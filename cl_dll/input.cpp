@@ -1,6 +1,6 @@
 // cl.input.c  -- builds an intended movement command to send to the server
 
-//xxxxxx Move bob and pitch drifting code here and other stuff from view if needed
+// xxxxxx Move bob and pitch drifting code here and other stuff from view if needed
 
 // Quake is a trademark of Id Software, Inc., (c) 1996 Id Software, Inc. All
 // rights reserved.
@@ -106,6 +106,7 @@ kbutton_t in_duck;
 kbutton_t in_reload;
 kbutton_t in_alt1;
 kbutton_t in_score;
+kbutton_t in_inventory;
 kbutton_t in_break;
 kbutton_t in_graph; // Display the netgraph
 
@@ -311,7 +312,7 @@ void KeyDown(kbutton_t* b)
 		return;
 	}
 
-	//TODO: define constants
+	// TODO: define constants
 	if ((b->state & 1) != 0)
 		return;		   // still down
 	b->state |= 1 + 2; // down + impulse down
@@ -345,7 +346,7 @@ void KeyUp(kbutton_t* b)
 		return; // key up without coresponding down (menu pass through)
 	if (0 != b->down[0] || 0 != b->down[1])
 	{
-		//Con_Printf ("Keys down for button: '%c' '%c' '%c' (%d,%d,%d)!\n", b->down[0], b->down[1], c, b->down[0], b->down[1], c);
+		// Con_Printf ("Keys down for button: '%c' '%c' '%c' (%d,%d,%d)!\n", b->down[0], b->down[1], c, b->down[0], b->down[1], c);
 		return; // some other key is still holding it down
 	}
 
@@ -522,6 +523,24 @@ void IN_ScoreUp()
 	}
 }
 
+void IN_InventoryDown()
+{
+	KeyDown(&in_inventory);
+	if (gViewPort)
+	{
+		gViewPort->ShowInventory();
+	}
+}
+
+void IN_InventoryUp()
+{
+	KeyUp(&in_inventory);
+	if (gViewPort)
+	{
+		gViewPort->HideInventory();
+	}
+}
+
 void IN_MLookUp()
 {
 	KeyUp(&in_mlook);
@@ -659,8 +678,8 @@ void DLLEXPORT CL_CreateMove(float frametime, struct usercmd_s* cmd, int active)
 
 	if (0 != active)
 	{
-		//memset( viewangles, 0, sizeof( Vector ) );
-		//viewangles[ 0 ] = viewangles[ 1 ] = viewangles[ 2 ] = 0.0;
+		// memset( viewangles, 0, sizeof( Vector ) );
+		// viewangles[ 0 ] = viewangles[ 1 ] = viewangles[ 2 ] = 0.0;
 		gEngfuncs.GetViewAngles((float*)viewangles);
 
 		CL_AdjustAngles(frametime, viewangles);
@@ -854,6 +873,10 @@ int CL_ButtonBits(bool bResetState)
 	{
 		bits |= IN_SCORE;
 	}
+	if ((in_inventory.state & 3) != 0)
+	{
+		bits |= IN_INVENTORY;
+	}
 
 	// Dead or in intermission? Shore scoreboard, too
 	if (CL_IsDead() || gHUD.m_iIntermission)
@@ -876,7 +899,7 @@ int CL_ButtonBits(bool bResetState)
 		in_attack2.state &= ~2;
 		in_reload.state &= ~2;
 		in_alt1.state &= ~2;
-		in_score.state &= ~2;
+		// in_inventory.state &= ~2;
 	}
 
 	return bits;
@@ -964,6 +987,8 @@ void InitInput()
 	gEngfuncs.pfnAddCommand("-score", IN_ScoreUp);
 	gEngfuncs.pfnAddCommand("+showscores", IN_ScoreDown);
 	gEngfuncs.pfnAddCommand("-showscores", IN_ScoreUp);
+	gEngfuncs.pfnAddCommand("+inventory", IN_InventoryDown);
+	gEngfuncs.pfnAddCommand("-inventory", IN_InventoryUp);
 	gEngfuncs.pfnAddCommand("+graph", IN_GraphDown);
 	gEngfuncs.pfnAddCommand("-graph", IN_GraphUp);
 	gEngfuncs.pfnAddCommand("+break", IN_BreakDown);

@@ -23,6 +23,7 @@
 
 // custom scheme handling
 #include "vgui_SchemeManager.h"
+#include "vgui_inventory.h"
 
 #define TF_DEFS_ONLY
 #define PC_LASTCLASS 10
@@ -546,6 +547,7 @@ public:
 
 	int		CreateCommandMenu( const char * menuFile, bool direction, int yOffset, bool flatDesign, float flButtonSizeX, float flButtonSizeY, int xOffset );
 	void	CreateScoreBoard( void );
+	void	CreateInventory( void );
 	CommandButton * CreateCustomButton( char *pButtonText, char * pButtonName, int  iYOffset );
 	CCommandMenu *	CreateDisguiseSubmenu( CommandButton *pButton, CCommandMenu *pParentMenu, const char *commandText, int iYOffset, int iXOffset = 0 );
 
@@ -568,7 +570,11 @@ public:
 
 	void ShowScoreBoard( void );
 	void HideScoreBoard( void );
+	void ShowInventory( void );
+	void HideInventory( void );
+	// void HideInventory( void );
 	bool IsScoreBoardVisible( void );
+	// bool IsInventoryVisible( void );
 
 	bool AllowedToPrintText( void );
 
@@ -628,6 +634,7 @@ public:
 	int						m_PlayerMenu; // a list of current player
 	CClassMenuPanel	*m_pClassMenu;
 	ScorePanel		*m_pScoreBoard;
+	CInventoryPanel	*m_pInventoryPanel;
 	SpectatorPanel *		m_pSpectatorPanel;
 	char			m_szServerName[ MAX_SERVERNAME_LENGTH ];
 };

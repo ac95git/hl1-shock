@@ -47,6 +47,8 @@
 #include "pm_shared.h"
 #include "pm_defs.h"
 #include "UserMessages.h"
+#include "skill.h"
+#include "player_skills.h"
 
 DLL_GLOBAL unsigned int g_ulFrameCount;
 
@@ -561,6 +563,57 @@ void ClientCommand(edict_t* pEntity)
 	else if (FStrEq(pcmd, "lastinv"))
 	{
 		player->SelectLastItem();
+	}
+	else if (FStrEq(pcmd, "inv_use"))
+	{
+		// Use a consumable inventory item by classname (sent from the VGUI inventory panel).
+		const char* szItem = CMD_ARGV(1);
+
+		if (FStrEq(szItem, "item_healthkit"))
+		{
+			if (player->m_rgItems[ITEM_HEALTHKIT] > 0)
+			{
+				if (player->TakeHealth(gSkillData.healthkitCapacity, DMG_GENERIC))
+				{
+					player->m_rgItems[ITEM_HEALTHKIT] -= 1;
+					EMIT_SOUND(ENT(player->pev), CHAN_ITEM, "items/smallmedkit1.wav", 1, ATTN_NORM);
+				}
+				// Always sync the count back so the client stays accurate.
+				MESSAGE_BEGIN(MSG_ONE, gmsgInventoryItem, NULL, player->pev);
+				WRITE_BYTE(ITEM_HEALTHKIT);
+				WRITE_BYTE((unsigned char)V_min(player->m_rgItems[ITEM_HEALTHKIT], 255));
+				MESSAGE_END();
+			}
+		}
+		else if (FStrEq(szItem, "item_battery"))
+		{
+			if (player->m_rgItems[ITEM_BATTERY] > 0 &&
+				player->HasSuit() &&
+				player->pev->armorvalue < MAX_NORMAL_BATTERY)
+			{
+				player->pev->armorvalue = V_min(
+					player->pev->armorvalue + gSkillData.batteryCapacity,
+					(float)MAX_NORMAL_BATTERY);
+				player->m_rgItems[ITEM_BATTERY] -= 1;
+
+				// Play the same sound used when picking up a battery.
+				EMIT_SOUND(ENT(player->pev), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM);
+
+				// HEV suit charge voice line.
+				int pct = (int)((player->pev->armorvalue * 100.0f) * (1.0f / MAX_NORMAL_BATTERY) + 0.5f);
+				pct = (pct / 5);
+				if (pct > 0) pct--;
+				char szcharge[64];
+				sprintf(szcharge, "!HEV_%1dP", pct);
+				player->SetSuitUpdate(szcharge, false, SUIT_NEXT_IN_30SEC);
+
+				MESSAGE_BEGIN(MSG_ONE, gmsgInventoryItem, NULL, player->pev);
+				WRITE_BYTE(ITEM_BATTERY);
+				WRITE_BYTE((unsigned char)V_min(player->m_rgItems[ITEM_BATTERY], 255));
+				MESSAGE_END();
+			}
+		}
+		// (additional consumable types can be added here)
 	}
 	else if (FStrEq(pcmd, "spectate")) // clients wants to become a spectator
 	{
@@ -1576,6 +1629,12 @@ static entity_field_alias_t player_field_alias[] =
 		{"origin[0]", 0},
 		{"origin[1]", 0},
 		{"origin[2]", 0},
+		{"angles[0]", 0},
+		{"angles[1]", 0},
+		{"angles[2]", 0},
+		{"skin", 0},
+		{"sequence", 0},
+		{"animtime", 0},
 };
 
 void Player_FieldInit(struct delta_s* pFields)
@@ -1583,6 +1642,9 @@ void Player_FieldInit(struct delta_s* pFields)
 	player_field_alias[FIELD_ORIGIN0].field = DELTA_FINDFIELD(pFields, player_field_alias[FIELD_ORIGIN0].name);
 	player_field_alias[FIELD_ORIGIN1].field = DELTA_FINDFIELD(pFields, player_field_alias[FIELD_ORIGIN1].name);
 	player_field_alias[FIELD_ORIGIN2].field = DELTA_FINDFIELD(pFields, player_field_alias[FIELD_ORIGIN2].name);
+	player_field_alias[FIELD_ANGLES0].field = DELTA_FINDFIELD(pFields, player_field_alias[FIELD_ANGLES0].name);
+	player_field_alias[FIELD_ANGLES1].field = DELTA_FINDFIELD(pFields, player_field_alias[FIELD_ANGLES1].name);
+	player_field_alias[FIELD_ANGLES2].field = DELTA_FINDFIELD(pFields, player_field_alias[FIELD_ANGLES2].name);
 }
 
 /*
@@ -1826,7 +1888,7 @@ void UpdateClientData(const edict_t* ent, int sendweapons, struct clientdata_s* 
 	}
 
 	cd->flags = pev->flags;
-	cd->health = pev->health;
+	cd->health =pev->health;
 
 	cd->viewmodel = MODEL_INDEX(STRING(pev->viewmodel));
 
@@ -1958,7 +2020,6 @@ void CmdEnd(const edict_t* player)
 		UTIL_UnsetGroupTrace();
 	}
 }
-
 /*
 ================================
 ConnectionlessPacket

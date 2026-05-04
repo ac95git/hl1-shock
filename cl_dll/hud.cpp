@@ -29,6 +29,7 @@
 #include "demo.h"
 #include "demo_api.h"
 #include "vgui_ScorePanel.h"
+#include <keydefs.h>
 
 hud_player_info_t g_PlayerInfoList[MAX_PLAYERS_HUD + 1];	// player info from the engine
 extra_player_info_t g_PlayerExtraInfo[MAX_PLAYERS_HUD + 1]; // additional player info sent directly to the client dll
@@ -280,9 +281,46 @@ int __MsgFunc_AllowSpec(const char* pszName, int iSize, void* pbuf)
 	return 0;
 }
 
+int CHud::KeyInput(int down, int keynum, const char *pszCurrentBinding)
+{
+    if (keynum == K_TAB)
+    {
+        //m_bTabPanelOpen = down ? true : false;
+		m_bTabPanelOpen = true;
+        return 1; // eat the key (prevents scoreboard)
+    }
+
+    return 0;
+}
+
+void CHud::DrawTabPanel()
+{
+    int x = ScreenWidth / 2 - 150;
+    int y = ScreenHeight / 2 - 100;
+    int w = 300;
+    int h = 200;
+
+    // Background
+    FillRGBA(x, y, w, h, 0, 0, 0, 180);
+
+    // Border
+    FillRGBA(x, y, w, 2, 255, 255, 255, 255);
+    FillRGBA(x, y + h - 2, w, 2, 255, 255, 255, 255);
+    FillRGBA(x, y, 2, h, 255, 255, 255, 255);
+    FillRGBA(x + w - 2, y, 2, h, 255, 255, 255, 255);
+
+    // Text
+    DrawHudString(x + 10, y + 10, 320, "TAB PANEL", 255, 255, 255);
+    DrawHudString(x + 10, y + 30, 350, "Your content here", 255, 255, 255);
+    DrawHudString(x + 10, y + 30, 350, "kk", 255, 255, 255);
+}
+
+
 // This is called every time the DLL is loaded
 void CHud::Init()
 {
+	m_bTabPanelOpen = false;
+
 	HOOK_MESSAGE(Logo);
 	HOOK_MESSAGE(ResetHUD);
 	HOOK_MESSAGE(GameMode);

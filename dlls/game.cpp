@@ -19,6 +19,8 @@
 #include "game.h"
 #include "filesystem_utils.h"
 
+void LinkUserMessages();
+
 cvar_t displaysoundlist = {"displaysoundlist", "0"};
 
 // multiplayer server rules
@@ -934,6 +936,11 @@ void GameDLLInit()
 	InitMapLoadingUtils();
 
 	SERVER_COMMAND("exec skill.cfg\n");
+
+	// Register all user messages here, during DLL init, which is the guaranteed
+	// safe window for REG_USER_MSG in GoldSrc. LinkUserMessages guards against
+	// double-registration so calling it again from ServerActivate is harmless.
+	LinkUserMessages();
 }
 
 void GameDLLShutdown()

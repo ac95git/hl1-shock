@@ -1,17 +1,17 @@
 /***
-*
-*	Copyright (c) 1999, Valve LLC. All rights reserved.
-*	
-*	This product contains software technology licensed from Id 
-*	Software, Inc. ("Id Technology").  Id Technology (c) 1996 Id Software, Inc. 
-*	All Rights Reserved.
-*
-*   Use, distribution, and modification of this source code and/or resulting
-*   object code is restricted to non-commercial enhancements to products from
-*   Valve LLC.  All other use, distribution, or modification is prohibited
-*   without written permission from Valve LLC.
-*
-****/
+ *
+ *	Copyright (c) 1999, Valve LLC. All rights reserved.
+ *
+ *	This product contains software technology licensed from Id
+ *	Software, Inc. ("Id Technology").  Id Technology (c) 1996 Id Software, Inc.
+ *	All Rights Reserved.
+ *
+ *   Use, distribution, and modification of this source code and/or resulting
+ *   object code is restricted to non-commercial enhancements to products from
+ *   Valve LLC.  All other use, distribution, or modification is prohibited
+ *   without written permission from Valve LLC.
+ *
+ ****/
 //
 //  hud.h
 //
@@ -22,9 +22,9 @@
 
 #pragma once
 
-#define RGB_YELLOWISH 0x00FFA000 //255,160,0
-#define RGB_REDISH 0x00FF1010	 //255,160,0
-#define RGB_GREENISH 0x0000A000	 //0,160,0
+#define RGB_YELLOWISH 0x00FFA000 // 255,160,0
+#define RGB_REDISH 0x00FF1010	 // 255,160,0
+#define RGB_GREENISH 0x0000A000	 // 0,160,0
 
 #include "common_types.h"
 #include "cl_dll.h"
@@ -111,6 +111,7 @@ public:
 	bool MsgFunc_WeapPickup(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_ItemPickup(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_HideWeapon(const char* pszName, int iSize, void* pbuf);
+	bool MsgFunc_InvItem(const char* pszName, int iSize, void* pbuf);
 
 	void SlotInput(int iSlot);
 	void UserCmd_Slot1();
@@ -460,8 +461,8 @@ public:
 	};
 
 
-	//had to make these public so CHud could access them (to enable concussion icon)
-	//could use a friend declaration instead...
+	// had to make these public so CHud could access them (to enable concussion icon)
+	// could use a friend declaration instead...
 	void EnableIcon(const char* pszIconName, unsigned char red, unsigned char green, unsigned char blue);
 	void DisableIcon(const char* pszIconName);
 
@@ -495,6 +496,10 @@ private:
 	int m_iConcussionEffect;
 
 public:
+	int KeyInput(int down, int keynum, const char* pszCurrentBinding);
+	void DrawTabPanel();
+
+	bool m_bTabPanelOpen;
 	HSPRITE m_hsprCursor;
 	float m_flTime;		  // the current client time
 	float m_fOldTime;	  // the time at which the HUD was last redrawn

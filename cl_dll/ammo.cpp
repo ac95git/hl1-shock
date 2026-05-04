@@ -240,6 +240,7 @@ DECLARE_MESSAGE(m_Ammo, AmmoPickup); // flashes an ammo pickup record
 DECLARE_MESSAGE(m_Ammo, WeapPickup); // flashes a weapon pickup record
 DECLARE_MESSAGE(m_Ammo, HideWeapon); // hides the weapon, ammo, and crosshair displays temporarily
 DECLARE_MESSAGE(m_Ammo, ItemPickup);
+DECLARE_MESSAGE(m_Ammo, InvItem);
 
 DECLARE_COMMAND(m_Ammo, Slot1);
 DECLARE_COMMAND(m_Ammo, Slot2);
@@ -272,6 +273,7 @@ bool CHudAmmo::Init()
 	HOOK_MESSAGE(ItemPickup);
 	HOOK_MESSAGE(HideWeapon);
 	HOOK_MESSAGE(AmmoX);
+	HOOK_MESSAGE(InvItem);
 
 	HOOK_COMMAND("slot1", Slot1);
 	HOOK_COMMAND("slot2", Slot2);
@@ -366,6 +368,14 @@ void CHudAmmo::Think()
 				else
 					gWR.DropWeapon(p);
 			}
+		}
+
+		// Inventory changed on client-side weapons resource (gWR).
+		// If the VGUI inventory panel exists, refresh its list from gWR.
+		if (gViewPort && gViewPort->m_pInventoryPanel)
+		{
+			// Passing nullptr/0 causes SetWeaponNames to rebuild names from gWR.
+			gViewPort->m_pInventoryPanel->SetWeaponNames(nullptr, 0);
 		}
 	}
 
@@ -531,6 +541,19 @@ bool CHudAmmo::MsgFunc_ItemPickup(const char* pszName, int iSize, void* pbuf)
 	return true;
 }
 
+bool CHudAmmo::MsgFunc_InvItem(const char* pszName, int iSize, void* pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+	int iItemId = READ_BYTE();
+	int iCount  = READ_BYTE();
+
+	// Forward to the inventory panel if it exists so it can refresh its item list.
+	if (gViewPort && gViewPort->m_pInventoryPanel)
+		gViewPort->m_pInventoryPanel->UpdateInventoryItem(iItemId, iCount);
+
+	return true;
+}
+
 
 bool CHudAmmo::MsgFunc_HideWeapon(const char* pszName, int iSize, void* pbuf)
 {
@@ -625,7 +648,7 @@ bool CHudAmmo::MsgFunc_CurWeapon(const char* pszName, int iSize, void* pbuf)
 		if (fOnTarget && 0 != m_pWeapon->hZoomedAutoaim)
 			SetCrosshair(m_pWeapon->hZoomedAutoaim, m_pWeapon->rcZoomedAutoaim, 255, 255, 255);
 		else
-			SetCrosshair(m_pWeapon->hZoomedCrosshair, m_pWeapon->rcZoomedCrosshair, 255, 255, 255);
+		 SetCrosshair(m_pWeapon->hZoomedCrosshair, m_pWeapon->rcZoomedCrosshair, 255, 255, 255);
 	}
 
 	m_fFade = 200.0f; //!!!
@@ -761,7 +784,6 @@ void CHudAmmo::UserCmd_Close()
 	else
 		EngineClientCmd("escape");
 }
-
 
 // Selects the next item in the weapon menu
 void CHudAmmo::UserCmd_NextWeapon()

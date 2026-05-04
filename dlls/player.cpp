@@ -4688,10 +4688,12 @@ int CBasePlayer::GetCustomDecalFrames()
 //=========================================================
 void CBasePlayer::DropPlayerItem(char* pszItemName)
 {
+	ALERT(at_console, "%s drop attempt\n", pszItemName);
+	
 	if (!g_pGameRules->IsMultiplayer() || (weaponstay.value > 0))
 	{
 		// no dropping in single player.
-		return;
+		//return;
 	}
 
 	if (0 == strlen(pszItemName))
@@ -4738,14 +4740,18 @@ void CBasePlayer::DropPlayerItem(char* pszItemName)
 		// item we want to drop and hit a BREAK;  pWeapon is the item.
 		if (pWeapon)
 		{
+			//ALERT(at_console, "%s drop guard...\n", pszItemName);
 			if (!g_pGameRules->GetNextBestWeapon(this, pWeapon))
+			{
+				//ALERT(at_console, "%s can't drop the item they asked for\n", pszItemName);
 				return; // can't drop the item they asked for, may be our last item or something we can't holster
-
+			}
 			UTIL_MakeVectors(pev->angles);
 
 			ClearWeaponBit(pWeapon->m_iId); // take item off hud
 
-			CWeaponBox* pWeaponBox = (CWeaponBox*)CBaseEntity::Create("weaponbox", pev->origin + gpGlobals->v_forward * 10, pev->angles, edict());
+			ALERT(at_console, "%s dropping...\n", pszItemName);
+			CWeaponBox* pWeaponBox = (CWeaponBox*)CBaseEntity::Create(pszItemName, pev->origin + gpGlobals->v_forward * 10, pev->angles, edict());
 			pWeaponBox->pev->angles.x = 0;
 			pWeaponBox->pev->angles.z = 0;
 			pWeaponBox->PackWeapon(pWeapon);

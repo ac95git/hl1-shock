@@ -326,8 +326,10 @@ void W_Precache()
 
 	if (g_pGameRules->IsDeathmatch())
 	{
-		UTIL_PrecacheOther("weaponbox"); // container for dropped deathmatch weapons
+		// (weaponbox precached unconditionally below)
 	}
+
+	UTIL_PrecacheOther("weaponbox"); // container for dropped weapons
 
 	g_sModelIndexFireball = PRECACHE_MODEL("sprites/zerogxplode.spr");	// fireball
 	g_sModelIndexWExplosion = PRECACHE_MODEL("sprites/WXplo1.spr");		// underwater fireball

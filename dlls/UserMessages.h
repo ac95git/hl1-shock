@@ -55,4 +55,10 @@ inline int gmsgStatusValue = 0;
 
 inline int gmsgWeapons = 0;
 
+// Inventory item count sync (max 12-char engine limit): BYTE itemId, BYTE count
+inline int gmsgInventoryItem = 0;
+
+// Skill tree sync: variable-length (see SendSkillTreeToClient)
+inline int gmsgSkillTree = 0;
+
 void LinkUserMessages();

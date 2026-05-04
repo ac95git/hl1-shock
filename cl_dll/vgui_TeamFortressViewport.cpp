@@ -56,6 +56,7 @@
 
 #include "shake.h"
 #include "screenfade.h"
+#include "vgui_inventory.h"
 
 extern bool g_iVisibleMouse;
 class CCommandMenu;
@@ -518,6 +519,7 @@ TeamFortressViewport::TeamFortressViewport(int x, int y, int wide, int tall) : P
 	m_pTeamMenu = NULL;
 	m_pClassMenu = NULL;
 	m_pScoreBoard = NULL;
+	m_pInventoryPanel = NULL;
 	m_pSpectatorPanel = NULL;
 	m_pCurrentMenu = NULL;
 	m_pCurrentCommandMenu = NULL;
@@ -579,6 +581,7 @@ TeamFortressViewport::TeamFortressViewport(int x, int y, int wide, int tall) : P
 	CreateClassMenu();
 	CreateSpectatorMenu();
 	CreateScoreBoard();
+	CreateInventory();
 	// Init command menus
 	m_iNumMenus = 0;
 	m_iCurrentTeamNumber = m_iUser1 = m_iUser2 = m_iUser3 = 0;
@@ -616,10 +619,19 @@ void TeamFortressViewport::Initialize()
 	{
 		m_pClassMenu->Initialize();
 	}
+	
+	if (m_pInventoryPanel)
+	{
+		m_pInventoryPanel->Initialize();
+	}
 	if (m_pScoreBoard)
 	{
 		m_pScoreBoard->Initialize();
 		HideScoreBoard();
+	}
+	if (m_pInventoryPanel)
+	{
+		m_pInventoryPanel->Initialize();
 	}
 	if (m_pSpectatorPanel)
 	{
@@ -1065,6 +1077,24 @@ void TeamFortressViewport::ShowScoreBoard()
 		}
 	}
 }
+void TeamFortressViewport::ShowInventory()
+{
+	if (m_pInventoryPanel)
+	{	
+			m_pInventoryPanel->Open();
+			UpdateCursorState();
+		
+	}
+}
+
+void TeamFortressViewport::HideInventory()
+{
+	if (m_pInventoryPanel)
+	{	
+			m_pInventoryPanel->Close();
+		
+	}
+}
 
 //-----------------------------------------------------------------------------
 // Purpose: Returns true if the scoreboard is up
@@ -1336,6 +1366,25 @@ void TeamFortressViewport::CreateScoreBoard()
 	m_pScoreBoard = new ScorePanel(xdent, ydent, ScreenWidth - (xdent * 2), ScreenHeight - (ydent * 2));
 	m_pScoreBoard->setParent(this);
 	m_pScoreBoard->setVisible(false);
+}
+
+void TeamFortressViewport::CreateInventory()
+{
+	int xdent = SBOARD_INDENT_X, ydent = SBOARD_INDENT_Y;
+	if (ScreenWidth == 512)
+	{
+		xdent = SBOARD_INDENT_X_512;
+		ydent = SBOARD_INDENT_Y_512;
+	}
+	else if (ScreenWidth == 400)
+	{
+		xdent = SBOARD_INDENT_X_400;
+		ydent = SBOARD_INDENT_Y_400;
+	}
+
+	m_pInventoryPanel = new CInventoryPanel(xdent, ydent, ((ScreenWidth - (xdent * 2) + 16) / 32) * 32 + 32, ScreenHeight - (ydent * 2));
+	m_pInventoryPanel->setParent(this);
+	m_pInventoryPanel->setVisible(false);
 }
 
 //======================================================================
@@ -1666,6 +1715,14 @@ void TeamFortressViewport::UpdateCursorState()
 			App::getInstance()->setCursorOveride(App::getInstance()->getScheme()->getCursor(Scheme::scu_arrow));
 			return;
 		}
+	}
+
+	// Show cursor when inventory panel is visible (use I-beam cursor)
+	if (m_pInventoryPanel && m_pInventoryPanel->isVisible())
+	{
+		g_iVisibleMouse = true;
+		App::getInstance()->setCursorOveride(App::getInstance()->getScheme()->getCursor(Scheme::scu_arrow));
+		return;
 	}
 
 	// Don't reset mouse in demo playback
@@ -2111,7 +2168,10 @@ bool TeamFortressViewport::MsgFunc_TeamInfo(const char* pszName, int iSize, void
 
 void TeamFortressViewport::DeathMsg(int killer, int victim)
 {
-	m_pScoreBoard->DeathMsg(killer, victim);
+    if (m_pScoreBoard)
+    {
+        m_pScoreBoard->DeathMsg(killer, victim);
+    }
 }
 
 bool TeamFortressViewport::MsgFunc_Spectator(const char* pszName, int iSize, void* pbuf)

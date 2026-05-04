@@ -71,7 +71,6 @@ CBasePlayerItem* CGameRules::FindNextBestWeapon(CBasePlayer* pPlayer, CBasePlaye
 			}
 			else if (pCheck->iWeight() > iBestWeight)
 			{
-				//ALERT ( at_console, "Considering %s\n", STRING( pCheck->pev->classname ) );
 				// we keep updating the 'best' weapon just in case we can't find a weapon of the same weight
 				// that the player was using. This will end up leaving the player with his heaviest-weighted
 				// weapon.
@@ -96,12 +95,14 @@ CBasePlayerItem* CGameRules::FindNextBestWeapon(CBasePlayer* pPlayer, CBasePlaye
 
 bool CGameRules::GetNextBestWeapon(CBasePlayer* pPlayer, CBasePlayerItem* pCurrentWeapon, bool alwaysSearch)
 {
+	ALERT(at_console, "Looking for best weapon to switch to\n");
 	if (auto pBest = FindNextBestWeapon(pPlayer, pCurrentWeapon); pBest != nullptr)
 	{
+		ALERT(at_console, "Switching to best weapon %s\n", pBest->pszName());
 		pPlayer->SwitchWeapon(pBest);
 		return true;
 	}
-
+	ALERT(at_console, "No best weapon found\n");
 	return false;
 }
 

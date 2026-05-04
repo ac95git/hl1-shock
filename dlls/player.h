@@ -16,6 +16,7 @@
 #pragma once
 
 #include "pm_materials.h"
+#include "player_skills.h"
 
 
 #define PLAYER_FATAL_FALL_SPEED 1024															  // approx 60 feet
@@ -356,6 +357,9 @@ public:
 
 	//True if the player is currently spawning.
 	bool m_bIsSpawning = false;
+
+	// ---- Skill tree ----
+	CPlayerSkills m_skills;
 };
 
 inline void CBasePlayer::SetWeaponBit(int id)

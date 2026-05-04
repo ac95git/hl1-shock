@@ -215,40 +215,39 @@ class CItemBattery : public CItem
 	bool MyTouch(CBasePlayer* pPlayer) override
 	{
 		if (pPlayer->pev->deadflag != DEAD_NO)
-		{
 			return false;
-		}
 
-		if ((pPlayer->pev->armorvalue < MAX_NORMAL_BATTERY) &&
-			pPlayer->HasSuit())
+		// Require HEV suit so batteries still make sense contextually.
+		if (!pPlayer->HasSuit())
+			return false;
+
+		// Add to inventory instead of charging armor immediately.
+		pPlayer->m_rgItems[ITEM_BATTERY] += 1;
+
+		EMIT_SOUND(pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM);
+
+		ALERT(at_console, "[Battery] gmsgInventoryItem=%d gmsgItemPickup=%d\n",
+			gmsgInventoryItem, gmsgItemPickup);
+
+		// Notify client of updated count.
+		if (gmsgInventoryItem != 0)
 		{
-			int pct;
-			char szcharge[64];
-
-			pPlayer->pev->armorvalue += gSkillData.batteryCapacity;
-			pPlayer->pev->armorvalue = V_min(pPlayer->pev->armorvalue, MAX_NORMAL_BATTERY);
-
-			EMIT_SOUND(pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM);
-
-			MESSAGE_BEGIN(MSG_ONE, gmsgItemPickup, NULL, pPlayer->pev);
-			WRITE_STRING(STRING(pev->classname));
+			MESSAGE_BEGIN(MSG_ONE, gmsgInventoryItem, NULL, pPlayer->pev);
+			WRITE_BYTE(ITEM_BATTERY);
+			WRITE_BYTE((unsigned char)V_min(pPlayer->m_rgItems[ITEM_BATTERY], 255));
 			MESSAGE_END();
-
-
-			// Suit reports new power level
-			// For some reason this wasn't working in release build -- round it.
-			pct = (int)((float)(pPlayer->pev->armorvalue * 100.0) * (1.0 / MAX_NORMAL_BATTERY) + 0.5);
-			pct = (pct / 5);
-			if (pct > 0)
-				pct--;
-
-			sprintf(szcharge, "!HEV_%1dP", pct);
-
-			//EMIT_SOUND_SUIT(ENT(pev), szcharge);
-			pPlayer->SetSuitUpdate(szcharge, false, SUIT_NEXT_IN_30SEC);
-			return true;
 		}
-		return false;
+		else
+		{
+			ALERT(at_console, "[Battery] ERROR: gmsgInventoryItem is 0, skipping!\n");
+		}
+
+		// Standard ItemPickup for pickup history HUD.
+		MESSAGE_BEGIN(MSG_ONE, gmsgItemPickup, NULL, pPlayer->pev);
+		WRITE_STRING(STRING(pev->classname));
+		MESSAGE_END();
+
+		return true;
 	}
 };
 

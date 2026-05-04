@@ -31,3 +31,5 @@
 #define IN_RELOAD (1 << 13)
 #define IN_ALT1 (1 << 14)
 #define IN_SCORE (1 << 15) // Used by client.dll for when scoreboard is held down
+#define IN_INVENTORY (1 << 16) // Used by client.dll for when inventory is held down
+
