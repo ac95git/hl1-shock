@@ -241,6 +241,7 @@ DECLARE_MESSAGE(m_Ammo, WeapPickup); // flashes a weapon pickup record
 DECLARE_MESSAGE(m_Ammo, HideWeapon); // hides the weapon, ammo, and crosshair displays temporarily
 DECLARE_MESSAGE(m_Ammo, ItemPickup);
 DECLARE_MESSAGE(m_Ammo, InvItem);
+DECLARE_MESSAGE(m_Ammo, SkillTree);
 
 DECLARE_COMMAND(m_Ammo, Slot1);
 DECLARE_COMMAND(m_Ammo, Slot2);
@@ -274,6 +275,7 @@ bool CHudAmmo::Init()
 	HOOK_MESSAGE(HideWeapon);
 	HOOK_MESSAGE(AmmoX);
 	HOOK_MESSAGE(InvItem);
+	HOOK_MESSAGE(SkillTree);
 
 	HOOK_COMMAND("slot1", Slot1);
 	HOOK_COMMAND("slot2", Slot2);
@@ -550,6 +552,39 @@ bool CHudAmmo::MsgFunc_InvItem(const char* pszName, int iSize, void* pbuf)
 	// Forward to the inventory panel if it exists so it can refresh its item list.
 	if (gViewPort && gViewPort->m_pInventoryPanel)
 		gViewPort->m_pInventoryPanel->UpdateInventoryItem(iItemId, iCount);
+
+	return true;
+}
+
+bool CHudAmmo::MsgFunc_SkillTree(const char* pszName, int iSize, void* pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+
+	int count = READ_BYTE();
+
+	// Use a fixed-size local array; k_MaxSkills is at most a few dozen entries.
+	static SkillNode nodes[64];
+	const int safeCount = (count < 64) ? count : 63;
+
+	for (int i = 0; i < safeCount; ++i)
+	{
+		SkillNode& n = nodes[i];
+		n.id = READ_BYTE();
+		n.gridCol = READ_BYTE();
+		n.gridRow = READ_BYTE();
+		n.cost = READ_BYTE();
+		n.prereqId = READ_BYTE();
+		int flags = READ_BYTE();
+		n.bUnlocked = (flags & 1) != 0;
+		n.bAvailable = (flags & 2) != 0;
+		n.displayName = nullptr;
+		n.description = nullptr;
+	}
+
+	int skillPoints = READ_BYTE();
+
+	if (gViewPort && gViewPort->m_pInventoryPanel)
+		gViewPort->m_pInventoryPanel->UpdateSkillTree(nodes, safeCount, skillPoints);
 
 	return true;
 }

@@ -13,7 +13,7 @@ using namespace vgui;
 // =====================================================================
 // Layout constants (must match the ones in vgui_inventory.cpp)
 // =====================================================================
-static constexpr int INV_GRID_COLS    = 10;
+static constexpr int INV_GRID_COLS    = 11;
 static constexpr int INV_GRID_ROWS    = 8;
 static constexpr int INV_GRID_PADDING = 4;
 static constexpr int INV_MARGIN       = 8;

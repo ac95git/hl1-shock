@@ -112,6 +112,7 @@ public:
 	bool MsgFunc_ItemPickup(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_HideWeapon(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_InvItem(const char* pszName, int iSize, void* pbuf);
+	bool MsgFunc_SkillTree(const char* pszName, int iSize, void* pbuf);
 
 	void SlotInput(int iSlot);
 	void UserCmd_Slot1();

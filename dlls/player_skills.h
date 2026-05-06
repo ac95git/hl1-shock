@@ -1,5 +1,4 @@
 #pragma once
-#include "saverestore.h"
 
 // =====================================================================
 // ESkillId
@@ -38,8 +37,8 @@ static constexpr int k_MaxSkills = static_cast<int>(ESkillId::_Count);
 struct CPlayerSkills
 {
     // ---- Persistent data (save/restore) ----
-    int m_iSkillPoints                  = 0;                     // unspent points
-    bool m_bUnlocked[k_MaxSkills]       = {};                    // bUnlocked[ESkillId]
+    int m_iSkillPoints                  = 20;    // unspent points
+    bool m_bUnlocked[k_MaxSkills]       = {};   // bUnlocked[ESkillId]
 
     // ---- Helpers ----
     bool HasSkill(ESkillId id) const
@@ -57,10 +56,6 @@ struct CPlayerSkills
 
     // Award skill points (e.g., on level-up or quest completion).
     void AddSkillPoints(int pts) { m_iSkillPoints += pts; }
-
-    // Save/restore descriptor table (registered once in player_skills.cpp).
-    static TYPEDESCRIPTION m_SaveData[];
-    static int             m_SaveDataCount;
 };
 
 // =====================================================================
@@ -80,7 +75,18 @@ struct SkillDef
 // Array of all skill definitions; defined in player_skills.cpp.
 extern const SkillDef k_SkillDefs[k_MaxSkills];
 
-// Forward: sends the full skill-tree state to a single player.
-// Declared here so CHalfLifeRules::InitHUD and ClientCommand can call it.
+// =====================================================================
+// Save/restore helpers – implemented in player_skills.cpp.
+// CSave/CRestore are forward-declared so saverestore.h is NOT needed here.
+// =====================================================================
+class CSave;
+class CRestore;
+
+bool SkillsSave(CPlayerSkills& skills, CSave& save);
+bool SkillsRestore(CPlayerSkills& skills, CRestore& restore);
+
+// =====================================================================
+// Sends the full skill-tree state to a single player.
+// =====================================================================
 class CBasePlayer;
 void SendSkillTreeToClient(CBasePlayer* pPlayer);

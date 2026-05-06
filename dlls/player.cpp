@@ -3053,6 +3053,11 @@ bool CBasePlayer::Save(CSave& save)
 	if (!CBaseMonster::Save(save))
 		return false;
 
+	// Persist skill-tree state alongside the rest of the player.
+	if (!SkillsSave(m_skills, save))
+		return false;
+
+
 	return save.WriteFields("PLAYER", this, m_playerSaveData, ARRAYSIZE(m_playerSaveData));
 }
 
@@ -3069,6 +3074,9 @@ bool CBasePlayer::Restore(CRestore& restore)
 {
 	if (!CBaseMonster::Restore(restore))
 		return false;
+
+	// Restore skill-tree state (non-fatal if the block is absent in an older save).
+	SkillsRestore(m_skills, restore);
 
 	bool status = restore.ReadFields("PLAYER", this, m_playerSaveData, ARRAYSIZE(m_playerSaveData));
 
@@ -3105,7 +3113,7 @@ bool CBasePlayer::Restore(CRestore& restore)
 	if (FBitSet(pev->flags, FL_DUCKING))
 	{
 		// Use the crouch HACK
-		//FixPlayerCrouchStuck( edict() );
+		// FixPlayerCrouchStuck( edict() );
 		// Don't need to do this with new player prediction code.
 		UTIL_SetSize(pev, VEC_DUCK_HULL_MIN, VEC_DUCK_HULL_MAX);
 	}
@@ -4103,6 +4111,8 @@ void CBasePlayer::UpdateClientData()
 		FireTargets("game_playerspawn", this, this, USE_TOGGLE, 0);
 
 		InitStatusBar();
+		// Send the initial skill-tree state to the newly connected client.
+		SendSkillTreeToClient(this);
 	}
 
 	if (m_iHideHUD != m_iClientHideHUD)
@@ -4221,6 +4231,9 @@ void CBasePlayer::UpdateClientData()
 			WRITE_BYTE(m_iFlashBattery);
 			MESSAGE_END();
 		}
+
+		// Resend the full skill-tree state so the client reflects the loaded save.
+		SendSkillTreeToClient(this);
 	}
 
 	// Update Flashlight

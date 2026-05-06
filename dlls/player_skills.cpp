@@ -1,13 +1,14 @@
 #include "extdll.h"
 #include "util.h"
 #include "cbase.h"
+#include "saverestore.h"
 #include "player.h"
 #include "player_skills.h"
 #include "UserMessages.h"
+#include <algorithm>
 
 // =====================================================================
 // Skill definitions
-//   Order must match ESkillId values exactly (index == id).
 // =====================================================================
 const SkillDef k_SkillDefs[k_MaxSkills] =
 {
@@ -26,14 +27,26 @@ const SkillDef k_SkillDefs[k_MaxSkills] =
 };
 
 // =====================================================================
-// Save/restore table
+// Local save/restore descriptor table
 // =====================================================================
-TYPEDESCRIPTION CPlayerSkills::m_SaveData[] =
+static TYPEDESCRIPTION g_SkillsSaveData[] =
 {
     DEFINE_FIELD(CPlayerSkills, m_iSkillPoints, FIELD_INTEGER),
     DEFINE_ARRAY(CPlayerSkills, m_bUnlocked,    FIELD_BOOLEAN, k_MaxSkills),
 };
-int CPlayerSkills::m_SaveDataCount = ARRAYSIZE(CPlayerSkills::m_SaveData);
+
+// =====================================================================
+// SkillsSave / SkillsRestore  (declared in player_skills.h)
+// =====================================================================
+bool SkillsSave(CPlayerSkills& skills, CSave& save)
+{
+    return save.WriteFields("SKILLS", &skills, g_SkillsSaveData, ARRAYSIZE(g_SkillsSaveData));
+}
+
+bool SkillsRestore(CPlayerSkills& skills, CRestore& restore)
+{
+    return restore.ReadFields("SKILLS", &skills, g_SkillsSaveData, ARRAYSIZE(g_SkillsSaveData));
+}
 
 // =====================================================================
 // CPlayerSkills::PrereqMet
@@ -44,7 +57,7 @@ bool CPlayerSkills::PrereqMet(ESkillId id) const
     if (i <= 0 || i >= k_MaxSkills) return false;
 
     ESkillId prereq = k_SkillDefs[i].prereq;
-    if (prereq == ESkillId::None) return true;         // root node
+    if (prereq == ESkillId::None) return true;
     return HasSkill(prereq);
 }
 
@@ -55,11 +68,11 @@ bool CPlayerSkills::TryUnlock(ESkillId id)
 {
     int i = static_cast<int>(id);
     if (i <= 0 || i >= k_MaxSkills) return false;
-    if (m_bUnlocked[i]) return false;                  // already have it
-    if (!PrereqMet(id)) return false;                  // locked out
+    if (m_bUnlocked[i]) return false;
+    if (!PrereqMet(id)) return false;
 
     int cost = k_SkillDefs[i].cost;
-    if (m_iSkillPoints < cost) return false;           // can't afford
+    if (m_iSkillPoints < cost) return false;
 
     m_bUnlocked[i]  = true;
     m_iSkillPoints -= cost;
@@ -68,24 +81,12 @@ bool CPlayerSkills::TryUnlock(ESkillId id)
 
 // =====================================================================
 // SendSkillTreeToClient
-//   Wire format (variable-length message "SkillTree"):
-//     BYTE   nodeCount
-//     for each node:
-//       BYTE   id
-//       BYTE   gridCol
-//       BYTE   gridRow
-//       BYTE   cost
-//       BYTE   prereqId
-//       BYTE   flags  (bit0 = unlocked, bit1 = available)
-//     BYTE   skillPoints (clamped to 255)
 // =====================================================================
 void SendSkillTreeToClient(CBasePlayer* pPlayer)
 {
     if (!pPlayer || gmsgSkillTree == 0) return;
 
     const CPlayerSkills& sk = pPlayer->m_skills;
-
-    // Count non-None nodes
     int count = k_MaxSkills - 1; // skip index 0 (None)
 
     MESSAGE_BEGIN(MSG_ONE, gmsgSkillTree, NULL, pPlayer->pev);
@@ -98,12 +99,12 @@ void SendSkillTreeToClient(CBasePlayer* pPlayer)
         bool available = !unlocked && sk.PrereqMet(static_cast<ESkillId>(i))
                          && sk.m_iSkillPoints >= def.cost;
 
-        WRITE_BYTE(i);                                              // id
+        WRITE_BYTE(i);
         WRITE_BYTE((unsigned char)def.gridCol);
         WRITE_BYTE((unsigned char)def.gridRow);
         WRITE_BYTE((unsigned char)def.cost);
-        WRITE_BYTE((unsigned char)static_cast<int>(def.prereq));   // prereqId
-        WRITE_BYTE((unlocked ? 1 : 0) | (available ? 2 : 0));      // flags
+        WRITE_BYTE((unsigned char)static_cast<int>(def.prereq));
+        WRITE_BYTE((unlocked ? 1 : 0) | (available ? 2 : 0));
     }
 
     WRITE_BYTE((unsigned char)std::min(sk.m_iSkillPoints, 255));

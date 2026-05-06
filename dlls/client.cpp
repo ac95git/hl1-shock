@@ -644,6 +644,16 @@ void ClientCommand(edict_t* pEntity)
 		if (player->IsObserver())
 			player->Observer_FindNextPlayer(atoi(CMD_ARGV(1)) != 0);
 	}
+	else if (FStrEq(pcmd, "skill_unlock"))
+	{
+		// Client requests to spend a skill point on the given skill id.
+		if (CMD_ARGC() >= 2)
+		{
+			int id = atoi(CMD_ARGV(1));
+			if (player->m_skills.TryUnlock(static_cast<ESkillId>(id)))
+				SendSkillTreeToClient(player);
+		}
+	}
 	else if (g_pGameRules->ClientCommand(player, pcmd))
 	{
 		// MenuSelect returns true only if the command is properly handled,  so don't print a warning
