@@ -6,7 +6,7 @@ document tracks the custom gameplay on top of it.
 This is a living document. When a pillar's state changes, update its section and the summary table in the
 same commit as the code change.
 
-**Last updated:** 2026-08-01 (branch `hl-shock`, at `ecd76a5`)
+**Last updated:** 2026-08-01 (branch `hl-shock`, at `82b05af`)
 
 ## Status legend
 
@@ -22,9 +22,9 @@ same commit as the code change.
 | # | Pillar | Status | One-line state |
 | --- | --- | --- | --- |
 | 1 | [Exploration](#1-exploration) | **Not started** | No code. |
-| 2 | [Enhanced combat](#2-enhanced-combat) | **Not started** | Exists only as skill descriptions; no weapon or damage code changed. |
+| 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar. Numbers untuned. Melee/reload skills still do nothing. |
 | 3 | [Custom items](#3-custom-items) | **Scaffolded** | Two stock consumables usable from the inventory; no custom item framework. |
-| 4 | [Skill trees](#4-skill-trees) | **Scaffolded** | Full tree unlocks, saves, and renders — but no unlocked skill changes gameplay. |
+| 4 | [Skill trees](#4-skill-trees) | **Scaffolded** | Full tree unlocks, saves, and renders. Five of eighteen skills now have effects; the rest are inert. A Skill can hold only one prerequisite, which already bites. |
 | 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work. Client-side model only — the server-owned rebuild is designed and scheduled. |
 
 ---
@@ -66,28 +66,181 @@ exploration should *also* award them is open.
 
 ## 2. Enhanced combat
 
-**Status: Not started**
+**Status: Playable**
+
+The Pulse is the first custom mechanic in the mod that changes how the game plays, and the first Skill
+effect of any kind.
 
 ### What exists
 
-Only *descriptions*. `dlls/player_skills.cpp` defines combat skills — Crowbar Reach, Crowbar Force, Fast
-Reload, Weapon Mastery, Crowbar Speed, Crowbar Parry — but no weapon, damage, or melee code has been
-modified anywhere in `dlls/`.
+**The Pulse** — `dlls/player_pulse.cpp` / `.h`, a `CPlayerPulse` held by value in `CBasePlayer` alongside
+`m_skills`. Four hooks, all server-side:
+
+- `CBasePlayer::ImpulseCommands()` — `impulse 150` raises a Shield.
+- `CBasePlayer::TakeDamage()` — a standing Shield refuses qualifying damage before armour, before the
+  suit's damage report, before `m_lastDamageAmount`.
+- `CBasePlayer::PreThink()` — closes a window that has run out and picks the Recharge; completes the
+  Recharge and chimes.
+- `CBasePlayer::Spawn()` / `Save` / `Restore` — reset on spawn, `FIELD_TIME` timers across saves.
+
+**Four Skills** that actually do something: `PulseWindow` (id 12, renamed from `CrowbarParry`) →
+`PulseRecharge` (15) → then a branch into `PulseDischarge` (16) and `PulseRebound` (17). Placed in
+column 11, with Rebound in column 12 so the branch has room to grow.
+
+**The Rebound** — a window that deflected something skips its Recharge outright. Held as a *count*
+(`m_iRebounds`), spent at window close, and all of them restored by sitting through a normal Recharge.
+That caps the chain at two Shields back to back, then a real wait.
+
+It is a count and not a flag on purpose: a later Skill raising the ceiling to 2 gives a three-Shield burst
+and changes nothing else. `PulseMaxRebounds()` is the only place that would need editing.
+
+**Why a Rebound cannot overlap.** It is granted when the window *closes*, never at the moment of the
+deflect. The player therefore can never be Ready while a Shield is still standing, so two Shields cannot
+coexist and the "window always runs its full duration" invariant holds. Granting it at deflect time was
+considered and rejected for exactly that reason.
+
+**Ten tuning cvars**, registered in `dlls/game.cpp` — eight for behaviour, two for the ring's look.
+
+**Feedback** — nested rings plus a `TE_DLIGHT` flash, and sounds on Pulse, on each deflect, on a denied
+press, and on Recharge completing. All stock placeholder assets. Deflects use randomised
+`weapons/ric1-5.wav`: a ricochet rather than another electrical noise, because the electrical one landed a
+fraction of a second after the Pulse's own in the same timbre and was simply not heard.
+
+The ring geometry is cvar-driven — `pulse_ring_style` picks `TE_BEAMCYLINDER` (a ring expanding along the
+ground, borrowed from the houndeye) or `TE_BEAMTORUS` (screen-aligned and centred on the player, so it
+reads as a bubble), and `pulse_ring_scale` sizes it. Nothing else in the SDK uses the torus, so there was
+no existing call site to take a correct scale from; these exist to be dialled in by eye.
+
+**The readiness readout** — `CHudPulse` (`cl_dll/hud_pulse.cpp`), sitting immediately right of the armour
+readout on the same baseline. The `suit_full` sprite in cyan — the armour's is yellow, which is what tells
+two identical icons apart — with a vertical charge bar beside it filling bottom-up. Geometry mirrors
+`CHudBattery` so the two stay aligned at any resolution.
+
+While a Shield stands the screen is tinted cyan, alpha via `hud_pulse_tint` (0 disables).
+**`m_Pulse.Init()` is registered first in `CHud::Init` on purpose:** `AddHudElem` appends, so Init order is
+draw order, and the tint has to go under every other readout rather than over it.
+
+`gmsgPulse` carries `(state, duration in tenths)` and is sent **only on a state change** — the client runs
+the fill off its own clock from the duration it was given. A whole Pulse costs three 2-byte messages
+instead of one per frame. `CPlayerPulse::ForgetSentState()`, called where `m_fInitHUD` is handled in
+`UpdateClientData`, forces a resend after the client's HUD is reset so the bar cannot go stale.
+
+Everything else in this pillar is still only *descriptions*: Crowbar Reach, Crowbar Force, Fast Reload,
+Weapon Mastery and Crowbar Speed change nothing.
 
 ### What's missing
 
-Everything behind those strings. In particular:
-
 - Melee reach/damage/speed multipliers in `dlls/weapons.cpp` and the crowbar implementation.
-- A parry mechanic — `CrowbarParry` names a "wider parry timing window" for a system that does not exist.
 - Reload-time and global damage modifiers.
+- A custom Shield sprite; `sprites/shockwave.spr` is standing in.
+- **Tuning.** Every number is a first guess, and `pulse_ring_style` still has to be judged one way or the
+  other so the winner can become the default.
+
+### Design — the Pulse
+
+Settled 2026-08-01. Vocabulary is in [CONTEXT.md](../CONTEXT.md); the two decisions with lasting
+consequences are recorded in [adr/0005](adr/0005-the-shield-negates-a-curated-damage-list.md) and
+[adr/0006](adr/0006-the-discharge-vents-at-the-crosshair.md).
+
+**What it is.** The HEV suit emits a Pulse, raising a Shield for a brief Pulse Window during which
+qualifying damage is negated, followed by a Recharge. Lore-wise the suit is mining equipment and the Shield
+is what protects its wearer from falling debris.
+
+**Availability.** Suit hardware, not a Skill — `pev->weapons & (1 << WEAPON_SUIT)`. No Pulse before
+Anomalous Materials. Skills evolve a verb the player already has rather than granting it, which lets level
+design assume it.
+
+**Trigger.** `impulse 150`, handled in `CBasePlayer::ImpulseCommands()`. Deliberately *not* a button bit:
+`usercmd_t.buttons` is an `unsigned short` (`common/usercmd.h:29`) and `common/in_buttons.h` already spends
+all 16 usable bits. `usercmd_t.impulse` rides the same per-tick packet, so timing fidelity is identical to a
+button, and it is self-clearing (`dlls/player.cpp:3615`) so the press is edge-triggered for free. Also
+deliberately not a crowbar secondary attack — that would tie a suit ability to one weapon and drag it into
+client prediction, where the player-owned Recharge state does not exist.
+
+**The window always runs its full duration.** Negating something does not close the Shield early, so
+several attackers landing hits in one window are all negated. The Recharge length is decided when the
+window ends: short if the Shield negated anything, long if it negated nothing. Good reads chain, whiffs
+strand you.
+
+**What is negated** — see [ADR-0005](adr/0005-the-shield-negates-a-curated-damage-list.md). Verified
+against the three intended test targets: headcrab leap (`dlls/headcrab.cpp:355`), zombie slashes
+(`dlls/zombie.cpp:199`, `:223`, `:245`) and alien slave claws (`dlls/islave.cpp:316`, `:337`) are all
+`DMG_SLASH`; the slave's zap (`dlls/islave.cpp:831`) is `DMG_SHOCK`. All four are on the list. The slave is
+the best single test subject — it is the only one of the three with both a telegraphed melee and a hitscan
+attack.
+
+**The Discharge** is Skill-gated: on each negated hit it fires immediately from the gun position toward the
+crosshair for `clamp(absorbed × scale, min, max)` damage, as `DMG_ENERGYBEAM`. One Discharge per negated
+hit. A generic bolt ships first, with a per-attacker override table slotted in later without rework — see
+[ADR-0006](adr/0006-the-discharge-vents-at-the-crosshair.md).
+
+It fires on **melee** deflects too, not only ranged ones — deflecting a zombie swipe sends a beam wherever
+you are aiming. That was never designed; it falls out of "one Discharge per negated hit", which does not
+care what dealt the damage, and has been true since the Discharge was first written. It plays well, so it
+is on by default and should not be "fixed" as an oversight — but it is the part of the Pulse most likely
+to be judged wrong under more testing, so `pulse_discharge_melee 0` turns it off on its own.
+
+`DMG_ENERGYBEAM` rather than `DMG_SHOCK` is also deliberate. The alien slave is the only thing in the game
+immune to `DMG_SHOCK` (`dlls/islave.cpp:585`), and slaves are a headline target for the Pulse, so a
+counter they alone shrugged off was the wrong counter. `DMG_ENERGYBEAM` has no immunity anywhere and is
+what the Egon fires.
+
+**Skills — three nodes.** `PulseWindow` → `PulseRecharge` → `PulseDischarge`. `ESkillId::CrowbarParry`
+(id 12) is renamed to `PulseWindow` and **keeps id 12**: the id stays stable on the wire and in saves, and
+only the meaning changes, which is safe because it currently has no meaning. Its existing description
+already promises exactly this behaviour.
+
+**Presentation.** Expanding ring via `TE_BEAMCYLINDER` + `sprites/shockwave.spr` — the pattern at
+`dlls/houndeye.cpp:576-596` — with a custom sprite later. Sounds on Pulse, on each negated hit, and on
+Recharge completing. Plus a HUD recharge indicator, which is the only part needing client DLL work: a new
+user message and a `CHud` element.
+
+**Tuning** through cvars, following the `inv_rows_*` precedent: `pulse_window`, `pulse_window_bonus`,
+`pulse_recharge_hit`, `pulse_recharge_miss`, `pulse_recharge_scale`, `pulse_discharge_scale`,
+`pulse_discharge_min`, `pulse_discharge_max`. Every number is a starting guess to be judged in play.
+
+**State** lives in a `CPlayerPulse` held by value in `CBasePlayer`, mirroring `CPlayerSkills` —
+`m_flShieldEndTime` and `m_flPulseReadyTime` as `FIELD_TIME` (which rebases on restore, so timers survive
+save/load and level transitions) plus a `FIELD_BOOLEAN` recording whether the window absorbed anything.
+
+**The Follow-Up** — `CrowbarFollowUp` (id 18) primes the crowbar for `pulse_followup_time` seconds after a
+deflect; the next swing that **connects** deals `pulse_followup_damage`× and is then spent. A whiff costs
+nothing, so the timer rather than the swing is what stops it being banked.
+
+Knockback is **headcrabs only**, alive or dead, and that restriction is the point. Half-Life does not knock
+monsters back from damage at all — the one place it happens (`dlls/combat.cpp:891`) is gated on
+`MOVETYPE_WALK`, which is the player; monsters are `MOVETYPE_STEP`. The corpse equivalent was written and
+then disabled (`dlls/combat.cpp:986`, *"turn this back on when the bounding box issues are resolved"*), so
+this is a road Valve started down and abandoned. Headcrabs are small and light enough for the result to
+look right, and the restriction keeps it away from anything mid-script, boss-sized, or standing where it
+must not be shoved. `pulse_followup_knockback` sizes it; `0` disables it.
+
+Applied *after* the damage, deliberately, so a headcrab the hit killed is still thrown. If the hit gibs it
+there is no body left and the gibs fly on their own.
+
+### Known weaknesses of this design
+
+Recorded now so they are not rediscovered as bugs:
+
+- **Hitscan is a guess, not a read.** HECU grunts telegraph nothing, so Pulsing against gunfire is
+  anticipation rather than reaction. The mechanic will feel best against melee and projectiles. The
+  candidate answer is a fourth node, **`PulseSustain`**, where each absorbed hit *extends* the Pulse Window
+  (~+0.3s per hit) — turning sustained fire from what punishes a blind Pulse into what rewards it. It needs
+  a hard ceiling before it is built: four grunts land hits far faster than 0.3s apart, and uncapped the
+  Shield would simply never drop. It also compounds with the asymmetric Recharge, since a long sustained
+  Shield would still be followed by the *short* success Recharge.
+- **`DMG_CRUSH` will occasionally feel arbitrary** — it is on the list for the fiction, but most crush
+  damage in Half-Life comes from doors, trains and lifts.
 
 ### Next step
 
-Pick one skill and wire it end to end as the pattern the rest follow. `CrowbarDamage` is the cheapest —
-it's a single damage multiplier, server-side only, and it makes the skill tree stop being decorative.
-Establish where the modifier is read (a `CBasePlayer` helper that consults `m_skills`) so later skills
-don't each invent their own hook.
+Tune. The mechanic is confirmed to feel rewarding in play against headcrabs, zombies and alien slaves;
+every number behind it is still a first guess.
+
+The pattern for every Skill effect after this one is set by `PulseWindowFor` / `PulseRechargeFor` in
+`dlls/player_pulse.cpp`: a modifier is read server-side from `m_skills`, applied where the effect is
+computed, and never touched in prediction. Melee and reload skills should follow it rather than each
+inventing their own hook.
 
 ### Acceptance criteria (draft)
 
@@ -173,18 +326,50 @@ The most complete system by line count, and the one furthest from affecting play
 
 ### What's missing
 
-- **The effects.** `CPlayerSkills::HasSkill()` has no callers outside `player_skills.cpp`. Every skill in the
-  tree unlocks, persists, and renders, and none of them do anything.
+- **Most of the effects.** Five of eighteen Skills now do something — `PulseWindow`, `PulseRecharge`,
+  `PulseDischarge`, `PulseRebound` and `CrowbarFollowUp`, all read by `dlls/player_pulse.cpp`. The other
+  thirteen still unlock, persist and render without changing anything.
 - **A way to earn points.** `m_iSkillPoints` defaults to 20 for UI testing (`dlls/player_skills.h:58`).
 - **A bug:** `SprintSpeed` lists itself as its own prerequisite (`dlls/player_skills.cpp:22`), so
   `PrereqMet()` requires the skill to already be unlocked and the node can never become available.
 - Tooltip layout debt — heuristic text measurement rather than font metrics. See
   [TECH_DEBT.md](TECH_DEBT.md).
 
+### Wanted: two prerequisites per Skill
+
+A `SkillDef` holds exactly **one** prerequisite, and that single id runs the whole length of the system:
+the server table, one prereq byte per node on the wire, `SkillNode::prereqId` on the client
+(`cl_dll/vgui_skilltree.h:35`), and one connector line per node
+(`cl_dll/vgui_skilltree.cpp:227-235`). A Skill gated on two branches cannot be expressed.
+
+This bit for the first time with **Follow-Up** (id 18), which is a crowbar payoff for a Pulse deflect and
+therefore wants a prerequisite in each branch. It hangs off `CrowbarDamage` alone as a result, so a player
+can take it having never touched the Pulse tree — for a Skill that does nothing without deflecting. It is
+listed in the crowbar branch and marked in `player_skills.cpp` as owing a second prerequisite.
+
+What it would take, all mechanical and none of it hard:
+
+- `SkillDef` gains `prereq2`; `PrereqMet` requires both.
+- `SendSkillTreeToClient` grows from 6 to 7 bytes per node, and `MsgFunc_SkillTree` (`cl_dll/ammo.cpp:589`)
+  reads the extra byte.
+- `SkillNode` gains `prereqId2`; the connector loop draws a second line.
+
+**Watch the message size.** At 6 bytes per node the tree currently costs 110 bytes of a 192-byte user
+message. At 7 bytes it would be 128, leaving room for roughly nine more Skills before the message has to
+be chunked the way `gmsgInventory` already is.
+
+Deliberately deferred rather than forgotten: altering skill logic was out of scope for the work that
+surfaced it.
+
 ### Next step
 
-Fix the `SprintSpeed` prerequisite, then wire the first effect (see pillar 2). Movement skills — `HighJump`,
-`SprintSpeed` — need `pm_shared/` and therefore touch both DLLs; start with a server-only effect instead.
+Fix the `SprintSpeed` prerequisite, then wire the first effects: the three Pulse nodes (see pillar 2), which
+are server-only and give this pillar its first Skills that change play. Movement skills — `HighJump`,
+`SprintSpeed` — need `pm_shared/` and therefore touch both DLLs; leave them until after.
+
+Note that `CrowbarParry` (id 12) is being renamed to `PulseWindow` rather than removed. Ids stay stable —
+only the meaning changes, which is safe precisely because no skill currently has one. It is the one free
+opportunity to repurpose an id, and it should not be treated as a precedent once skills start doing things.
 
 Note that inventory capacity was considered as the first Skill effect and deliberately moved to exploration
 instead (pillar 5). Nothing in the inventory work will give this pillar an effect, so it stays Scaffolded

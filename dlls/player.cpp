@@ -331,8 +331,20 @@ void CBasePlayer::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vec
 			break;
 		}
 
-		SpawnBlood(ptr->vecEndPos, BloodColor(), flDamage); // a little surface blood.
-		TraceBleed(flDamage, vecDir, ptr, bitsDamageType);
+		// A hit a standing Shield will turn away must not draw blood. The
+		// negation itself happens in TakeDamage, which is reached through
+		// AddMultiDamage below -- by then the blood has already been spawned,
+		// so the question has to be asked here instead.
+		//
+		// AddMultiDamage still runs: TakeDamage is what makes the deflect
+		// sound and fires the Discharge, so the hit must still arrive there
+		// to be refused.
+		if (!m_pulse.WouldNegate(bitsDamageType))
+		{
+			SpawnBlood(ptr->vecEndPos, BloodColor(), flDamage); // a little surface blood.
+			TraceBleed(flDamage, vecDir, ptr, bitsDamageType);
+		}
+
 		AddMultiDamage(pevAttacker, this, flDamage, bitsDamageType);
 	}
 }
@@ -380,6 +392,15 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 	if (!g_pGameRules->FPlayerCanTakeDamage(this, pAttacker))
 	{
 		// Refuse the damage
+		return false;
+	}
+
+	// A standing Shield turns this away entirely -- before armour, before the
+	// suit's damage report, before m_lastDamageAmount. Nothing downstream should
+	// see a hit the player did not take. TryNegate has already fired the
+	// Discharge and made its noise by the time it returns true.
+	if (m_pulse.TryNegate(this, flDamage, bitsDamageType))
+	{
 		return false;
 	}
 
@@ -1891,6 +1912,9 @@ void CBasePlayer::PreThink()
 	// sends a message when the answer changes.
 	UpdatePickupPrompt(this);
 
+	// Close a Shield whose window has run out, and complete a finished Recharge.
+	m_pulse.Think(this);
+
 	if (g_pGameRules && g_pGameRules->FAllowFlashlight())
 		m_iHideHUD &= ~HIDEHUD_FLASHLIGHT;
 	else
@@ -2971,6 +2995,11 @@ void CBasePlayer::Spawn()
 	m_afPhysicsFlags = 0;
 	m_fLongJump = false; // no longjump module.
 
+	// A fresh spawn is Ready -- no Shield left standing, no Recharge running,
+	// Rebounds full. Restored players do not come through here; the engine
+	// calls Restore instead of Spawn, so a save caught mid-Recharge keeps it.
+	m_pulse.Clear(this);
+
 	g_engfuncs.pfnSetPhysicsKeyValue(edict(), "slj", "0");
 	g_engfuncs.pfnSetPhysicsKeyValue(edict(), "hl", "1");
 	g_engfuncs.pfnSetPhysicsKeyValue(edict(), "bj", UTIL_dtos1(sv_allowbunnyhopping.value != 0 ? 1 : 0));
@@ -3085,6 +3114,11 @@ bool CBasePlayer::Save(CSave& save)
 	if (!InventorySave(m_inventory, save))
 		return false;
 
+	// Pulse timers. FIELD_TIME rebases on restore, so a Shield or a Recharge
+	// caught mid-flight by a save resumes with the right time remaining.
+	if (!PulseSave(m_pulse, save))
+		return false;
+
 	return save.WriteFields("PLAYER", this, m_playerSaveData, ARRAYSIZE(m_playerSaveData));
 }
 
@@ -3107,6 +3141,9 @@ bool CBasePlayer::Restore(CRestore& restore)
 
 	// Same for the inventory: a save predating it simply leaves an empty one.
 	InventoryRestore(m_inventory, restore);
+
+	// And the Pulse: a save predating it restores a player who is simply Ready.
+	PulseRestore(m_pulse, restore);
 
 	bool status = restore.ReadFields("PLAYER", this, m_playerSaveData, ARRAYSIZE(m_playerSaveData));
 
@@ -3549,6 +3586,15 @@ void CBasePlayer::ImpulseCommands()
 	int iImpulse = (int)pev->impulse;
 	switch (iImpulse)
 	{
+	// The Pulse. An impulse rather than a button bit because usercmd_t.buttons
+	// is an unsigned short (common/usercmd.h:29) and common/in_buttons.h already
+	// spends all 16 usable bits. usercmd_t.impulse rides the same per-tick
+	// packet, so the timing fidelity is identical to a button, and pev->impulse
+	// is cleared at the end of this function so the press is edge-triggered.
+	case 150:
+		m_pulse.TryPulse(this);
+		break;
+
 	case 99:
 	{
 
@@ -4146,6 +4192,10 @@ void CBasePlayer::UpdateClientData()
 		MESSAGE_BEGIN(MSG_ONE, gmsgResetHUD, NULL, pev);
 		WRITE_BYTE(0);
 		MESSAGE_END();
+
+		// The reset above wipes the client's Pulse bar, so make the next sync
+		// resend rather than leaving it showing whatever it had.
+		m_pulse.ForgetSentState();
 
 		if (!m_fGameHUDInitialized)
 		{

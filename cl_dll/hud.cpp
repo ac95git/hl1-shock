@@ -393,6 +393,12 @@ void CHud::Init()
 	// In case we get messages before the first update -- time will be valid
 	m_flTime = 1.0;
 
+	// FIRST, deliberately. AddHudElem appends, so Init order is draw order and
+	// later elements land on top. The Pulse draws a full-screen tint while a
+	// Shield stands; registering it here keeps every other readout legible
+	// above that tint instead of being washed out by it.
+	m_Pulse.Init();
+
 	m_Ammo.Init();
 	m_Health.Init();
 	m_SayText.Init();
@@ -563,6 +569,7 @@ void CHud::VidInit()
 	m_TextMessage.VidInit();
 	m_StatusIcons.VidInit();
 	m_PickupPrompt.VidInit();
+	m_Pulse.VidInit();
 	GetClientVoiceMgr()->VidInit();
 }
 

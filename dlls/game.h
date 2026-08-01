@@ -49,6 +49,23 @@ extern cvar_t sv_busters;
 extern cvar_t inv_rows_start;
 extern cvar_t inv_rows_max;
 
+// The Pulse.  Every one of these is a starting guess to be judged in play.
+extern cvar_t pulse_window;
+extern cvar_t pulse_window_bonus;
+extern cvar_t pulse_recharge_hit;
+extern cvar_t pulse_recharge_miss;
+extern cvar_t pulse_recharge_scale;
+extern cvar_t pulse_discharge_scale;
+extern cvar_t pulse_discharge_min;
+extern cvar_t pulse_discharge_max;
+extern cvar_t pulse_ring_style;
+extern cvar_t pulse_ring_scale;
+extern cvar_t pulse_deflect_punch;
+extern cvar_t pulse_discharge_melee;
+extern cvar_t pulse_followup_time;
+extern cvar_t pulse_followup_damage;
+extern cvar_t pulse_followup_knockback;
+
 // Engine Cvars
 inline cvar_t* g_psv_gravity;
 inline cvar_t* g_psv_aim;

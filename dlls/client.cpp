@@ -1010,6 +1010,9 @@ void StartFrame()
 
 void ClientPrecache()
 {
+	// The Pulse's ring sprite and sounds.
+	PulsePrecache();
+
 	// setup precaches always needed
 	PRECACHE_SOUND("player/sprayer.wav"); // spray paint sound for PreAlpha
 
@@ -1925,6 +1928,14 @@ void UpdateClientData(const edict_t* ent, int sendweapons, struct clientdata_s* 
 	cd->waterlevel = pev->waterlevel;
 	cd->watertype = pev->watertype;
 	cd->weapons = pev->weapons;
+
+	// Scale back the view kick from any blow the Shield turned away this frame.
+	// Here rather than in PreThink because every entity has now thought, so
+	// punchangle is final -- a melee attacker writes it after the player has
+	// already run, and scaling a frame late would show the full kick for one
+	// frame and then snap.
+	if (pl)
+		pl->m_pulse.DampenDeflectPunch(pl);
 
 	// Vectors
 	cd->origin = pev->origin;

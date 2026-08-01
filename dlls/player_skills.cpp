@@ -25,9 +25,16 @@ const SkillDef k_SkillDefs[k_MaxSkills] =
     { ESkillId::ArmorEfficiency,    "Armor Expert",      "Armor absorbs 10% more damage.",     7,   1,   2,    ESkillId::MoreHealth,    ENodeTier::Medium },
     { ESkillId::HealthRegen,        "Regen",             "Slowly regenerate health.",          7,   2,   3,    ESkillId::MoreHealth,    ENodeTier::Major  },
     { ESkillId::CrowbarSpeed,       "Crowbar Speed",     "+30% crowbar attack speed.",         0,   2,   2,    ESkillId::CrowbarDamage, ENodeTier::Medium },
-    { ESkillId::CrowbarParry,       "Crowbar Parry",     "Wider crowbar parry timing window.", 2,   2,   2,    ESkillId::CrowbarDamage, ENodeTier::Medium },
+    { ESkillId::PulseWindow,        "Pulse Window",      "+0.15s Pulse Window.",              11,   0,   1,    ESkillId::None,          ENodeTier::Minor  },
     { ESkillId::BatteryCapacity,    "Battery Capacity",  "+50 max battery.",                   9,   0,   2,    ESkillId::None,          ENodeTier::Minor  },
     { ESkillId::BatteryRegen,       "Battery Regen",     "Regenerate armor over time.",        9,   1,   3,    ESkillId::BatteryCapacity, ENodeTier::Major },
+    { ESkillId::PulseRecharge,      "Pulse Recharge",    "-33% Pulse Recharge.",              11,   1,   2,    ESkillId::PulseWindow,   ENodeTier::Medium },
+    { ESkillId::PulseDischarge,     "Pulse Discharge",   "Negated hits vent energy at your crosshair.", 11, 2, 3, ESkillId::PulseRecharge, ENodeTier::Major },
+    { ESkillId::PulseRebound,       "Pulse Rebound",     "A deflect skips the Recharge. Once, until you sit through a normal one.", 12, 2, 3, ESkillId::PulseRecharge, ENodeTier::Major },
+    // Wants a Pulse prerequisite as well as a crowbar one -- a SkillDef holds
+    // only one, so it hangs off the crowbar branch alone for now. See
+    // docs/PILLARS.md, "Wanted: two prerequisites per Skill".
+    { ESkillId::CrowbarFollowUp,    "Follow-Up",         "After a deflect, your next crowbar hit lands far harder.", 2, 2, 3, ESkillId::CrowbarDamage, ENodeTier::Major },
 };
 
 // =====================================================================

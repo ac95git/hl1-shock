@@ -91,4 +91,6 @@ void LinkUserMessages()
 	gmsgInventory = REG_USER_MSG("Inventory", -1);
 
 	gmsgPickupPrompt = REG_USER_MSG("PickupHint", 2);
+
+	gmsgPulse = REG_USER_MSG("Pulse", 2);
 }

@@ -83,3 +83,40 @@ _Avoid_: point, XP, credit
 **Skill Tree**:
 The full set of Skills and the prerequisites between them.
 _Avoid_: upgrade tree, talent tree, perk tree
+
+### The Pulse
+
+**Pulse**:
+The suit's brief defensive discharge, and the act of triggering it. Suit hardware — anyone wearing the HEV
+suit has it, and no Skill grants it.
+_Avoid_: parry, block, dodge, guard
+
+**Shield**:
+The field a Pulse raises around the player. It exists only for the Pulse Window and is gone once that
+closes.
+_Avoid_: bubble, barrier, aura, forcefield
+
+**Pulse Window**:
+The interval a Shield stands for. Damage that arrives inside it is negated; damage a moment either side of
+it is not.
+_Avoid_: active frames, i-frames, parry window
+
+**Recharge**:
+The wait between a Shield falling and the next Pulse being available. Shorter when the Shield negated
+something than when it negated nothing.
+_Avoid_: cooldown, refresh, reload
+
+**Discharge**:
+The energy a Shield vents toward the player's crosshair when it negates a hit. It goes where the player is
+aiming, not back where the damage came from.
+_Avoid_: reflect, riposte, counter, retaliation
+
+**Rebound**:
+A Recharge skipped because the Shield deflected something. Held as a count, spent when such a window
+closes, and restored only by sitting through a normal Recharge.
+_Avoid_: reset, refund, proc, free recharge
+
+**Follow-Up**:
+A crowbar swing empowered by having just deflected. Primed by a deflect for a short time and spent on the
+next swing that connects, so missing costs nothing.
+_Avoid_: riposte, counter, punish, parry attack

@@ -467,6 +467,42 @@ cvar_t sv_busters = {"sv_busters", "0", FCVAR_SERVER};
 cvar_t inv_rows_start = {"inv_rows_start", "5"};
 cvar_t inv_rows_max = {"inv_rows_max", "9"};
 
+// The Pulse.  Tuning knobs -- see docs/PILLARS.md pillar 2.  The Recharge is
+// deliberately asymmetric: a Shield that negated something recovers faster than
+// one that negated nothing, so good reads chain and whiffs strand you.
+cvar_t pulse_window = {"pulse_window", "0.25"};
+cvar_t pulse_window_bonus = {"pulse_window_bonus", "0.15"};
+cvar_t pulse_recharge_hit = {"pulse_recharge_hit", "1.5"};
+cvar_t pulse_recharge_miss = {"pulse_recharge_miss", "3.0"};
+cvar_t pulse_recharge_scale = {"pulse_recharge_scale", "0.66"};
+// The cap is load-bearing, not cosmetic: without it, timing a Pulse against the
+// hardest-hitting attacks in the game yields the strongest counter.
+cvar_t pulse_discharge_scale = {"pulse_discharge_scale", "0.75"};
+cvar_t pulse_discharge_min = {"pulse_discharge_min", "15"};
+cvar_t pulse_discharge_max = {"pulse_discharge_max", "60"};
+// Shield ring geometry, presentation only.  Style 0 is TE_BEAMCYLINDER (a ring
+// expanding along the ground), 1 is TE_BEAMTORUS (screen-aligned, centred on
+// the player).  Nothing else in the SDK uses the torus, so the right scale for
+// it is not known from any existing call site -- these exist to be dialled in
+// by eye rather than by rebuilding.
+cvar_t pulse_ring_style = {"pulse_ring_style", "1"};
+cvar_t pulse_ring_scale = {"pulse_ring_scale", "320"};
+// How much of a melee attacker's view kick survives a deflect. 1 is untouched,
+// 0 removes it entirely. Deliberately not 0: a blow that glances off the Shield
+// should still register as something happening, just not as something landing.
+cvar_t pulse_deflect_punch = {"pulse_deflect_punch", "0.25"};
+// Whether deflecting a melee blow fires a Discharge. On by default; this exists
+// because that behaviour was never designed -- it falls out of "one Discharge
+// per negated hit" -- and is the most likely part of the Pulse to be judged
+// wrong under more testing.
+cvar_t pulse_discharge_melee = {"pulse_discharge_melee", "1"};
+// The Follow-Up. Primed by a deflect, spent on the next crowbar hit -- a whiff
+// costs nothing, so the window is what stops it being banked indefinitely.
+// Knockback is headcrab-only; see PulseCrowbarFollowUpKnockback for why.
+cvar_t pulse_followup_time = {"pulse_followup_time", "2.0"};
+cvar_t pulse_followup_damage = {"pulse_followup_damage", "3.0"};
+cvar_t pulse_followup_knockback = {"pulse_followup_knockback", "500"};
+
 static bool SV_InitServer()
 {
 	if (!FileSystem_LoadFileSystem())
@@ -534,6 +570,22 @@ void GameDLLInit()
 
 	CVAR_REGISTER(&inv_rows_start);
 	CVAR_REGISTER(&inv_rows_max);
+
+	CVAR_REGISTER(&pulse_window);
+	CVAR_REGISTER(&pulse_window_bonus);
+	CVAR_REGISTER(&pulse_recharge_hit);
+	CVAR_REGISTER(&pulse_recharge_miss);
+	CVAR_REGISTER(&pulse_recharge_scale);
+	CVAR_REGISTER(&pulse_discharge_scale);
+	CVAR_REGISTER(&pulse_discharge_min);
+	CVAR_REGISTER(&pulse_discharge_max);
+	CVAR_REGISTER(&pulse_ring_style);
+	CVAR_REGISTER(&pulse_ring_scale);
+	CVAR_REGISTER(&pulse_deflect_punch);
+	CVAR_REGISTER(&pulse_discharge_melee);
+	CVAR_REGISTER(&pulse_followup_time);
+	CVAR_REGISTER(&pulse_followup_damage);
+	CVAR_REGISTER(&pulse_followup_knockback);
 
 	// REGISTER CVARS FOR SKILL LEVEL STUFF
 	// Agrunt

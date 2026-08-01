@@ -466,6 +466,36 @@ private:
 	int m_iId = 0;   // WeaponId or EItemTypeId
 };
 
+//
+//-----------------------------------------------------
+//
+// The Pulse readiness bar. The server sends state changes only; the fill
+// between them is driven by the client clock. See cl_dll/hud_pulse.cpp.
+//
+class CHudPulse : public CHudBase
+{
+public:
+	bool Init() override;
+	bool VidInit() override;
+	void Reset() override;
+	bool Draw(float flTime) override;
+	bool MsgFunc_Pulse(const char* pszName, int iSize, void* pbuf);
+
+private:
+	int m_iState = 0;         // EPulseState, mirrored from the server
+	float m_flStateStart = 0; // client time the current state began
+	float m_flStateEnd = 0;   // client time it is due to end
+
+	// Icon, borrowed from the armour readout. Handle is fetched lazily in
+	// Draw because the sprites are not loaded yet at VidInit time -- see
+	// CHudBattery for the same dance.
+	HSPRITE m_hSprite = 0;
+	Rect* m_prc = nullptr;
+	int m_iHeight = 0;
+
+	struct cvar_s* m_pCvarTint = nullptr;
+};
+
 class CHudStatusIcons : public CHudBase
 {
 public:
@@ -599,6 +629,7 @@ public:
 	CHudTextMessage m_TextMessage;
 	CHudStatusIcons m_StatusIcons;
 	CHudPickupPrompt m_PickupPrompt;
+	CHudPulse m_Pulse;
 
 	void Init();
 	void VidInit();

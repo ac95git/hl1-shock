@@ -224,17 +224,28 @@ bool CCrowbar::Swing(bool fFirst)
 
 		// JoshA: Changed from < -> <= to fix the full swing logic since client weapon prediction.
 		// -1.0f + 1.0f = 0.0f. UTIL_WeaponTimeBase is always 0 with client weapon prediction (0 time base vs curtime base)
+		float flDamage;
 		if ((m_flNextPrimaryAttack + 1.0f <= UTIL_WeaponTimeBase()) || g_pGameRules->IsMultiplayer())
 		{
 			// first swing does full damage
-			pEntity->TraceAttack(m_pPlayer->pev, gSkillData.plrDmgCrowbar, gpGlobals->v_forward, &tr, DMG_CLUB);
+			flDamage = gSkillData.plrDmgCrowbar;
 		}
 		else
 		{
 			// subsequent swings do half
-			pEntity->TraceAttack(m_pPlayer->pev, gSkillData.plrDmgCrowbar / 2, gpGlobals->v_forward, &tr, DMG_CLUB);
+			flDamage = gSkillData.plrDmgCrowbar / 2;
 		}
+
+		// A deflect primes the next crowbar HIT. Consumed here rather than in
+		// PrimaryAttack so a swing that connects with nothing costs nothing.
+		const bool bFollowUp = PulseTakeCrowbarFollowUp(m_pPlayer, flDamage);
+
+		pEntity->TraceAttack(m_pPlayer->pev, flDamage, gpGlobals->v_forward, &tr, DMG_CLUB);
 		ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
+
+		// After the damage, so a headcrab the hit killed is still thrown.
+		if (bFollowUp)
+			PulseCrowbarFollowUpKnockback(pEntity, gpGlobals->v_forward);
 
 #endif
 

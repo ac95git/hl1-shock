@@ -39,11 +39,23 @@ enum class ESkillId : int
 
     // ---- Test branches (layout/connector validation) ----
     CrowbarSpeed        = 11,  // crowbar swing speed +30 %
-    CrowbarParry        = 12,  // improved crowbar defensive timing
+    CrowbarFollowUp     = 18,  // the swing after a deflect hits harder
+
+    // ---- The Pulse ----
+    // Id 12 was CrowbarParry, a placeholder for a mechanic that turned out to
+    // be suit hardware rather than a crowbar technique.  The id is reused
+    // rather than retired: ids are saved and networked, so keeping 12 keeps
+    // old saves loading, and changing its meaning is only safe because no
+    // Skill had an effect yet.  Do not treat this as a precedent.
+    PulseWindow         = 12,  // wider Pulse Window
+    PulseRecharge       = 15,  // shorter Recharge
+    PulseDischarge      = 16,  // negated hits vent at the crosshair
+    PulseRebound        = 17,  // a deflect skips the Recharge, once per charge
+
     BatteryCapacity     = 13,  // +50 max battery
     BatteryRegen        = 14,  // passive armor regeneration
 
-    _Count              = 15,  // keep last
+    _Count              = 19,  // keep last
 };
 
 static constexpr int k_MaxSkills = static_cast<int>(ESkillId::_Count);

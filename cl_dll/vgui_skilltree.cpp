@@ -90,9 +90,13 @@ static const SkillUiInfo k_SkillUiInfo[] =
     { "Armor Expert",   "Armor absorbs 10% more damage.",   "suit_full" },
     { "Regen",          "Slowly regenerate health.",        "cross" },
     { "Crowbar Speed",  "+30% crowbar attack speed.",       "d_crowbar" },
-    { "Crowbar Parry",  "Wider crowbar parry timing window.", "d_crowbar" },
+    { "Pulse Window",   "+0.15s Pulse Window.",             "suit_full" },
     { "Battery Capacity", "+50 max battery.",               "suit_full" },
     { "Battery Regen",  "Regenerate armor over time.",      "suit_full" },
+    { "Pulse Recharge", "-33% Pulse Recharge.",             "suit_full" },
+    { "Pulse Discharge", "Negated hits vent energy at your crosshair.", "suit_full" },
+    { "Pulse Rebound",  "A deflect skips the Recharge. Once, until you sit through a normal one.", "suit_full" },
+    { "Follow-Up",      "After a deflect, your next crowbar hit lands far harder.", "d_crowbar" },
 };
 
 static const SkillUiInfo* GetSkillUiInfo(int id)

@@ -50,6 +50,8 @@ HL1_OBJS = \
 	$(HL1_OBJ_DIR)/geiger.o \
 	$(HL1_OBJ_DIR)/health.o \
 	$(HL1_OBJ_DIR)/hud_msg.o \
+	$(HL1_OBJ_DIR)/hud_pickupprompt.o \
+	$(HL1_OBJ_DIR)/hud_pulse.o \
 	$(HL1_OBJ_DIR)/hud_redraw.o \
 	$(HL1_OBJ_DIR)/hud_update.o \
 	$(HL1_OBJ_DIR)/in_camera.o \
@@ -68,6 +70,9 @@ HL1_OBJS = \
 	$(HL1_OBJ_DIR)/util.o \
 	$(HL1_OBJ_DIR)/view.o \
 	$(HL1_OBJ_DIR)/vgui_int.o \
+	$(HL1_OBJ_DIR)/vgui_inventory.o \
+	$(HL1_OBJ_DIR)/vgui_inventory_grid.o \
+	$(HL1_OBJ_DIR)/vgui_skilltree.o \
 	$(HL1_OBJ_DIR)/vgui_ClassMenu.o \
 	$(HL1_OBJ_DIR)/vgui_CustomObjects.o \
 	$(HL1_OBJ_DIR)/vgui_MOTDWindow.o \

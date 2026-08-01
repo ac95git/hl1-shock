@@ -69,4 +69,9 @@ inline int gmsgInventory = 0;
 // the shared Item Type table, so no strings go over the wire.
 inline int gmsgPickupPrompt = 0;
 
+// Pulse state: 2 bytes (state, duration in tenths of a second).
+// Sent only on a state change -- the client runs the bar off its own clock
+// from the duration, so a Recharge costs three messages rather than one a frame.
+inline int gmsgPulse = 0;
+
 void LinkUserMessages();
