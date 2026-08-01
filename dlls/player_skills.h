@@ -1,9 +1,21 @@
 #pragma once
 
 // =====================================================================
+// ENodeTier
+//   Controls the visual weight of a skill node in the client UI.
+//   Encoded in bits 2-3 of the flags byte sent via gmsgSkillTree.
+// =====================================================================
+enum class ENodeTier : uint8_t
+{
+    Minor  = 0,   // small node  â€“ cheap/root skills
+    Medium = 1,   // medium node â€“ mid-tree skills
+    Major  = 2,   // large node  â€“ powerful end-tree skills
+};
+
+// =====================================================================
 // ESkillId
 //   Canonical list of all unlockable skills.
-//   IDs must be stable – they are saved to disk and sent over the wire.
+//   IDs must be stable ï¿½ they are saved to disk and sent over the wire.
 // =====================================================================
 enum class ESkillId : int
 {
@@ -22,10 +34,16 @@ enum class ESkillId : int
 
     // ---- Survivability ----
     MoreHealth          = 8,   // max health +25
-    ArmorEfficiency     = 9,   // armor absorbs 10 % more damage
+    ArmorEfficiency     = 9,  // armor absorbs 10 % more damage
     HealthRegen         = 10,  // slowly regenerate health out of combat
 
-    _Count              = 11,  // keep last
+    // ---- Test branches (layout/connector validation) ----
+    CrowbarSpeed        = 11,  // crowbar swing speed +30 %
+    CrowbarParry        = 12,  // improved crowbar defensive timing
+    BatteryCapacity     = 13,  // +50 max battery
+    BatteryRegen        = 14,  // passive armor regeneration
+
+    _Count              = 15,  // keep last
 };
 
 static constexpr int k_MaxSkills = static_cast<int>(ESkillId::_Count);
@@ -70,13 +88,14 @@ struct SkillDef
     int         gridRow;     // row    in the client UI grid
     int         cost;        // skill-point cost
     ESkillId    prereq;      // ESkillId::None = root node
+    ENodeTier   tier;        // visual weight in the client UI
 };
 
 // Array of all skill definitions; defined in player_skills.cpp.
 extern const SkillDef k_SkillDefs[k_MaxSkills];
 
 // =====================================================================
-// Save/restore helpers – implemented in player_skills.cpp.
+// Save/restore helpers ï¿½ implemented in player_skills.cpp.
 // CSave/CRestore are forward-declared so saverestore.h is NOT needed here.
 // =====================================================================
 class CSave;

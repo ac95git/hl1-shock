@@ -17,16 +17,18 @@ static constexpr int INV_GRID_COLS    = 11;
 static constexpr int INV_GRID_ROWS    = 8;
 static constexpr int INV_GRID_PADDING = 4;
 static constexpr int INV_MARGIN       = 8;
-static constexpr int k_weaponCellWidth = 3;
 
 static int GetItemCellWidthGrid(const std::string& classname)
 {
     // 1-cell items
-    static const char* k_oneCellNames[] = {
-        "item_healthkit", "item_battery", "item_antidote", "item_security"
+    static const InvCellWidthEntry k_oneCellEntries[] = {
+        { "item_healthkit", 1 },
+        { "item_battery",   1 },
+        { "item_antidote",  1 },
+        { "item_security",  1 },
     };
-    for (auto n : k_oneCellNames)
-        if (classname == n) return 1;
+    for (const auto& e : k_oneCellEntries)
+        if (classname == e.classname) return e.cellWidth;
     return 1;
 }
 
@@ -41,7 +43,7 @@ int CInventoryGridView::SlotCellWidth(int slotIdx,
     const std::vector<WEAPON*>& wl,
     const std::vector<InventoryItemEntry>& items) const
 {
-    if (slotIdx < (int)wl.size()) return k_weaponCellWidth;
+    if (slotIdx < (int)wl.size()) return InvCellWidthEntry::WeaponCellWidth;
     int afterWeapons = slotIdx - (int)wl.size();
     if (afterWeapons < (int)items.size())
         return GetItemCellWidthGrid(items[afterWeapons].classname);
@@ -64,6 +66,150 @@ void CInventoryGridView::CancelDrag()
     m_draggedIndex = -1;
 }
 
+void CInventoryGridView::NormalizeGridLayout(
+    const std::vector<WEAPON*>& weaponList,
+    const std::vector<InventoryItemEntry>& inventoryItems,
+    const std::vector<AmmoGridEntry>& ammoEntries,
+    std::vector<int>& weaponOffsetX,
+    std::vector<int>& weaponOffsetY,
+    std::vector<int>& invOffsetX,
+    std::vector<int>& invOffsetY,
+    std::vector<int>& ammoOffsetX,
+    std::vector<int>& ammoOffsetY,
+    int x0, int y0, int cellStepX, int cellStepY) const
+{
+    weaponOffsetX.resize(weaponList.size(), 0);
+    weaponOffsetY.resize(weaponList.size(), 0);
+    invOffsetX.resize(inventoryItems.size(), 0);
+    invOffsetY.resize(inventoryItems.size(), 0);
+    ammoOffsetX.resize(ammoEntries.size(), 0);
+    ammoOffsetY.resize(ammoEntries.size(), 0);
+
+    const int totalSlots = (int)weaponList.size() + (int)inventoryItems.size() + (int)ammoEntries.size();
+    bool occupied[INV_GRID_COLS * INV_GRID_ROWS] = {};
+
+    auto getOffsetsForSlot = [&](int slotIdx, int& ox, int& oy)
+    {
+        if (slotIdx < (int)weaponList.size())
+        {
+            ox = weaponOffsetX[slotIdx];
+            oy = weaponOffsetY[slotIdx];
+            return;
+        }
+
+        int invIdx = slotIdx - (int)weaponList.size();
+        if (invIdx < (int)inventoryItems.size())
+        {
+            ox = invOffsetX[invIdx];
+            oy = invOffsetY[invIdx];
+            return;
+        }
+
+        int ammoIdx = invIdx - (int)inventoryItems.size();
+        ox = ammoOffsetX[ammoIdx];
+        oy = ammoOffsetY[ammoIdx];
+    };
+
+    auto setOffsetsForSlot = [&](int slotIdx, int ox, int oy)
+    {
+        if (slotIdx < (int)weaponList.size())
+        {
+            weaponOffsetX[slotIdx] = ox;
+            weaponOffsetY[slotIdx] = oy;
+            return;
+        }
+
+        int invIdx = slotIdx - (int)weaponList.size();
+        if (invIdx < (int)inventoryItems.size())
+        {
+            invOffsetX[invIdx] = ox;
+            invOffsetY[invIdx] = oy;
+            return;
+        }
+
+        int ammoIdx = invIdx - (int)inventoryItems.size();
+        ammoOffsetX[ammoIdx] = ox;
+        ammoOffsetY[ammoIdx] = oy;
+    };
+
+    auto canPlaceAt = [&](int cell, int cw) -> bool
+    {
+        if (cw < 1 || cw > INV_GRID_COLS) return false;
+        int row = cell / INV_GRID_COLS;
+        int col = cell % INV_GRID_COLS;
+        if (row < 0 || row >= INV_GRID_ROWS) return false;
+        if (col < 0 || col + cw > INV_GRID_COLS) return false;
+        for (int x = 0; x < cw; ++x)
+        {
+            if (occupied[row * INV_GRID_COLS + col + x]) return false;
+        }
+        return true;
+    };
+
+    auto markPlaced = [&](int cell, int cw)
+    {
+        int row = cell / INV_GRID_COLS;
+        int col = cell % INV_GRID_COLS;
+        for (int x = 0; x < cw; ++x)
+            occupied[row * INV_GRID_COLS + col + x] = true;
+    };
+
+    for (int slotIdx = 0; slotIdx < totalSlots; ++slotIdx)
+    {
+        int cw = SlotCellWidth(slotIdx, weaponList, inventoryItems);
+        if (cw < 1) cw = 1;
+        if (cw > INV_GRID_COLS) cw = INV_GRID_COLS;
+
+        int nat = SlotNaturalCell(slotIdx, weaponList, inventoryItems);
+        int natCol = nat % INV_GRID_COLS;
+        int natRow = nat / INV_GRID_COLS;
+
+        int ox = 0, oy = 0;
+        getOffsetsForSlot(slotIdx, ox, oy);
+
+        int centerX = x0 + natCol * cellStepX + ox + cellStepX / 2;
+        int centerY = y0 + natRow * cellStepY + oy + cellStepY / 2;
+        int desiredCol = std::max(0, std::min(INV_GRID_COLS - 1, (centerX - x0) / cellStepX));
+        int desiredRow = std::max(0, std::min(INV_GRID_ROWS - 1, (centerY - y0) / cellStepY));
+        if (desiredCol + cw > INV_GRID_COLS)
+            desiredCol = INV_GRID_COLS - cw;
+
+        int desiredCell = desiredRow * INV_GRID_COLS + desiredCol;
+        int bestCell = -1;
+        int bestDist = 999999;
+        int bestTie = 999999;
+
+        for (int row = 0; row < INV_GRID_ROWS; ++row)
+        {
+            for (int col = 0; col + cw <= INV_GRID_COLS; ++col)
+            {
+                int cell = row * INV_GRID_COLS + col;
+                if (!canPlaceAt(cell, cw)) continue;
+
+                int dist = abs(col - desiredCol) + abs(row - desiredRow);
+                int tie = abs(cell - desiredCell);
+                if (dist < bestDist || (dist == bestDist && tie < bestTie))
+                {
+                    bestDist = dist;
+                    bestTie = tie;
+                    bestCell = cell;
+                }
+            }
+        }
+
+        if (bestCell < 0)
+            continue;
+
+        markPlaced(bestCell, cw);
+
+        int targetCol = bestCell % INV_GRID_COLS;
+        int targetRow = bestCell / INV_GRID_COLS;
+        int newOx = (x0 + targetCol * cellStepX) - (x0 + natCol * cellStepX);
+        int newOy = (y0 + targetRow * cellStepY) - (y0 + natRow * cellStepY);
+        setOffsetsForSlot(slotIdx, newOx, newOy);
+    }
+}
+
 // =====================================================================
 // Paint
 // =====================================================================
@@ -77,9 +223,21 @@ void CInventoryGridView::Paint(
     std::vector<InventoryItemEntry>& inventoryItems,
     std::vector<int>& invOffsetX,
     std::vector<int>& invOffsetY,
-    std::vector<AmmoGridEntry>& ammoEntries)
+    std::vector<AmmoGridEntry>& ammoEntries,
+    std::vector<int>& ammoOffsetX,
+    std::vector<int>& ammoOffsetY)
 {
+    struct DeferredCountLabel
+    {
+        int bgX, bgY, bgW, bgH;
+        int textX, textY;
+        int r, g, b;
+        char text[8];
+        int textLen;
+    };
+
     m_itemRects.clear();
+    std::vector<DeferredCountLabel> deferredCountLabels;
 
     // Compute cell size from available area
     int cellSize = std::min(
@@ -95,6 +253,56 @@ void CInventoryGridView::Paint(
     m_x0 = x0; m_y0 = y0;
     m_cellSize = cellSize;
     m_cellStepX = cellStepX; m_cellStepY = cellStepY;
+
+    // Build ammo entries up-front so layout normalization can solve all slot types together.
+    {
+        std::vector<AmmoGridEntry> prevAmmoEntries = ammoEntries;
+        std::vector<int> prevAmmoOffsetX = ammoOffsetX;
+        std::vector<int> prevAmmoOffsetY = ammoOffsetY;
+
+        ammoEntries.clear();
+        ammoOffsetX.clear();
+        ammoOffsetY.clear();
+        bool seen[MAX_AMMO_TYPES] = {};
+
+        auto restoreAmmoOffsets = [&](int ammoType)
+        {
+            int restoredX = 0;
+            int restoredY = 0;
+            for (size_t pi = 0; pi < prevAmmoEntries.size(); ++pi)
+            {
+                if (prevAmmoEntries[pi].ammoType != ammoType) continue;
+                if (pi < prevAmmoOffsetX.size()) restoredX = prevAmmoOffsetX[pi];
+                if (pi < prevAmmoOffsetY.size()) restoredY = prevAmmoOffsetY[pi];
+                break;
+            }
+            ammoOffsetX.push_back(restoredX);
+            ammoOffsetY.push_back(restoredY);
+        };
+
+        for (WEAPON* w : weaponList)
+        {
+            if (!w || w->iId == 0) continue;
+            if (w->iAmmoType >= 0 && w->iAmmoType < MAX_AMMO_TYPES && !seen[w->iAmmoType])
+                if (w->hAmmo && (w->rcAmmo.right - w->rcAmmo.left) > 0)
+                {
+                    seen[w->iAmmoType] = true;
+                    ammoEntries.push_back({ w->iAmmoType, w->hAmmo, w->rcAmmo, w->iMax1 });
+                    restoreAmmoOffsets(w->iAmmoType);
+                }
+            if (w->iAmmo2Type >= 0 && w->iAmmo2Type < MAX_AMMO_TYPES && !seen[w->iAmmo2Type])
+                if (w->hAmmo2 && (w->rcAmmo2.right - w->rcAmmo2.left) > 0)
+                {
+                    seen[w->iAmmo2Type] = true;
+                    ammoEntries.push_back({ w->iAmmo2Type, w->hAmmo2, w->rcAmmo2, w->iMax2 });
+                    restoreAmmoOffsets(w->iAmmo2Type);
+                }
+        }
+    }
+
+    NormalizeGridLayout(weaponList, inventoryItems, ammoEntries,
+        weaponOffsetX, weaponOffsetY, invOffsetX, invOffsetY, ammoOffsetX, ammoOffsetY,
+        x0, y0, cellStepX, cellStepY);
 
     // ---- Grid background ----
     ctx->drawSetColor(10, 10, 10, 60);
@@ -218,16 +426,19 @@ void CInventoryGridView::Paint(
 
             if (entry.count > 0 && ctx->m_pSmallFont)
             {
-                vgui::Font* smallFont = ctx->m_pSmallFont;
-                char countStr[8]; snprintf(countStr, sizeof(countStr), "x%d", entry.count);
-                int textLen = (int)strlen(countStr);
+                DeferredCountLabel label{};
+                snprintf(label.text, sizeof(label.text), "x%d", entry.count);
+                label.textLen = (int)strlen(label.text);
                 int charW = 6, charH = 10;
-                int textW = textLen * charW;
-                FillRGBA(cx2 + icw - textW - 3, cy2 + ich - charH - 2, textW + 2, charH + 1, 0, 0, 0, 180);
-                ctx->drawSetTextFont(smallFont);
-                ctx->drawSetTextColor(255, 220, 50, 255);
-                ctx->drawSetTextPos(cx2 + icw - textW - 2, cy2 + ich - charH - 1);
-                ctx->drawPrintText(countStr, textLen);
+                int textW = label.textLen * charW;
+                label.bgX = cx2 + icw - textW - 3;
+                label.bgY = cy2 + ich - charH - 2;
+                label.bgW = textW + 2;
+                label.bgH = charH + 1;
+                label.textX = cx2 + icw - textW - 2;
+                label.textY = cy2 + ich - charH - 1;
+                label.r = 255; label.g = 220; label.b = 50;
+                deferredCountLabels.push_back(label);
             }
 
             IRect rect; rect.x = cx2; rect.y = cy2; rect.w = icw; rect.h = ich;
@@ -237,19 +448,6 @@ void CInventoryGridView::Paint(
 
     // ---- AMMO ----
     {
-        ammoEntries.clear();
-        bool seen[MAX_AMMO_TYPES] = {};
-        for (WEAPON* w : weaponList)
-        {
-            if (!w || w->iId == 0) continue;
-            if (w->iAmmoType >= 0 && w->iAmmoType < MAX_AMMO_TYPES && !seen[w->iAmmoType])
-                if (w->hAmmo && (w->rcAmmo.right - w->rcAmmo.left) > 0)
-                { seen[w->iAmmoType] = true; ammoEntries.push_back({ w->iAmmoType, w->hAmmo, w->rcAmmo, w->iMax1 }); }
-            if (w->iAmmo2Type >= 0 && w->iAmmo2Type < MAX_AMMO_TYPES && !seen[w->iAmmo2Type])
-                if (w->hAmmo2 && (w->rcAmmo2.right - w->rcAmmo2.left) > 0)
-                { seen[w->iAmmo2Type] = true; ammoEntries.push_back({ w->iAmmo2Type, w->hAmmo2, w->rcAmmo2, w->iMax2 }); }
-        }
-
         int ammoStartSlot = (int)weaponList.size() + (int)inventoryItems.size();
         vgui::Font* smallFont = ctx->m_pSmallFont;
 
@@ -261,8 +459,17 @@ void CInventoryGridView::Paint(
 
             int col = nat % INV_GRID_COLS, row = nat / INV_GRID_COLS;
             int bX = x0 + col * cellStepX, bY = y0 + row * cellStepY;
-            int cx2 = bX + 2, cy2 = bY + 2;
+            int ox = (ai < (int)ammoOffsetX.size()) ? ammoOffsetX[ai] : 0;
+            int oy = (ai < (int)ammoOffsetY.size()) ? ammoOffsetY[ai] : 0;
+            int cx2 = bX + ox + 2, cy2 = bY + oy + 2;
             int icw = cellSize - 4, ich = cellSize - 4;
+
+            if (m_bDragging && m_draggedIndex == ammoStartSlot + ai)
+            {
+                IRect rect; rect.x = cx2; rect.y = cy2; rect.w = icw; rect.h = ich;
+                m_itemRects.push_back(rect);
+                continue;
+            }
 
             int count = gWR.CountAmmo(ae.ammoType);
             if (count > 0) { UnpackRGB(rr, gg, bb, RGB_YELLOWISH); ScaleColors(rr, gg, bb, 200); }
@@ -296,16 +503,23 @@ void CInventoryGridView::Paint(
 
             if (smallFont)
             {
-                char countStr[8]; snprintf(countStr, sizeof(countStr), "%d", count);
-                int textLen = (int)strlen(countStr);
+                DeferredCountLabel label{};
+                snprintf(label.text, sizeof(label.text), "%d", count);
+                label.textLen = (int)strlen(label.text);
                 int charW = 6, charH = 10;
-                int textW = textLen * charW;
-                FillRGBA(cx2 + icw - textW - 3, cy2 + 2, textW + 2, charH + 1, 0, 0, 0, 180);
-                ctx->drawSetTextFont(smallFont);
-                ctx->drawSetTextColor(rr, gg, bb, 255);
-                ctx->drawSetTextPos(cx2 + icw - textW - 2, cy2 + 3);
-                ctx->drawPrintText(countStr, textLen);
+                int textW = label.textLen * charW;
+                label.bgX = cx2 + icw - textW - 3;
+                label.bgY = cy2 + 2;
+                label.bgW = textW + 2;
+                label.bgH = charH + 1;
+                label.textX = cx2 + icw - textW - 2;
+                label.textY = cy2 + 3;
+                label.r = rr; label.g = gg; label.b = bb;
+                deferredCountLabels.push_back(label);
             }
+
+            IRect rect; rect.x = cx2; rect.y = cy2; rect.w = icw; rect.h = ich;
+            m_itemRects.push_back(rect);
         }
     }
 
@@ -319,6 +533,8 @@ void CInventoryGridView::Paint(
         bool isDraggingWeapon = (m_draggedIndex < (int)weaponList.size());
         bool isDraggingInv    = !isDraggingWeapon &&
                                 (m_draggedIndex < (int)weaponList.size() + (int)inventoryItems.size());
+        bool isDraggingAmmo   = !isDraggingWeapon && !isDraggingInv &&
+                    (m_draggedIndex < (int)weaponList.size() + (int)inventoryItems.size() + (int)ammoEntries.size());
 
         int dragCw   = SlotCellWidth(m_draggedIndex, weaponList, inventoryItems);
         int dragNat  = SlotNaturalCell(m_draggedIndex, weaponList, inventoryItems);
@@ -340,14 +556,22 @@ void CInventoryGridView::Paint(
                 int wx2 = bX2 + weaponOffsetX[idx], wy2 = bY2 + weaponOffsetY[idx];
                 if (!gWR.HasAmmo(p)) { UnpackRGB(rr, gg, bb, RGB_REDISH); ScaleColors(rr, gg, bb, 128); }
                 else                 { UnpackRGB(rr, gg, bb, RGB_YELLOWISH); ScaleColors(rr, gg, bb, 192); }
+                int sprW2 = rc.right - rc.left;
+                int sprH2 = rc.bottom - rc.top;
+                int sprX2 = wx2 + (dragSlotW - sprW2) / 2;
+                int sprY2 = wy2 + (dragSlotH - sprH2) / 2;
+                ctx->drawSetColor(30, 30, 30, 80);
+                ctx->drawFilledRect(wx2, wy2, wx2 + dragSlotW, wy2 + dragSlotH);
+                ctx->drawSetColor(255, 170, 0, 80);
+                ctx->drawOutlinedRect(wx2, wy2, wx2 + dragSlotW, wy2 + dragSlotH);
                 ctx->drawSetColor(255, 255, 255, 180);
                 ctx->drawOutlinedRect(wx2 - 2, wy2 - 2, wx2 + dragSlotW + 2, wy2 + dragSlotH + 2);
+                SPR_Set(h, rr, gg, bb);
                 const int outlinesz = 2;
                 for (int oy2 = -outlinesz; oy2 <= outlinesz; ++oy2)
                     for (int ox2 = -outlinesz; ox2 <= outlinesz; ++ox2)
-                        if (ox2 || oy2) SPR_DrawAdditive(0, wx2 + ox2, wy2 + oy2, &rc);
-                SPR_Set(h, rr, gg, bb);
-                SPR_DrawAdditive(0, wx2, wy2, &rc);
+                        if (ox2 || oy2) SPR_DrawAdditive(0, sprX2 + ox2, sprY2 + oy2, &rc);
+                SPR_DrawAdditive(0, sprX2, sprY2, &rc);
             }
         }
         else if (isDraggingInv)
@@ -370,8 +594,8 @@ void CInventoryGridView::Paint(
             }
             ctx->drawSetColor(255, 255, 255, 220);
             ctx->drawOutlinedRect(cx2 - 2, cy2 - 2, cx2 + icw + 2, cy2 + ich + 2);
-            FillRGBA(cx2, cy2, icw, ich, ir, ig, ib, 140);
-            ctx->drawSetColor(ir, ig, ib, 220);
+            FillRGBA(cx2, cy2, icw, ich, ir, ig, ib, 100);
+            ctx->drawSetColor(ir, ig, ib, 60);
             ctx->drawOutlinedRect(cx2, cy2, cx2 + icw, cy2 + ich);
             if (entry.hSprite && (entry.rc.right - entry.rc.left) > 0)
             {
@@ -379,8 +603,99 @@ void CInventoryGridView::Paint(
                 SPR_Set(entry.hSprite, ir, ig, ib);
                 SPR_DrawAdditive(0, cx2 + (icw - sprW2) / 2, cy2 + (ich - sprH2) / 2, &entry.rc);
             }
+            if (entry.count > 0 && ctx->m_pSmallFont)
+            {
+                DeferredCountLabel label{};
+                snprintf(label.text, sizeof(label.text), "x%d", entry.count);
+                label.textLen = (int)strlen(label.text);
+                int charW = 6, charH = 10;
+                int textW = label.textLen * charW;
+                label.bgX = cx2 + icw - textW - 3;
+                label.bgY = cy2 + ich - charH - 2;
+                label.bgW = textW + 2;
+                label.bgH = charH + 1;
+                label.textX = cx2 + icw - textW - 2;
+                label.textY = cy2 + ich - charH - 1;
+                label.r = 255; label.g = 220; label.b = 50;
+                deferredCountLabels.push_back(label);
+            }
+        }
+        else if (isDraggingAmmo)
+        {
+            int ai = m_draggedIndex - (int)weaponList.size() - (int)inventoryItems.size();
+            if (ai >= 0 && ai < (int)ammoOffsetX.size())
+            { ammoOffsetX[ai] = m_origOffsetX + dx; ammoOffsetY[ai] = m_origOffsetY + dy; }
+
+            const AmmoGridEntry& ae = ammoEntries[ai];
+            int bX2 = x0 + dragCol * cellStepX, bY2 = y0 + dragRow * cellStepY;
+            int ox2 = ammoOffsetX[ai], oy2 = ammoOffsetY[ai];
+            int cx2 = bX2 + ox2 + 2, cy2 = bY2 + oy2 + 2;
+            int icw = dragSlotW - 4, ich = dragSlotH - 4;
+
+            int count = gWR.CountAmmo(ae.ammoType);
+            if (count > 0) { UnpackRGB(rr, gg, bb, RGB_YELLOWISH); ScaleColors(rr, gg, bb, 200); }
+            else           { UnpackRGB(rr, gg, bb, RGB_REDISH);    ScaleColors(rr, gg, bb, 140); }
+
+            ctx->drawSetColor(255, 255, 255, 220);
+            ctx->drawOutlinedRect(cx2 - 2, cy2 - 2, cx2 + icw + 2, cy2 + ich + 2);
+            FillRGBA(cx2, cy2, icw, ich, rr / 4, gg / 4, bb / 4, 140);
+            ctx->drawSetColor(rr, gg, bb, 60);
+            ctx->drawOutlinedRect(cx2, cy2, cx2 + icw, cy2 + ich);
+
+            if (ae.hSpr && (ae.rc.right - ae.rc.left) > 0)
+            {
+                int sprW2 = ae.rc.right - ae.rc.left, sprH2 = ae.rc.bottom - ae.rc.top;
+                int barH = 5, sprAreaH = ich - barH - 3;
+                SPR_Set(ae.hSpr, rr, gg, bb);
+                SPR_DrawAdditive(0, cx2 + (icw - sprW2) / 2, cy2 + (sprAreaH - sprH2) / 2, &ae.rc);
+
+                int barX = cx2 + 2, barY = cy2 + ich - barH - 1, barW = icw - 4;
+                int dr, dg, db; UnpackRGB(dr, dg, db, RGB_YELLOWISH);
+                FillRGBA(barX, barY, barW, barH, dr, dg, db, 50);
+                if (ae.iMax > 0 && count > 0)
+                {
+                    float frac = std::min(1.0f, (float)count / (float)ae.iMax);
+                    int fw = std::max(1, (int)(barW * frac));
+                    int fr, fg, fb;
+                    if (frac > 0.5f)       UnpackRGB(fr, fg, fb, RGB_GREENISH);
+                    else if (frac > 0.25f) UnpackRGB(fr, fg, fb, RGB_YELLOWISH);
+                    else                   UnpackRGB(fr, fg, fb, RGB_REDISH);
+                    FillRGBA(barX, barY, fw, barH, fr, fg, fb, 220);
+                }
+            }
+
+            if (ctx->m_pSmallFont)
+            {
+                DeferredCountLabel label{};
+                snprintf(label.text, sizeof(label.text), "%d", count);
+                label.textLen = (int)strlen(label.text);
+                int charW = 6, charH = 10;
+                int textW = label.textLen * charW;
+                label.bgX = cx2 + icw - textW - 3;
+                label.bgY = cy2 + 2;
+                label.bgW = textW + 2;
+                label.bgH = charH + 1;
+                label.textX = cx2 + icw - textW - 2;
+                label.textY = cy2 + 3;
+                label.r = rr; label.g = gg; label.b = bb;
+                deferredCountLabels.push_back(label);
+            }
         }
     }
+
+    // Final text overlay pass: draw all count labels after sprite work.
+    if (!deferredCountLabels.empty() && ctx->m_pSmallFont)
+    {
+        ctx->drawSetTextFont(ctx->m_pSmallFont);
+        for (const auto& label : deferredCountLabels)
+        {
+            FillRGBA(label.bgX, label.bgY, label.bgW, label.bgH, 0, 0, 0, 180);
+            ctx->drawSetTextColor(label.r, label.g, label.b, 0);
+            ctx->drawPrintText(label.textX, label.textY, label.text, label.textLen);
+        }
+        ctx->drawSetTextPos(0, 0);
+    }
+
 }
 
 // =====================================================================
@@ -394,7 +709,10 @@ bool CInventoryGridView::HandleMousePress(
     std::vector<int>& weaponOffsetY,
     std::vector<InventoryItemEntry>& inventoryItems,
     std::vector<int>& invOffsetX,
-    std::vector<int>& invOffsetY)
+    std::vector<int>& invOffsetY,
+    std::vector<AmmoGridEntry>& ammoEntries,
+    std::vector<int>& ammoOffsetX,
+    std::vector<int>& ammoOffsetY)
 {
     for (size_t i = 0; i < m_itemRects.size(); ++i)
     {
@@ -402,16 +720,16 @@ bool CInventoryGridView::HandleMousePress(
         if (localX < r.x || localX >= r.x + r.w || localY < r.y || localY >= r.y + r.h)
             continue;
 
-        if (i < weaponNames.size())
+        if (i < weaponList.size())
         {
-            const char* weapon = weaponNames[i];
+            const char* weapon = (i < weaponNames.size()) ? weaponNames[i] : nullptr;
             if (!weapon || weapon[0] == '\0') return true;
             m_bDragging = true; m_draggedIndex = (int)i;
             App::getInstance()->getCursorPos(m_dragStartX, m_dragStartY);
             m_origOffsetX = (i < weaponOffsetX.size()) ? weaponOffsetX[i] : 0;
             m_origOffsetY = (i < weaponOffsetY.size()) ? weaponOffsetY[i] : 0;
         }
-        else
+        else if (i < weaponList.size() + inventoryItems.size())
         {
             int ii = (int)i - (int)weaponList.size();
             if (ii >= 0 && ii < (int)inventoryItems.size())
@@ -420,6 +738,17 @@ bool CInventoryGridView::HandleMousePress(
                 App::getInstance()->getCursorPos(m_dragStartX, m_dragStartY);
                 m_origOffsetX = (ii < (int)invOffsetX.size()) ? invOffsetX[ii] : 0;
                 m_origOffsetY = (ii < (int)invOffsetY.size()) ? invOffsetY[ii] : 0;
+            }
+        }
+        else
+        {
+            int ai = (int)i - (int)weaponList.size() - (int)inventoryItems.size();
+            if (ai >= 0 && ai < (int)ammoEntries.size())
+            {
+                m_bDragging = true; m_draggedIndex = (int)i;
+                App::getInstance()->getCursorPos(m_dragStartX, m_dragStartY);
+                m_origOffsetX = (ai < (int)ammoOffsetX.size()) ? ammoOffsetX[ai] : 0;
+                m_origOffsetY = (ai < (int)ammoOffsetY.size()) ? ammoOffsetY[ai] : 0;
             }
         }
 
@@ -441,7 +770,10 @@ bool CInventoryGridView::HandleMouseRelease(
     std::vector<int>& weaponOffsetY,
     std::vector<InventoryItemEntry>& inventoryItems,
     std::vector<int>& invOffsetX,
-    std::vector<int>& invOffsetY)
+    std::vector<int>& invOffsetY,
+    std::vector<AmmoGridEntry>& ammoEntries,
+    std::vector<int>& ammoOffsetX,
+    std::vector<int>& ammoOffsetY)
 {
     if (!m_bDragging || m_draggedIndex < 0) return false;
 
@@ -449,6 +781,8 @@ bool CInventoryGridView::HandleMouseRelease(
     int dx = cx2 - m_dragStartX, dy = cy2 - m_dragStartY;
     const int clickThreshold = 6;
     bool isDraggingWeapon = (m_draggedIndex < (int)weaponList.size());
+    bool isDraggingInv = !isDraggingWeapon &&
+                         (m_draggedIndex < (int)weaponList.size() + (int)inventoryItems.size());
 
     if (abs(dx) <= clickThreshold && abs(dy) <= clickThreshold)
     {
@@ -467,7 +801,6 @@ bool CInventoryGridView::HandleMouseRelease(
     {
         // Drag: snap to nearest cell
         int x0 = m_x0, y0 = m_y0;
-        int cellSize  = m_cellSize;
         int cellStepX = m_cellStepX, cellStepY = m_cellStepY;
 
         int dragNatural = SlotNaturalCell(m_draggedIndex, weaponList, inventoryItems);
@@ -476,10 +809,14 @@ bool CInventoryGridView::HandleMouseRelease(
 
         int currentOx = isDraggingWeapon
             ? (m_draggedIndex < (int)weaponOffsetX.size() ? weaponOffsetX[m_draggedIndex] : 0)
-            : (m_draggedIndex - (int)weaponList.size() < (int)invOffsetX.size() ? invOffsetX[m_draggedIndex - (int)weaponList.size()] : 0);
+            : (isDraggingInv
+                ? (m_draggedIndex - (int)weaponList.size() < (int)invOffsetX.size() ? invOffsetX[m_draggedIndex - (int)weaponList.size()] : 0)
+                : (m_draggedIndex - (int)weaponList.size() - (int)inventoryItems.size() < (int)ammoOffsetX.size() ? ammoOffsetX[m_draggedIndex - (int)weaponList.size() - (int)inventoryItems.size()] : 0));
         int currentOy = isDraggingWeapon
             ? (m_draggedIndex < (int)weaponOffsetY.size() ? weaponOffsetY[m_draggedIndex] : 0)
-            : (m_draggedIndex - (int)weaponList.size() < (int)invOffsetY.size() ? invOffsetY[m_draggedIndex - (int)weaponList.size()] : 0);
+            : (isDraggingInv
+                ? (m_draggedIndex - (int)weaponList.size() < (int)invOffsetY.size() ? invOffsetY[m_draggedIndex - (int)weaponList.size()] : 0)
+                : (m_draggedIndex - (int)weaponList.size() - (int)inventoryItems.size() < (int)ammoOffsetY.size() ? ammoOffsetY[m_draggedIndex - (int)weaponList.size() - (int)inventoryItems.size()] : 0));
 
         int curCenterX = origBaseX + currentOx + cellStepX / 2;
         int curCenterY = origBaseY + currentOy + cellStepY / 2;
@@ -500,10 +837,14 @@ bool CInventoryGridView::HandleMouseRelease(
             bool isW2 = (slotIdx < (int)weaponList.size());
             int sOx = isW2
                 ? (slotIdx < (int)weaponOffsetX.size() ? weaponOffsetX[slotIdx] : 0)
-                : (slotIdx - (int)weaponList.size() < (int)invOffsetX.size() ? invOffsetX[slotIdx - (int)weaponList.size()] : 0);
+                : ((slotIdx - (int)weaponList.size() < (int)inventoryItems.size())
+                    ? (slotIdx - (int)weaponList.size() < (int)invOffsetX.size() ? invOffsetX[slotIdx - (int)weaponList.size()] : 0)
+                    : (slotIdx - (int)weaponList.size() - (int)inventoryItems.size() < (int)ammoOffsetX.size() ? ammoOffsetX[slotIdx - (int)weaponList.size() - (int)inventoryItems.size()] : 0));
             int sOy = isW2
                 ? (slotIdx < (int)weaponOffsetY.size() ? weaponOffsetY[slotIdx] : 0)
-                : (slotIdx - (int)weaponList.size() < (int)invOffsetY.size() ? invOffsetY[slotIdx - (int)weaponList.size()] : 0);
+                : ((slotIdx - (int)weaponList.size() < (int)inventoryItems.size())
+                    ? (slotIdx - (int)weaponList.size() < (int)invOffsetY.size() ? invOffsetY[slotIdx - (int)weaponList.size()] : 0)
+                    : (slotIdx - (int)weaponList.size() - (int)inventoryItems.size() < (int)ammoOffsetY.size() ? ammoOffsetY[slotIdx - (int)weaponList.size() - (int)inventoryItems.size()] : 0));
             int iCx = sbX + sOx + cellStepX / 2, iCy = sbY + sOy + cellStepY / 2;
             return std::max(0, std::min(INV_GRID_ROWS - 1, (iCy - y0) / cellStepY)) * INV_GRID_COLS
                  + std::max(0, std::min(INV_GRID_COLS - 1, (iCx - x0) / cellStepX));
@@ -520,12 +861,23 @@ bool CInventoryGridView::HandleMouseRelease(
             if (isW2)
             { if (slotIdx < (int)weaponOffsetX.size()) { weaponOffsetX[slotIdx] = newOx; weaponOffsetY[slotIdx] = newOy; } }
             else
-            { int ii2 = slotIdx - (int)weaponList.size(); if (ii2 < (int)invOffsetX.size()) { invOffsetX[ii2] = newOx; invOffsetY[ii2] = newOy; } }
+            {
+                int ii2 = slotIdx - (int)weaponList.size();
+                if (ii2 < (int)inventoryItems.size())
+                {
+                    if (ii2 < (int)invOffsetX.size()) { invOffsetX[ii2] = newOx; invOffsetY[ii2] = newOy; }
+                }
+                else
+                {
+                    int ai2 = ii2 - (int)inventoryItems.size();
+                    if (ai2 < (int)ammoOffsetX.size()) { ammoOffsetX[ai2] = newOx; ammoOffsetY[ai2] = newOy; }
+                }
+            }
         };
 
         if (snapCell != dragNatural)
         {
-            int totalSlots = (int)weaponList.size() + (int)inventoryItems.size();
+            int totalSlots = (int)weaponList.size() + (int)inventoryItems.size() + (int)ammoEntries.size();
             for (int si = 0; si < totalSlots; ++si)
             {
                 if (si == m_draggedIndex) continue;
@@ -545,6 +897,10 @@ bool CInventoryGridView::HandleMouseRelease(
             if (!w || w->iId <= 0) continue;
             gWR.SetGridCell(w->iId, getSlotCell(i));
         }
+
+        NormalizeGridLayout(weaponList, inventoryItems, ammoEntries,
+            weaponOffsetX, weaponOffsetY, invOffsetX, invOffsetY, ammoOffsetX, ammoOffsetY,
+            x0, y0, cellStepX, cellStepY);
     }
 
     m_bDragging = false;
@@ -562,21 +918,50 @@ void CInventoryGridView::HandleMouseMove(
     std::vector<int>& weaponOffsetX,
     std::vector<int>& weaponOffsetY,
     const std::vector<WEAPON*>& weaponList,
+    const std::vector<InventoryItemEntry>& inventoryItems,
     std::vector<int>& invOffsetX,
-    std::vector<int>& invOffsetY)
+    std::vector<int>& invOffsetY,
+    const std::vector<AmmoGridEntry>& ammoEntries,
+    std::vector<int>& ammoOffsetX,
+    std::vector<int>& ammoOffsetY)
 {
     if (!m_bDragging || m_draggedIndex < 0) return;
 
     int cx2, cy2; App::getInstance()->getCursorPos(cx2, cy2);
     int dx = cx2 - m_dragStartX, dy = cy2 - m_dragStartY;
 
+    int dragCw = SlotCellWidth(m_draggedIndex, weaponList, inventoryItems);
+    if (dragCw < 1) dragCw = 1;
+    if (dragCw > INV_GRID_COLS) dragCw = INV_GRID_COLS;
+    int dragNat = SlotNaturalCell(m_draggedIndex, weaponList, inventoryItems);
+    int natCol = dragNat % INV_GRID_COLS;
+    int natRow = dragNat / INV_GRID_COLS;
+    int baseX = m_x0 + natCol * m_cellStepX;
+    int baseY = m_y0 + natRow * m_cellStepY;
+
+    int minOffsetX = m_x0 - baseX;
+    int maxOffsetX = (m_x0 + (INV_GRID_COLS - dragCw) * m_cellStepX) - baseX;
+    int minOffsetY = m_y0 - baseY;
+    int maxOffsetY = (m_y0 + (INV_GRID_ROWS - 1) * m_cellStepY) - baseY;
+
+    int newOx = m_origOffsetX + dx;
+    int newOy = m_origOffsetY + dy;
+    newOx = std::max(minOffsetX, std::min(maxOffsetX, newOx));
+    newOy = std::max(minOffsetY, std::min(maxOffsetY, newOy));
+
     if (m_draggedIndex < (int)weaponOffsetX.size())
-    { weaponOffsetX[m_draggedIndex] = m_origOffsetX + dx; weaponOffsetY[m_draggedIndex] = m_origOffsetY + dy; }
-    else
+    { weaponOffsetX[m_draggedIndex] = newOx; weaponOffsetY[m_draggedIndex] = newOy; }
+    else if (m_draggedIndex < (int)weaponList.size() + (int)invOffsetX.size())
     {
         int ii = m_draggedIndex - (int)weaponList.size();
         if (ii >= 0 && ii < (int)invOffsetX.size())
-        { invOffsetX[ii] = m_origOffsetX + dx; invOffsetY[ii] = m_origOffsetY + dy; }
+        { invOffsetX[ii] = newOx; invOffsetY[ii] = newOy; }
+    }
+    else
+    {
+        int ai = m_draggedIndex - (int)weaponList.size() - (int)invOffsetX.size();
+        if (ai >= 0 && ai < (int)ammoEntries.size() && ai < (int)ammoOffsetX.size())
+        { ammoOffsetX[ai] = newOx; ammoOffsetY[ai] = newOy; }
     }
     ctx->repaint();
 }

@@ -12,18 +12,22 @@
 // =====================================================================
 const SkillDef k_SkillDefs[k_MaxSkills] =
 {
-    //  id                          name                 description                           col  row  cost  prereq
-    { ESkillId::None,               "None",              "",                                   0,   0,   0,    ESkillId::None          },
-    { ESkillId::CrowbarRange,       "Crowbar Reach",     "+25% melee range.",                  0,   0,   1,    ESkillId::None          },
-    { ESkillId::CrowbarDamage,      "Crowbar Force",     "+50% melee damage.",                 0,   1,   2,    ESkillId::CrowbarRange  },
-    { ESkillId::FastReload,         "Fast Reload",       "-20% reload time.",                  1,   0,   1,    ESkillId::None          },
-    { ESkillId::ExtraDamage,        "Weapon Mastery",    "+10% weapon damage.",                1,   1,   3,    ESkillId::FastReload     },
-    { ESkillId::HighJump,           "High Jump",         "+30% jump height.",                  2,   0,   1,    ESkillId::None          },
-    { ESkillId::SprintSpeed,        "Sprint",            "+15% movement speed.",               2,   1,   2,    ESkillId::HighJump       },
-    { ESkillId::FallResistance,     "Fall Resist",       "-50% fall damage.",                  2,   2,   1,    ESkillId::HighJump       },
-    { ESkillId::MoreHealth,         "Fortitude",         "+25 max health.",                    3,   0,   2,    ESkillId::None          },
-    { ESkillId::ArmorEfficiency,    "Armor Expert",      "Armor absorbs 10% more damage.",     3,   1,   2,    ESkillId::MoreHealth     },
-    { ESkillId::HealthRegen,        "Regen",             "Slowly regenerate health.",          3,   2,   3,    ESkillId::MoreHealth     },
+    //  id                          name                 description                           col  row  cost  prereq                   tier
+    { ESkillId::None,               "None",              "",                                   0,   0,   0,    ESkillId::None,          ENodeTier::Minor  },
+    { ESkillId::CrowbarRange,       "Crowbar Reach",     "+25% melee range.",                  1,   0,   1,    ESkillId::None,          ENodeTier::Minor  },
+    { ESkillId::CrowbarDamage,      "Crowbar Force",     "+50% melee damage.",                 1,   1,   2,    ESkillId::CrowbarRange,  ENodeTier::Medium },
+    { ESkillId::FastReload,         "Fast Reload",       "-20% reload time.",                  3,   0,   1,    ESkillId::None,          ENodeTier::Minor  },
+    { ESkillId::ExtraDamage,        "Weapon Mastery",    "+10% weapon damage.",                3,   1,   3,    ESkillId::FastReload,    ENodeTier::Major  },
+    { ESkillId::HighJump,           "High Jump",         "+30% jump height.",                  5,   0,   1,    ESkillId::None,          ENodeTier::Minor  },
+    { ESkillId::SprintSpeed,        "Sprint",            "+15% movement speed.",               5,   1,   2,    ESkillId::SprintSpeed,   ENodeTier::Major  },
+    { ESkillId::FallResistance,     "Fall Resist",       "-50% fall damage.",                  5,   2,   1,    ESkillId::HighJump,      ENodeTier::Medium },
+    { ESkillId::MoreHealth,         "Fortitude",         "+25 max health.",                    7,   0,   2,    ESkillId::None,          ENodeTier::Minor  },
+    { ESkillId::ArmorEfficiency,    "Armor Expert",      "Armor absorbs 10% more damage.",     7,   1,   2,    ESkillId::MoreHealth,    ENodeTier::Medium },
+    { ESkillId::HealthRegen,        "Regen",             "Slowly regenerate health.",          7,   2,   3,    ESkillId::MoreHealth,    ENodeTier::Major  },
+    { ESkillId::CrowbarSpeed,       "Crowbar Speed",     "+30% crowbar attack speed.",         0,   2,   2,    ESkillId::CrowbarDamage, ENodeTier::Medium },
+    { ESkillId::CrowbarParry,       "Crowbar Parry",     "Wider crowbar parry timing window.", 2,   2,   2,    ESkillId::CrowbarDamage, ENodeTier::Medium },
+    { ESkillId::BatteryCapacity,    "Battery Capacity",  "+50 max battery.",                   9,   0,   2,    ESkillId::None,          ENodeTier::Minor  },
+    { ESkillId::BatteryRegen,       "Battery Regen",     "Regenerate armor over time.",        9,   1,   3,    ESkillId::BatteryCapacity, ENodeTier::Major },
 };
 
 // =====================================================================
@@ -104,7 +108,7 @@ void SendSkillTreeToClient(CBasePlayer* pPlayer)
         WRITE_BYTE((unsigned char)def.gridRow);
         WRITE_BYTE((unsigned char)def.cost);
         WRITE_BYTE((unsigned char)static_cast<int>(def.prereq));
-        WRITE_BYTE((unlocked ? 1 : 0) | (available ? 2 : 0));
+        WRITE_BYTE((unlocked ? 1 : 0) | (available ? 2 : 0) | (static_cast<int>(def.tier) << 2));
     }
 
     WRITE_BYTE((unsigned char)std::min(sk.m_iSkillPoints, 255));

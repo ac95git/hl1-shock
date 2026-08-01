@@ -11,7 +11,7 @@ class CInventoryContextMenu;
 
 // =====================================================================
 // CInventoryGridView
-//   Plain C++ helper — not a VGUI panel.
+//   Plain C++ helper ï¿½ not a VGUI panel.
 //   CInventoryPanel owns one of these and delegates all grid
 //   painting and input to it.  Draw calls are forwarded back
 //   through the owner pointer (friend relationship).
@@ -29,9 +29,9 @@ public:
         std::vector<int>& weaponOffsetY);
 
     // Paint the full grid area (weapons, items, ammo).
-    // ctx   – the owning panel (draw calls are protected members of Panel)
-    // x0/y0 – top-left of the grid area
-    // areaW/areaH – available pixel size
+    // ctx   ï¿½ the owning panel (draw calls are protected members of Panel)
+    // x0/y0 ï¿½ top-left of the grid area
+    // areaW/areaH ï¿½ available pixel size
     void Paint(CInventoryPanel* ctx,
                int x0, int y0, int areaW, int areaH,
                const std::vector<WEAPON*>& weaponList,
@@ -41,9 +41,11 @@ public:
                std::vector<InventoryItemEntry>& inventoryItems,
                std::vector<int>& invOffsetX,
                std::vector<int>& invOffsetY,
-               std::vector<AmmoGridEntry>& ammoEntries);
+               std::vector<AmmoGridEntry>& ammoEntries,
+               std::vector<int>& ammoOffsetX,
+               std::vector<int>& ammoOffsetY);
 
-    // Input – return true if the event was consumed
+    // Input ï¿½ return true if the event was consumed
     bool HandleMousePress  (CInventoryPanel* ctx, int localX, int localY,
                             std::vector<const char*>& weaponNames,
                             std::vector<WEAPON*>& weaponList,
@@ -51,7 +53,10 @@ public:
                             std::vector<int>& weaponOffsetY,
                             std::vector<InventoryItemEntry>& inventoryItems,
                             std::vector<int>& invOffsetX,
-                            std::vector<int>& invOffsetY);
+                            std::vector<int>& invOffsetY,
+                            std::vector<AmmoGridEntry>& ammoEntries,
+                            std::vector<int>& ammoOffsetX,
+                            std::vector<int>& ammoOffsetY);
 
     bool HandleMouseRelease(CInventoryPanel* ctx, int localX, int localY,
                             std::vector<const char*>& weaponNames,
@@ -60,18 +65,25 @@ public:
                             std::vector<int>& weaponOffsetY,
                             std::vector<InventoryItemEntry>& inventoryItems,
                             std::vector<int>& invOffsetX,
-                            std::vector<int>& invOffsetY);
+                            std::vector<int>& invOffsetY,
+                            std::vector<AmmoGridEntry>& ammoEntries,
+                            std::vector<int>& ammoOffsetX,
+                            std::vector<int>& ammoOffsetY);
 
     void HandleMouseMove   (CInventoryPanel* ctx,
                             std::vector<int>& weaponOffsetX,
                             std::vector<int>& weaponOffsetY,
                             const std::vector<WEAPON*>& weaponList,
+                            const std::vector<InventoryItemEntry>& inventoryItems,
                             std::vector<int>& invOffsetX,
-                            std::vector<int>& invOffsetY);
+                            std::vector<int>& invOffsetY,
+                            const std::vector<AmmoGridEntry>& ammoEntries,
+                            std::vector<int>& ammoOffsetX,
+                            std::vector<int>& ammoOffsetY);
 
     // Hit-rect list, populated every Paint() call.
     // Entry i maps to weaponList[i] for i < weaponList.size(),
-    // else inventoryItems[i - weaponList.size()].
+    // inventoryItems[...] next, then ammo entries after that.
     struct IRect { int x, y, w, h; };
     const std::vector<IRect>& GetItemRects() const { return m_itemRects; }
 
@@ -87,6 +99,16 @@ private:
                         const std::vector<InventoryItemEntry>& items) const;
     int  SlotNaturalCell(int slotIdx, const std::vector<WEAPON*>& wl,
                          const std::vector<InventoryItemEntry>& items) const;
+    void NormalizeGridLayout(const std::vector<WEAPON*>& weaponList,
+                             const std::vector<InventoryItemEntry>& inventoryItems,
+                             const std::vector<AmmoGridEntry>& ammoEntries,
+                             std::vector<int>& weaponOffsetX,
+                             std::vector<int>& weaponOffsetY,
+                             std::vector<int>& invOffsetX,
+                             std::vector<int>& invOffsetY,
+                             std::vector<int>& ammoOffsetX,
+                             std::vector<int>& ammoOffsetY,
+                             int x0, int y0, int cellStepX, int cellStepY) const;
 
     std::vector<IRect> m_itemRects;
 

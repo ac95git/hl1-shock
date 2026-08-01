@@ -575,8 +575,9 @@ bool CHudAmmo::MsgFunc_SkillTree(const char* pszName, int iSize, void* pbuf)
 		n.cost = READ_BYTE();
 		n.prereqId = READ_BYTE();
 		int flags = READ_BYTE();
-		n.bUnlocked = (flags & 1) != 0;
+		n.bUnlocked  = (flags & 1) != 0;
 		n.bAvailable = (flags & 2) != 0;
+		n.tier       = static_cast<ENodeTier>((flags >> 2) & 0x3);
 		n.displayName = nullptr;
 		n.description = nullptr;
 	}
@@ -917,6 +918,11 @@ bool CHudAmmo::Draw(float flTime)
 		return true;
 
 	if ((gHUD.m_iHideHUDDisplay & (HIDEHUD_WEAPONS | HIDEHUD_ALL)) != 0)
+		return true;
+
+	// Inventory renders its own weapon/item UI; suppress default HUD weapon sprites
+	// to avoid overlay artifacts on top of inventory/skill panels.
+	if (gViewPort && gViewPort->m_pInventoryPanel && gViewPort->m_pInventoryPanel->isVisible())
 		return true;
 
 	// Draw Weapon Menu

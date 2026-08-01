@@ -37,11 +37,10 @@ static constexpr int INV_HEADER_H       = 64;
 static constexpr int INV_LEFT_COL_W     = 240;
 static constexpr int INV_MARGIN         = 8;
 static constexpr int INV_SECTION_GAP    = 6;
-static constexpr int INV_GRID_COLS      = 10;
+static constexpr int INV_GRID_COLS      = 11;
 static constexpr int INV_GRID_ROWS      = 8;
 static constexpr int INV_GRID_PADDING   = 4;
 
-struct InvCellWidthEntry { const char* classname; int cellWidth; };
 static const InvCellWidthEntry k_cellWidthTable[] =
 {
     { "item_healthkit", 1 },
@@ -49,7 +48,6 @@ static const InvCellWidthEntry k_cellWidthTable[] =
     { "item_antidote",  1 },
     { "item_security",  1 },
 };
-static constexpr int k_weaponCellWidth = 3;
 
 static int GetItemCellWidth(const std::string& classname)
 {
@@ -71,7 +69,7 @@ void CInventoryCloseAction::actionPerformed(vgui::Panel*)
 // =====================================================================
 int CInventoryPanel::SlotCellWidth(int slotIdx) const
 {
-    if (slotIdx < (int)m_weaponList.size()) return k_weaponCellWidth;
+    if (slotIdx < (int)m_weaponList.size()) return InvCellWidthEntry::WeaponCellWidth;
     int afterWeapons = slotIdx - (int)m_weaponList.size();
     if (afterWeapons < (int)m_inventoryItems.size())
         return GetItemCellWidth(m_inventoryItems[afterWeapons].classname);
@@ -156,6 +154,10 @@ void CInventoryContextMenu::Show(int x, int y, int itemIndex, EInventoryItemType
     case EInventoryItemType::Battery:
         m_pUseButton->setText("Use");
         m_pUseButton->setVisible(true);
+        m_pDropButton->setVisible(true);
+        break;
+    case EInventoryItemType::Ammo:
+        m_pUseButton->setVisible(false);
         m_pDropButton->setVisible(true);
         break;
     case EInventoryItemType::Junk:
@@ -279,6 +281,7 @@ CInventoryPanel::CInventoryPanel(int x, int y, int wide, int tall)
     m_pTitleFont = nullptr;
 
     const int closeBtnSz = INV_HEADER_H - 6;
+    const int closeBtnOffsetX = 4;
     int labelX = INV_MARGIN + 8;
     int labelY = INV_MARGIN + (INV_HEADER_H - 20) / 2;
     int labelW = wide - INV_MARGIN * 2 - closeBtnSz - 8;
@@ -302,7 +305,7 @@ CInventoryPanel::CInventoryPanel(int x, int y, int wide, int tall)
 	m_pLabel->setText("Inventory");
     m_pLabel->setParent(this);
 
-    m_pCloseButton = new Button("x", wide - INV_MARGIN - closeBtnSz, INV_MARGIN + 3, closeBtnSz, closeBtnSz);
+    m_pCloseButton = new Button("", wide - INV_MARGIN - closeBtnSz - closeBtnOffsetX, INV_MARGIN + 3, closeBtnSz, closeBtnSz);
     m_pCloseButton->setParent(this);
     m_pCloseButton->setPaintBackgroundEnabled(false);
     m_pCloseButton->setPaintEnabled(false);
@@ -473,6 +476,8 @@ void CInventoryPanel::SetWeaponNames(const char** names, int count)
 
     m_weaponOffsetX.assign(m_weaponList.size(), 0);
     m_weaponOffsetY.assign(m_weaponList.size(), 0);
+    m_ammoOffsetX.clear();
+    m_ammoOffsetY.clear();
 
     // Restore saved grid positions
     {
@@ -511,6 +516,7 @@ void CInventoryPanel::paintBackground()
 {
     Panel::paintBackground();
     m_weaponRects.clear();
+    drawSetTextPos(0, 0);
 
     int panelW = 0, panelH = 0;
     getSize(panelW, panelH);
@@ -540,14 +546,6 @@ void CInventoryPanel::paintBackground()
             drawOutlinedRect(bx, by, bx + bw, by + bh);
             drawSetColor(255, 100, 100, 100);
             drawFilledRect(bx + 1, by + 1, bx + bw - 1, by + 2);
-            if (m_pTitleFont)
-            {
-                drawSetTextFont(m_pTitleFont);
-                drawSetTextColor(255, 80, 80, 0);
-                int charW = 5, charH = 5;
-                drawSetTextPos(bx + (bw - charW) / 2, by + (bh - charH) / 2);
-                drawPrintText("x", 1);
-            }
         }
     }
 
@@ -560,14 +558,14 @@ void CInventoryPanel::paintBackground()
         int colW = INV_LEFT_COL_W;
         int colH = panelH - colY - INV_MARGIN;
 
-        int panelH1 = (colH - INV_SECTION_GAP) / 2;
+        // Diagnostic layout: make nav area taller so overdraw around tabs is easier to inspect.
+        int panelH1 = (colH * 2) / 3;
         int panelH2 = colH - panelH1 - INV_SECTION_GAP;
 
         // --- Panel 1: NAV TABS ---
         int p1Y = colY;
-        static constexpr int NAV_BTN_H   = 28;
+        static constexpr int NAV_BTN_H   = 76;
         static constexpr int NAV_BTN_GAP = 4;
-        static constexpr int NAV_BTN_PAD = 6;
 
         drawSetColor(15, 15, 15, 60);
         drawFilledRect(colX, p1Y, colX + colW, p1Y + panelH1);
@@ -588,37 +586,28 @@ void CInventoryPanel::paintBackground()
             bool active = (m_eActiveTab == navBtns[nb].tab);
             int btnX  = colX + 6;
             int btnW2 = colW - 12;
+            int btnH  = NAV_BTN_H;
 
-            m_navBtnRects[nb] = { btnX, btnY, btnW2, NAV_BTN_H };
+            m_navBtnRects[nb] = { btnX, btnY, btnW2, btnH };
 
             if (active)
             {
                 drawSetColor(200, 130, 0, 30);
-                drawFilledRect(btnX, btnY, btnX + btnW2, btnY + NAV_BTN_H);
+                drawFilledRect(btnX, btnY, btnX + btnW2, btnY + btnH);
                 drawSetColor(255, 170, 0, 40);
-                drawOutlinedRect(btnX, btnY, btnX + btnW2, btnY + NAV_BTN_H);
+                drawOutlinedRect(btnX, btnY, btnX + btnW2, btnY + btnH);
                 drawSetColor(255, 170, 0, 0);
-                drawFilledRect(btnX, btnY, btnX + 3, btnY + NAV_BTN_H);
+                drawFilledRect(btnX, btnY, btnX + 3, btnY + btnH);
             }
             else
             {
                 drawSetColor(30, 30, 30, 120);
-                drawFilledRect(btnX, btnY, btnX + btnW2, btnY + NAV_BTN_H);
+                drawFilledRect(btnX, btnY, btnX + btnW2, btnY + btnH);
                 drawSetColor(120, 100, 60, 140);
-                drawOutlinedRect(btnX, btnY, btnX + btnW2, btnY + NAV_BTN_H);
+                drawOutlinedRect(btnX, btnY, btnX + btnW2, btnY + btnH);
             }
 
-            if (m_pSmallFont)
-            {
-                int nameLen = (int)strlen(navBtns[nb].label);
-                drawSetTextFont(m_pSmallFont);
-                if (active) drawSetTextColor(255, 200, 60, 0);
-                else        drawSetTextColor(160, 140, 100, 0);
-                drawSetTextPos(btnX + NAV_BTN_PAD + 4, btnY + (NAV_BTN_H - 10) / 2);
-                drawPrintText(navBtns[nb].label, nameLen);
-            }
-
-            btnY += NAV_BTN_H + NAV_BTN_GAP;
+            btnY += btnH + NAV_BTN_GAP;
         }
 
         // --- Panel 2: ITEMS side panel ---
@@ -641,8 +630,8 @@ void CInventoryPanel::paintBackground()
         }
         if (pLongjump)
         {
-            int tileX = colX + 4, tileY = p2Y + 6;
-            int tileW = colW - 8, tileH = panelH2 - 12;
+            int tileX = colX + 6, tileY = p2Y + 6;
+            int tileW = colW - 12, tileH = panelH2 - 12;
             drawSetColor(40, 40, 40, 140);
             drawFilledRect(tileX, tileY, tileX + tileW, tileY + tileH);
             if (pLongjump->hSprite && (pLongjump->rc.right - pLongjump->rc.left) > 0)
@@ -655,19 +644,21 @@ void CInventoryPanel::paintBackground()
                     scale = std::min((float)maxW / (float)sprW, (float)maxH / (float)sprH);
                 int drawX = tileX + (tileW - (int)(sprW * scale)) / 2;
                 int drawY = tileY + (tileH - (int)(sprH * scale)) / 2;
-                SPR_Set(pLongjump->hSprite, 255, 255, 255);
+                SPR_Set(pLongjump->hSprite, 220, 220, 220);
                 SPR_DrawAdditive(0, drawX, drawY, &pLongjump->rc);
             }
         }
+
     }
 
     // ----------------------------------------------------------------
-    // RIGHT COLUMN — delegate to the active view
+    // RIGHT COLUMN ï¿½ delegate to the active view
     // ----------------------------------------------------------------
     int x0, y0;
     GetGridOrigin(x0, y0);
     int areaW = panelW - x0 - INV_MARGIN;
     int areaH = panelH - y0 - INV_MARGIN;
+    drawSetTextPos(0, 0);
 
     if (m_eActiveTab == EInventoryTab::Inventory)
     {
@@ -675,7 +666,7 @@ void CInventoryPanel::paintBackground()
             m_weaponList, m_weaponNames,
             m_weaponOffsetX, m_weaponOffsetY,
             m_inventoryItems, m_invOffsetX, m_invOffsetY,
-            m_ammoGridEntries);
+            m_ammoGridEntries, m_ammoOffsetX, m_ammoOffsetY);
 
         // Mirror grid item rects for context-menu hit-testing
         for (auto& r : m_gridView.GetItemRects())
@@ -686,6 +677,45 @@ void CInventoryPanel::paintBackground()
         m_skillTreeView.Paint(this, x0, y0, areaW, areaH,
             m_pSmallFont, m_pTitleFont);
     }
+
+    // Draw nav labels after sprite-heavy sections to avoid stale text cursor state
+    // affecting later sprite draws inside the same frame.
+    if (m_pSmallFont)
+    {
+        static const char* navLabels[k_NumNavBtns] = { "Inventory", "Upgrades" };
+        static constexpr int NAV_BTN_PAD = 6;
+
+        for (int nb = 0; nb < k_NumNavBtns; ++nb)
+        {
+            const IRect& r = m_navBtnRects[nb];
+            bool active = (m_eActiveTab == ((nb == 0) ? EInventoryTab::Inventory : EInventoryTab::Upgrades));
+            int nameLen = (int)strlen(navLabels[nb]);
+
+            vgui::Font* navFont = m_pTitleFont ? m_pTitleFont : m_pSmallFont;
+            drawSetTextFont(navFont);
+            if (active) drawSetTextColor(255, 200, 60, 0);
+            else        drawSetTextColor(160, 140, 100, 0);
+
+            int textH = m_pTitleFont ? 18 : 10;
+            drawSetTextPos(r.x + NAV_BTN_PAD + 4, r.y + (r.h - textH) / 2);
+            drawPrintText(navLabels[nb], nameLen);
+        }
+    }
+
+    // Draw close button text last so it cannot leak text cursor state into sprite passes.
+    if (m_pCloseButton && m_pTitleFont)
+    {
+        int bx, by, bw, bh;
+        m_pCloseButton->getBounds(bx, by, bw, bh);
+        drawSetTextFont(m_pTitleFont);
+        drawSetTextColor(255, 80, 80, 0);
+        int charW = 5, charH = 5;
+        drawSetTextPos(bx + (bw - charW) / 2 - 1, by + (bh - charH) / 2 - 1);
+        drawPrintText("x", 1);
+    }
+
+    drawSetTextPos(0, 0);
+
 }
 
 // =====================================================================
@@ -730,7 +760,17 @@ void CInventoryPanel::mousePressed(vgui::MouseCode code, vgui::Panel* panel)
                         int menuY = std::min(localy, panelH - CTX_MENU_HEIGHT);
                         EInventoryItemType ctxType = EInventoryItemType::Weapon;
                         if (i >= m_weaponList.size())
-                        { const InventoryItemEntry* e = GetInventoryItem((int)i); if (e) ctxType = e->type; }
+                        {
+                            if (i < m_weaponList.size() + m_inventoryItems.size())
+                            {
+                                const InventoryItemEntry* e = GetInventoryItem((int)i);
+                                if (e) ctxType = e->type;
+                            }
+                            else if (i < m_weaponList.size() + m_inventoryItems.size() + m_ammoGridEntries.size())
+                            {
+                                ctxType = EInventoryItemType::Ammo;
+                            }
+                        }
                         m_pContextMenu->Show(menuX, menuY, (int)i, ctxType);
                     }
                     return;
@@ -763,6 +803,7 @@ void CInventoryPanel::mousePressed(vgui::MouseCode code, vgui::Panel* panel)
                 m_eActiveTab = newTab;
                 CloseContextMenu();
                 m_gridView.CancelDrag();
+                m_skillTreeView.HandleMouseMove(-1, -1);
             }
             return;
         }
@@ -781,7 +822,8 @@ void CInventoryPanel::mousePressed(vgui::MouseCode code, vgui::Panel* panel)
         m_gridView.HandleMousePress(this, localx, localy,
             m_weaponNames, m_weaponList,
             m_weaponOffsetX, m_weaponOffsetY,
-            m_inventoryItems, m_invOffsetX, m_invOffsetY);
+            m_inventoryItems, m_invOffsetX, m_invOffsetY,
+            m_ammoGridEntries, m_ammoOffsetX, m_ammoOffsetY);
     }
     else
     {
@@ -801,7 +843,8 @@ void CInventoryPanel::mouseReleased(vgui::MouseCode code, vgui::Panel* panel)
         m_gridView.HandleMouseRelease(this, localx, localy,
             m_weaponNames, m_weaponList,
             m_weaponOffsetX, m_weaponOffsetY,
-            m_inventoryItems, m_invOffsetX, m_invOffsetY);
+            m_inventoryItems, m_invOffsetX, m_invOffsetY,
+            m_ammoGridEntries, m_ammoOffsetX, m_ammoOffsetY);
     }
 }
 
@@ -811,6 +854,12 @@ void CInventoryPanel::cursorMoved(int x, int y, vgui::Panel* panel)
     {
         m_gridView.HandleMouseMove(this,
             m_weaponOffsetX, m_weaponOffsetY, m_weaponList,
-            m_invOffsetX, m_invOffsetY);
+            m_inventoryItems,
+            m_invOffsetX, m_invOffsetY,
+            m_ammoGridEntries, m_ammoOffsetX, m_ammoOffsetY);
+    }
+    else
+    {
+        m_skillTreeView.HandleMouseMove(x, y);
     }
 }

@@ -24,9 +24,17 @@ enum class EInventoryTab { Inventory, Upgrades };
 enum class EInventoryItemType
 {
     Weapon,
+    Ammo,
     Medkit,
     Battery,
     Junk,
+};
+
+struct InvCellWidthEntry
+{
+    const char* classname;
+    int         cellWidth;
+    static constexpr int WeaponCellWidth = 3;
 };
 
 // ------------------------------------------------------------------
@@ -133,6 +141,8 @@ private:
     std::vector<int> m_weaponOffsetY;
     std::vector<int> m_invOffsetX;
     std::vector<int> m_invOffsetY;
+    std::vector<int> m_ammoOffsetX;
+    std::vector<int> m_ammoOffsetY;
 
     // Simple hit-rect used for items (populated each frame by the grid view)
     struct IRect { int x; int y; int w; int h; };
