@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 #include "ammohistory.h" // for WEAPON
+#include "inventory_defs.h"
 #include "vgui_inventory_grid.h"
 #include "vgui_skilltree.h"
 
@@ -15,45 +16,33 @@ class CInventoryPanel;
 
 // ------------------------------------------------------------------
 // Which right-hand view is active
-// ----------------------------------------------------------------__
+// ------------------------------------------------------------------
 enum class EInventoryTab { Inventory, Upgrades };
 
 // ------------------------------------------------------------------
-// Item type -- controls context menu buttons and actions
+// InvEntryView
+//   The client's copy of one Entry.  Purely what the server said --
+//   the client never invents, moves or removes one of these.
+//   See docs/adr/0004-the-server-owns-the-inventory.md.
 // ------------------------------------------------------------------
-enum class EInventoryItemType
+struct InvEntryView
 {
-    Weapon,
-    Ammo,
-    Medkit,
-    Battery,
-    Junk,
-};
+    int kind  = 0; // EEntryKind
+    int id    = 0; // WeaponId or EItemTypeId
+    int count = 0;
+    int col   = 0;
+    int row   = 0;
 
-struct InvCellWidthEntry
-{
-    const char* classname;
-    int         cellWidth;
-    static constexpr int WeaponCellWidth = 3;
-};
-
-// ------------------------------------------------------------------
-// Non-weapon inventory item tracked on the client
-// ------------------------------------------------------------------
-struct InventoryItemEntry
-{
-    EInventoryItemType type        = EInventoryItemType::Junk;
-    std::string        classname;
-    std::string        displayName;
-    int                count       = 0;
-    HSPRITE            hSprite     = 0;
-    Rect               rc          = {};
+    EEntryKind Kind() const { return static_cast<EEntryKind>(kind); }
+    bool IsWeapon() const { return Kind() == EEntryKind::Weapon; }
+    bool IsItem()   const { return Kind() == EEntryKind::Item; }
 };
 
 // ------------------------------------------------------------------
-// Ammo entry used for grid display (collected each frame)
+// Ammo readout entry.  Ammo is not in the Grid (ADR-0001); it is
+// collected each frame and listed in the left column instead.
 // ------------------------------------------------------------------
-struct AmmoGridEntry
+struct AmmoReadoutEntry
 {
     int     ammoType = -1;
     HSPRITE hSpr     = 0;
@@ -69,22 +58,23 @@ class CInventoryContextMenu : public vgui::Panel
 public:
     CInventoryContextMenu(CInventoryPanel* pOwner, int wide, int tall);
 
-    void Show(int x, int y, int itemIndex, EInventoryItemType itemType);
+    void Show(int x, int y, int entryIndex, EEntryKind kind, int id);
     void Hide();
 
-    int                GetItemIndex() const { return m_iItemIndex; }
-    EInventoryItemType GetItemType()  const { return m_eItemType; }
-    int                GetWeaponIndex() const { return m_iItemIndex; }
+    int        GetEntryIndex() const { return m_iEntryIndex; }
+    EEntryKind GetEntryKind()  const { return m_eKind; }
+    int        GetEntryId()    const { return m_iId; }
 
     bool HandleClick(int panelLocalX, int panelLocalY);
     virtual void paintBackground();
 
 private:
-    CInventoryPanel*   m_pOwner;
-    vgui::Button*      m_pUseButton;
-    vgui::Button*      m_pDropButton;
-    int                m_iItemIndex  = -1;
-    EInventoryItemType m_eItemType   = EInventoryItemType::Weapon;
+    CInventoryPanel* m_pOwner;
+    vgui::Button*    m_pUseButton;
+    vgui::Button*    m_pDropButton;
+    int              m_iEntryIndex = -1;
+    EEntryKind       m_eKind       = EEntryKind::Empty;
+    int              m_iId         = 0;
 };
 
 // ------------------------------------------------------------------
@@ -93,7 +83,7 @@ private:
 class CInventoryMenuAction : public vgui::ActionSignal
 {
 public:
-    enum Action { ACT_EQUIP, ACT_USE = ACT_EQUIP, ACT_DROP };
+    enum Action { ACT_USE, ACT_DROP };
 
     CInventoryMenuAction(CInventoryPanel* pOwner, CInventoryContextMenu* pMenu, Action action);
     void actionPerformed(vgui::Panel* panel) override;
@@ -124,33 +114,23 @@ class CInventoryPanel : public vgui::Panel, public vgui::CDefaultInputSignal
     friend class CSkillTreeView;
 
 private:
-    vgui::Label*             m_pLabel;
-    vgui::Button*            m_pCloseButton  = nullptr;
-    vgui::Font*              m_pSmallFont    = nullptr;
-    vgui::Font*              m_pTitleFont    = nullptr;
-    std::vector<const char*> m_weaponNames;
-    std::vector<WEAPON*>     m_weaponList;
+    vgui::Label*  m_pLabel;
+    vgui::Button* m_pCloseButton = nullptr;
+    vgui::Font*   m_pSmallFont   = nullptr;
+    vgui::Font*   m_pTitleFont   = nullptr;
 
-    std::vector<InventoryItemEntry> m_inventoryItems;
+    // ---- Inventory state, as told by the server ----
+    std::vector<InvEntryView> m_entries;
+    int m_gridWidth      = INV_GRID_WIDTH;
+    int m_gridRows       = 1;
+    int m_gridRowsToDraw = 1;
 
-    // Ammo entries collected each frame for grid display
-    std::vector<AmmoGridEntry> m_ammoGridEntries;
-
-    // Grid item offsets (owned here so context-menu actions can still read them)
-    std::vector<int> m_weaponOffsetX;
-    std::vector<int> m_weaponOffsetY;
-    std::vector<int> m_invOffsetX;
-    std::vector<int> m_invOffsetY;
-    std::vector<int> m_ammoOffsetX;
-    std::vector<int> m_ammoOffsetY;
-
-    // Simple hit-rect used for items (populated each frame by the grid view)
-    struct IRect { int x; int y; int w; int h; };
-    std::vector<IRect> m_weaponRects;
+    // Ammo readout, rebuilt each paint from the weapon list.
+    std::vector<AmmoReadoutEntry> m_ammoReadout;
 
     // ---- Tab state ----
     EInventoryTab m_eActiveTab = EInventoryTab::Inventory;
-    // Nav-button rects populated each paint; used for click-detection
+    struct IRect { int x; int y; int w; int h; };
     static constexpr int k_NumNavBtns = 2;
     IRect m_navBtnRects[k_NumNavBtns] = {};
 
@@ -176,11 +156,16 @@ public:
     void Close();
     void Initialize();
 
-    void        SetWeaponNames(const char** names, int count);
-    const char* GetWeaponName(int index) const;
+    // Applies one chunk of a server sync.  'reset' starts a fresh list.
+    void UpdateInventory(bool reset, int gridWidth, int rows, int rowsToDraw,
+                         const InvEntryView* entries, int count);
 
-    void                      UpdateInventoryItem(int itemId, int count);
-    const InventoryItemEntry* GetInventoryItem(int index) const;
+    const std::vector<InvEntryView>& GetEntries() const { return m_entries; }
+    const InvEntryView* GetEntry(int index) const;
+
+    int GridWidth()      const { return m_gridWidth; }
+    int GridRows()       const { return m_gridRows; }
+    int GridRowsToDraw() const { return m_gridRowsToDraw; }
 
     // Skill-tree data update (call from UserMessage handler)
     void UpdateSkillTree(const SkillNode* nodes, int count, int skillPoints)
@@ -196,10 +181,8 @@ public:
     virtual void cursorMoved(int x, int y, vgui::Panel* panel) override;
 
 private:
-    // Kept here because SetWeaponNames still needs them to restore saved grid cells
-    int SlotCellWidth(int slotIdx) const;
-    int SlotNaturalCell(int slotIdx) const;
     void GetGridOrigin(int& x0, int& y0) const;
+    void RebuildAmmoReadout();
 };
 
 #endif

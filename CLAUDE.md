@@ -23,7 +23,9 @@ Referenced by `00-PROJECT-OVERVIEW.md` but **not yet written**: `10-COMMON-TASKS
 
 | File | Read it when |
 | --- | --- |
+| [CONTEXT.md](CONTEXT.md) | Naming anything in the custom gameplay layer. It is the glossary — match its vocabulary in code, comments, and commits, and add to it when a new term is settled |
 | [docs/PILLARS.md](docs/PILLARS.md) | Orienting on what the mod is for, checking what a gameplay system actually does today, or picking what to build next. Update it in the same commit as a change that moves a pillar |
+| [docs/adr/](docs/adr/) | Before changing something that looks arbitrary — the decisions recorded there were deliberate and the reasoning is not visible in the code |
 | [docs/TECH_DEBT.md](docs/TECH_DEBT.md) | Touching the skill tree tooltip or the inventory grid — both have known-issue entries with acceptance criteria |
 | [BUILDING.md](BUILDING.md) | Setting up a build or packaging the mod |
 | [INSTALL.md](INSTALL.md) | Installing the built mod into a Half-Life instance |

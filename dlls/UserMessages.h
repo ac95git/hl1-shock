@@ -61,4 +61,7 @@ inline int gmsgInventoryItem = 0;
 // Skill tree sync: variable-length (see SendSkillTreeToClient)
 inline int gmsgSkillTree = 0;
 
+// Inventory sync: variable-length, sent in chunks (see SendInventoryToClient)
+inline int gmsgInventory = 0;
+
 void LinkUserMessages();

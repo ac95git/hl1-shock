@@ -566,54 +566,61 @@ void ClientCommand(edict_t* pEntity)
 	}
 	else if (FStrEq(pcmd, "inv_use"))
 	{
-		// Use a consumable inventory item by classname (sent from the VGUI inventory panel).
-		const char* szItem = CMD_ARGV(1);
-
-		if (FStrEq(szItem, "item_healthkit"))
+		// inv_use <entryIndex> <kind> <id>
+		// The kind and id are the client's belief about what sits at that
+		// index; the server refuses to act if they disagree.
+		if (CMD_ARGC() >= 4)
 		{
-			if (player->m_rgItems[ITEM_HEALTHKIT] > 0)
-			{
-				if (player->TakeHealth(gSkillData.healthkitCapacity, DMG_GENERIC))
-				{
-					player->m_rgItems[ITEM_HEALTHKIT] -= 1;
-					EMIT_SOUND(ENT(player->pev), CHAN_ITEM, "items/smallmedkit1.wav", 1, ATTN_NORM);
-				}
-				// Always sync the count back so the client stays accurate.
-				MESSAGE_BEGIN(MSG_ONE, gmsgInventoryItem, NULL, player->pev);
-				WRITE_BYTE(ITEM_HEALTHKIT);
-				WRITE_BYTE((unsigned char)V_min(player->m_rgItems[ITEM_HEALTHKIT], 255));
-				MESSAGE_END();
-			}
+			InventoryUseEntry(player,
+				atoi(CMD_ARGV(1)),
+				static_cast<EEntryKind>(atoi(CMD_ARGV(2))),
+				atoi(CMD_ARGV(3)));
 		}
-		else if (FStrEq(szItem, "item_battery"))
+	}
+	else if (FStrEq(pcmd, "inv_drop"))
+	{
+		// inv_drop <entryIndex> <kind> <id>
+		if (CMD_ARGC() >= 4)
 		{
-			if (player->m_rgItems[ITEM_BATTERY] > 0 &&
-				player->HasSuit() &&
-				player->pev->armorvalue < MAX_NORMAL_BATTERY)
-			{
-				player->pev->armorvalue = V_min(
-					player->pev->armorvalue + gSkillData.batteryCapacity,
-					(float)MAX_NORMAL_BATTERY);
-				player->m_rgItems[ITEM_BATTERY] -= 1;
-
-				// Play the same sound used when picking up a battery.
-				EMIT_SOUND(ENT(player->pev), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM);
-
-				// HEV suit charge voice line.
-				int pct = (int)((player->pev->armorvalue * 100.0f) * (1.0f / MAX_NORMAL_BATTERY) + 0.5f);
-				pct = (pct / 5);
-				if (pct > 0) pct--;
-				char szcharge[64];
-				sprintf(szcharge, "!HEV_%1dP", pct);
-				player->SetSuitUpdate(szcharge, false, SUIT_NEXT_IN_30SEC);
-
-				MESSAGE_BEGIN(MSG_ONE, gmsgInventoryItem, NULL, player->pev);
-				WRITE_BYTE(ITEM_BATTERY);
-				WRITE_BYTE((unsigned char)V_min(player->m_rgItems[ITEM_BATTERY], 255));
-				MESSAGE_END();
-			}
+			InventoryDropEntry(player,
+				atoi(CMD_ARGV(1)),
+				static_cast<EEntryKind>(atoi(CMD_ARGV(2))),
+				atoi(CMD_ARGV(3)));
 		}
-		// (additional consumable types can be added here)
+	}
+	else if (FStrEq(pcmd, "inv_move"))
+	{
+		// inv_move <entryIndex> <kind> <id> <col> <row>
+		if (CMD_ARGC() >= 6)
+		{
+			InventoryMoveEntry(player,
+				atoi(CMD_ARGV(1)),
+				static_cast<EEntryKind>(atoi(CMD_ARGV(2))),
+				atoi(CMD_ARGV(3)),
+				atoi(CMD_ARGV(4)),
+				atoi(CMD_ARGV(5)));
+		}
+	}
+	else if (FStrEq(pcmd, "inv_sync"))
+	{
+		// Client asking for a fresh copy, e.g. when opening the panel.
+		SendInventoryToClient(player);
+	}
+	else if (FStrEq(pcmd, "inv_addrows"))
+	{
+		// Cheat-gated tuning aid: grow the Grid without needing an upgrade
+		// pickup, so the maximum can be judged by eye. See docs/PILLARS.md.
+		if (0 != g_psv_cheats->value)
+		{
+			const int n = (CMD_ARGC() >= 2) ? atoi(CMD_ARGV(1)) : 1;
+			const int granted = player->m_inventory.GrantRows(n);
+
+			ClientPrint(pev, HUD_PRINTCONSOLE,
+				UTIL_VarArgs("Granted %d row(s); grid is now %d rows (inv_rows_max %d).\n",
+					granted, player->m_inventory.Rows(), (int)inv_rows_max.value));
+
+			SendInventoryToClient(player);
+		}
 	}
 	else if (FStrEq(pcmd, "spectate")) // clients wants to become a spectator
 	{

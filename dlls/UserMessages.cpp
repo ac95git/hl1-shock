@@ -87,4 +87,6 @@ void LinkUserMessages()
 	gmsgSkillTree = REG_USER_MSG("SkillTree", -1);
 
 	ALERT(at_console, "[LinkUserMessages] Done: gmsgSkillTree=%d\n", gmsgSkillTree);
+
+	gmsgInventory = REG_USER_MSG("Inventory", -1);
 }

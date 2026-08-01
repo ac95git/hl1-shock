@@ -221,26 +221,12 @@ class CItemBattery : public CItem
 		if (!pPlayer->HasSuit())
 			return false;
 
-		// Add to inventory instead of charging armor immediately.
-		pPlayer->m_rgItems[ITEM_BATTERY] += 1;
+		// Add to the Inventory instead of charging armor immediately.
+		// A full Grid refuses it and the battery stays in the world.
+		if (InventoryGiveItem(pPlayer, EItemTypeId::Battery) <= 0)
+			return false;
 
 		EMIT_SOUND(pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM);
-
-		ALERT(at_console, "[Battery] gmsgInventoryItem=%d gmsgItemPickup=%d\n",
-			gmsgInventoryItem, gmsgItemPickup);
-
-		// Notify client of updated count.
-		if (gmsgInventoryItem != 0)
-		{
-			MESSAGE_BEGIN(MSG_ONE, gmsgInventoryItem, NULL, pPlayer->pev);
-			WRITE_BYTE(ITEM_BATTERY);
-			WRITE_BYTE((unsigned char)V_min(pPlayer->m_rgItems[ITEM_BATTERY], 255));
-			MESSAGE_END();
-		}
-		else
-		{
-			ALERT(at_console, "[Battery] ERROR: gmsgInventoryItem is 0, skipping!\n");
-		}
 
 		// Standard ItemPickup for pickup history HUD.
 		MESSAGE_BEGIN(MSG_ONE, gmsgItemPickup, NULL, pPlayer->pev);
@@ -268,9 +254,10 @@ class CItemAntidote : public CItem
 	}
 	bool MyTouch(CBasePlayer* pPlayer) override
 	{
-		pPlayer->SetSuitUpdate("!HEV_DET4", false, SUIT_NEXT_IN_1MIN);
+		if (InventoryGiveItem(pPlayer, EItemTypeId::Antidote) <= 0)
+			return false;
 
-		pPlayer->m_rgItems[ITEM_ANTIDOTE] += 1;
+		pPlayer->SetSuitUpdate("!HEV_DET4", false, SUIT_NEXT_IN_1MIN);
 		return true;
 	}
 };
@@ -292,8 +279,7 @@ class CItemSecurity : public CItem
 	}
 	bool MyTouch(CBasePlayer* pPlayer) override
 	{
-		pPlayer->m_rgItems[ITEM_SECURITY] += 1;
-		return true;
+		return InventoryGiveItem(pPlayer, EItemTypeId::Keycard) > 0;
 	}
 };
 

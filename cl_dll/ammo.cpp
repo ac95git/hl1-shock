@@ -240,7 +240,7 @@ DECLARE_MESSAGE(m_Ammo, AmmoPickup); // flashes an ammo pickup record
 DECLARE_MESSAGE(m_Ammo, WeapPickup); // flashes a weapon pickup record
 DECLARE_MESSAGE(m_Ammo, HideWeapon); // hides the weapon, ammo, and crosshair displays temporarily
 DECLARE_MESSAGE(m_Ammo, ItemPickup);
-DECLARE_MESSAGE(m_Ammo, InvItem);
+DECLARE_MESSAGE(m_Ammo, Inventory);
 DECLARE_MESSAGE(m_Ammo, SkillTree);
 
 DECLARE_COMMAND(m_Ammo, Slot1);
@@ -274,7 +274,7 @@ bool CHudAmmo::Init()
 	HOOK_MESSAGE(ItemPickup);
 	HOOK_MESSAGE(HideWeapon);
 	HOOK_MESSAGE(AmmoX);
-	HOOK_MESSAGE(InvItem);
+	HOOK_MESSAGE(Inventory);
 	HOOK_MESSAGE(SkillTree);
 
 	HOOK_COMMAND("slot1", Slot1);
@@ -372,13 +372,9 @@ void CHudAmmo::Think()
 			}
 		}
 
-		// Inventory changed on client-side weapons resource (gWR).
-		// If the VGUI inventory panel exists, refresh its list from gWR.
-		if (gViewPort && gViewPort->m_pInventoryPanel)
-		{
-			// Passing nullptr/0 causes SetWeaponNames to rebuild names from gWR.
-			gViewPort->m_pInventoryPanel->SetWeaponNames(nullptr, 0);
-		}
+		// The Inventory does not need refreshing here: the server owns it and
+		// pushes a sync whenever it changes (ADR-0004). gWR is only consulted
+		// for weapon sprites and ammo state at paint time.
 	}
 
 	if (!gpActiveSel)
@@ -543,15 +539,36 @@ bool CHudAmmo::MsgFunc_ItemPickup(const char* pszName, int iSize, void* pbuf)
 	return true;
 }
 
-bool CHudAmmo::MsgFunc_InvItem(const char* pszName, int iSize, void* pbuf)
+bool CHudAmmo::MsgFunc_Inventory(const char* pszName, int iSize, void* pbuf)
 {
 	BEGIN_READ(pbuf, iSize);
-	int iItemId = READ_BYTE();
-	int iCount  = READ_BYTE();
 
-	// Forward to the inventory panel if it exists so it can refresh its item list.
+	const bool reset      = READ_BYTE() != 0;
+	const int gridWidth   = READ_BYTE();
+	const int rows        = READ_BYTE();
+	const int rowsToDraw  = READ_BYTE();
+	const int count       = READ_BYTE();
+
+	// A full Inventory does not fit in one user message, so the server sends
+	// it in chunks; the first carries the reset flag. See SendInventoryToClient.
+	static InvEntryView entries[INV_SYNC_CHUNK];
+	const int safeCount = (count < INV_SYNC_CHUNK) ? count : INV_SYNC_CHUNK;
+
+	for (int i = 0; i < safeCount; ++i)
+	{
+		InvEntryView& e = entries[i];
+		e.kind  = READ_BYTE();
+		e.id    = READ_BYTE();
+		e.count = READ_BYTE();
+		e.col   = READ_BYTE();
+		e.row   = READ_BYTE();
+	}
+
 	if (gViewPort && gViewPort->m_pInventoryPanel)
-		gViewPort->m_pInventoryPanel->UpdateInventoryItem(iItemId, iCount);
+	{
+		gViewPort->m_pInventoryPanel->UpdateInventory(
+			reset, gridWidth, rows, rowsToDraw, entries, safeCount);
+	}
 
 	return true;
 }

@@ -17,6 +17,7 @@
 
 #include "pm_materials.h"
 #include "player_skills.h"
+#include "player_inventory.h"
 
 
 #define PLAYER_FATAL_FALL_SPEED 1024															  // approx 60 feet
@@ -360,6 +361,9 @@ public:
 
 	// ---- Skill tree ----
 	CPlayerSkills m_skills;
+
+	// ---- Inventory ----
+	CPlayerInventory m_inventory;
 };
 
 inline void CBasePlayer::SetWeaponBit(int id)

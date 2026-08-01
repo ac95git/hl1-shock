@@ -809,6 +809,17 @@ void CBasePlayer::RemoveAllItems(bool removeSuit)
 	for (i = 0; i < MAX_AMMO_SLOTS; i++)
 		m_rgAmmo[i] = 0;
 
+	// This function empties m_rgpPlayerItems directly rather than going
+	// through RemovePlayerItem, so the Cells those weapons held have to be
+	// released here or the Grid keeps showing weapons the player no longer
+	// has. Walked backwards because RemoveAt shifts later Entries down.
+	for (int e = m_inventory.EntryCount() - 1; e >= 0; --e)
+	{
+		if (m_inventory.KindAt(e) == EEntryKind::Weapon)
+			m_inventory.RemoveAt(e);
+	}
+	SendInventoryToClient(this);
+
 	UpdateClientData();
 }
 
@@ -3057,6 +3068,10 @@ bool CBasePlayer::Save(CSave& save)
 	if (!SkillsSave(m_skills, save))
 		return false;
 
+	// Inventory contents AND layout -- the client cannot persist either,
+	// see docs/adr/0004-the-server-owns-the-inventory.md.
+	if (!InventorySave(m_inventory, save))
+		return false;
 
 	return save.WriteFields("PLAYER", this, m_playerSaveData, ARRAYSIZE(m_playerSaveData));
 }
@@ -3077,6 +3092,9 @@ bool CBasePlayer::Restore(CRestore& restore)
 
 	// Restore skill-tree state (non-fatal if the block is absent in an older save).
 	SkillsRestore(m_skills, restore);
+
+	// Same for the inventory: a save predating it simply leaves an empty one.
+	InventoryRestore(m_inventory, restore);
 
 	bool status = restore.ReadFields("PLAYER", this, m_playerSaveData, ARRAYSIZE(m_playerSaveData));
 
@@ -3799,6 +3817,14 @@ bool CBasePlayer::AddPlayerItem(CBasePlayerItem* pItem)
 
 	if (pItem->CanAddToPlayer(this))
 	{
+		// Claim Grid space BEFORE accepting the weapon.  A weapon that will
+		// not fit is left in the world rather than carried invisibly --
+		// returning false here makes DefaultTouch leave it alone.
+		if (!m_inventory.TryAddWeapon(pItem->m_iId))
+		{
+			return false;
+		}
+
 		pItem->AddToPlayer(this);
 
 		g_pGameRules->PlayerGotWeapon(this, pItem);
@@ -3838,6 +3864,7 @@ bool CBasePlayer::AddPlayerItem(CBasePlayerItem* pItem)
 			SwitchWeapon(pItem);
 		}
 
+		SendInventoryToClient(this);
 		return true;
 	}
 	else if (gEvilImpulse101)
@@ -3852,6 +3879,17 @@ bool CBasePlayer::AddPlayerItem(CBasePlayerItem* pItem)
 
 bool CBasePlayer::RemovePlayerItem(CBasePlayerItem* pItem)
 {
+	// Release the Cells this weapon held.  Done up front so every path out
+	// of this function frees the space, not just the common one.
+	{
+		const int entry = m_inventory.FindEntry(EEntryKind::Weapon, pItem->m_iId);
+		if (entry >= 0)
+		{
+			m_inventory.RemoveAt(entry);
+			SendInventoryToClient(this);
+		}
+	}
+
 	if (m_pActiveItem == pItem)
 	{
 		ResetAutoaim();
@@ -4701,8 +4739,6 @@ int CBasePlayer::GetCustomDecalFrames()
 //=========================================================
 void CBasePlayer::DropPlayerItem(char* pszItemName)
 {
-	ALERT(at_console, "%s drop attempt\n", pszItemName);
-	
 	if (!g_pGameRules->IsMultiplayer() || (weaponstay.value > 0))
 	{
 		// no dropping in single player.
@@ -4763,34 +4799,33 @@ void CBasePlayer::DropPlayerItem(char* pszItemName)
 
 			ClearWeaponBit(pWeapon->m_iId); // take item off hud
 
-			ALERT(at_console, "%s dropping...\n", pszItemName);
-			CWeaponBox* pWeaponBox = (CWeaponBox*)CBaseEntity::Create(pszItemName, pev->origin + gpGlobals->v_forward * 10, pev->angles, edict());
-			pWeaponBox->pev->angles.x = 0;
-			pWeaponBox->pev->angles.z = 0;
-			pWeaponBox->PackWeapon(pWeapon);
-			pWeaponBox->pev->velocity = gpGlobals->v_forward * 300 + gpGlobals->v_forward * 100;
+			// Hand the weapon back to the world as an ordinary pickup rather
+			// than a box: a crowbar on the floor should read as a crowbar.
+			// Boxes are for Stacks -- see docs/PILLARS.md.
+			//
+			// RemovePlayerItem also releases the Cells this weapon held.
+			RemovePlayerItem(pWeapon);
 
-			// drop half of the ammo for this weapon.
-			int iAmmoIndex;
+			CBaseEntity* pDropped = CBaseEntity::Create(
+				pszItemName, pev->origin + gpGlobals->v_forward * 10, pev->angles, edict());
 
-			iAmmoIndex = GetAmmoIndex(pWeapon->pszAmmo1()); // ???
-
-			if (iAmmoIndex != -1)
+			if (pDropped)
 			{
-				// this weapon weapon uses ammo, so pack an appropriate amount.
-				if ((pWeapon->iFlags() & ITEM_FLAG_EXHAUSTIBLE) != 0)
+				pDropped->pev->angles.x = 0;
+				pDropped->pev->angles.z = 0;
+				pDropped->pev->velocity = gpGlobals->v_forward * 300;
+
+				// A dropped weapon carries no ammo. Ammo is a pool, not part of
+				// the weapon (ADR-0001), so granting the pickup default would let
+				// a player farm ammo by dropping and retaking the same gun.
+				if (auto droppedWeapon = dynamic_cast<CBasePlayerWeapon*>(pDropped); droppedWeapon)
 				{
-					// pack up all the ammo, this weapon is its own ammo type
-					pWeaponBox->PackAmmo(MAKE_STRING(pWeapon->pszAmmo1()), m_rgAmmo[iAmmoIndex]);
-					m_rgAmmo[iAmmoIndex] = 0;
-				}
-				else
-				{
-					// pack half of the ammo
-					pWeaponBox->PackAmmo(MAKE_STRING(pWeapon->pszAmmo1()), m_rgAmmo[iAmmoIndex] / 2);
-					m_rgAmmo[iAmmoIndex] /= 2;
+					droppedWeapon->m_iDefaultAmmo = 0;
 				}
 			}
+
+			// The carried instance is gone; the dropped entity replaces it.
+			UTIL_Remove(pWeapon);
 
 			return; // we're done, so stop searching with the FOR loop.
 		}

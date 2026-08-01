@@ -31,10 +31,6 @@ private:
 	WEAPON* rgSlots[MAX_WEAPON_SLOTS + 1][MAX_WEAPON_POSITIONS + 1]; // The slots currently in use by weapons.  The value is a pointer to the weapon;  if it's NULL, no weapon is there
 	int riAmmo[MAX_AMMO_TYPES];										 // count of each ammo type
 
-	// Inventory grid cell assignments, indexed by weapon iId.
-	// -1 means no user-assigned position (use default).
-	int riGridCell[MAX_WEAPONS];
-
 public:
 	void Init()
 	{
@@ -47,7 +43,6 @@ public:
 		iOldWeaponBits = 0;
 		memset(rgSlots, 0, sizeof rgSlots);
 		memset(riAmmo, 0, sizeof riAmmo);
-		memset(riGridCell, 0xFF, sizeof riGridCell); // fill with -1
 	}
 
 	///// WEAPON /////
@@ -96,21 +91,6 @@ public:
 
 	HSPRITE* GetAmmoPicFromWeapon(int iAmmoId, Rect& rect);
 
-	///// INVENTORY GRID /////
-	// Get the grid cell assigned to weapon iId (-1 = no assignment)
-	int GetGridCell(int iId) const
-	{
-		if (iId < 0 || iId >= MAX_WEAPONS)
-			return -1;
-		return riGridCell[iId];
-	}
-
-	// Set the grid cell for weapon iId (-1 to clear)
-	void SetGridCell(int iId, int cell)
-	{
-		if (iId >= 0 && iId < MAX_WEAPONS)
-			riGridCell[iId] = cell;
-	}
 };
 
 extern WeaponsResource gWR;

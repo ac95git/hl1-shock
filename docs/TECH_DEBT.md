@@ -1,5 +1,47 @@
 # Technical Debt Register
 
+## VGUI Draw Order: All Sprites, Then All Text
+
+### Scope
+Every VGUI panel that draws both sprites and text in one pass — currently
+[cl_dll/vgui_inventory.cpp](../cl_dll/vgui_inventory.cpp),
+[cl_dll/vgui_inventory_grid.cpp](../cl_dll/vgui_inventory_grid.cpp),
+[cl_dll/vgui_skilltree.cpp](../cl_dll/vgui_skilltree.cpp).
+
+### The rule
+**Draw every sprite first, then every piece of text.** Text drawn before a later
+`SPR_DrawAdditive` gets overwritten — the sprite renders in place of the glyphs.
+
+Interleaving per row or per item looks natural and is wrong:
+
+```cpp
+for (auto& row : rows) { DrawSprite(row); DrawText(row); }   // text is eaten
+```
+
+Collect the text into a small local list during the sprite pass and flush it at the end
+of `paintBackground`. `DeferredCountLabel` in the grid view and `DeferredText` in the
+inventory panel are the existing examples.
+
+This applies across the *whole* paint, not just within one helper: a panel that draws
+text and then calls a sub-view which draws sprites has the same bug. That is why the
+ammo readout collects its counts in the left column and draws them after the Grid.
+
+### Why This Is Debt
+The underlying cause is not understood — it is presumed to be text cursor / render state
+left behind by the VGUI1 text path, which the sprite path then trips over. Every call
+site works around the symptom rather than fixing the cause, and the workaround is easy to
+forget because interleaved drawing is the obvious way to write it.
+
+### Recommended Next Steps
+1. Find the actual state leak between `drawPrintText`/`drawSetTextPos` and `SPR_DrawAdditive`.
+2. If it can be reset explicitly, wrap it in one helper and delete the deferral lists.
+3. Failing that, give panels a tiny shared "deferred text" collector so the workaround is
+   one type rather than re-invented per file.
+
+### Acceptance Criteria For Closure
+- A panel can draw sprites and text in natural order without text loss.
+- The deferral lists are gone.
+
 ## Skill Tree Tooltip Layout Reliability
 
 ### Scope
@@ -48,32 +90,20 @@ However, tooltip sizing/wrapping is still not fully robust in all cases.
 ### Notes
 This debt is non-blocking for gameplay and can be addressed in a dedicated UI refinement pass.
 
-## Inventory Grid Placement Consistency
+## Inventory Grid Placement Consistency — RESOLVED 2026-08-01
 
-### Scope
-- Inventory grid layout and drag/drop behavior in [cl_dll/vgui_inventory_grid.cpp](../cl_dll/vgui_inventory_grid.cpp)
-- Context: mixed-width slots (weapons/items/ammo), offset persistence, and normalization after drag/pickup
+Closed by deletion rather than by fixing. The client-side placement solver
+(`NormalizeGridLayout`) no longer exists: the server owns each Entry's position, the client
+renders what it is told, and nothing re-packs the Grid behind the player's back. See
+[adr/0004-the-server-owns-the-inventory.md](adr/0004-the-server-owns-the-inventory.md).
 
-### Current State (as of 2026-05-10)
-- Overlap/overflow prevention was added through layout normalization and drag clamping.
-- Core behavior is improved and generally stable.
+All three acceptance criteria are met structurally, not behaviourally — an Entry can only sit
+where the server put it, and the server refuses any placement that overlaps or overflows:
 
-### Known Issues
-1. Layout normalization can still produce occasional visual inconsistencies after complex manual drags.
-2. Neighbor slot movement during or after drag may feel non-deterministic in some sequences.
-3. Mixed-width slot repacking priority is heuristic, so final placement may be surprising to players in edge cases.
+- No overlap/overflow across all Entry widths — enforced by `CPlayerInventory::CanPlaceAt`.
+- Repeated drag/drop sequences produce stable placements — a drag is a request for one specific
+  Cell, accepted or rejected; there is no solver to produce a different answer the second time.
+- Non-involved Entries never move — nothing but an explicit `inv_move` changes a position.
 
-### Why This Is Debt
-- The placement solver currently prioritizes safety (no overlap/overflow) over strict positional predictability.
-- Resolution rules are implicit and not yet codified as user-facing behavior.
-
-### Recommended Next Steps
-1. Define explicit placement invariants (for example: preserve untouched slot order, only move colliding slots).
-2. Split "live drag clamping" from "post-drop normalization" so behavior is easier to reason about.
-3. Add deterministic tie-break rules for mixed-width placement and document them in code comments.
-4. Add a debug overlay mode to visualize slot occupancy and solver decisions.
-
-### Acceptance Criteria For Closure
-- No overlap/overflow across all slot types and widths.
-- Repeated drag/drop sequences produce stable, predictable placements.
-- Non-involved neighboring slots do not move unless required by explicit collision resolution rules.
+Kept as a record because the mixed-width fragmentation that caused much of this is also gone:
+the Grid width is now a multiple of the weapon width, so no Cell is stranded at a row end.

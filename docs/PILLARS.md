@@ -6,7 +6,7 @@ document tracks the custom gameplay on top of it.
 This is a living document. When a pillar's state changes, update its section and the summary table in the
 same commit as the code change.
 
-**Last updated:** 2026-08-01 (branch `hl-shock`, including uncommitted working-tree changes)
+**Last updated:** 2026-08-01 (branch `hl-shock`, at `ecd76a5`)
 
 ## Status legend
 
@@ -25,7 +25,7 @@ same commit as the code change.
 | 2 | [Enhanced combat](#2-enhanced-combat) | **Not started** | Exists only as skill descriptions; no weapon or damage code changed. |
 | 3 | [Custom items](#3-custom-items) | **Scaffolded** | Two stock consumables usable from the inventory; no custom item framework. |
 | 4 | [Skill trees](#4-skill-trees) | **Scaffolded** | Full tree unlocks, saves, and renders — but no unlocked skill changes gameplay. |
-| 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work. Client-side model only. |
+| 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work. Client-side model only — the server-owned rebuild is designed and scheduled. |
 
 ---
 
@@ -49,9 +49,13 @@ code is worth writing:
 
 ### Next step
 
-Decide the reward loop first. Exploration is the natural source of skill points — right now `m_iSkillPoints`
-is hardcoded to 20 for UI testing and there is no way to earn one. Wiring "discover an optional area →
-gain a skill point" would give pillars 1 and 4 a shared spine.
+The reward loop has its first concrete answer: **Row Grants**. Inventory capacity grows from things found
+in the world rather than from Skills (see pillar 5), so a hidden cache off the critical path permanently
+increases what the player can carry. That is exploration's first real mechanic, and it arrives as part of
+inventory iteration 3.
+
+Skill points remain unearnable — `m_iSkillPoints` is still hardcoded to 20 for UI testing. Whether
+exploration should *also* award them is open.
 
 ### Acceptance criteria (draft)
 
@@ -120,9 +124,10 @@ don't each invent their own hook.
 
 ### Next step
 
-Before adding items, give them a shared definition — one table both DLLs agree on, keyed by a stable id, in
-the spirit of `k_SkillDefs`. Then the first genuinely custom item is a small addition rather than a fifth
-special case.
+Decided as part of the inventory design: **one Item Type table under `game_shared/`, compiled into both
+DLLs**, so the client and server cannot disagree. It lands in inventory iteration 1, and the first
+genuinely custom item becomes one table entry plus its effect. Weapons stay on Half-Life's own identity —
+see [ADR-0002](adr/0002-two-identity-spaces-for-weapons-and-items.md).
 
 ### Acceptance criteria (draft)
 
@@ -181,6 +186,11 @@ The most complete system by line count, and the one furthest from affecting play
 Fix the `SprintSpeed` prerequisite, then wire the first effect (see pillar 2). Movement skills — `HighJump`,
 `SprintSpeed` — need `pm_shared/` and therefore touch both DLLs; start with a server-only effect instead.
 
+Note that inventory capacity was considered as the first Skill effect and deliberately moved to exploration
+instead (pillar 5). Nothing in the inventory work will give this pillar an effect, so it stays Scaffolded
+until a combat skill is wired. The Row Grant counter is source-agnostic, so a capacity Skill can still
+grant Rows later without rework.
+
 ### Acceptance criteria (draft)
 
 - Every unlocked skill has an observable effect.
@@ -215,24 +225,105 @@ the default weapon sprites don't bleed through the panel.
 
 ### What's missing
 
-- **There is no server-side inventory.** The client mirrors `m_rgItems[]` counts and weapon state; layout,
-  ordering, and slot positions exist only on the client and are not saved with the game.
-- No capacity, weight, or stack limits — nothing that makes "management" a decision.
-- Drop is wired for items in the UI but unhandled on the server (see pillar 3).
-- Placement solver debt: repeated manual drags can produce surprising placements. See
-  [TECH_DEBT.md](TECH_DEBT.md).
+Iteration 1 is **done** — the model is server-owned, saved, and capacity-limited. Remaining:
 
-### Next step
+- **Iteration 2, the pickup interaction.** No Pickup Prompt, no use-to-take, no medkit Auto-Consume.
+  Weapons are still taken by walking over them (they are just refusable now), and items still enter the
+  Inventory on touch rather than on a deliberate press.
+- **Iteration 3, containers and the world.** Dropping a Stack prints a message and does nothing; there is
+  no Box holding items and no Row Grant pickup entity, so Rows can currently only be earned via
+  `inv_addrows`.
+- No custom Item Types yet — the table holds the four stock ones.
 
-Decide whether inventory layout is *presentation* (fine as-is, client-only) or *state* (needs to persist
-through save/load and belongs on the server). That answer determines everything else in this pillar. If
-management is meant to be a real constraint, capacity limits come next.
+### Deliberately deferred
 
-### Acceptance criteria (draft)
+Designed, agreed, and **not** in the first server-side version. Recorded so they aren't rediscovered as
+bugs:
 
-- No overlap or overflow across all slot types and widths.
-- Repeated drag/drop sequences produce stable, predictable placements.
-- Inventory contents survive save/load and level transitions.
+- **Dropping a Stack.** Dropping an Entry holding more than one shows a message and does nothing. The
+  intended implementation is a `CWeaponBox` extended with `(itemTypeId, count)` arrays — see the
+  container notes below. Single-count Entries still drop normally.
+- **Container UI.** Taking things out of a box is "take whatever fits, leave the rest", driven by the
+  same look-and-use prompt as any other pickup. The two-panel loot window — open a box, drag items
+  across — comes later. It is a presentation change over the same `TryAdd` logic, not new mechanics.
+- **Splitting and merging Stacks by hand.** Pickups merge automatically; there is no manual split. A
+  player wanting to drop one medkit out of five must drop all five. Purely additive to fix.
+- **Auto-sort / re-pack button.** Deliberately absent. Nothing may re-arrange the Grid behind the
+  player's back — that was the whole point of making placement explicit.
+
+Two hazards in `CWeaponBox` that must be fixed *before* anything puts items in a box, or the player's
+belongings get deleted:
+
+- `IsEmpty()` (`dlls/weapons.cpp:1357`) only checks weapons and ammo. A box holding only items would
+  report empty and be removed.
+- `Touch` clears each ammo slot unconditionally after `GiveAmmo` (`dlls/weapons.cpp:1184`), destroying
+  ammo that didn't fit in the player's pool.
+- Boxes created by the multiplayer death-drop path get `SetThink(&CWeaponBox::Kill)` (`dlls/player.cpp:698`)
+  and self-destruct on a timer. A box holding deliberately dropped belongings must never do that.
+
+### Agreed design
+
+Settled 2026-08-01. Vocabulary is in [CONTEXT.md](../CONTEXT.md); the decisions with lasting consequences
+have their own records in [adr/](adr/).
+
+**Shape.** The Inventory is a container that owns its contents, not a view over `m_rgItems[]`. An Entry is
+`(what, count, col, row)` and carries no state beyond that — there is no half-used medkit. Item Types
+declare a maximum Stack size; unique things are simply those with a maximum of one, and picking up past the
+maximum creates a second Entry.
+
+**What competes for space.** Weapons (3 Cells) and items (1 Cell). Ammo does not — see
+[ADR-0001](adr/0001-ammo-is-not-in-the-inventory.md). Ammo moves to the Inventory Panel's left column.
+
+**Grid.** 12 Cells wide, fixed; 3 Rows to start, 6 maximum, all drawn at all times with un-granted Rows
+greyed out — see [ADR-0003](adr/0003-fixed-grid-width-rows-only-growth.md). Rows are granted by things
+found in the world, not by Skills, which makes Inventory growth a reward for exploration. Because Rows are
+only ever granted, the Grid never shrinks and no eviction rules are needed.
+
+`inv_rows_start` and `inv_rows_max` are tuning cvars; granted Rows are saved player state, clamped only at
+grant time and never re-clamped on load, so lowering a cvar can never shrink a Grid under a player.
+`inv_addrows <n>` (cheat-gated) exists to tune the maximum by eye.
+
+**Ownership.** The server owns contents *and* placement; the client renders and requests — see
+[ADR-0004](adr/0004-the-server-owns-the-inventory.md). Placement on pickup is first-fit, scanning
+left-to-right, top-to-bottom.
+
+**Item Types** are defined once, in a table under `game_shared/` compiled into both DLLs. Weapons keep
+Half-Life's `WeaponId` — see [ADR-0002](adr/0002-two-identity-spaces-for-weapons-and-items.md).
+
+**Verbs.** Move, Use, Drop. Nothing else.
+
+**Acquisition.** A weapon walked over is taken automatically if there is room, and otherwise left where it
+is. A medkit walked over is consumed on the spot when doing so wastes none of its healing — the test is
+`health + heal <= maxHealth`, so a perfect fit is consumed rather than left. Everything else is taken by
+looking at it and pressing use.
+
+**Persistence.** Save games and level transitions, via `CBasePlayer`'s save table. Death is a full reload
+from the last save, so there is no respawn-inventory case to design. Things left behind stay in the map
+they were left in; maps are designed with backtracking in mind, so this is a consequence to build levels
+around rather than a problem to solve.
+
+### Planned iterations
+
+1. ~~**The model, server-side.**~~ **Done 2026-08-01.** `game_shared/inventory_defs.h` holds the Item
+   Type table; `CPlayerInventory` (`dlls/player_inventory.cpp`) holds Entries in the player's save table;
+   placement is first-fit with Stack top-up; `gmsgInventory` syncs in chunks; the client renders and
+   requests. `NormalizeGridLayout`, the offset vectors, and `gWR.riGridCell` are gone.
+2. **The pickup interaction.** Pickup Prompt, use-to-take, weapon auto-pickup, medkit Auto-Consume, Ammo
+   readout in the left column.
+   *Done when a map plays start-to-finish without opening the panel and it feels normal.*
+3. **Containers and the world.** Box extended to hold items, its three hazards fixed first, Stack
+   dropping, the Row-grant pickup entity.
+   *Done when dropping and retrieving is lossless and reversible.*
+
+Iteration 1 is the only one that is hard to reverse.
+
+### Acceptance criteria
+
+- No overlap or overflow across all Entry widths.
+- Repeated drag/drop sequences produce stable, predictable placements, and nothing moves that the player
+  did not move.
+- Inventory contents *and* layout survive save/load and level transitions.
+- Lowering an `inv_rows_*` cvar never destroys or displaces anything a player is carrying.
 
 ---
 
@@ -243,4 +334,3 @@ Not pillars, but they affect all of them:
 - Debug `ALERT(at_console, ...)` calls left in `dlls/items.cpp:229`, `dlls/healthkit.cpp:78`, and
   `dlls/UserMessages.cpp:27` log to console on every pickup and on message registration.
 - Custom systems have no tests and no debug visualization; both TECH_DEBT entries ask for a debug overlay.
-- ~1,080 lines of skill-tree and inventory work are currently uncommitted on `hl-shock`.

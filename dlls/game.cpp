@@ -460,6 +460,13 @@ cvar_t sv_pushable_fixed_tick_fudge = {"sv_pushable_fixed_tick_fudge", "15"};
 
 cvar_t sv_busters = {"sv_busters", "0", FCVAR_SERVER};
 
+// Inventory Grid sizing.  Tuning knobs only -- the Rows a player actually has
+// are saved state, captured at spawn and granted since.  Lowering either of
+// these can never shrink a Grid that already has things in it; see
+// CPlayerInventory::Rows() and docs/adr/0003-fixed-grid-width-rows-only-growth.md.
+cvar_t inv_rows_start = {"inv_rows_start", "3"};
+cvar_t inv_rows_max = {"inv_rows_max", "6"};
+
 static bool SV_InitServer()
 {
 	if (!FileSystem_LoadFileSystem())
@@ -524,6 +531,9 @@ void GameDLLInit()
 	CVAR_REGISTER(&sv_busters);
 
 	CVAR_REGISTER(&sv_allowbunnyhopping);
+
+	CVAR_REGISTER(&inv_rows_start);
+	CVAR_REGISTER(&inv_rows_max);
 
 	// REGISTER CVARS FOR SKILL LEVEL STUFF
 	// Agrunt

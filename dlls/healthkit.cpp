@@ -68,37 +68,18 @@ bool CHealthKit::MyTouch(CBasePlayer* pPlayer)
 	if (pPlayer->pev->deadflag != DEAD_NO)
 		return false;
 
-	// Store the kit in the player's inventory instead of healing immediately.
-	pPlayer->m_rgItems[ITEM_HEALTHKIT] += 1;
+	// Store the kit in the player's Inventory instead of healing immediately.
+	// A full Grid refuses it, and returning false leaves the kit in the world.
+	if (InventoryGiveItem(pPlayer, EItemTypeId::Medkit) <= 0)
+		return false;
 
 	// Pickup sound for feedback.
 	EMIT_SOUND(ENT(pPlayer->pev), CHAN_ITEM, "items/smallmedkit1.wav", 1, ATTN_NORM);
-
-	// Debug: verify the message ID is valid before sending
-	ALERT(at_console, "[HealthKit] gmsgInventoryItem=%d gmsgItemPickup=%d count=%d\n",
-		gmsgInventoryItem, gmsgItemPickup, pPlayer->m_rgItems[ITEM_HEALTHKIT]);
-
-	// Tell the client about the new count so the inventory panel can refresh.
-	if (gmsgInventoryItem != 0)
-	{
-		MESSAGE_BEGIN(MSG_ONE, gmsgInventoryItem, NULL, pPlayer->pev);
-		WRITE_BYTE(ITEM_HEALTHKIT);
-		WRITE_BYTE(V_min(pPlayer->m_rgItems[ITEM_HEALTHKIT], 255));
-		MESSAGE_END();
-	}
-	else
-	{
-		ALERT(at_console, "[HealthKit] ERROR: gmsgInventoryItem is 0, skipping message!\n");
-	}
-
-	ALERT(at_console, "[HealthKit] Sending ItemPickup message\n");
 
 	// Standard ItemPickup so the pickup history HUD still works.
 	MESSAGE_BEGIN(MSG_ONE, gmsgItemPickup, NULL, pPlayer->pev);
 	WRITE_STRING(STRING(pev->classname));
 	MESSAGE_END();
-
-	ALERT(at_console, "[HealthKit] MyTouch complete\n");
 
 	if (0 != g_pGameRules->ItemShouldRespawn(this))
 		Respawn();
