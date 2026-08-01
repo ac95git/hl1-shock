@@ -25,7 +25,11 @@ inline constexpr int INV_GRID_WIDTH = 12;
 
 // Hard ceiling on Rows, used only to size arrays.  The *playable*
 // ceiling is the inv_rows_max cvar, which must never exceed this.
-inline constexpr int INV_ROWS_ABSOLUTE_MAX = 8;
+//
+// Set generously and then left alone: it sizes the DEFINE_ARRAY fields in
+// the save table, so changing it changes the save format and invalidates
+// existing saves.  Costs ~2.9 KB per player in the save file at this size.
+inline constexpr int INV_ROWS_ABSOLUTE_MAX = 12;
 
 inline constexpr int INV_MAX_CELLS = INV_GRID_WIDTH * INV_ROWS_ABSOLUTE_MAX;
 

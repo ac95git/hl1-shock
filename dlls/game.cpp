@@ -464,8 +464,8 @@ cvar_t sv_busters = {"sv_busters", "0", FCVAR_SERVER};
 // are saved state, captured at spawn and granted since.  Lowering either of
 // these can never shrink a Grid that already has things in it; see
 // CPlayerInventory::Rows() and docs/adr/0003-fixed-grid-width-rows-only-growth.md.
-cvar_t inv_rows_start = {"inv_rows_start", "3"};
-cvar_t inv_rows_max = {"inv_rows_max", "6"};
+cvar_t inv_rows_start = {"inv_rows_start", "5"};
+cvar_t inv_rows_max = {"inv_rows_max", "9"};
 
 static bool SV_InitServer()
 {

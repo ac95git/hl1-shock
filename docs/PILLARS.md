@@ -274,10 +274,14 @@ maximum creates a second Entry.
 **What competes for space.** Weapons (3 Cells) and items (1 Cell). Ammo does not — see
 [ADR-0001](adr/0001-ammo-is-not-in-the-inventory.md). Ammo moves to the Inventory Panel's left column.
 
-**Grid.** 12 Cells wide, fixed; 3 Rows to start, 6 maximum, all drawn at all times with un-granted Rows
-greyed out — see [ADR-0003](adr/0003-fixed-grid-width-rows-only-growth.md). Rows are granted by things
-found in the world, not by Skills, which makes Inventory growth a reward for exploration. Because Rows are
-only ever granted, the Grid never shrinks and no eviction rules are needed.
+**Grid.** 12 Cells wide, fixed; **5 Rows to start and 4 more to earn, 9 maximum** (60 to 108 Cells), all
+drawn at all times with un-granted Rows greyed out — see
+[ADR-0003](adr/0003-fixed-grid-width-rows-only-growth.md). Rows are granted by things found in the world,
+not by Skills, which makes Inventory growth a reward for exploration. Because Rows are only ever granted,
+the Grid never shrinks and no eviction rules are needed.
+
+The base Grid is deliberately generous: this mod adds more weapons and items than vanilla Half-Life, whose
+full 15-weapon arsenal would occupy 45 of the 60 starting Cells on its own.
 
 `inv_rows_start` and `inv_rows_max` are tuning cvars; granted Rows are saved player state, clamped only at
 grant time and never re-clamped on load, so lowering a cvar can never shrink a Grid under a player.
