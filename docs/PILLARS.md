@@ -225,27 +225,35 @@ the default weapon sprites don't bleed through the panel.
 
 ### What's missing
 
-Iteration 1 is **done** — the model is server-owned, saved, and capacity-limited. Remaining:
+Iterations 1 and 2 are **done**, and dropping is complete — the model is server-owned, saved and
+capacity-limited, things enter the Inventory deliberately, and anything in it can be dropped back out.
+Remaining:
 
-- **Iteration 2, the pickup interaction.** No Pickup Prompt, no use-to-take, no medkit Auto-Consume.
-  Weapons are still taken by walking over them (they are just refusable now), and items still enter the
-  Inventory on touch rather than on a deliberate press.
-- **Iteration 3, containers and the world.** Dropping a Stack prints a message and does nothing; there is
-  no Box holding items and no Row Grant pickup entity, so Rows can currently only be earned via
-  `inv_addrows`.
+- **No Row Grant pickup**, so Rows can only be earned via `inv_addrows`. Needs custom maps before it can
+  be placed at all.
+- **No Boxes**, so nothing in the world holds items — lootable caches are still future work.
 - No custom Item Types yet — the table holds the four stock ones.
+- The ammo readout overflows its panel when the player carries many ammo types; it needs a taller panel,
+  a scroll, or two columns. Deferred to a UI pass.
+- The Pickup Prompt is unstyled — it uses the engine console font pending a visual style for the mod.
+- **Untested:** dropping an exhaustible weapon (satchel, tripmine, snark, hand grenade). Their ammo is the
+  item itself and lives in the pool rather than a clip, so the clip-transfer on drop does nothing for them.
+  Nothing should be lost, but it is the one weapon class whose drop path has not been exercised.
+- `inv_rows_max` has been eyeballed at 9 against vanilla content only. Re-judge it once there are more
+  weapons and items than vanilla has.
 
 ### Deliberately deferred
 
 Designed, agreed, and **not** in the first server-side version. Recorded so they aren't rediscovered as
 bugs:
 
-- **Dropping a Stack.** Dropping an Entry holding more than one shows a message and does nothing. The
-  intended implementation is a `CWeaponBox` extended with `(itemTypeId, count)` arrays — see the
-  container notes below. Single-count Entries still drop normally.
-- **Container UI.** Taking things out of a box is "take whatever fits, leave the rest", driven by the
-  same look-and-use prompt as any other pickup. The two-panel loot window — open a box, drag items
-  across — comes later. It is a presentation change over the same `TryAdd` logic, not new mechanics.
+- **Boxes, and everything that needs them.** Dropping a Stack was going to need a `CWeaponBox` extended
+  with `(itemTypeId, count)` arrays. It does not: "Drop all" spawns one world entity per item with a
+  small scatter, and a Stack is at most a handful. Boxes are now purely a future feature — lootable
+  caches and the two-panel loot window that goes with them.
+- **Container UI.** Taking things out of a box would be "take whatever fits, leave the rest", driven by
+  the same look-and-use prompt as any other pickup, with the loot window as a later presentation change
+  over the same `TryAdd` logic. Nothing depends on it today.
 - **Splitting and merging Stacks by hand.** Pickups merge automatically; there is no manual split. A
   player wanting to drop one medkit out of five must drop all five. Purely additive to fix.
 - **Auto-sort / re-pack button.** Deliberately absent. Nothing may re-arrange the Grid behind the
@@ -294,7 +302,15 @@ left-to-right, top-to-bottom.
 **Item Types** are defined once, in a table under `game_shared/` compiled into both DLLs. Weapons keep
 Half-Life's `WeaponId` — see [ADR-0002](adr/0002-two-identity-spaces-for-weapons-and-items.md).
 
-**Verbs.** Move, Use, Drop. Nothing else.
+**Verbs.** Move, Use, Drop. Nothing else. Dropping a single item spawns its world entity; dropping a
+Stack offers "Drop 1" or "Drop all", the latter spawning one entity per item with a small scatter.
+Weapons drop through Half-Life's own `DropPlayerItem`, which spawns the real weapon model.
+
+A dropped weapon keeps its **loaded clip** but grants no reserve ammo, so dropping and retaking is exactly
+lossless and never profitable. **Reserve ammo stays with the player** — it is a pool, not a property of the
+weapon (ADR-0001), so you keep shells for a shotgun you no longer own. Vanilla differs here: `CWeaponBox`
+packs half your reserve into the box. Ours is the deliberate choice, on the grounds that reserve ammo costs
+no Cells and so is harmless to carry.
 
 **Acquisition.** A weapon walked over is taken automatically if there is room, and otherwise left where it
 is. A medkit walked over is consumed on the spot when doing so wastes none of its healing — the test is
@@ -312,12 +328,18 @@ around rather than a problem to solve.
    Type table; `CPlayerInventory` (`dlls/player_inventory.cpp`) holds Entries in the player's save table;
    placement is first-fit with Stack top-up; `gmsgInventory` syncs in chunks; the client renders and
    requests. `NormalizeGridLayout`, the offset vectors, and `gWR.riGridCell` are gone.
-2. **The pickup interaction.** Pickup Prompt, use-to-take, weapon auto-pickup, medkit Auto-Consume, Ammo
-   readout in the left column.
+2. ~~**The pickup interaction.**~~ **Done 2026-08-01.** `FindLookedAtPickup` answers "what would a use
+   press take?" once, and both the Pickup Prompt and the take use that same answer, so they cannot
+   disagree. It deliberately also weighs ordinary usable entities, so pressing use at a button never
+   grabs a medkit behind it. Items are use-only now; medkits Auto-Consume on contact when nothing is
+   wasted; weapons keep walk-over pickup. Ammo readout moved to the left column in iteration 1.
    *Done when a map plays start-to-finish without opening the panel and it feels normal.*
-3. **Containers and the world.** Box extended to hold items, its three hazards fixed first, Stack
-   dropping, the Row-grant pickup entity.
-   *Done when dropping and retrieving is lossless and reversible.*
+3. ~~**Containers and the world.**~~ **Postponed 2026-08-01.** Dropping was completed without needing
+   containers: weapons became droppable, and a Stack offers "Drop 1" and "Drop all", spawning one world
+   entity per item. What remains under this heading is genuinely future work — lootable Boxes, the loot
+   window, and the `item_inventory_upgrade` pickup that grants Rows. Until that entity exists Rows come
+   only from `inv_addrows`, and it cannot be exercised in-game before there are custom maps to place one
+   in.
 
 Iteration 1 is the only one that is hard to reverse.
 

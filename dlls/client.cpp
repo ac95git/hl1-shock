@@ -579,13 +579,26 @@ void ClientCommand(edict_t* pEntity)
 	}
 	else if (FStrEq(pcmd, "inv_drop"))
 	{
-		// inv_drop <entryIndex> <kind> <id>
+		// inv_drop <entryIndex> <kind> <id>  -- one item off the Stack
 		if (CMD_ARGC() >= 4)
 		{
 			InventoryDropEntry(player,
 				atoi(CMD_ARGV(1)),
 				static_cast<EEntryKind>(atoi(CMD_ARGV(2))),
-				atoi(CMD_ARGV(3)));
+				atoi(CMD_ARGV(3)),
+				false);
+		}
+	}
+	else if (FStrEq(pcmd, "inv_dropall"))
+	{
+		// inv_dropall <entryIndex> <kind> <id>  -- the whole Stack
+		if (CMD_ARGC() >= 4)
+		{
+			InventoryDropEntry(player,
+				atoi(CMD_ARGV(1)),
+				static_cast<EEntryKind>(atoi(CMD_ARGV(2))),
+				atoi(CMD_ARGV(3)),
+				true);
 		}
 	}
 	else if (FStrEq(pcmd, "inv_move"))

@@ -64,4 +64,9 @@ inline int gmsgSkillTree = 0;
 // Inventory sync: variable-length, sent in chunks (see SendInventoryToClient)
 inline int gmsgInventory = 0;
 
+// Pickup prompt: 2 bytes (entry kind, id). Sent only when the looked-at
+// pickup changes; (0,0) clears it. The client resolves the display name from
+// the shared Item Type table, so no strings go over the wire.
+inline int gmsgPickupPrompt = 0;
+
 void LinkUserMessages();

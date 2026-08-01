@@ -1,6 +1,53 @@
 # Custom Features
 
-This project includes custom gameplay systems such as the player skill tree and inventory UI. This guide explains how to extend the skill tree safely.
+This project includes custom gameplay systems such as the player skill tree and the Inventory. This guide
+explains how to extend them safely.
+
+Terms used here — Entry, Stack, Item Type, Cell, Row — are defined in [CONTEXT.md](../CONTEXT.md).
+Decisions that look arbitrary are explained in [docs/adr/](../docs/adr/).
+
+## Adding an Item Type
+
+Item Types are defined **once**, in [game_shared/inventory_defs.h](../game_shared/inventory_defs.h),
+compiled into both DLLs so the client and server cannot disagree. Adding one is a single table entry plus
+its behaviour.
+
+1. Add an id to `EItemTypeId`, before `_Count`. **Ids are frozen once written to a save** — adding is
+   free, reordering or reusing corrupts existing saves.
+2. Add the matching row to `k_ItemTypes[]`:
+   - `classname` is the world entity spawned when the item is dropped; `nullptr` means it cannot be dropped
+   - `displayName` is shown in the Inventory Panel and the Pickup Prompt
+   - `spriteName` comes from the HUD sprite set in `sprites/hud.txt`; `nullptr` renders without an icon
+   - `cellWidth` is how many Cells it occupies
+   - `maxStack` is the Stack ceiling — `1` means unique
+3. If it does something when used, add a case to `InventoryUseEntry` in
+   [dlls/player_inventory.cpp](../dlls/player_inventory.cpp). Use behaviour is server-side only; the
+   client never decides what using something does.
+4. If it is picked up in the world, give it a `CItem` subclass whose `MyTouch` calls `InventoryGiveItem`,
+   and override `AutoPickupOnTouch()` to return `false` so it is taken with a use press rather than by
+   walking over it.
+
+Weapons are **not** Item Types — they keep Half-Life's own `WeaponId`. See
+[ADR-0002](../docs/adr/0002-two-identity-spaces-for-weapons-and-items.md).
+
+## Inventory console commands and cvars
+
+| Command | What it does |
+| --- | --- |
+| `inv_move <entry> <kind> <id> <col> <row>` | Move an Entry. The kind and id guard against a stale index |
+| `inv_use <entry> <kind> <id>` | Use an Entry |
+| `inv_drop <entry> <kind> <id>` | Drop one item off a Stack |
+| `inv_dropall <entry> <kind> <id>` | Drop a whole Stack, one world entity per item |
+| `inv_sync` | Ask the server to resend the Inventory |
+| `inv_addrows <n>` | **Cheat-gated.** Grant Rows without an upgrade pickup — the tuning aid for judging the Row ceiling by eye |
+
+| Cvar | Default | What it does |
+| --- | --- | --- |
+| `inv_rows_start` | 5 | Rows a new game begins with |
+| `inv_rows_max` | 9 | Ceiling on granted Rows, and how many Rows are drawn |
+
+Both cvars are **tuning knobs only**. The Rows a player actually has are saved state, captured at spawn
+and granted since, so lowering either can never shrink a Grid that already holds things.
 
 ## Adding a Skill
 

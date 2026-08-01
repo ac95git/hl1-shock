@@ -5,6 +5,7 @@
 #include "monsters.h"
 #include "weapons.h"
 #include "player.h"
+#include "items.h"
 #include "skill.h"
 #include "game.h"
 #include "player_inventory.h"
@@ -575,7 +576,8 @@ bool InventoryUseEntry(CBasePlayer* pPlayer, int index, EEntryKind expectedKind,
 //=========================================================
 // Verb: Drop
 //=========================================================
-bool InventoryDropEntry(CBasePlayer* pPlayer, int index, EEntryKind expectedKind, int expectedId)
+bool InventoryDropEntry(CBasePlayer* pPlayer, int index, EEntryKind expectedKind, int expectedId,
+	bool dropAll)
 {
 	if (!pPlayer)
 		return false;
@@ -600,30 +602,38 @@ bool InventoryDropEntry(CBasePlayer* pPlayer, int index, EEntryKind expectedKind
 	if (!def || !def->classname)
 		return false;
 
-	// Dropping a Stack needs a Box to put it in, which is iteration 3.
-	// Until then say so plainly rather than silently dropping one of them.
-	if (inv.CountAt(index) > 1)
-	{
-		ClientPrint(pPlayer->pev, HUD_PRINTCENTER, "Can't drop a stack yet.\n");
+	const int wanted = dropAll ? inv.CountAt(index) : 1;
+	if (wanted <= 0)
 		return false;
-	}
 
 	UTIL_MakeVectors(pPlayer->pev->angles);
 
-	CBaseEntity* pDropped = CBaseEntity::Create(
-		(char*)def->classname,
-		pPlayer->pev->origin + gpGlobals->v_forward * 10,
-		pPlayer->pev->angles,
-		pPlayer->edict());
+	const Vector vecOrigin = pPlayer->pev->origin + gpGlobals->v_forward * 10;
 
-	if (!pDropped)
+	int dropped = 0;
+	for (int i = 0; i < wanted; ++i)
+	{
+		CBaseEntity* pDropped = CBaseEntity::Create(
+			(char*)def->classname, vecOrigin, pPlayer->pev->angles, pPlayer->edict());
+
+		if (!pDropped)
+			break;
+
+		pDropped->pev->angles.x = 0;
+		pDropped->pev->angles.z = 0;
+
+		// Scatter so a dropped Stack lands as a small pile rather than one
+		// model hiding the rest. A Stack is at most a handful of items.
+		pDropped->pev->velocity = gpGlobals->v_forward * 200
+			+ Vector(RANDOM_FLOAT(-45, 45), RANDOM_FLOAT(-45, 45), RANDOM_FLOAT(0, 80));
+
+		++dropped;
+	}
+
+	if (dropped <= 0)
 		return false;
 
-	pDropped->pev->angles.x = 0;
-	pDropped->pev->angles.z = 0;
-	pDropped->pev->velocity = gpGlobals->v_forward * 200;
-
-	inv.RemoveCountAt(index, 1);
+	inv.RemoveCountAt(index, dropped);
 	SyncLegacyItemCount(pPlayer, expectedId);
 	SendInventoryToClient(pPlayer);
 	return true;
@@ -660,6 +670,149 @@ bool InventoryMoveEntry(CBasePlayer* pPlayer, int index, EEntryKind expectedKind
 // Inventory can carry far more Entries than that allows.  The first
 // chunk carries the header and tells the client to reset.
 //=========================================================
+//=========================================================
+// Acquisition
+//=========================================================
+
+// Matches PLAYER_SEARCH_RADIUS in player.cpp, so the Pickup Prompt appears at
+// exactly the distance a use press would reach.
+static constexpr float INV_PICKUP_RADIUS = 64.0f;
+
+// Is this entity something that can be taken, and if so, what?
+static bool ClassifyPickup(CBaseEntity* pEnt, EEntryKind& outKind, int& outId)
+{
+	if (!pEnt)
+		return false;
+
+	// A carried weapon is attached to its owner and not drawn. Only things
+	// actually lying in the world are pickups.
+	if ((pEnt->pev->effects & EF_NODRAW) != 0)
+		return false;
+
+	if (auto weapon = dynamic_cast<CBasePlayerItem*>(pEnt); weapon)
+	{
+		if (weapon->m_iId <= 0)
+			return false;
+		outKind = EEntryKind::Weapon;
+		outId = weapon->m_iId;
+		return true;
+	}
+
+	if (dynamic_cast<CItem*>(pEnt))
+	{
+		// Only Item Types are Inventory pickups. The HEV suit and the longjump
+		// module are CItems too, but they are not carried, so they keep
+		// Half-Life's walk-over behaviour and get no prompt.
+		const EItemTypeId type = ItemTypeFromClassname(STRING(pEnt->pev->classname));
+		if (type == EItemTypeId::None)
+			return false;
+
+		outKind = EEntryKind::Item;
+		outId = static_cast<int>(type);
+		return true;
+	}
+
+	return false;
+}
+
+LookedAtPickup FindLookedAtPickup(CBasePlayer* pPlayer)
+{
+	LookedAtPickup out;
+
+	if (!pPlayer || pPlayer->pev->deadflag != DEAD_NO)
+		return out;
+
+	UTIL_MakeVectors(pPlayer->pev->v_angle);
+
+	CBaseEntity* pObject = nullptr;
+	float flMaxDot = VIEW_FIELD_NARROW;
+
+	// Mirrors CBasePlayer::PlayerUse's aim test exactly, including considering
+	// ordinary usable entities, so the winner here is the thing a use press
+	// would actually act on.
+	while ((pObject = UTIL_FindEntityInSphere(pObject, pPlayer->pev->origin, INV_PICKUP_RADIUS)) != nullptr)
+	{
+		const bool usable =
+			(pObject->ObjectCaps() & (FCAP_IMPULSE_USE | FCAP_CONTINUOUS_USE | FCAP_ONOFF_USE)) != 0;
+
+		EEntryKind kind = EEntryKind::Empty;
+		int id = 0;
+		const bool pickup = ClassifyPickup(pObject, kind, id);
+
+		if (!usable && !pickup)
+			continue;
+
+		Vector vecLOS = (VecBModelOrigin(pObject->pev) - (pPlayer->pev->origin + pPlayer->pev->view_ofs));
+		vecLOS = UTIL_ClampVectorToBox(vecLOS, pObject->pev->size * 0.5);
+
+		const float flDot = DotProduct(vecLOS, gpGlobals->v_forward);
+		if (flDot <= flMaxDot)
+			continue;
+
+		flMaxDot = flDot;
+
+		// A usable entity that wins means a use press goes to it, not to any
+		// pickup behind it -- so report nothing.
+		out.pEntity = pickup ? pObject : nullptr;
+		out.kind = pickup ? kind : EEntryKind::Empty;
+		out.id = pickup ? id : 0;
+	}
+
+	return out;
+}
+
+void UpdatePickupPrompt(CBasePlayer* pPlayer)
+{
+	if (!pPlayer || gmsgPickupPrompt == 0)
+		return;
+
+	const LookedAtPickup look = FindLookedAtPickup(pPlayer);
+
+	const int kind = look.Valid() ? static_cast<int>(look.kind) : 0;
+	const int id = look.Valid() ? look.id : 0;
+
+	// Only on change: the prompt is stable for as long as the player keeps
+	// looking at the same thing, so there is nothing to resend each frame.
+	if (kind == pPlayer->m_iPromptKind && id == pPlayer->m_iPromptId)
+		return;
+
+	pPlayer->m_iPromptKind = kind;
+	pPlayer->m_iPromptId = id;
+
+	MESSAGE_BEGIN(MSG_ONE, gmsgPickupPrompt, NULL, pPlayer->pev);
+	WRITE_BYTE((unsigned char)kind);
+	WRITE_BYTE((unsigned char)id);
+	MESSAGE_END();
+}
+
+bool TryTakeLookedAtPickup(CBasePlayer* pPlayer)
+{
+	const LookedAtPickup look = FindLookedAtPickup(pPlayer);
+	if (!look.Valid())
+		return false;
+
+	if (look.kind == EEntryKind::Weapon)
+	{
+		// Routed through the normal touch path so every piece of weapon
+		// bookkeeping -- ammo extraction, auto-switch, respawn -- still runs.
+		// AddPlayerItem refuses it if the Grid is full.
+		DispatchTouch(ENT(look.pEntity->pev), ENT(pPlayer->pev));
+		return true;
+	}
+
+	CItem* pItem = dynamic_cast<CItem*>(look.pEntity);
+	if (!pItem)
+		return false;
+
+	if (!pItem->AcquireBy(pPlayer))
+	{
+		ClientPrint(pPlayer->pev, HUD_PRINTCENTER, "No room in inventory.\n");
+		return false;
+	}
+
+	return true;
+}
+
 //=========================================================
 // Reconcile
 //

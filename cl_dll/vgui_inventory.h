@@ -58,7 +58,9 @@ class CInventoryContextMenu : public vgui::Panel
 public:
     CInventoryContextMenu(CInventoryPanel* pOwner, int wide, int tall);
 
-    void Show(int x, int y, int entryIndex, EEntryKind kind, int id);
+    // 'count' decides whether the Stack options appear: a single item offers
+    // "Drop", a Stack offers "Drop 1" and "Drop all".
+    void Show(int x, int y, int entryIndex, EEntryKind kind, int id, int count);
     void Hide();
 
     int        GetEntryIndex() const { return m_iEntryIndex; }
@@ -71,7 +73,8 @@ public:
 private:
     CInventoryPanel* m_pOwner;
     vgui::Button*    m_pUseButton;
-    vgui::Button*    m_pDropButton;
+    vgui::Button*    m_pDropOneButton;
+    vgui::Button*    m_pDropAllButton;
     int              m_iEntryIndex = -1;
     EEntryKind       m_eKind       = EEntryKind::Empty;
     int              m_iId         = 0;
@@ -83,7 +86,7 @@ private:
 class CInventoryMenuAction : public vgui::ActionSignal
 {
 public:
-    enum Action { ACT_USE, ACT_DROP };
+    enum Action { ACT_USE, ACT_DROP_ONE, ACT_DROP_ALL };
 
     CInventoryMenuAction(CInventoryPanel* pOwner, CInventoryContextMenu* pMenu, Action action);
     void actionPerformed(vgui::Panel* panel) override;

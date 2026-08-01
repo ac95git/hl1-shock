@@ -1597,8 +1597,16 @@ void CBasePlayer::PlayerUse()
 	}
 	else
 	{
+		// Nothing ordinary to use. This is where a pickup gets taken -- after
+		// buttons, doors and chargers have had their chance, so use never
+		// grabs an item when the player meant to press something.
 		if ((m_afButtonPressed & IN_USE) != 0)
+		{
+			if (TryTakeLookedAtPickup(this))
+				return;
+
 			EMIT_SOUND(ENT(pev), CHAN_ITEM, "common/wpn_denyselect.wav", 0.4, ATTN_NORM);
+		}
 	}
 }
 
@@ -1878,6 +1886,10 @@ void CBasePlayer::PreThink()
 
 	ItemPreFrame();
 	WaterMove();
+
+	// Refresh what the crosshair is over. Cheap (a 64-unit sphere) and only
+	// sends a message when the answer changes.
+	UpdatePickupPrompt(this);
 
 	if (g_pGameRules && g_pGameRules->FAllowFlashlight())
 		m_iHideHUD &= ~HIDEHUD_FLASHLIGHT;
@@ -3879,17 +3891,6 @@ bool CBasePlayer::AddPlayerItem(CBasePlayerItem* pItem)
 
 bool CBasePlayer::RemovePlayerItem(CBasePlayerItem* pItem)
 {
-	// Release the Cells this weapon held.  Done up front so every path out
-	// of this function frees the space, not just the common one.
-	{
-		const int entry = m_inventory.FindEntry(EEntryKind::Weapon, pItem->m_iId);
-		if (entry >= 0)
-		{
-			m_inventory.RemoveAt(entry);
-			SendInventoryToClient(this);
-		}
-	}
-
 	if (m_pActiveItem == pItem)
 	{
 		ResetAutoaim();
@@ -3903,12 +3904,13 @@ bool CBasePlayer::RemovePlayerItem(CBasePlayerItem* pItem)
 	if (m_pLastItem == pItem)
 		m_pLastItem = NULL;
 
+	bool unlinked = false;
 	CBasePlayerItem* pPrev = m_rgpPlayerItems[pItem->iItemSlot()];
 
 	if (pPrev == pItem)
 	{
 		m_rgpPlayerItems[pItem->iItemSlot()] = pItem->m_pNext;
-		return true;
+		unlinked = true;
 	}
 	else
 	{
@@ -3919,10 +3921,25 @@ bool CBasePlayer::RemovePlayerItem(CBasePlayerItem* pItem)
 		if (pPrev)
 		{
 			pPrev->m_pNext = pItem->m_pNext;
-			return true;
+			unlinked = true;
 		}
 	}
-	return false;
+
+	if (unlinked)
+	{
+		// Release the Cells this weapon held -- but only now, AFTER it has
+		// left m_rgpPlayerItems.  Doing it earlier is useless: the sync
+		// reconciles the Inventory against the weapons the player actually
+		// carries, so it would find this one still listed and immediately put
+		// the Entry back.
+		const int entry = m_inventory.FindEntry(EEntryKind::Weapon, pItem->m_iId);
+		if (entry >= 0)
+			m_inventory.RemoveAt(entry);
+
+		SendInventoryToClient(this);
+	}
+
+	return unlinked;
 }
 
 
@@ -4789,12 +4806,21 @@ void CBasePlayer::DropPlayerItem(char* pszItemName)
 		// item we want to drop and hit a BREAK;  pWeapon is the item.
 		if (pWeapon)
 		{
-			//ALERT(at_console, "%s drop guard...\n", pszItemName);
-			if (!g_pGameRules->GetNextBestWeapon(this, pWeapon))
+			// Switching away is only needed when dropping what is currently
+			// held, and only ever as a courtesy -- failing to find a
+			// replacement is not a reason to refuse the drop. Single-player
+			// rules return false from GetNextBestWeapon unless alwaysSearch is
+			// set, so treating its result as permission made every weapon
+			// undroppable in single player.
+			//
+			// RemovePlayerItem below holsters and clears the active item, so
+			// dropping your last weapon leaves you empty-handed rather than
+			// broken. That is the player's call to make.
+			if (pWeapon == m_pActiveItem)
 			{
-				//ALERT(at_console, "%s can't drop the item they asked for\n", pszItemName);
-				return; // can't drop the item they asked for, may be our last item or something we can't holster
+				g_pGameRules->GetNextBestWeapon(this, pWeapon, true);
 			}
+
 			UTIL_MakeVectors(pev->angles);
 
 			ClearWeaponBit(pWeapon->m_iId); // take item off hud
@@ -4815,12 +4841,24 @@ void CBasePlayer::DropPlayerItem(char* pszItemName)
 				pDropped->pev->angles.z = 0;
 				pDropped->pev->velocity = gpGlobals->v_forward * 300;
 
-				// A dropped weapon carries no ammo. Ammo is a pool, not part of
-				// the weapon (ADR-0001), so granting the pickup default would let
-				// a player farm ammo by dropping and retaking the same gun.
 				if (auto droppedWeapon = dynamic_cast<CBasePlayerWeapon*>(pDropped); droppedWeapon)
 				{
+					// No free reserve ammo. A world-spawned weapon grants
+					// m_iDefaultAmmo on pickup; leaving that set would let a
+					// player farm ammo by dropping and retaking the same gun.
 					droppedWeapon->m_iDefaultAmmo = 0;
+
+					// The loaded rounds go with the weapon. Half-Life normally
+					// gets this for free, because a weapon entity BECOMES the
+					// carried weapon on pickup and its clip comes along -- see
+					// the comment above CBasePlayerWeapon::ExtractAmmo. We drop
+					// a fresh entity rather than re-releasing the carried one,
+					// so the clip has to be handed over explicitly or those
+					// rounds are destroyed.
+					if (auto carried = pWeapon->GetWeaponPtr(); carried)
+					{
+						droppedWeapon->m_iClip = carried->m_iClip;
+					}
 				}
 			}
 

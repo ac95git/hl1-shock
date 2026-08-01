@@ -364,6 +364,12 @@ public:
 
 	// ---- Inventory ----
 	CPlayerInventory m_inventory;
+
+	// Last Pickup Prompt sent, so it is only resent when it changes.
+	// Transient display state -- deliberately not saved; it is re-derived on
+	// the first frame after a restore.
+	int m_iPromptKind = 0;
+	int m_iPromptId = 0;
 };
 
 inline void CBasePlayer::SetWeaponBit(int id)

@@ -176,6 +176,39 @@ int InventoryTakeItem(CBasePlayer* pPlayer, EItemTypeId type, int count = 1);
 // that shifted underneath it; a mismatch is ignored rather than acted on.
 //=========================================================
 bool InventoryUseEntry(CBasePlayer* pPlayer, int index, EEntryKind expectedKind, int expectedId);
-bool InventoryDropEntry(CBasePlayer* pPlayer, int index, EEntryKind expectedKind, int expectedId);
+// dropAll drops a whole Stack, one world entity per item, scattered so they
+// do not pile up in a single point. Weapons are always a single Entry.
+bool InventoryDropEntry(CBasePlayer* pPlayer, int index, EEntryKind expectedKind, int expectedId,
+	bool dropAll = false);
 bool InventoryMoveEntry(CBasePlayer* pPlayer, int index, EEntryKind expectedKind, int expectedId,
 	int col, int row);
+
+//=========================================================
+// Acquisition -- the Pickup Prompt and taking what it names.
+//=========================================================
+class CBaseEntity;
+
+// What the player is currently looking at, if it can be taken.
+struct LookedAtPickup
+{
+	EEntryKind   kind    = EEntryKind::Empty;
+	int          id      = 0;  // WeaponId or EItemTypeId
+	CBaseEntity* pEntity = nullptr;
+
+	bool Valid() const { return pEntity != nullptr && kind != EEntryKind::Empty; }
+};
+
+// The single answer to "what would a use press take?".
+//
+// Deliberately also considers ordinary usable entities (buttons, doors,
+// chargers) so that when one of those wins the aim test this returns nothing.
+// The Pickup Prompt and the take therefore cannot disagree, and pressing use
+// near a button never silently grabs a medkit instead.
+LookedAtPickup FindLookedAtPickup(CBasePlayer* pPlayer);
+
+// Sends the Pickup Prompt when the looked-at pickup changes. Call each frame.
+void UpdatePickupPrompt(CBasePlayer* pPlayer);
+
+// Takes whatever the prompt is naming. Returns false if there is nothing to
+// take or the Grid has no room.
+bool TryTakeLookedAtPickup(CBasePlayer* pPlayer);

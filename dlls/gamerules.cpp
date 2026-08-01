@@ -95,14 +95,11 @@ CBasePlayerItem* CGameRules::FindNextBestWeapon(CBasePlayer* pPlayer, CBasePlaye
 
 bool CGameRules::GetNextBestWeapon(CBasePlayer* pPlayer, CBasePlayerItem* pCurrentWeapon, bool alwaysSearch)
 {
-	ALERT(at_console, "Looking for best weapon to switch to\n");
 	if (auto pBest = FindNextBestWeapon(pPlayer, pCurrentWeapon); pBest != nullptr)
 	{
-		ALERT(at_console, "Switching to best weapon %s\n", pBest->pszName());
 		pPlayer->SwitchWeapon(pBest);
 		return true;
 	}
-	ALERT(at_console, "No best weapon found\n");
 	return false;
 }
 

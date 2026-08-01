@@ -19,6 +19,7 @@
 #include "weapons.h"
 #include "player.h"
 #include "items.h"
+#include "skill.h"
 #include "gamerules.h"
 #include "UserMessages.h"
 
@@ -27,6 +28,13 @@ class CHealthKit : public CItem
 	void Spawn() override;
 	void Precache() override;
 	bool MyTouch(CBasePlayer* pPlayer) override;
+
+	// Carried, not grabbed: taking a kit into the Inventory needs a use press.
+	bool AutoPickupOnTouch() override { return false; }
+
+	// ...unless using it right now wastes none of its healing, in which case
+	// walking over it uses it. See docs/PILLARS.md.
+	bool ConsumeOnContact(CBasePlayer* pPlayer) override;
 
 	/*
 	int		Save( CSave &save ) override; 
@@ -63,6 +71,28 @@ void CHealthKit::Precache()
 	PRECACHE_SOUND("items/smallmedkit1.wav");
 }
 
+bool CHealthKit::ConsumeOnContact(CBasePlayer* pPlayer)
+{
+	if (pPlayer->pev->deadflag != DEAD_NO)
+		return false;
+
+	// The test is "wastes nothing", inclusive: a kit that heals the player to
+	// exactly full is a perfect fit and should be used, not left behind.
+	if (pPlayer->pev->health + gSkillData.healthkitCapacity > pPlayer->pev->max_health)
+		return false;
+
+	if (!pPlayer->TakeHealth(gSkillData.healthkitCapacity, DMG_GENERIC))
+		return false;
+
+	EMIT_SOUND(ENT(pPlayer->pev), CHAN_ITEM, "items/smallmedkit1.wav", 1, ATTN_NORM);
+
+	MESSAGE_BEGIN(MSG_ONE, gmsgItemPickup, NULL, pPlayer->pev);
+	WRITE_STRING(STRING(pev->classname));
+	MESSAGE_END();
+
+	return true;
+}
+
 bool CHealthKit::MyTouch(CBasePlayer* pPlayer)
 {
 	if (pPlayer->pev->deadflag != DEAD_NO)
@@ -81,11 +111,8 @@ bool CHealthKit::MyTouch(CBasePlayer* pPlayer)
 	WRITE_STRING(STRING(pev->classname));
 	MESSAGE_END();
 
-	if (0 != g_pGameRules->ItemShouldRespawn(this))
-		Respawn();
-	else
-		UTIL_Remove(this);
-
+	// Respawn/removal is CItem::FinishAcquire's job; doing it here too used to
+	// remove the entity twice.
 	return true;
 }
 

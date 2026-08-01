@@ -71,9 +71,15 @@ static const char* WeaponClassnameFromId(int weaponId)
 // CTX_MENU
 // =====================================================================
 static const int CTX_MENU_WIDTH  = 100;
-static const int CTX_MENU_HEIGHT = 52;
 static const int CTX_BTN_HEIGHT  = 22;
 static const int CTX_BTN_MARGIN  = 4;
+static const int CTX_BTN_GAP     = 2;
+static const int CTX_MENU_BUTTONS = 3;
+
+// The menu is sized to the buttons it actually shows; this is the tallest it
+// can get, used to keep it on screen before the layout is known.
+static const int CTX_MENU_MAX_HEIGHT =
+    CTX_BTN_MARGIN * 2 + CTX_MENU_BUTTONS * CTX_BTN_HEIGHT + (CTX_MENU_BUTTONS - 1) * CTX_BTN_GAP;
 
 CInventoryContextMenu::CInventoryContextMenu(CInventoryPanel* pOwner, int wide, int tall)
     : Panel(0, 0, wide, tall), m_pOwner(pOwner), m_iEntryIndex(-1)
@@ -93,53 +99,73 @@ CInventoryContextMenu::CInventoryContextMenu(CInventoryPanel* pOwner, int wide, 
         }
     }
 
-    int btnW = wide - CTX_BTN_MARGIN * 2;
-    int yPos = CTX_BTN_MARGIN;
+    const int btnW = wide - CTX_BTN_MARGIN * 2;
 
-    m_pUseButton = new Button("Equip", CTX_BTN_MARGIN, yPos, btnW, CTX_BTN_HEIGHT);
-    m_pUseButton->setParent(this);
-    m_pUseButton->setContentAlignment(Label::a_center);
-    m_pUseButton->addActionSignal(new CInventoryMenuAction(pOwner, this, CInventoryMenuAction::ACT_USE));
-    m_pUseButton->setPaintBackgroundEnabled(false);
-    m_pUseButton->setBgColor(0, 0, 0, 255);
-    m_pUseButton->setFgColor(Scheme::sc_primary1);
-    if (ctxFont) m_pUseButton->setFont(ctxFont);
+    auto makeButton = [&](const char* label, CInventoryMenuAction::Action action) -> Button*
+    {
+        // Positions are set in Show(), which lays out only the visible buttons.
+        Button* btn = new Button(label, CTX_BTN_MARGIN, CTX_BTN_MARGIN, btnW, CTX_BTN_HEIGHT);
+        btn->setParent(this);
+        btn->setContentAlignment(Label::a_center);
+        btn->addActionSignal(new CInventoryMenuAction(pOwner, this, action));
+        btn->setPaintBackgroundEnabled(false);
+        btn->setBgColor(0, 0, 0, 255);
+        btn->setFgColor(Scheme::sc_primary1);
+        if (ctxFont) btn->setFont(ctxFont);
+        return btn;
+    };
 
-    yPos += CTX_BTN_HEIGHT + 2;
-
-    m_pDropButton = new Button("Drop", CTX_BTN_MARGIN, yPos, btnW, CTX_BTN_HEIGHT);
-    m_pDropButton->setParent(this);
-    m_pDropButton->setContentAlignment(Label::a_center);
-    m_pDropButton->addActionSignal(new CInventoryMenuAction(pOwner, this, CInventoryMenuAction::ACT_DROP));
-    m_pDropButton->setPaintBackgroundEnabled(false);
-    m_pDropButton->setBgColor(0, 0, 0, 255);
-    m_pDropButton->setFgColor(Scheme::sc_primary1);
-    if (ctxFont) m_pDropButton->setFont(ctxFont);
+    m_pUseButton     = makeButton("Equip",    CInventoryMenuAction::ACT_USE);
+    m_pDropOneButton = makeButton("Drop",     CInventoryMenuAction::ACT_DROP_ONE);
+    m_pDropAllButton = makeButton("Drop all", CInventoryMenuAction::ACT_DROP_ALL);
 }
 
-void CInventoryContextMenu::Show(int x, int y, int entryIndex, EEntryKind kind, int id)
+void CInventoryContextMenu::Show(int x, int y, int entryIndex, EEntryKind kind, int id, int count)
 {
     m_iEntryIndex = entryIndex;
     m_eKind = kind;
     m_iId = id;
 
+    bool showUse = false;
     if (kind == EEntryKind::Weapon)
     {
         m_pUseButton->setText("Equip");
-        m_pUseButton->setVisible(true);
-        m_pDropButton->setVisible(true);
+        showUse = true;
     }
     else
     {
         // Only consumables do anything when used; a keycard is carried, not used.
         const EItemTypeId type = static_cast<EItemTypeId>(id);
-        const bool usable = (type == EItemTypeId::Medkit || type == EItemTypeId::Battery);
-
+        showUse = (type == EItemTypeId::Medkit || type == EItemTypeId::Battery);
         m_pUseButton->setText("Use");
-        m_pUseButton->setVisible(usable);
-        m_pDropButton->setVisible(true);
     }
 
+    // A Stack can shed one item or all of them; a single item just drops.
+    const bool isStack = (count > 1);
+    m_pDropOneButton->setText(isStack ? "Drop 1" : "Drop");
+
+    Button* order[CTX_MENU_BUTTONS] = { m_pUseButton, m_pDropOneButton, m_pDropAllButton };
+    const bool visible[CTX_MENU_BUTTONS] = { showUse, true, isStack };
+
+    // Laid out over the visible buttons only, so a hidden option leaves no gap.
+    int yPos = CTX_BTN_MARGIN;
+    int shown = 0;
+    for (int i = 0; i < CTX_MENU_BUTTONS; ++i)
+    {
+        order[i]->setVisible(visible[i]);
+        if (!visible[i])
+            continue;
+
+        order[i]->setBounds(CTX_BTN_MARGIN, yPos, CTX_MENU_WIDTH - CTX_BTN_MARGIN * 2, CTX_BTN_HEIGHT);
+        yPos += CTX_BTN_HEIGHT + CTX_BTN_GAP;
+        ++shown;
+    }
+
+    const int height = (shown > 0)
+        ? (yPos - CTX_BTN_GAP + CTX_BTN_MARGIN)
+        : (CTX_BTN_MARGIN * 2);
+
+    setSize(CTX_MENU_WIDTH, height);
     setPos(x, y);
     setVisible(true);
 }
@@ -160,17 +186,18 @@ bool CInventoryContextMenu::HandleClick(int panelLocalX, int panelLocalY)
     int menuW, menuH; getSize(menuW, menuH);
     if (localX < 0 || localX >= menuW || localY < 0 || localY >= menuH) return false;
 
-    if (m_pUseButton && m_pUseButton->isVisible())
+    Button* order[CTX_MENU_BUTTONS] = { m_pUseButton, m_pDropOneButton, m_pDropAllButton };
+    for (Button* btn : order)
     {
-        int bx, by, bw, bh; m_pUseButton->getBounds(bx, by, bw, bh);
+        if (!btn || !btn->isVisible())
+            continue;
+
+        int bx, by, bw, bh; btn->getBounds(bx, by, bw, bh);
         if (localX >= bx && localX < bx + bw && localY >= by && localY < by + bh)
-        { m_pUseButton->doClick(); return true; }
-    }
-    if (m_pDropButton && m_pDropButton->isVisible())
-    {
-        int bx, by, bw, bh; m_pDropButton->getBounds(bx, by, bw, bh);
-        if (localX >= bx && localX < bx + bw && localY >= by && localY < by + bh)
-        { m_pDropButton->doClick(); return true; }
+        {
+            btn->doClick();
+            return true;
+        }
     }
     return false;
 }
@@ -230,9 +257,14 @@ void CInventoryMenuAction::actionPerformed(vgui::Panel* panel)
             gEngfuncs.pfnClientCmd(cmd);
         }
     }
-    else if (m_action == ACT_DROP)
+    else if (m_action == ACT_DROP_ONE)
     {
         snprintf(cmd, sizeof(cmd), "inv_drop %d %d %d\n", index, (int)kind, id);
+        gEngfuncs.pfnClientCmd(cmd);
+    }
+    else if (m_action == ACT_DROP_ALL)
+    {
+        snprintf(cmd, sizeof(cmd), "inv_dropall %d %d %d\n", index, (int)kind, id);
         gEngfuncs.pfnClientCmd(cmd);
     }
 
@@ -286,7 +318,8 @@ CInventoryPanel::CInventoryPanel(int x, int y, int wide, int tall)
     m_pCloseButton->setFgColor(255, 80, 80, 0);
     if (m_pTitleFont) m_pCloseButton->setFont(m_pTitleFont);
 
-    m_pContextMenu = new CInventoryContextMenu(this, CTX_MENU_WIDTH, CTX_MENU_HEIGHT);
+    // Constructed at its tallest; Show() resizes it to whatever options apply.
+    m_pContextMenu = new CInventoryContextMenu(this, CTX_MENU_WIDTH, CTX_MENU_MAX_HEIGHT);
     m_pContextMenu->setParent(this);
 
     m_HitTestPanel.setBgColor(0, 0, 0, 255);
@@ -677,8 +710,8 @@ void CInventoryPanel::mousePressed(vgui::MouseCode code, vgui::Panel* panel)
             {
                 int panelW = 0, panelH = 0; getSize(panelW, panelH);
                 int menuX = std::min(localx, panelW - CTX_MENU_WIDTH);
-                int menuY = std::min(localy, panelH - CTX_MENU_HEIGHT);
-                m_pContextMenu->Show(menuX, menuY, index, e->Kind(), e->id);
+                int menuY = std::min(localy, panelH - CTX_MENU_MAX_HEIGHT);
+                m_pContextMenu->Show(menuX, menuY, index, e->Kind(), e->id, e->count);
             }
         }
         return;

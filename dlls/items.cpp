@@ -102,6 +102,41 @@ void CItem::Spawn()
 	}
 }
 
+void CItem::FinishAcquire(CBasePlayer* pPlayer)
+{
+	SUB_UseTargets(pPlayer, USE_TOGGLE, 0);
+	SetTouch(NULL);
+
+	g_pGameRules->PlayerGotItem(pPlayer, this);
+	if (g_pGameRules->ItemShouldRespawn(this) == GR_ITEM_RESPAWN_YES)
+	{
+		Respawn();
+	}
+	else
+	{
+		UTIL_Remove(this);
+	}
+}
+
+bool CItem::AcquireBy(CBasePlayer* pPlayer)
+{
+	if (!pPlayer)
+		return false;
+
+	if (!g_pGameRules->CanHaveItem(pPlayer, this))
+		return false;
+
+	if (!MyTouch(pPlayer))
+	{
+		if (gEvilImpulse101)
+			UTIL_Remove(this);
+		return false;
+	}
+
+	FinishAcquire(pPlayer);
+	return true;
+}
+
 void CItem::ItemTouch(CBaseEntity* pOther)
 {
 	// if it's not a player, ignore
@@ -119,26 +154,21 @@ void CItem::ItemTouch(CBaseEntity* pOther)
 		return;
 	}
 
-	if (MyTouch(pPlayer))
+	// Using it on contact beats carrying it, when nothing would be wasted.
+	if (ConsumeOnContact(pPlayer))
 	{
-		SUB_UseTargets(pOther, USE_TOGGLE, 0);
-		SetTouch(NULL);
+		FinishAcquire(pPlayer);
+		return;
+	}
 
-		// player grabbed the item.
-		g_pGameRules->PlayerGotItem(pPlayer, this);
-		if (g_pGameRules->ItemShouldRespawn(this) == GR_ITEM_RESPAWN_YES)
-		{
-			Respawn();
-		}
-		else
-		{
-			UTIL_Remove(this);
-		}
-	}
-	else if (gEvilImpulse101)
+	// Otherwise Inventory items wait for a deliberate use press; walking over
+	// them does nothing. The Pickup Prompt tells the player they can take it.
+	if (!AutoPickupOnTouch())
 	{
-		UTIL_Remove(this);
+		return;
 	}
+
+	AcquireBy(pPlayer);
 }
 
 CBaseEntity* CItem::Respawn()
@@ -212,6 +242,7 @@ class CItemBattery : public CItem
 		PRECACHE_MODEL("models/w_battery.mdl");
 		PRECACHE_SOUND("items/gunpickup2.wav");
 	}
+	bool AutoPickupOnTouch() override { return false; }
 	bool MyTouch(CBasePlayer* pPlayer) override
 	{
 		if (pPlayer->pev->deadflag != DEAD_NO)
@@ -252,6 +283,7 @@ class CItemAntidote : public CItem
 	{
 		PRECACHE_MODEL("models/w_antidote.mdl");
 	}
+	bool AutoPickupOnTouch() override { return false; }
 	bool MyTouch(CBasePlayer* pPlayer) override
 	{
 		if (InventoryGiveItem(pPlayer, EItemTypeId::Antidote) <= 0)
@@ -277,6 +309,7 @@ class CItemSecurity : public CItem
 	{
 		PRECACHE_MODEL("models/w_security.mdl");
 	}
+	bool AutoPickupOnTouch() override { return false; }
 	bool MyTouch(CBasePlayer* pPlayer) override
 	{
 		return InventoryGiveItem(pPlayer, EItemTypeId::Keycard) > 0;

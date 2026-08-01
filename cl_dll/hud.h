@@ -446,6 +446,26 @@ private:
 //
 #define MAX_SPRITE_NAME_LENGTH 24
 
+//
+//-----------------------------------------------------
+// Pickup Prompt: names what the crosshair is over, when it can be taken.
+// Driven entirely by the server (see UpdatePickupPrompt); the client only
+// resolves the id into a display name.
+//
+class CHudPickupPrompt : public CHudBase
+{
+public:
+	bool Init() override;
+	bool VidInit() override;
+	void Reset() override;
+	bool Draw(float flTime) override;
+	bool MsgFunc_PickupHint(const char* pszName, int iSize, void* pbuf);
+
+private:
+	int m_iKind = 0; // EEntryKind; 0 means nothing is being looked at
+	int m_iId = 0;   // WeaponId or EItemTypeId
+};
+
 class CHudStatusIcons : public CHudBase
 {
 public:
@@ -578,6 +598,7 @@ public:
 	CHudAmmoSecondary m_AmmoSecondary;
 	CHudTextMessage m_TextMessage;
 	CHudStatusIcons m_StatusIcons;
+	CHudPickupPrompt m_PickupPrompt;
 
 	void Init();
 	void VidInit();
