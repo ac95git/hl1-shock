@@ -22,9 +22,9 @@ same commit as the code change.
 | # | Pillar | Status | One-line state |
 | --- | --- | --- | --- |
 | 1 | [Exploration](#1-exploration) | **Not started** | Its rewards exist — Row Grants, Skill Points, Reset Tokens are all findable entities — but no map places one, so nothing is explored *for* yet. |
-| 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar. Numbers untuned. Melee/reload skills still do nothing. |
+| 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar. Numbers untuned. Melee skills still do nothing. |
 | 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. |
-| 4 | [Skill trees](#4-skill-trees) | **Scaffolded** | Full tree unlocks, saves, and renders; points and Reset Tokens are earned and spent. Six of nineteen skills have effects; the rest are inert, which is what still keeps this off Playable. |
+| 4 | [Skill trees](#4-skill-trees) | **Scaffolded** | Curated to 15 Skills; unlocks, saves and renders; points and Reset Tokens are earned and spent. Six have effects, nine are inert — the only thing keeping this off Playable. |
 | 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work. Client-side model only — the server-owned rebuild is designed and scheduled. |
 
 ---
@@ -246,8 +246,9 @@ every number behind it is still a first guess.
 
 The pattern for every Skill effect after this one is set by `PulseWindowFor` / `PulseRechargeFor` in
 `dlls/player_pulse.cpp`: a modifier is read server-side from `m_skills`, applied where the effect is
-computed, and never touched in prediction. Melee and reload skills should follow it rather than each
-inventing their own hook.
+computed, and never touched in prediction. The nine remaining Skills should follow it rather than each
+inventing their own hook. Reload and attack-rate Skills are deliberately *not* among them — those are
+client-predicted and were cut from the tree until that work is done.
 
 ### Acceptance criteria (draft)
 
@@ -369,7 +370,15 @@ The most complete system by line count, and the one furthest from affecting play
 
 **Definitions** — `game_shared/skill_defs.h`, compiled into both DLLs
 
-- 19 skill definitions across Combat, Mobility, Survivability, the Pulse and the Infusion.
+- **15 Skills in the tree**, across seven columns: Melee (0), the Pulse (1–2), the suit (3), Armaments (4),
+  Survivability (5–6). Total cost **33 points**, which is the target for how many Skill Points a campaign
+  places.
+- **Six reserved ids** with no row: `FastReload`, `HighJump`, `SprintSpeed` and `CrowbarSpeed` are cut
+  pending prediction work; `HiveCapacity` and `HiveRegrowth` are held for the alien column below. A
+  reserved row is `SKILL_RESERVED(id)` — the id stays frozen and the Skill returns unchanged later.
+- A `static_assert` enforces that the table is ordered by id. It is indexed positionally, so a row out of
+  place would silently make a save's unlocked bits refer to different abilities — the grouping that reads
+  most naturally to a human is exactly the mistake, so it is a compile error.
 - Each `SkillDef` carries id, display name, description, icon, grid column/row, cost, **two**
   prerequisites, and a visual tier (`Minor` / `Medium` / `Major`). Both prerequisites are required, so a
   connector line always means "you need this".
@@ -415,19 +424,16 @@ The most complete system by line count, and the one furthest from affecting play
 
 ### What's missing
 
-- **Most of the effects.** Six of nineteen Skills now do something — `PulseWindow`, `PulseRecharge`,
-  `PulseDischarge`, `PulseRebound` and `CrowbarFollowUp`, all read by `dlls/player_pulse.cpp`, plus
-  `MedExpert` (id 19), read by `dlls/player_infusion.cpp`. The other thirteen still unlock, persist and
-  render without changing anything.
-- `MedExpert` is a **root** node despite belonging conceptually to the medical branch, because every skill
-  in that column is inert and gating a working skill behind one would charge points for nothing. It should
-  be re-parented once `MoreHealth` or `HealthRegen` does something — a data change, not a structural one.
+- **Nine of the fifteen effects.** Six work — `PulseWindow`, `PulseRecharge`, `PulseDischarge`,
+  `PulseRebound` and `CrowbarFollowUp`, all read by `dlls/player_pulse.cpp`, plus `MedExpert` (id 19), read
+  by `dlls/player_infusion.cpp`. The other nine unlock, persist and render without changing anything.
+  Every one of them is server-side and cheap; this is the last thing standing between the pillar and
+  Playable.
 - **Anywhere to earn points.** The mechanism exists — `item_skillpoint` and `item_resettoken` are placeable
   entities — but no map places one, so in practice points still come from `skill_addpoints`. Blocked on
   custom maps, exactly as Row Grants are.
-- **A bug:** `SprintSpeed` lists itself as its own prerequisite (`game_shared/skill_defs.h`), so
-  `SkillPrereqMet()` requires the skill to already be unlocked and the node can never become available.
-  Left in place deliberately — the curation pass cuts the node, which removes the bug with it.
+- **Node icons.** The tree is deliberately label-free, which makes icon distinctness *blocking* rather than
+  cosmetic — and today five Skills share `suit_full`. See [ART_DEBT.md](ART_DEBT.md).
 - Tooltip layout debt — heuristic text measurement rather than font metrics. See
   [TECH_DEBT.md](TECH_DEBT.md).
 
@@ -446,6 +452,29 @@ The connector loop builds one edge per prerequisite, so a two-gated node draws t
 same thing — every line is a requirement — which is why only AND is supported. An OR gate would need a
 second line style before it could be read.
 
+### Wanted: the alien column
+
+A branch of Skills for alien weapons, **hidden entirely until the player carries one**, so that reading the
+tree does not spoil that the branch exists. The column is reserved now rather than built: ids 20 and 21 are
+held for it, and it takes column 7 when it opens.
+
+Half-Life has exactly two alien weapons — the **Hivehand** and **Snarks**. The Gauss, Egon and Tau are all
+HEV/human tech and belong in Armaments; the Displacer is not in HL1. So the column is naturally small, and
+the Hivehand carries both knobs worth having, since its ammo already regenerates on a timer
+(`m_flRechargeTime` in `hornetgun.cpp`):
+
+| Reserved id | Skill | Effect | Tier | Cost |
+| --- | --- | --- | --- | --- |
+| 20 | Hive Capacity | Hivehand holds more hornets (raises `HORNET_MAX_CARRY`, currently 8) | Medium | 2 |
+| 21 | Hive Regrowth | Hornets replenish faster | Major | 3 |
+
+Both effects are server-side constants read at fire and recharge time — no prediction involved.
+
+**Build this together with the anonymization feature below.** They are different rules — "hidden until you
+hold an alien weapon" is a possession test, "anonymized past N hops" is a graph-distance test — but they
+are the same rendering machinery, and a node that can be absent needs the layout to cope with a column
+appearing mid-playthrough. Doing one without the other means writing that twice.
+
 ### Wanted: distant Skills are anonymized
 
 Skills more than a few prerequisite hops from the player's unlocked set should render as `???` — no name,
@@ -460,15 +489,13 @@ designing first, and no server or wire change is involved.
 ### Next step
 
 The shared definition table ([ADR-0008](adr/0008-skill-definitions-are-shared-not-networked.md)), two
-prerequisites, and the points/Tokens economy are all in. The remaining work, in order:
+prerequisites, the points/Tokens economy and the curation pass are all in. What remains:
 
-1. **Curation.** Cut `CrowbarSpeed`, `FastReload`, `HighJump` and `SprintSpeed` from the table — all four
-   need prediction work in `pm_shared/` and both DLLs. Their enum entries stay, so the ids remain reserved
-   and the Skills return later with the same numbers. Re-parent `ExtraDamage` (loses `FastReload`) and
-   `MedExpert`. Re-cost and re-column the surviving 15.
-2. **The UI pass.** Six columns fitted to the panel, cost drawn on each node, and the hover bubble rebuilt
-   on real font metrics (see [TECH_DEBT.md](TECH_DEBT.md)).
-3. **The nine remaining effects**, each following `PulseWindowFor` / `PulseRechargeFor`.
+1. **The UI pass.** Seven columns fitted to the panel rather than hardcoded steps, cost drawn on each node,
+   and the hover bubble rebuilt on real font metrics (see [TECH_DEBT.md](TECH_DEBT.md)). Note the tree
+   currently needs a wide screen: seven columns at `k_ColStep` 100 is 700px, and the tree area is
+   `panelW - 264`.
+2. **The nine remaining effects**, each following `PulseWindowFor` / `PulseRechargeFor`.
 
 ### The economy
 

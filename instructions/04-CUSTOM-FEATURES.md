@@ -151,12 +151,23 @@ keep in step, and no networking change. See
 `SendSkillTreeToClient()` needs no change: it sends only which Skills are unlocked and how many points are
 unspent. Position, cost, prerequisites and tier are already on the client.
 
-## Removing a Skill
+## Removing or reserving a Skill
 
-Delete the row's contents but **never reuse the id**. Ids are frozen twice over — they index the saved
-unlocked array *and* they are bit positions in the sync message, so handing one to a different Skill
-silently reassigns what old saves unlocked. A removed Skill keeps its `ESkillId` entry as a reserved id
-and can return later with the same number.
+Replace the row with `SKILL_RESERVED(TheId)` — but **never reuse the id**. Ids are frozen twice over: they
+index the saved unlocked array *and* they are bit positions in the sync message, so handing one to a
+different Skill silently reassigns what old saves unlocked. A reserved Skill keeps its `ESkillId` entry and
+returns later with the same number.
+
+A reserved row has a null `name`, which is what both sides key off: the client's `RebuildNodeList` gives it
+no node, and `SpentPoints()` charges nothing for it. A player who had bought it gets those points back on
+the next load, with no migration step.
+
+The same macro covers a Skill held for a branch that has not opened yet, not just one that was cut.
+
+**The table is ordered by id and a `static_assert` enforces it.** Grouping rows by branch reads better and
+is exactly the mistake — entry `[n]` must be the Skill with id `n`, or a save's unlocked bits start meaning
+different abilities with nothing to indicate it. Put the row at its id's index and use a comment for the
+grouping.
 
 ## Notes
 

@@ -44,24 +44,29 @@ enum class ESkillId : int
 {
 	None = 0,
 
-	// ---- Combat ----
+	// ---- Melee ----
 	CrowbarRange        = 1,  // melee reach +25%
 	CrowbarDamage       = 2,  // melee damage +50%
-	FastReload          = 3,  // reload time -20%
+	CrowbarFollowUp     = 18, // the swing after a deflect hits harder
+
+	// ---- Armaments ----
 	ExtraDamage         = 4,  // all weapon damage +10%
 
-	// ---- Mobility ----
-	HighJump            = 5,  // jump height +30%
-	SprintSpeed         = 6,  // movement speed +15%
-	FallResistance      = 7,  // fall damage -50%
-
 	// ---- Survivability ----
+	FallResistance      = 7,  // fall damage -50%
 	MoreHealth          = 8,  // max health +25
 	ArmorEfficiency     = 9,  // armor absorbs 10% more damage
 	HealthRegen         = 10, // slowly regenerate health out of combat
 
+	// ---- Reserved: cut from the tree pending prediction work ----
+	// All four change attack rate, reload timing or movement, every one of
+	// which is client-predicted -- doing them properly means pm_shared/ and
+	// both DLLs. They keep their ids and return unchanged when that work
+	// happens; they simply have no row in k_SkillDefs meanwhile.
+	FastReload          = 3,  // reload time -20%
+	HighJump            = 5,  // jump height +30%
+	SprintSpeed         = 6,  // movement speed +15%
 	CrowbarSpeed        = 11, // crowbar swing speed +30%
-	CrowbarFollowUp     = 18, // the swing after a deflect hits harder
 
 	// ---- The Pulse ----
 	// Id 12 was CrowbarParry, a placeholder for a mechanic that turned out to
@@ -80,7 +85,16 @@ enum class ESkillId : int
 	// ---- The Infusion ----
 	MedExpert           = 19, // longer Infusion from a Health Syringe
 
-	_Count              = 20, // keep last
+	// ---- Reserved: the alien column ----
+	// Held for a branch that stays hidden until the player carries an alien
+	// weapon, so its existence is not spoiled by reading the tree. Half-Life
+	// has only two alien weapons, and the Hivehand carries both knobs worth
+	// having -- how many hornets it holds, and how fast they come back.
+	// See docs/PILLARS.md pillar 4.
+	HiveCapacity        = 20, // Hivehand holds more hornets
+	HiveRegrowth        = 21, // hornets replenish faster
+
+	_Count              = 22, // keep last
 };
 
 inline constexpr int k_MaxSkills = static_cast<int>(ESkillId::_Count);
@@ -113,42 +127,99 @@ struct SkillDef
 	ENodeTier   tier;        // visual weight only
 };
 
+// A reserved id: it exists, nothing in the tree points at it, and it is not
+// buyable.  Used for Skills cut pending other work and for ones held for a
+// branch that has not opened yet.  RebuildNodeList and SpentPoints both key
+// off the null name, so a Skill moved to this state disappears from the tree
+// and refunds itself on the next load.
+#define SKILL_RESERVED(idName) \
+	{ ESkillId::idName, nullptr, nullptr, nullptr, 0, 0, 0, ESkillId::None, ESkillId::None, ENodeTier::Minor }
+
 // Indexed by ESkillId, so entry [n] is always the Skill with id n.
+//
+// Seven columns, three rows.  Melee sits beside the Pulse deliberately:
+// Follow-Up is gated on both, and adjacent columns keep that cross-link short
+// instead of dragging a connector the width of the tree.
+//
+//   MELEE      PULSE    (fork)   SUIT     ARMS    SURVIVAL  (fork)
+//   col0       col1     col2     col3     col4     col5     col6
+//
+// r0 Reach     Window            Capacity Mastery Fortitude
+// r1 Force     Recharge          BattRegen        ArmorExp  FallResist
+// r2 Follow-Up Discharge Rebound                  Regen     MedExpert
+//
+// Total cost is 33 points, which is the target for how many Skill Points get
+// placed across a campaign -- see docs/PILLARS.md pillar 4.
 inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 {
-	//  id                        name                description                                        sprite           col row cost prereq                     prereq2            tier
-	{ ESkillId::None,            "None",             "",                                                nullptr,          0,  0,  0,  ESkillId::None,            ESkillId::None,    ENodeTier::Minor  },
-	{ ESkillId::CrowbarRange,    "Crowbar Reach",    "+25% melee range.",                               "d_crowbar",      1,  0,  1,  ESkillId::None,            ESkillId::None,    ENodeTier::Minor  },
-	{ ESkillId::CrowbarDamage,   "Crowbar Force",    "+50% melee damage.",                              "d_crowbar",      1,  1,  2,  ESkillId::CrowbarRange,    ESkillId::None,    ENodeTier::Medium },
-	{ ESkillId::FastReload,      "Fast Reload",      "-20% reload time.",                               "d_9mmhandgun",   3,  0,  1,  ESkillId::None,            ESkillId::None,    ENodeTier::Minor  },
-	{ ESkillId::ExtraDamage,     "Weapon Mastery",   "+10% weapon damage.",                             "d_9mmar",        3,  1,  3,  ESkillId::FastReload,      ESkillId::None,    ENodeTier::Major  },
-	{ ESkillId::HighJump,        "High Jump",        "+30% jump height.",                               nullptr,          5,  0,  1,  ESkillId::None,            ESkillId::None,    ENodeTier::Minor  },
-	// Lists itself as its own prerequisite, so it can never become available.
-	// Preserved verbatim from the pre-move table: this iteration changes where
-	// the data lives and nothing about what it says.  The node is cut in the
-	// curation pass, which removes the bug with it.
-	{ ESkillId::SprintSpeed,     "Sprint",           "+15% movement speed.",                            nullptr,          5,  1,  2,  ESkillId::SprintSpeed,     ESkillId::None,    ENodeTier::Major  },
-	{ ESkillId::FallResistance,  "Fall Resist",      "-50% fall damage.",                               nullptr,          5,  2,  1,  ESkillId::HighJump,        ESkillId::None,    ENodeTier::Medium },
-	{ ESkillId::MoreHealth,      "Fortitude",        "+25 max health.",                                 "cross",          7,  0,  2,  ESkillId::None,            ESkillId::None,    ENodeTier::Minor  },
-	{ ESkillId::ArmorEfficiency, "Armor Expert",     "Armor absorbs 10% more damage.",                  "suit_full",      7,  1,  2,  ESkillId::MoreHealth,      ESkillId::None,    ENodeTier::Medium },
-	{ ESkillId::HealthRegen,     "Regen",            "Slowly regenerate health.",                       "cross",          7,  2,  3,  ESkillId::MoreHealth,      ESkillId::None,    ENodeTier::Major  },
-	{ ESkillId::CrowbarSpeed,    "Crowbar Speed",    "+30% crowbar attack speed.",                      "d_crowbar",      0,  2,  2,  ESkillId::CrowbarDamage,   ESkillId::None,    ENodeTier::Medium },
-	{ ESkillId::PulseWindow,     "Pulse Window",     "+0.15s Pulse Window.",                            "suit_full",     11,  0,  1,  ESkillId::None,            ESkillId::None,    ENodeTier::Minor  },
-	{ ESkillId::BatteryCapacity, "Battery Capacity", "+50 max battery.",                                "suit_full",      9,  0,  2,  ESkillId::None,            ESkillId::None,    ENodeTier::Minor  },
-	{ ESkillId::BatteryRegen,    "Battery Regen",    "Regenerate armor over time.",                     "suit_full",      9,  1,  3,  ESkillId::BatteryCapacity, ESkillId::None,    ENodeTier::Major  },
-	{ ESkillId::PulseRecharge,   "Pulse Recharge",   "-33% Pulse Recharge.",                            "suit_full",     11,  1,  2,  ESkillId::PulseWindow,     ESkillId::None,    ENodeTier::Medium },
-	{ ESkillId::PulseDischarge,  "Pulse Discharge",  "Negated hits vent energy at your crosshair.",     "suit_full",     11,  2,  3,  ESkillId::PulseRecharge,   ESkillId::None,    ENodeTier::Major  },
-	{ ESkillId::PulseRebound,    "Pulse Rebound",    "A deflect skips the Recharge. Once, until you sit through a normal one.", "suit_full", 12, 2, 3, ESkillId::PulseRecharge, ESkillId::None, ENodeTier::Major },
-	// The second prerequisite this Skill always wanted: it is a crowbar payoff
-	// for a Pulse deflect, and now genuinely requires both branches.
-	{ ESkillId::CrowbarFollowUp, "Follow-Up",        "After a deflect, your next crowbar hit lands far harder.", "d_crowbar", 2, 2, 3, ESkillId::CrowbarDamage, ESkillId::PulseRecharge, ENodeTier::Major },
-	// A root rather than a child of the survivability column: MoreHealth,
-	// ArmorEfficiency and HealthRegen are all still inert, so hanging this off
-	// one of them would charge points for a node that does nothing purely to
-	// reach one that does. PulseWindow set the precedent. Re-parenting later is
-	// a data change, not a structural one.
-	{ ESkillId::MedExpert,       "Med Expert",       "+5s Infusion duration.",                          "cross",          8,  0,  2,  ESkillId::None,            ESkillId::None,    ENodeTier::Medium },
+	//  id                        name                description                                                    sprite           col row cost prereq                     prereq2                  tier
+	{ ESkillId::None,            "None",             "",                                                            nullptr,          0,  0,  0,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor  },
+
+	// 1-2: melee, col 0
+	{ ESkillId::CrowbarRange,    "Crowbar Reach",    "Your crowbar connects from 25% further away.",                "d_crowbar",      0,  0,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor  },
+	{ ESkillId::CrowbarDamage,   "Crowbar Force",    "Crowbar hits land 50% harder.",                               "d_crowbar",      0,  1,  2,  ESkillId::CrowbarRange,    ESkillId::None,          ENodeTier::Medium },
+
+	SKILL_RESERVED(FastReload),
+
+	// 4: armaments, col 4. A column of one for now -- reserved as much as
+	// filled: gun Skills belong together, and this is where the next ones go.
+	{ ESkillId::ExtraDamage,     "Weapon Mastery",   "Every weapon you carry deals 10% more damage.",               "d_9mmar",        4,  0,  3,  ESkillId::None,            ESkillId::None,          ENodeTier::Major  },
+
+	SKILL_RESERVED(HighJump),
+	// Also carried a self-prerequisite bug, which goes away with the row.
+	SKILL_RESERVED(SprintSpeed),
+
+	// 7-10: survivability, cols 5-6
+	{ ESkillId::FallResistance,  "Sure Footing",     "Falls deal half as much damage.",                             "cross",          6,  1,  1,  ESkillId::MoreHealth,      ESkillId::None,          ENodeTier::Minor  },
+	{ ESkillId::MoreHealth,      "Fortitude",        "+25 maximum health.",                                         "cross",          5,  0,  2,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor  },
+	{ ESkillId::ArmorEfficiency, "Armor Expert",     "Armor absorbs 10% more of every blow.",                       "suit_full",      5,  1,  2,  ESkillId::MoreHealth,      ESkillId::None,          ENodeTier::Medium },
+	{ ESkillId::HealthRegen,     "Regeneration",     "Wounds slowly close on their own.",                           "cross",          5,  2,  3,  ESkillId::ArmorEfficiency, ESkillId::None,          ENodeTier::Major  },
+
+	SKILL_RESERVED(CrowbarSpeed),
+
+	// 12: the Pulse, col 1
+	{ ESkillId::PulseWindow,     "Pulse Window",     "The Shield stands 0.15s longer.",                             "suit_full",      1,  0,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor  },
+
+	// 13-14: the suit, col 3
+	{ ESkillId::BatteryCapacity, "Battery Capacity", "The suit holds 50 more armor.",                               "suit_full",      3,  0,  2,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor  },
+	{ ESkillId::BatteryRegen,    "Battery Regen",    "The suit slowly rebuilds its own armor.",                     "suit_full",      3,  1,  3,  ESkillId::BatteryCapacity, ESkillId::None,          ENodeTier::Major  },
+
+	// 15-17: the Pulse continued, cols 1-2
+	{ ESkillId::PulseRecharge,   "Pulse Recharge",   "The wait between Pulses is a third shorter.",                 "suit_full",      1,  1,  2,  ESkillId::PulseWindow,     ESkillId::None,          ENodeTier::Medium },
+	{ ESkillId::PulseDischarge,  "Pulse Discharge",  "Negated hits vent energy at your crosshair.",                 "suit_full",      1,  2,  3,  ESkillId::PulseRecharge,   ESkillId::None,          ENodeTier::Major  },
+	{ ESkillId::PulseRebound,    "Pulse Rebound",    "A deflect skips the Recharge. Once, until you sit through a normal one.", "suit_full", 2, 2, 3, ESkillId::PulseRecharge, ESkillId::None,     ENodeTier::Major  },
+
+	// 18: melee payoff, col 0. Gated on both branches: it is a crowbar payoff
+	// for a Pulse deflect, and does nothing for a player who never deflects.
+	{ ESkillId::CrowbarFollowUp, "Follow-Up",        "After a deflect, your next crowbar hit lands far harder.",     "d_crowbar",      0,  2,  3,  ESkillId::CrowbarDamage,   ESkillId::PulseRecharge, ENodeTier::Major  },
+
+	// 19: medical, col 6. Re-parented off root now that the whole survival
+	// line is shipping -- Regeneration is the node it belongs behind.
+	{ ESkillId::MedExpert,       "Med Expert",       "An Infusion runs 5 seconds longer.",                          "cross",          6,  2,  2,  ESkillId::HealthRegen,     ESkillId::None,          ENodeTier::Medium },
+
+	// 20-21: the alien column, held until it opens
+	SKILL_RESERVED(HiveCapacity),
+	SKILL_RESERVED(HiveRegrowth),
 };
+
+#undef SKILL_RESERVED
+
+// The table is indexed by id, and a row out of position silently reassigns
+// Skills rather than failing anywhere visible -- a save's unlocked bits would
+// simply start meaning different abilities.  Checked at compile time because
+// the grouping that reads most naturally to a human is exactly the mistake.
+constexpr bool SkillDefsAreIdOrdered()
+{
+	for (int i = 0; i < k_MaxSkills; ++i)
+	{
+		if (static_cast<int>(k_SkillDefs[i].id) != i)
+			return false;
+	}
+	return true;
+}
+
+static_assert(SkillDefsAreIdOrdered(),
+	"k_SkillDefs must be ordered by id: entry [n] is the Skill with id n");
 
 // Returns nullptr for None or any out-of-range id.
 inline const SkillDef* GetSkillDef(int id)
