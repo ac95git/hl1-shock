@@ -475,6 +475,14 @@ cvar_t inv_rows_max = {"inv_rows_max", "9"};
 cvar_t skill_points_start = {"skill_points_start", "0"};
 cvar_t skill_reset_tokens_start = {"skill_reset_tokens_start", "0"};
 
+// Skill effects.  Every one is a starting guess to be judged in play, and each
+// is read server-side where the effect is computed -- never in prediction.
+cvar_t skill_health_bonus = {"skill_health_bonus", "25"};
+// Multiplies ARMOR_RATIO, the fraction of a blow that gets PAST armor. Lower
+// is better armor: 0.9 lets a tenth less through.
+cvar_t skill_armor_ratio_scale = {"skill_armor_ratio_scale", "0.9"};
+cvar_t skill_fall_damage_scale = {"skill_fall_damage_scale", "0.5"};
+
 // The Pulse.  Tuning knobs -- see docs/PILLARS.md pillar 2.  The Recharge is
 // deliberately asymmetric: a Shield that negated something recovers faster than
 // one that negated nothing, so good reads chain and whiffs strand you.
@@ -591,6 +599,10 @@ void GameDLLInit()
 
 	CVAR_REGISTER(&skill_points_start);
 	CVAR_REGISTER(&skill_reset_tokens_start);
+
+	CVAR_REGISTER(&skill_health_bonus);
+	CVAR_REGISTER(&skill_armor_ratio_scale);
+	CVAR_REGISTER(&skill_fall_damage_scale);
 
 	CVAR_REGISTER(&pulse_window);
 	CVAR_REGISTER(&pulse_window_bonus);

@@ -53,6 +53,11 @@ extern cvar_t inv_rows_max;
 extern cvar_t skill_points_start;
 extern cvar_t skill_reset_tokens_start;
 
+// Skill effects
+extern cvar_t skill_health_bonus;
+extern cvar_t skill_armor_ratio_scale;
+extern cvar_t skill_fall_damage_scale;
+
 // The Pulse.  Every one of these is a starting guess to be judged in play.
 extern cvar_t pulse_window;
 extern cvar_t pulse_window_bonus;

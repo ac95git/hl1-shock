@@ -108,3 +108,13 @@ bool SkillsRestore(CPlayerSkills& skills, CRestore& restore);
 // =====================================================================
 class CBasePlayer;
 void SendSkillTreeToClient(CBasePlayer* pPlayer);
+
+// =====================================================================
+// Brings max health into line with whether Fortitude is held.
+//
+// Called at spawn AND whenever the tree changes, because a Skill can be
+// unlocked or reset mid-life -- unlike the Pulse and Infusion modifiers,
+// which are read fresh each time the effect is computed, this one edits
+// durable state and so has to be re-applied rather than consulted.
+// =====================================================================
+void ApplySkillHealthBonus(CBasePlayer* pPlayer);

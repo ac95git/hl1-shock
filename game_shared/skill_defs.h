@@ -172,7 +172,7 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// 7-10: survivability, cols 5-6
 	{ ESkillId::FallResistance,  "Sure Footing",     "Falls deal half as much damage.",                             "item_longjump",  6,  1,  1,  ESkillId::MoreHealth,      ESkillId::None,          ENodeTier::Minor  },
 	{ ESkillId::MoreHealth,      "Fortitude",        "+25 maximum health.",                                         "item_healthkit", 5,  0,  2,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor  },
-	{ ESkillId::ArmorEfficiency, "Armor Expert",     "Armor absorbs 10% more of every blow.",                       "suit_full",      5,  1,  2,  ESkillId::MoreHealth,      ESkillId::None,          ENodeTier::Medium },
+	{ ESkillId::ArmorEfficiency, "Armor Expert",     "A tenth less damage gets past your armor.",                   "suit_full",      5,  1,  2,  ESkillId::MoreHealth,      ESkillId::None,          ENodeTier::Medium },
 	{ ESkillId::HealthRegen,     "Regeneration",     "Wounds slowly close on their own.",                           "cross",          5,  2,  3,  ESkillId::ArmorEfficiency, ESkillId::None,          ENodeTier::Major  },
 
 	SKILL_RESERVED(CrowbarSpeed),

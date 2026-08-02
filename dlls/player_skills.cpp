@@ -198,6 +198,39 @@ void CPlayerSkills::BuildUnlockedMask(unsigned char* mask) const
 }
 
 // =====================================================================
+// ApplySkillHealthBonus
+// =====================================================================
+void ApplySkillHealthBonus(CBasePlayer* pPlayer)
+{
+    if (!pPlayer)
+        return;
+
+    const float bonus = pPlayer->m_skills.HasSkill(ESkillId::MoreHealth)
+        ? std::max(0.0f, skill_health_bonus.value)
+        : 0.0f;
+
+    // 100 is what CBasePlayer::Spawn sets, and the only baseline there is.
+    const float desired = 100.0f + bonus;
+    const float delta   = desired - pPlayer->pev->max_health;
+    if (delta == 0.0f)
+        return;
+
+    pPlayer->pev->max_health = desired;
+
+    if (delta > 0.0f)
+    {
+        // Raising the cap alone would mean unlocking Fortitude does nothing
+        // until the next medkit, which reads as the Skill being broken.
+        pPlayer->pev->health += delta;
+    }
+    else if (pPlayer->pev->health > desired)
+    {
+        // A reset must not leave the player above their new maximum.
+        pPlayer->pev->health = desired;
+    }
+}
+
+// =====================================================================
 // SendSkillTreeToClient
 //
 // State only: one bit per unlocked Skill, then unspent Skill Points,

@@ -375,6 +375,11 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 	flBonus = ARMOR_BONUS;
 	flRatio = ARMOR_RATIO;
 
+	// Armor Expert. flRatio is the fraction of a blow that gets PAST armor,
+	// so scaling it DOWN is what makes armor better.
+	if (m_skills.HasSkill(ESkillId::ArmorEfficiency))
+		flRatio *= std::max(0.0f, skill_armor_ratio_scale.value);
+
 	if ((bitsDamageType & DMG_BLAST) != 0 && g_pGameRules->IsMultiplayer())
 	{
 		// blasts damage armor more.
@@ -2719,6 +2724,11 @@ void CBasePlayer::PostThink()
 
 			float flFallDamage = g_pGameRules->FlPlayerFallDamage(this);
 
+			// Sure Footing. Scaled here rather than inside FlPlayerFallDamage
+			// so the game rules stay free of per-player skill state.
+			if (m_skills.HasSkill(ESkillId::FallResistance))
+				flFallDamage *= std::max(0.0f, skill_fall_damage_scale.value);
+
 			if (flFallDamage > pev->health)
 			{ //splat
 				// note: play on item channel because we play footstep landing on body channel
@@ -2983,6 +2993,8 @@ void CBasePlayer::Spawn()
 	pev->solid = SOLID_SLIDEBOX;
 	pev->movetype = MOVETYPE_WALK;
 	pev->max_health = pev->health;
+	// Fortitude raises the cap, and the health with it.
+	ApplySkillHealthBonus(this);
 	pev->flags &= FL_PROXY | FL_FAKECLIENT; // keep proxy and fakeclient flags set by engine
 	pev->flags |= FL_CLIENT;
 	pev->air_finished = gpGlobals->time + 12;

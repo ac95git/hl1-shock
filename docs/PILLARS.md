@@ -24,7 +24,7 @@ same commit as the code change.
 | 1 | [Exploration](#1-exploration) | **Not started** | Its rewards exist — Row Grants, Skill Points, Reset Tokens are all findable entities — but no map places one, so nothing is explored *for* yet. |
 | 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar. Numbers untuned. Melee skills still do nothing. |
 | 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. |
-| 4 | [Skill trees](#4-skill-trees) | **Scaffolded** | Curated to 15 Skills; unlocks, saves and renders; points and Reset Tokens are earned and spent. Six have effects, nine are inert — the only thing keeping this off Playable. |
+| 4 | [Skill trees](#4-skill-trees) | **Scaffolded** | Curated to 15 Skills; unlocks, saves and renders; points and Reset Tokens are earned and spent. Nine have effects, six are inert — the only thing keeping this off Playable. |
 | 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work. Client-side model only — the server-owned rebuild is designed and scheduled. |
 
 ---
@@ -444,11 +444,17 @@ The most complete system by line count, and the one furthest from affecting play
 
 ### What's missing
 
-- **Nine of the fifteen effects.** Six work — `PulseWindow`, `PulseRecharge`, `PulseDischarge`,
-  `PulseRebound` and `CrowbarFollowUp`, all read by `dlls/player_pulse.cpp`, plus `MedExpert` (id 19), read
-  by `dlls/player_infusion.cpp`. The other nine unlock, persist and render without changing anything.
-  Every one of them is server-side and cheap; this is the last thing standing between the pillar and
-  Playable.
+- **Six of the fifteen effects.** Nine work: the four Pulse Skills and `CrowbarFollowUp` via
+  `dlls/player_pulse.cpp`, `MedExpert` via `dlls/player_infusion.cpp`, and now `MoreHealth`,
+  `ArmorEfficiency` and `FallResistance`. Still inert: `CrowbarRange`, `CrowbarDamage`, `ExtraDamage`,
+  `HealthRegen`, `BatteryCapacity`, `BatteryRegen`. Every one is server-side and cheap; this is the last
+  thing standing between the pillar and Playable.
+
+  `MoreHealth` is the one that does not follow the read-it-where-it-is-computed pattern, and could not:
+  max health is durable state rather than a value recomputed per hit, so `ApplySkillHealthBonus` is
+  *re-applied* at spawn, on unlock and on reset instead of being consulted. It grants the health along
+  with the cap — a cap raised alone does nothing until the next medkit, which reads as a broken Skill —
+  and clamps back down on reset.
 - **Anywhere to earn points.** The mechanism exists — `item_skillpoint` and `item_resettoken` are placeable
   entities — but no map places one, so in practice points still come from `skill_addpoints`. Blocked on
   custom maps, exactly as Row Grants are.
@@ -509,9 +515,16 @@ designing first, and no server or wire change is involved.
 The shared definition table ([ADR-0008](adr/0008-skill-definitions-are-shared-not-networked.md)), two
 prerequisites, the points/Tokens economy, the curation pass and the UI pass are all in. What remains:
 
-**The nine remaining effects**, each following `PulseWindowFor` / `PulseRechargeFor` — a modifier read
+**The six remaining effects**, each following `PulseWindowFor` / `PulseRechargeFor` — a modifier read
 server-side from `m_skills`, applied where the effect is computed, never touched in prediction. That is
 the last thing between this pillar and Playable, and the only work left that touches nothing else.
+
+1. ~~Survivability values — `MoreHealth`, `ArmorEfficiency`, `FallResistance`.~~ **Done.**
+2. **Regeneration and the battery cap** — `HealthRegen`, `BatteryRegen`, `BatteryCapacity`. The two
+   regenerators copy the accumulator in `dlls/player_infusion.cpp`. `BatteryCapacity` is grouped with them
+   because it is the one that is *not* purely server-side: the armour HUD assumes a maximum of 100
+   (`MAX_NORMAL_BATTERY`), so raising the cap needs the client to know about it.
+3. **Combat** — `CrowbarRange`, `CrowbarDamage`, `ExtraDamage`.
 
 ### The economy
 

@@ -124,6 +124,14 @@ than leaking points, and why a Skill cut from the tree refunds itself on the nex
 
 Raising `skill_points_start` is the way to work on the tree UI without hunting for pickups.
 
+### Skill effect tuning
+
+| Cvar | Default | What it does |
+| --- | --- | --- |
+| `skill_health_bonus` | 25 | Extra max health from Fortitude |
+| `skill_armor_ratio_scale` | 0.9 | Armor Expert multiplies `ARMOR_RATIO` — the share of a blow that gets **past** armor — so lower is better armor |
+| `skill_fall_damage_scale` | 0.5 | Sure Footing multiplies fall damage |
+
 ## Adding a Skill
 
 Everything static about a Skill lives in one table, [game_shared/skill_defs.h](../game_shared/skill_defs.h),

@@ -671,7 +671,10 @@ void ClientCommand(edict_t* pEntity)
 		{
 			int id = atoi(CMD_ARGV(1));
 			if (player->m_skills.TryUnlock(static_cast<ESkillId>(id)))
+			{
+				ApplySkillHealthBonus(player);
 				SendSkillTreeToClient(player);
+			}
 		}
 	}
 	else if (FStrEq(pcmd, "skill_reset"))
@@ -681,6 +684,9 @@ void ClientCommand(edict_t* pEntity)
 		// validates the Token and the tree and does what it is told.
 		if (player->m_skills.TryReset())
 		{
+			// Must run after the wipe: it takes the Fortitude bonus back off
+			// the cap, and clamps the player down to it if they were above.
+			ApplySkillHealthBonus(player);
 			ClientPrint(pev, HUD_PRINTCENTER, "Skill Tree reset.\n");
 			SendSkillTreeToClient(player);
 		}
