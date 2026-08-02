@@ -135,8 +135,10 @@ void CInventoryContextMenu::Show(int x, int y, int entryIndex, EEntryKind kind, 
     else
     {
         // Only consumables do anything when used; a keycard is carried, not used.
-        const EItemTypeId type = static_cast<EItemTypeId>(id);
-        showUse = (type == EItemTypeId::Medkit || type == EItemTypeId::Battery);
+        // Read from the shared Item Type table rather than listed here, so a new
+        // item cannot ship without its Use button.
+        const ItemTypeDef* def = GetItemType(id);
+        showUse = (def && def->usable);
         m_pUseButton->setText("Use");
     }
 

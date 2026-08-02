@@ -97,6 +97,7 @@ static const SkillUiInfo k_SkillUiInfo[] =
     { "Pulse Discharge", "Negated hits vent energy at your crosshair.", "suit_full" },
     { "Pulse Rebound",  "A deflect skips the Recharge. Once, until you sit through a normal one.", "suit_full" },
     { "Follow-Up",      "After a deflect, your next crowbar hit lands far harder.", "d_crowbar" },
+    { "Med Expert",     "+5s Infusion duration.",           "cross" },
 };
 
 static const SkillUiInfo* GetSkillUiInfo(int id)

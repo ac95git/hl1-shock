@@ -503,6 +503,16 @@ cvar_t pulse_followup_time = {"pulse_followup_time", "2.0"};
 cvar_t pulse_followup_damage = {"pulse_followup_damage", "3.0"};
 cvar_t pulse_followup_knockback = {"pulse_followup_knockback", "500"};
 
+// The Infusion -- see docs/PILLARS.md pillar 3.  40 HP over 10 seconds is more
+// than two medkits, and the duration is what pays for it: none of it lands if
+// the player does not survive the ten seconds, and it cannot answer burst
+// damage the way an instant medkit can.
+cvar_t infusion_rate = {"infusion_rate", "4"};
+cvar_t infusion_duration = {"infusion_duration", "10"};
+// Med Expert. Additive rather than a percentage so it stays legible when
+// infusion_duration is tuned -- the same choice pulse_window_bonus makes.
+cvar_t infusion_duration_bonus = {"infusion_duration_bonus", "5"};
+
 static bool SV_InitServer()
 {
 	if (!FileSystem_LoadFileSystem())
@@ -583,6 +593,10 @@ void GameDLLInit()
 	CVAR_REGISTER(&pulse_ring_scale);
 	CVAR_REGISTER(&pulse_deflect_punch);
 	CVAR_REGISTER(&pulse_discharge_melee);
+	CVAR_REGISTER(&infusion_rate);
+	CVAR_REGISTER(&infusion_duration);
+	CVAR_REGISTER(&infusion_duration_bonus);
+
 	CVAR_REGISTER(&pulse_followup_time);
 	CVAR_REGISTER(&pulse_followup_damage);
 	CVAR_REGISTER(&pulse_followup_knockback);

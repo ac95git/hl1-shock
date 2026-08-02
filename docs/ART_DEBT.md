@@ -38,6 +38,47 @@ a code change, so consider a cvar for the sprite name if this turns into much it
 ### Done when
 The effect is recognisably the mod's own, and nobody mistakes it for a houndeye.
 
+## The Health Syringe — icon, world model and sounds
+
+### Scope
+`game_shared/inventory_defs.h` (the `k_ItemTypes` row), `dlls/items.cpp` (`CItemSyringe`), and the
+`k_Infusion*` constants in `dlls/player_infusion.cpp`.
+
+### Current stand-ins
+
+| Use | Asset | Borrowed from |
+| --- | --- | --- |
+| Grid icon **and** Infusion status icon | `cross` | the health readout's cross |
+| World model | `models/w_adrenaline.mdl` | `valve/models`, by game-directory fallback |
+| Picked up | `items/smallmedkit1.wav` | medkit |
+| Infusion starts | `items/medshot4.wav` | health charger |
+| Use refused while infusing | `items/medshotno1.wav` | health charger, denied |
+| Voice line | `!HEV_HEAL7` — "hiss, morphine_shot" | stock HEV sentence |
+
+The use sounds and the voice line are close enough to right that they may simply stay. The **pickup**
+sound is the medkit's outright, which is the odd one out: the Syringe deliberately does not sound like a
+medkit when it is *used*, so sounding exactly like one when it is *taken* undoes half of that. The sprite
+and the model are the rest of the debt.
+
+### What's wrong with them
+- **`cross` is the health readout's own icon.** Used in the Grid it says "health", not "syringe", and it
+  will read as a second medkit to a player scanning the Grid quickly. It is deliberately the same sprite
+  in both places so the item and its effect are visibly linked — a replacement should keep that property
+  and supply *one* new sprite used twice, not two.
+- The status icon is drawn additively and tinted green, so a greyscale source is required; a coloured
+  sprite will come out wrong.
+- **`w_adrenaline.mdl` is not used anywhere in Half-Life** — it ships in `valve/models` unreferenced,
+  which is why it was free to take. It is small, so it may sit oddly inside the standard
+  `size(-16 -16 0, 16 16 36)` pickup bounds, and nothing about it says *this heals you over time*.
+
+### What to look for
+A syringe silhouette that reads at 20×20 (the 320-res sprite size) as well as at 132×132, distinct at a
+glance from the medkit's box. The world model wants to be recognisable on a floor from standing height.
+
+### Done when
+Nobody confuses a Health Syringe with a Medkit in the Grid, and the status icon is legibly a syringe
+rather than a cross.
+
 ## The Pulse — sounds
 
 ### Scope

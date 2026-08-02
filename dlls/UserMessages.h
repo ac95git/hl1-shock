@@ -74,4 +74,10 @@ inline int gmsgPickupPrompt = 0;
 // from the duration, so a Recharge costs three messages rather than one a frame.
 inline int gmsgPulse = 0;
 
+// Status icon: BYTE enable, STRING sprite name, then BYTE r/g/b when enabling.
+// CHudStatusIcons shipped with the SDK complete but with no sender anywhere in
+// dlls/; the Infusion is the first thing to use it. Variable length because it
+// carries a string.
+inline int gmsgStatusIcon = 0;
+
 void LinkUserMessages();

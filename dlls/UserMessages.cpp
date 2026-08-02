@@ -93,4 +93,6 @@ void LinkUserMessages()
 	gmsgPickupPrompt = REG_USER_MSG("PickupHint", 2);
 
 	gmsgPulse = REG_USER_MSG("Pulse", 2);
+
+	gmsgStatusIcon = REG_USER_MSG("StatusIcon", -1);
 }

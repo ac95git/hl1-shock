@@ -6,7 +6,7 @@ document tracks the custom gameplay on top of it.
 This is a living document. When a pillar's state changes, update its section and the summary table in the
 same commit as the code change.
 
-**Last updated:** 2026-08-01 (branch `hl-shock`, at `82b05af`)
+**Last updated:** 2026-08-02 (branch `hl-shock`, at `d709eef`)
 
 ## Status legend
 
@@ -23,8 +23,8 @@ same commit as the code change.
 | --- | --- | --- | --- |
 | 1 | [Exploration](#1-exploration) | **Not started** | No code. |
 | 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar. Numbers untuned. Melee/reload skills still do nothing. |
-| 3 | [Custom items](#3-custom-items) | **Scaffolded** | Two stock consumables usable from the inventory; no custom item framework. |
-| 4 | [Skill trees](#4-skill-trees) | **Scaffolded** | Full tree unlocks, saves, and renders. Five of eighteen skills now have effects; the rest are inert. A Skill can hold only one prerequisite, which already bites. |
+| 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. |
+| 4 | [Skill trees](#4-skill-trees) | **Scaffolded** | Full tree unlocks, saves, and renders. Six of nineteen skills now have effects; the rest are inert. A Skill can hold only one prerequisite, which already bites. |
 | 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work. Client-side model only — the server-owned rebuild is designed and scheduled. |
 
 ---
@@ -252,41 +252,103 @@ inventing their own hook.
 
 ## 3. Custom items
 
-**Status: Scaffolded**
+**Status: Playable**
+
+The framework landed with inventory iteration 1, and the **Health Syringe** is the first item in the mod
+that Half-Life does not have.
 
 ### What exists
 
-- A client-side item template table in `cl_dll/vgui_inventory.cpp:378` with four entries: **Medkit**,
-  **Antidote**, **Keycard**, **Battery**. All four are stock Half-Life entities.
-- `gmsgInventoryItem` (`dlls/UserMessages.cpp:83`) pushes a `(itemId, count)` pair to the client on pickup,
-  sent from `dlls/items.cpp` (battery) and `dlls/healthkit.cpp`.
-- Server-side `inv_use` handling in `dlls/client.cpp:566` for exactly two classnames: `item_healthkit`
-  (heals, decrements, plays a sound) and `item_battery` (charges armour, HEV voice line). Both re-sync the
-  count to the client afterwards.
-- Item sprites resolve through the HUD sprite set; only healthkit and battery have one, so Antidote and
-  Keycard render without icons.
+**The Item Type table** — `game_shared/inventory_defs.h`, compiled into both DLLs so the client and server
+cannot disagree. Five entries: **Medkit**, **Antidote**, **Keycard**, **Battery** and **Health Syringe**.
+Each row carries classname, display name, sprite, Cell width, Stack ceiling and whether the item is
+usable. Ids are frozen once written to a save; adding is free, reordering corrupts.
+
+The `usable` flag replaced a hardcoded `id == Medkit || id == Battery` test in the client's context menu,
+which was found the only way it could be: the Syringe shipped with no **Use** button. The client now asks
+the shared table, so a new item cannot repeat it.
+
+**The Health Syringe** — Item Type id 5, `item_syringe`, three per Stack, one Cell. Uses
+`models/w_adrenaline.mdl`, which ships unreferenced in `valve/models` and reaches the mod by
+game-directory fallback. Placeable in a level editor via a `@PointClass` line in `fgd/halflife.fgd`.
+
+It is the first Item Type with **no legacy `m_rgItems[]` twin** — `MAX_ITEMS` is 5, so
+`SyncLegacyItemCount` skips it and the Inventory is its only record. That path was already guarded, so
+nothing had to change for it.
+
+**The Infusion** — `dlls/player_infusion.cpp` / `.h`, a `CPlayerInfusion` held by value in `CBasePlayer`
+alongside `m_pulse` and `m_skills`. Using a Syringe starts one: `infusion_rate` HP per second for
+`infusion_duration` seconds, landing as **1 HP every 0.25s** through a fractional accumulator, so the
+health readout climbs steadily rather than jumping. Hooks mirror the Pulse exactly — `Think()` from
+`PreThink`, `Clear()` from `Spawn()`, `FIELD_TIME` fields through `InfusionSave`/`InfusionRestore`, so an
+Infusion survives a save and a level transition with the right time left.
+
+`m_bActive` is an explicit bool rather than an inferred zero timer, for the reason `CPlayerPulse`'s header
+documents: `FIELD_TIME` rebases on restore, and a zero sentinel comes back as "just expired".
+
+**Two rules, recorded in [ADR-0007](adr/0007-the-infusion-is-one-at-a-time.md)**: a Syringe may be used at
+full health, and a second one is refused while an Infusion runs — refused, not queued, with the Syringe
+unspent. Together they make the Syringe proactive where the medkit is reactive, which is the whole reason
+it exists alongside one. Nothing interrupts a running Infusion.
+
+**A status icon, and the first sender `gmsgStatusIcon` has ever had.** `CHudStatusIcons`
+(`cl_dll/status_icons.cpp`) shipped complete with the SDK and was never wired up — nothing in `dlls/`
+registered its message. The Infusion registers it and sends `(1, "cross", green)` on start and `(0,
+"cross")` on end, so the icon cost **zero new client code**, and every future durable status is now one
+`MESSAGE_BEGIN`.
+
+Note this is a different system from the shock/fire/poison icons beside the health readout: those are
+`CHudHealth`'s **damage tiles**, keyed to `DMG_*` bits and self-expiring after 2 seconds
+(`DMG_IMAGE_LIFE`), which cannot express "on for exactly 10 seconds". `CHudStatusIcons` is the durable
+one, and it draws up the left edge from mid-screen instead.
+
+`ResetHUD` wipes the client's icon list, so `ForgetSentIcon()` is called at the `m_fInitHUD` site in
+`UpdateClientData` — without it a save loaded mid-Infusion heals invisibly.
+
+**Med Expert** (Skill id 19) — `+infusion_duration_bonus` seconds, additive. A root node, deliberately:
+every skill in the survivability column is still inert, so gating it behind one would charge points for
+nothing to reach something.
+
+**Three tuning cvars** in `dlls/game.cpp`: `infusion_rate` (4), `infusion_duration` (10),
+`infusion_duration_bonus` (5). Named for the mechanic rather than the Syringe, so a later source of an
+Infusion does not inherit syringe-flavoured names.
+
+**Sounds** — `items/smallmedkit1.wav` on pickup, `items/medshot4.wav` on use, `items/medshotno1.wav` on a
+refused press, and the `!HEV_HEAL7` suit line ("hiss, morphine_shot"), throttled `SUIT_NEXT_IN_30SEC`.
+The *use* sound is deliberately not the medkit's — the two items must not sound alike in the moment they
+do their work — which makes the shared pickup sound the weakest of the placeholders. See
+[ART_DEBT.md](ART_DEBT.md).
+
+No `gmsgItemPickup` is sent on pickup, unlike the medkit and battery: the pickup-history HUD resolves its
+icon from the classname, and there is no `item_syringe` sprite in `hud.txt` for it to find.
 
 ### What's missing
 
-- Any item that isn't already in stock Half-Life. There is no new entity, no new pickup, no new effect.
-- A framework: item ids are implicit array indices in a *client-side* table, and the server's notion of an
-  item is `m_rgItems[]` plus a hardcoded `if/else` chain in `client.cpp`. Adding a fifth item today means
-  editing both sides in a way nothing enforces.
-- Drop is wired in the UI (`cl_dll/vgui_inventory.cpp:248`) and sends `drop <classname>`, but no server
-  handler exists for dropping non-weapon items.
+- **No map places a Syringe.** Acquisition is `give item_syringe` with `sv_cheats 1` until there are
+  custom maps — the same constraint the Row Grant pickup has (pillar 5). The FGD entry exists so the
+  moment there is a map, it can be placed.
+- **Antidote and Keycard still do nothing when used**, and render without icons. They are carried, not
+  consumed, which is deliberate — but nothing in the world reads them either.
+- **Numbers are first guesses.** 4 HP/s for 10s is 40 health from one Cell, more than two medkits; the
+  duration is what pays for it, and whether that trade is right is a play question.
+- The Infusion has no countdown, only an on/off icon. That is by design (ADR-0007) and is the first thing
+  to revisit if refusal feels opaque in play.
 
 ### Next step
 
-Decided as part of the inventory design: **one Item Type table under `game_shared/`, compiled into both
-DLLs**, so the client and server cannot disagree. It lands in inventory iteration 1, and the first
-genuinely custom item becomes one table entry plus its effect. Weapons stay on Half-Life's own identity —
-see [ADR-0002](adr/0002-two-identity-spaces-for-weapons-and-items.md).
+Tune, and then decide whether the second custom item follows the same shape. `InventoryUseEntry` is still
+a `switch` over `EItemTypeId`; a function pointer in the table would be tidier but `inventory_defs.h`
+compiles into the client, where server-only effect functions cannot go. Adding an item is currently: one
+table row, one `EItemTypeId`, one `CItem` subclass, one FGD line, one `case`.
 
 ### Acceptance criteria (draft)
 
-- Adding an item means adding one table entry plus its effect, and nothing else.
-- Item ids are stable across saves and the network, like skill ids.
-- Every item in the inventory can be used or dropped, or is explicitly marked as neither.
+- ~~Adding an item means adding one table entry plus its effect, and nothing else.~~ **Met**, as literally
+  as the two-DLL split allows — see "Next step".
+- ~~Item ids are stable across saves and the network, like skill ids.~~ **Met** — `EItemTypeId` is frozen
+  by the same rule as `ESkillId`.
+- Every item in the inventory can be used or dropped, or is explicitly marked as neither. *Antidote and
+  Keycard are droppable but inert on use; neither is marked as deliberately unusable.*
 
 ---
 
@@ -326,9 +388,13 @@ The most complete system by line count, and the one furthest from affecting play
 
 ### What's missing
 
-- **Most of the effects.** Five of eighteen Skills now do something — `PulseWindow`, `PulseRecharge`,
-  `PulseDischarge`, `PulseRebound` and `CrowbarFollowUp`, all read by `dlls/player_pulse.cpp`. The other
-  thirteen still unlock, persist and render without changing anything.
+- **Most of the effects.** Six of nineteen Skills now do something — `PulseWindow`, `PulseRecharge`,
+  `PulseDischarge`, `PulseRebound` and `CrowbarFollowUp`, all read by `dlls/player_pulse.cpp`, plus
+  `MedExpert` (id 19), read by `dlls/player_infusion.cpp`. The other thirteen still unlock, persist and
+  render without changing anything.
+- `MedExpert` is a **root** node despite belonging conceptually to the medical branch, because every skill
+  in that column is inert and gating a working skill behind one would charge points for nothing. It should
+  be re-parented once `MoreHealth` or `HealthRegen` does something — a data change, not a structural one.
 - **A way to earn points.** `m_iSkillPoints` defaults to 20 for UI testing (`dlls/player_skills.h:58`).
 - **A bug:** `SprintSpeed` lists itself as its own prerequisite (`dlls/player_skills.cpp:22`), so
   `PrereqMet()` requires the skill to already be unlocked and the node can never become available.
@@ -354,9 +420,9 @@ What it would take, all mechanical and none of it hard:
   reads the extra byte.
 - `SkillNode` gains `prereqId2`; the connector loop draws a second line.
 
-**Watch the message size.** At 6 bytes per node the tree currently costs 110 bytes of a 192-byte user
-message. At 7 bytes it would be 128, leaving room for roughly nine more Skills before the message has to
-be chunked the way `gmsgInventory` already is.
+**Watch the message size.** At 6 bytes per node the tree currently costs 116 bytes of a 192-byte user
+message (19 Skills, after `MedExpert`). At 7 bytes it would be 135, leaving room for roughly eight more
+Skills before the message has to be chunked the way `gmsgInventory` already is.
 
 Deliberately deferred rather than forgotten: altering skill logic was out of scope for the work that
 surfaced it.

@@ -1915,6 +1915,9 @@ void CBasePlayer::PreThink()
 	// Close a Shield whose window has run out, and complete a finished Recharge.
 	m_pulse.Think(this);
 
+	// Land any Infusion ticks that are due, and end one whose time is up.
+	m_infusion.Think(this);
+
 	if (g_pGameRules && g_pGameRules->FAllowFlashlight())
 		m_iHideHUD &= ~HIDEHUD_FLASHLIGHT;
 	else
@@ -3000,6 +3003,10 @@ void CBasePlayer::Spawn()
 	// calls Restore instead of Spawn, so a save caught mid-Recharge keeps it.
 	m_pulse.Clear(this);
 
+	// Likewise no Infusion left running. Restored players skip this too, so a
+	// save caught mid-Infusion keeps the time it had left.
+	m_infusion.Clear(this);
+
 	g_engfuncs.pfnSetPhysicsKeyValue(edict(), "slj", "0");
 	g_engfuncs.pfnSetPhysicsKeyValue(edict(), "hl", "1");
 	g_engfuncs.pfnSetPhysicsKeyValue(edict(), "bj", UTIL_dtos1(sv_allowbunnyhopping.value != 0 ? 1 : 0));
@@ -3119,6 +3126,11 @@ bool CBasePlayer::Save(CSave& save)
 	if (!PulseSave(m_pulse, save))
 		return false;
 
+	// Same for a running Infusion -- a 10-second effect that vanished because
+	// the player crossed a level transition would read as a bug.
+	if (!InfusionSave(m_infusion, save))
+		return false;
+
 	return save.WriteFields("PLAYER", this, m_playerSaveData, ARRAYSIZE(m_playerSaveData));
 }
 
@@ -3144,6 +3156,9 @@ bool CBasePlayer::Restore(CRestore& restore)
 
 	// And the Pulse: a save predating it restores a player who is simply Ready.
 	PulseRestore(m_pulse, restore);
+
+	// And the Infusion: a save predating it restores a player with none running.
+	InfusionRestore(m_infusion, restore);
 
 	bool status = restore.ReadFields("PLAYER", this, m_playerSaveData, ARRAYSIZE(m_playerSaveData));
 
@@ -4196,6 +4211,10 @@ void CBasePlayer::UpdateClientData()
 		// The reset above wipes the client's Pulse bar, so make the next sync
 		// resend rather than leaving it showing whatever it had.
 		m_pulse.ForgetSentState();
+
+		// It wipes CHudStatusIcons too, so a running Infusion has to re-assert
+		// its icon or it heals invisibly for the rest of its duration.
+		m_infusion.ForgetSentIcon();
 
 		if (!m_fGameHUDInitialized)
 		{

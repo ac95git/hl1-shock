@@ -1013,6 +1013,9 @@ void ClientPrecache()
 	// The Pulse's ring sprite and sounds.
 	PulsePrecache();
 
+	// The Infusion's sounds.
+	InfusionPrecache();
+
 	// setup precaches always needed
 	PRECACHE_SOUND("player/sprayer.wav"); // spray paint sound for PreAlpha
 

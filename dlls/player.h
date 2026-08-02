@@ -19,6 +19,7 @@
 #include "player_skills.h"
 #include "player_inventory.h"
 #include "player_pulse.h"
+#include "player_infusion.h"
 
 
 #define PLAYER_FATAL_FALL_SPEED 1024															  // approx 60 feet
@@ -368,6 +369,9 @@ public:
 
 	// ---- The Pulse ----
 	CPlayerPulse m_pulse;
+
+	// ---- The Infusion ----
+	CPlayerInfusion m_infusion;
 
 	// Last Pickup Prompt sent, so it is only resent when it changes.
 	// Transient display state -- deliberately not saved; it is re-derived on

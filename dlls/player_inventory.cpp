@@ -531,6 +531,24 @@ static bool UseBattery(CBasePlayer* pPlayer, int index)
 	return true;
 }
 
+//=========================================================
+// The Health Syringe starts an Infusion.
+//
+// Unlike the medkit this is NOT refused at full health -- a Syringe is used
+// going into a fight, and ticks that land on a full health bar are the cost of
+// using it early.  It IS refused while an Infusion is already running, and the
+// Syringe is not spent when it is.
+// See docs/adr/0007-the-infusion-is-one-at-a-time.md.
+//=========================================================
+static bool UseSyringe(CBasePlayer* pPlayer, int index)
+{
+	if (!InfusionUseSyringe(pPlayer))
+		return false; // already infusing; the Syringe is not spent
+
+	pPlayer->m_inventory.RemoveCountAt(index, 1);
+	return true;
+}
+
 bool InventoryUseEntry(CBasePlayer* pPlayer, int index, EEntryKind expectedKind, int expectedId)
 {
 	if (!pPlayer)
@@ -553,6 +571,10 @@ bool InventoryUseEntry(CBasePlayer* pPlayer, int index, EEntryKind expectedKind,
 
 	case EItemTypeId::Battery:
 		used = UseBattery(pPlayer, index);
+		break;
+
+	case EItemTypeId::Syringe:
+		used = UseSyringe(pPlayer, index);
 		break;
 
 	case EItemTypeId::Antidote:

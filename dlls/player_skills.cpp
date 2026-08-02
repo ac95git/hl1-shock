@@ -35,6 +35,12 @@ const SkillDef k_SkillDefs[k_MaxSkills] =
     // only one, so it hangs off the crowbar branch alone for now. See
     // docs/PILLARS.md, "Wanted: two prerequisites per Skill".
     { ESkillId::CrowbarFollowUp,    "Follow-Up",         "After a deflect, your next crowbar hit lands far harder.", 2, 2, 3, ESkillId::CrowbarDamage, ENodeTier::Major },
+    // A root rather than a child of the survivability column: MoreHealth,
+    // ArmorEfficiency and HealthRegen are all still inert, so hanging this off
+    // one of them would charge points for a node that does nothing purely to
+    // reach one that does. PulseWindow set the precedent. Re-parenting later is
+    // a data change, not a structural one.
+    { ESkillId::MedExpert,          "Med Expert",        "+5s Infusion duration.", 8, 0, 2, ESkillId::None, ENodeTier::Medium },
 };
 
 // =====================================================================

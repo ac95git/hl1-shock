@@ -318,6 +318,48 @@ class CItemSecurity : public CItem
 
 LINK_ENTITY_TO_CLASS(item_security, CItemSecurity);
 
+
+//=========================================================
+// The Health Syringe -- the first Item Type that is ours rather
+// than Half-Life's.  Everything genuinely new about it is the
+// Infusion it starts; as a pickup it is an ordinary CItem.
+//
+// w_adrenaline.mdl is a placeholder and lives in valve/models,
+// which the mod gets by game-directory fallback.
+//=========================================================
+class CItemSyringe : public CItem
+{
+	void Spawn() override
+	{
+		Precache();
+		SET_MODEL(ENT(pev), "models/w_adrenaline.mdl");
+		CItem::Spawn();
+	}
+	void Precache() override
+	{
+		PRECACHE_MODEL("models/w_adrenaline.mdl");
+		PRECACHE_SOUND("items/smallmedkit1.wav");
+	}
+	// Use-to-take, never Auto-Consume: waste is not computable for an effect
+	// that pays out over time, so the test Auto-Consume relies on cannot exist.
+	bool AutoPickupOnTouch() override { return false; }
+	bool MyTouch(CBasePlayer* pPlayer) override
+	{
+		// A full Grid refuses it and the Syringe stays in the world.
+		if (InventoryGiveItem(pPlayer, EItemTypeId::Syringe) <= 0)
+			return false;
+
+		// Pickup feedback. Borrowed from the medkit as a stand-in -- the Syringe
+		// deliberately does not sound like a medkit when USED, so this one is
+		// the placeholder most likely to need replacing.
+		EMIT_SOUND(ENT(pPlayer->pev), CHAN_ITEM, "items/smallmedkit1.wav", 1, ATTN_NORM);
+
+		return true;
+	}
+};
+
+LINK_ENTITY_TO_CLASS(item_syringe, CItemSyringe);
+
 class CItemLongJump : public CItem
 {
 	void Spawn() override

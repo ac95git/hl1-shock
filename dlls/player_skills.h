@@ -55,7 +55,10 @@ enum class ESkillId : int
     BatteryCapacity     = 13,  // +50 max battery
     BatteryRegen        = 14,  // passive armor regeneration
 
-    _Count              = 19,  // keep last
+    // ---- The Infusion ----
+    MedExpert           = 19,  // longer Infusion from a Health Syringe
+
+    _Count              = 20,  // keep last
 };
 
 static constexpr int k_MaxSkills = static_cast<int>(ESkillId::_Count);

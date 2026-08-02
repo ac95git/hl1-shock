@@ -66,6 +66,12 @@ extern cvar_t pulse_followup_time;
 extern cvar_t pulse_followup_damage;
 extern cvar_t pulse_followup_knockback;
 
+// The Infusion.  Named for the mechanic rather than the Health Syringe, so a
+// later source of one does not inherit syringe-flavoured cvar names.
+extern cvar_t infusion_rate;
+extern cvar_t infusion_duration;
+extern cvar_t infusion_duration_bonus;
+
 // Engine Cvars
 inline cvar_t* g_psv_gravity;
 inline cvar_t* g_psv_aim;

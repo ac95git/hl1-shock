@@ -84,6 +84,19 @@ _Avoid_: point, XP, credit
 The full set of Skills and the prerequisites between them.
 _Avoid_: upgrade tree, talent tree, perk tree
 
+### The Infusion
+
+**Health Syringe**:
+The Item Type that starts an Infusion. Stacks three deep, used from the Inventory, and usable at any
+health — it is spent going *into* damage where a medkit answers damage already taken.
+_Avoid_: stim, stimpack, adrenaline, needle, shot
+
+**Infusion**:
+The healing a Health Syringe starts. It runs for its own duration, heals in small regular ticks while it
+does, and is gone when it ends. Nothing interrupts one, and only one runs at a time. A passive
+regeneration Skill is not an Infusion.
+_Avoid_: regen, heal-over-time, HoT, buff, dose
+
 ### The Pulse
 
 **Pulse**:

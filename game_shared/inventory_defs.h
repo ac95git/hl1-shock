@@ -81,7 +81,13 @@ enum class EItemTypeId : int
 	Keycard  = 3, // == ITEM_SECURITY
 	Battery  = 4, // == ITEM_BATTERY
 
-	_Count   = 5, // keep last
+	// The first Item Type that is ours rather than Half-Life's, and so the
+	// first with no legacy ITEM_* twin: MAX_ITEMS is 5, so m_rgItems[] has no
+	// slot for this and SyncLegacyItemCount skips it.  That is correct, not an
+	// oversight -- the Inventory is the only record of a Syringe.
+	Syringe  = 5,
+
+	_Count   = 6, // keep last
 };
 
 inline constexpr int k_MaxItemTypes = static_cast<int>(EItemTypeId::_Count);
@@ -97,16 +103,25 @@ struct ItemTypeDef
 	const char* spriteName;  // HUD sprite name; nullptr = renders without an icon
 	int         cellWidth;   // Cells occupied
 	int         maxStack;    // Stack ceiling; 1 means unique
+	// Whether Use does anything.  The client offers the verb from this rather
+	// than from a list of its own -- it had one, and the first item added after
+	// it was written silently shipped with no Use button.
+	bool        usable;
 };
 
 inline constexpr ItemTypeDef k_ItemTypes[k_MaxItemTypes] =
 {
-	//  id                      classname         display     sprite            cells  stack
-	{ EItemTypeId::None,        nullptr,          "",         nullptr,          1,     0 },
-	{ EItemTypeId::Medkit,      "item_healthkit", "Medkit",   "item_healthkit", 1,     5 },
-	{ EItemTypeId::Antidote,    "item_antidote",  "Antidote", nullptr,          1,     5 },
-	{ EItemTypeId::Keycard,     "item_security",  "Keycard",  nullptr,          1,     1 },
-	{ EItemTypeId::Battery,     "item_battery",   "Battery",  "item_battery",   1,     5 },
+	//  id                      classname         display     sprite            cells  stack  usable
+	{ EItemTypeId::None,        nullptr,          "",         nullptr,          1,     0,     false },
+	{ EItemTypeId::Medkit,      "item_healthkit", "Medkit",   "item_healthkit", 1,     5,     true  },
+	// Carried, not consumed -- deliberately have no Use.
+	{ EItemTypeId::Antidote,    "item_antidote",  "Antidote", nullptr,          1,     5,     false },
+	{ EItemTypeId::Keycard,     "item_security",  "Keycard",  nullptr,          1,     1,     false },
+	{ EItemTypeId::Battery,     "item_battery",   "Battery",  "item_battery",   1,     5,     true  },
+	// "cross" is deliberately the same sprite the Infusion's status icon uses:
+	// the player sees a cross in the Grid, uses it, and a cross appears at the
+	// screen edge.  Placeholder art -- see docs/ART_DEBT.md.
+	{ EItemTypeId::Syringe,     "item_syringe",   "Health Syringe", "cross",    1,     3,     true  },
 };
 
 // Returns nullptr for None or any out-of-range id.
