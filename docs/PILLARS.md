@@ -24,7 +24,7 @@ same commit as the code change.
 | 1 | [Exploration](#1-exploration) | **Not started** | Its rewards exist — Row Grants, Skill Points, Reset Tokens are all findable entities — but no map places one, so nothing is explored *for* yet. |
 | 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar. Numbers untuned. Melee skills still do nothing. |
 | 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. |
-| 4 | [Skill trees](#4-skill-trees) | **Scaffolded** | Curated to 15 Skills; unlocks, saves and renders; points and Reset Tokens are earned and spent. Nine have effects, six are inert — the only thing keeping this off Playable. |
+| 4 | [Skill trees](#4-skill-trees) | **Scaffolded** | Curated to 15 Skills; unlocks, saves and renders; points and Reset Tokens are earned and spent. Twelve have effects; the three melee/weapon-damage ones are all that keep this off Playable. |
 | 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work. Client-side model only — the server-owned rebuild is designed and scheduled. |
 
 ---
@@ -444,11 +444,10 @@ The most complete system by line count, and the one furthest from affecting play
 
 ### What's missing
 
-- **Six of the fifteen effects.** Nine work: the four Pulse Skills and `CrowbarFollowUp` via
-  `dlls/player_pulse.cpp`, `MedExpert` via `dlls/player_infusion.cpp`, and now `MoreHealth`,
-  `ArmorEfficiency` and `FallResistance`. Still inert: `CrowbarRange`, `CrowbarDamage`, `ExtraDamage`,
-  `HealthRegen`, `BatteryCapacity`, `BatteryRegen`. Every one is server-side and cheap; this is the last
-  thing standing between the pillar and Playable.
+- **Three of the fifteen effects.** Twelve work: the four Pulse Skills and `CrowbarFollowUp` via
+  `dlls/player_pulse.cpp`, `MedExpert` via `dlls/player_infusion.cpp`, `MoreHealth`, `ArmorEfficiency` and
+  `FallResistance` in `dlls/player.cpp`, and `HealthRegen` / `BatteryRegen` / `BatteryCapacity`. Still
+  inert: `CrowbarRange`, `CrowbarDamage`, `ExtraDamage` — the last thing between this pillar and Playable.
 
   `MoreHealth` is the one that does not follow the read-it-where-it-is-computed pattern, and could not:
   max health is durable state rather than a value recomputed per hit, so `ApplySkillHealthBonus` is
@@ -515,16 +514,27 @@ designing first, and no server or wire change is involved.
 The shared definition table ([ADR-0008](adr/0008-skill-definitions-are-shared-not-networked.md)), two
 prerequisites, the points/Tokens economy, the curation pass and the UI pass are all in. What remains:
 
-**The six remaining effects**, each following `PulseWindowFor` / `PulseRechargeFor` — a modifier read
-server-side from `m_skills`, applied where the effect is computed, never touched in prediction. That is
-the last thing between this pillar and Playable, and the only work left that touches nothing else.
+**The three remaining effects** — `CrowbarRange`, `CrowbarDamage` and `ExtraDamage` — each following
+`PulseWindowFor` / `PulseRechargeFor`: a modifier read server-side from `m_skills`, applied where the
+effect is computed, never touched in prediction. That is the last thing between this pillar and Playable.
 
-1. ~~Survivability values — `MoreHealth`, `ArmorEfficiency`, `FallResistance`.~~ **Done.**
-2. **Regeneration and the battery cap** — `HealthRegen`, `BatteryRegen`, `BatteryCapacity`. The two
-   regenerators copy the accumulator in `dlls/player_infusion.cpp`. `BatteryCapacity` is grouped with them
-   because it is the one that is *not* purely server-side: the armour HUD assumes a maximum of 100
-   (`MAX_NORMAL_BATTERY`), so raising the cap needs the client to know about it.
-3. **Combat** — `CrowbarRange`, `CrowbarDamage`, `ExtraDamage`.
+Survivability values and regeneration are both done. Two notes from that work worth keeping:
+
+**`CPlayerRegen`** (`dlls/player_regen.cpp`) holds `HealthRegen` and `BatteryRegen`. It is deliberately
+**not** an Infusion — CONTEXT.md draws that line, and it has no duration, no icon and no start; it is
+simply true while the Skill is held. It borrows the Infusion's fractional accumulator and nothing else,
+because at 0.5/s a whole-number tick would round the entire effect away. One clock, two accumulators, so
+health and armour land on the same beat instead of drifting into two unrelated-looking effects. Carried
+fractions are dropped at full health, on death, and while neither Skill is held, so nothing pays out a
+point it never earned.
+
+**`PlayerMaxArmor`** is now the only correct answer to "how much armour can this player hold". Every place
+that caps or fills armour must ask it rather than `MAX_NORMAL_BATTERY` — the battery item, the wall
+charger, and the regenerator — or `BatteryCapacity` silently does nothing through that route. It is also
+the first Skill whose effect the **client** has to know: `gmsgBattery` grew a second short carrying the
+player's maximum, because a HUD bar scaled against a fixed 100 shows full at 100 while the suit still has
+50 to take. `m_iClientBatteryMax` is tracked separately from `m_iClientBattery` so unlocking the Skill
+resends even when the armour value itself has not changed.
 
 ### The economy
 

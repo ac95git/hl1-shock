@@ -167,13 +167,21 @@ void CRecharge::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useT
 
 
 	// charge the player
-	if (m_hActivator->pev->armorvalue < 100)
+	//
+	// Battery Capacity raises the ceiling, so a wall charger has to ask for it
+	// too. Filling only to 100 here would make the Skill look broken at the
+	// most visible place armour is ever topped up.
+	const float maxArmor = m_hActivator->IsPlayer()
+		? (float)PlayerMaxArmor((CBasePlayer*)((CBaseEntity*)m_hActivator))
+		: 100.0f;
+
+	if (m_hActivator->pev->armorvalue < maxArmor)
 	{
 		m_iJuice--;
 		m_hActivator->pev->armorvalue += 1;
 
-		if (m_hActivator->pev->armorvalue > 100)
-			m_hActivator->pev->armorvalue = 100;
+		if (m_hActivator->pev->armorvalue > maxArmor)
+			m_hActivator->pev->armorvalue = maxArmor;
 	}
 
 	// govern the rate of charge

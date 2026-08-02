@@ -507,19 +507,23 @@ static bool UseBattery(CBasePlayer* pPlayer, int index)
 {
 	if (!pPlayer->HasSuit())
 		return false;
-	if (pPlayer->pev->armorvalue >= MAX_NORMAL_BATTERY)
+	// Battery Capacity raises the ceiling, so ask for it rather than assuming
+	// MAX_NORMAL_BATTERY -- otherwise the Skill silently does nothing here.
+	const float maxArmor = (float)PlayerMaxArmor(pPlayer);
+
+	if (pPlayer->pev->armorvalue >= maxArmor)
 		return false;
 
 	pPlayer->pev->armorvalue = V_min(
 		pPlayer->pev->armorvalue + gSkillData.batteryCapacity,
-		(float)MAX_NORMAL_BATTERY);
+		maxArmor);
 
 	pPlayer->m_inventory.RemoveCountAt(index, 1);
 
 	EMIT_SOUND(ENT(pPlayer->pev), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM);
 
 	// HEV suit charge voice line.
-	int pct = (int)((pPlayer->pev->armorvalue * 100.0f) * (1.0f / MAX_NORMAL_BATTERY) + 0.5f);
+	int pct = (int)((pPlayer->pev->armorvalue * 100.0f) / maxArmor + 0.5f);
 	pct = (pct / 5);
 	if (pct > 0)
 		pct--;

@@ -131,6 +131,18 @@ Raising `skill_points_start` is the way to work on the tree UI without hunting f
 | `skill_health_bonus` | 25 | Extra max health from Fortitude |
 | `skill_armor_ratio_scale` | 0.9 | Armor Expert multiplies `ARMOR_RATIO` — the share of a blow that gets **past** armor — so lower is better armor |
 | `skill_fall_damage_scale` | 0.5 | Sure Footing multiplies fall damage |
+| `skill_health_regen_rate` | 0.5 | Regeneration, HP per second |
+| `skill_battery_regen_rate` | 0.5 | Battery Regen, armor per second |
+| `skill_battery_bonus` | 50 | Extra max armor from Battery Capacity |
+
+Two rules that are easy to break:
+
+- **Never cap or fill armor against `MAX_NORMAL_BATTERY`.** Call `PlayerMaxArmor(pPlayer)` — Battery
+  Capacity raises the ceiling, and any route that assumes 100 makes the Skill silently do nothing through
+  that route. The battery item, the wall charger and the regenerator all ask.
+- **Regeneration is not an Infusion.** `CPlayerRegen` has no duration, icon or start; see
+  [CONTEXT.md](../CONTEXT.md). It shares only the fractional accumulator, which is load-bearing at these
+  rates — 0.5 HP/s rounded to whole points per tick would round the whole effect away.
 
 ## Adding a Skill
 

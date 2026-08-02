@@ -3,6 +3,7 @@
 #include "cbase.h"
 #include "saverestore.h"
 #include "player.h"
+#include "weapons.h" // MAX_NORMAL_BATTERY
 #include "player_skills.h"
 #include "game.h"
 #include "UserMessages.h"
@@ -228,6 +229,20 @@ void ApplySkillHealthBonus(CBasePlayer* pPlayer)
         // A reset must not leave the player above their new maximum.
         pPlayer->pev->health = desired;
     }
+}
+
+// =====================================================================
+// PlayerMaxArmor
+// =====================================================================
+int PlayerMaxArmor(CBasePlayer* pPlayer)
+{
+    if (!pPlayer)
+        return MAX_NORMAL_BATTERY;
+
+    if (!pPlayer->m_skills.HasSkill(ESkillId::BatteryCapacity))
+        return MAX_NORMAL_BATTERY;
+
+    return MAX_NORMAL_BATTERY + std::max(0, (int)skill_battery_bonus.value);
 }
 
 // =====================================================================

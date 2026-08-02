@@ -57,6 +57,9 @@ extern cvar_t skill_reset_tokens_start;
 extern cvar_t skill_health_bonus;
 extern cvar_t skill_armor_ratio_scale;
 extern cvar_t skill_fall_damage_scale;
+extern cvar_t skill_health_regen_rate;
+extern cvar_t skill_battery_regen_rate;
+extern cvar_t skill_battery_bonus;
 
 // The Pulse.  Every one of these is a starting guess to be judged in play.
 extern cvar_t pulse_window;

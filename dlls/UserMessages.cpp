@@ -37,7 +37,10 @@ void LinkUserMessages()
 	gmsgFlashBattery = REG_USER_MSG("FlashBat", 1);
 	gmsgHealth = REG_USER_MSG("Health", 2);
 	gmsgDamage = REG_USER_MSG("Damage", 12);
-	gmsgBattery = REG_USER_MSG("Battery", 2);
+	// Two shorts: the armour value, then the player's maximum. The maximum is
+	// sent because Battery Capacity can raise it above MAX_NORMAL_BATTERY, and
+	// the HUD bar has to know what "full" means to draw it.
+	gmsgBattery = REG_USER_MSG("Battery", 4);
 	gmsgTrain = REG_USER_MSG("Train", 1);
 	gmsgHudText = REG_USER_MSG("HudText", -1);
 	gmsgSayText = REG_USER_MSG("SayText", -1);

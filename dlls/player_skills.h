@@ -118,3 +118,13 @@ void SendSkillTreeToClient(CBasePlayer* pPlayer);
 // durable state and so has to be re-applied rather than consulted.
 // =====================================================================
 void ApplySkillHealthBonus(CBasePlayer* pPlayer);
+
+// =====================================================================
+// The player's armour ceiling: MAX_NORMAL_BATTERY, plus the Battery
+// Capacity bonus if that Skill is held.
+//
+// Every place that caps or fills armour must ask this rather than
+// MAX_NORMAL_BATTERY, or the Skill silently does nothing through that
+// route.  The client is told the answer so its armour bar scales.
+// =====================================================================
+int PlayerMaxArmor(CBasePlayer* pPlayer);

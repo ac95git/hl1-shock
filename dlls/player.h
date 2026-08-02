@@ -20,6 +20,7 @@
 #include "player_inventory.h"
 #include "player_pulse.h"
 #include "player_infusion.h"
+#include "player_regen.h"
 
 
 #define PLAYER_FATAL_FALL_SPEED 1024															  // approx 60 feet
@@ -178,6 +179,10 @@ public:
 	int m_iUpdateTime;	  // stores the number of frame ticks before sending HUD update messages
 	int m_iClientHealth;  // the health currently known by the client.  If this changes, send a new
 	int m_iClientBattery; // the Battery currently known by the client.  If this changes, send a new
+	// The armour MAXIMUM known by the client. Tracked separately because
+	// Battery Capacity can change the maximum while the value itself does not,
+	// and the HUD bar would otherwise keep scaling against a stale full mark.
+	int m_iClientBatteryMax = 0;
 	int m_iHideHUD;		  // the players hud weapon info is to be hidden
 	int m_iClientHideHUD;
 	int m_iFOV;		  // field of view
@@ -372,6 +377,9 @@ public:
 
 	// ---- The Infusion ----
 	CPlayerInfusion m_infusion;
+
+	// ---- Passive regeneration (Skill-driven) ----
+	CPlayerRegen m_regen;
 
 	// Last Pickup Prompt sent, so it is only resent when it changes.
 	// Transient display state -- deliberately not saved; it is re-derived on

@@ -27,9 +27,16 @@
 
 DECLARE_MESSAGE(m_Battery, Battery)
 
+// Mirrors MAX_NORMAL_BATTERY in dlls/weapons.h. Duplicated rather than
+// included: it is one number, and the HUD has no other reason to pull the
+// server's weapon header in. Only ever a fallback -- the server sends the
+// player's real maximum with every armour update.
+static constexpr int k_DefaultMaxBattery = 100;
+
 bool CHudBattery::Init()
 {
 	m_iBat = 0;
+	m_iBatMax = k_DefaultMaxBattery;
 	m_fFade = 0;
 	m_iFlags = 0;
 
@@ -60,12 +67,17 @@ bool CHudBattery::MsgFunc_Battery(const char* pszName, int iSize, void* pbuf)
 
 	BEGIN_READ(pbuf, iSize);
 	int x = READ_SHORT();
+	int xMax = READ_SHORT();
 
 	if (x != m_iBat)
 	{
 		m_fFade = FADE_TIME;
 		m_iBat = x;
 	}
+
+	// Battery Capacity raises this above k_DefaultMaxBattery. Guarded because a
+	// zero would divide by nothing when the bar is scaled.
+	m_iBatMax = (xMax > 0) ? xMax : k_DefaultMaxBattery;
 
 	return true;
 }
@@ -81,7 +93,11 @@ bool CHudBattery::Draw(float flTime)
 
 	rc = *m_prc2;
 
-	rc.top += m_iHeight * ((float)(100 - (V_min(100, m_iBat))) * 0.01); // battery can go from 0 to 100 so * 0.01 goes from 0 to 1
+	// The bar fills against the player's OWN maximum, which Battery Capacity
+	// can raise past k_DefaultMaxBattery -- scaling against a fixed 100 would
+	// show a full bar at 100 while the suit still had 50 to take.
+	const int iMax = (m_iBatMax > 0) ? m_iBatMax : k_DefaultMaxBattery;
+	rc.top += m_iHeight * ((float)(iMax - V_min(iMax, m_iBat)) / (float)iMax);
 
 	UnpackRGB(r, g, b, RGB_YELLOWISH);
 
