@@ -120,3 +120,56 @@ correctly. If a candidate set fails this, it does not matter how good it sounds 
 ### Done when
 Nothing in the Pulse's audio comes from another weapon, and a deflect is unmistakable over the Pulse that
 preceded it.
+
+## Skill Points and Reset Tokens — world models and pickup sound
+
+### Scope
+`dlls/items.cpp`, `CItemSkillPoint` and `CItemResetToken`.
+
+### Current stand-in
+- Skill Point — `models/w_longjump.mdl`, the longjump module.
+- Reset Token — `models/w_security.mdl`, the security keycard.
+- Both — `items/gunpickup2.wav`, and a centre-print line for feedback.
+
+### What's wrong with it
+- Both models already mean something else in Half-Life. The longjump module is a suit upgrade the player
+  can also genuinely find, and the keycard is a door key — walking over either and getting a Skill Point
+  instead is actively misleading, not merely unevocative.
+- The two are indistinguishable in kind. A Skill Point is a common, small reward; a Reset Token is rare
+  and consequential. Nothing about how they look says which is which, or that one is scarce.
+- The pickup is a generic weapon-pickup click. These are the reward for going off the critical path —
+  the sound is the moment exploration pays out, and it currently sounds like picking up ammo.
+
+### What to look for
+Two clearly *different* small pickups that read as progression rather than equipment, and that rank
+against each other at a glance — the Token should look rarer than the Point. Neither should resemble
+anything already in the HEV/keycard vocabulary.
+
+### Done when
+A player who has never read a manual can tell the two apart on sight, and neither is mistaken for a
+longjump module or a keycard.
+
+## The Skill Tree — node icons are load-bearing
+
+### Scope
+The `spriteName` column of `k_SkillDefs` in `game_shared/skill_defs.h`.
+
+### Current stand-in
+Stock HUD sprites, heavily duplicated: `suit_full` on five Skills, `d_crowbar` on three, `cross` on
+three. Six Skills are currently drawn with the same image as at least two others.
+
+### What's wrong with it
+This is the one entry here that is **blocking rather than cosmetic**. The tree is deliberately going
+label-free — no node names, no column headers — so that reading it means hovering and discovering
+(see PILLARS pillar 4, and the deferred anonymization feature). That design assumes each node's icon
+identifies it. It does not: today the icon narrows a node down to "something to do with the suit".
+
+Until the icons are distinct, either the tree keeps text labels or it is unreadable. The design decision
+and the art are the same decision.
+
+### What to look for
+One distinct icon per Skill, legible at 24–32px, grouped so a branch reads as a branch — a shared motif
+or palette per column, with the individual Skill distinguishable inside it.
+
+### Done when
+Every Skill in the tree has its own icon, and a player can tell two Skills apart without hovering either.

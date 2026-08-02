@@ -49,6 +49,10 @@ extern cvar_t sv_busters;
 extern cvar_t inv_rows_start;
 extern cvar_t inv_rows_max;
 
+// Skill Tree economy
+extern cvar_t skill_points_start;
+extern cvar_t skill_reset_tokens_start;
+
 // The Pulse.  Every one of these is a starting guess to be judged in play.
 extern cvar_t pulse_window;
 extern cvar_t pulse_window_bonus;

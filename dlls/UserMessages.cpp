@@ -18,6 +18,7 @@
 #include "cbase.h"
 #include "shake.h"
 #include "UserMessages.h"
+#include "skill_defs.h"
 
 void LinkUserMessages()
 {
@@ -84,7 +85,11 @@ void LinkUserMessages()
 
 	ALERT(at_console, "[LinkUserMessages] Done: gmsgInventoryItem=%d\n", gmsgInventoryItem);
 
-	gmsgSkillTree = REG_USER_MSG("SkillTree", -1);
+	// Fixed size: the unlocked mask, unspent Skill Points, banked Reset Tokens.
+	// Registering the exact length rather than -1 makes a client/server
+	// disagreement about k_MaxSkills an engine-level error instead of a silent
+	// misread.
+	gmsgSkillTree = REG_USER_MSG("SkillTree", k_SkillMaskBytes + 2);
 
 	ALERT(at_console, "[LinkUserMessages] Done: gmsgSkillTree=%d\n", gmsgSkillTree);
 

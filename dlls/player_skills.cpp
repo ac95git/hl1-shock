@@ -4,53 +4,40 @@
 #include "saverestore.h"
 #include "player.h"
 #include "player_skills.h"
+#include "game.h"
 #include "UserMessages.h"
 #include <algorithm>
+#include <cstring>
 
-// =====================================================================
-// Skill definitions
-// =====================================================================
-const SkillDef k_SkillDefs[k_MaxSkills] =
-{
-    //  id                          name                 description                           col  row  cost  prereq                   tier
-    { ESkillId::None,               "None",              "",                                   0,   0,   0,    ESkillId::None,          ENodeTier::Minor  },
-    { ESkillId::CrowbarRange,       "Crowbar Reach",     "+25% melee range.",                  1,   0,   1,    ESkillId::None,          ENodeTier::Minor  },
-    { ESkillId::CrowbarDamage,      "Crowbar Force",     "+50% melee damage.",                 1,   1,   2,    ESkillId::CrowbarRange,  ENodeTier::Medium },
-    { ESkillId::FastReload,         "Fast Reload",       "-20% reload time.",                  3,   0,   1,    ESkillId::None,          ENodeTier::Minor  },
-    { ESkillId::ExtraDamage,        "Weapon Mastery",    "+10% weapon damage.",                3,   1,   3,    ESkillId::FastReload,    ENodeTier::Major  },
-    { ESkillId::HighJump,           "High Jump",         "+30% jump height.",                  5,   0,   1,    ESkillId::None,          ENodeTier::Minor  },
-    { ESkillId::SprintSpeed,        "Sprint",            "+15% movement speed.",               5,   1,   2,    ESkillId::SprintSpeed,   ENodeTier::Major  },
-    { ESkillId::FallResistance,     "Fall Resist",       "-50% fall damage.",                  5,   2,   1,    ESkillId::HighJump,      ENodeTier::Medium },
-    { ESkillId::MoreHealth,         "Fortitude",         "+25 max health.",                    7,   0,   2,    ESkillId::None,          ENodeTier::Minor  },
-    { ESkillId::ArmorEfficiency,    "Armor Expert",      "Armor absorbs 10% more damage.",     7,   1,   2,    ESkillId::MoreHealth,    ENodeTier::Medium },
-    { ESkillId::HealthRegen,        "Regen",             "Slowly regenerate health.",          7,   2,   3,    ESkillId::MoreHealth,    ENodeTier::Major  },
-    { ESkillId::CrowbarSpeed,       "Crowbar Speed",     "+30% crowbar attack speed.",         0,   2,   2,    ESkillId::CrowbarDamage, ENodeTier::Medium },
-    { ESkillId::PulseWindow,        "Pulse Window",      "+0.15s Pulse Window.",              11,   0,   1,    ESkillId::None,          ENodeTier::Minor  },
-    { ESkillId::BatteryCapacity,    "Battery Capacity",  "+50 max battery.",                   9,   0,   2,    ESkillId::None,          ENodeTier::Minor  },
-    { ESkillId::BatteryRegen,       "Battery Regen",     "Regenerate armor over time.",        9,   1,   3,    ESkillId::BatteryCapacity, ENodeTier::Major },
-    { ESkillId::PulseRecharge,      "Pulse Recharge",    "-33% Pulse Recharge.",              11,   1,   2,    ESkillId::PulseWindow,   ENodeTier::Medium },
-    { ESkillId::PulseDischarge,     "Pulse Discharge",   "Negated hits vent energy at your crosshair.", 11, 2, 3, ESkillId::PulseRecharge, ENodeTier::Major },
-    { ESkillId::PulseRebound,       "Pulse Rebound",     "A deflect skips the Recharge. Once, until you sit through a normal one.", 12, 2, 3, ESkillId::PulseRecharge, ENodeTier::Major },
-    // Wants a Pulse prerequisite as well as a crowbar one -- a SkillDef holds
-    // only one, so it hangs off the crowbar branch alone for now. See
-    // docs/PILLARS.md, "Wanted: two prerequisites per Skill".
-    { ESkillId::CrowbarFollowUp,    "Follow-Up",         "After a deflect, your next crowbar hit lands far harder.", 2, 2, 3, ESkillId::CrowbarDamage, ENodeTier::Major },
-    // A root rather than a child of the survivability column: MoreHealth,
-    // ArmorEfficiency and HealthRegen are all still inert, so hanging this off
-    // one of them would charge points for a node that does nothing purely to
-    // reach one that does. PulseWindow set the precedent. Re-parenting later is
-    // a data change, not a structural one.
-    { ESkillId::MedExpert,          "Med Expert",        "+5s Infusion duration.", 8, 0, 2, ESkillId::None, ENodeTier::Medium },
-};
+// Skill definitions live in game_shared/skill_defs.h -- they are identical
+// for every player and are compiled into the client as well, so they are
+// never sent over the wire.  See
+// docs/adr/0008-skill-definitions-are-shared-not-networked.md.
 
 // =====================================================================
 // Local save/restore descriptor table
 // =====================================================================
 static TYPEDESCRIPTION g_SkillsSaveData[] =
 {
-    DEFINE_FIELD(CPlayerSkills, m_iSkillPoints, FIELD_INTEGER),
-    DEFINE_ARRAY(CPlayerSkills, m_bUnlocked,    FIELD_BOOLEAN, k_MaxSkills),
+    DEFINE_FIELD(CPlayerSkills, m_iPointsBase,    FIELD_INTEGER),
+    DEFINE_FIELD(CPlayerSkills, m_iPointsGranted, FIELD_INTEGER),
+    DEFINE_FIELD(CPlayerSkills, m_iResetTokens,   FIELD_INTEGER),
+    DEFINE_FIELD(CPlayerSkills, m_bInitialised,   FIELD_BOOLEAN),
+    DEFINE_ARRAY(CPlayerSkills, m_bUnlocked,      FIELD_BOOLEAN, k_MaxSkills),
 };
+
+// =====================================================================
+// Cvar readers.  Clamped so a typo cannot produce a negative balance.
+// =====================================================================
+static int CvarPointsStart()
+{
+    return std::max(0, static_cast<int>(skill_points_start.value));
+}
+
+static int CvarResetTokensStart()
+{
+    return std::max(0, static_cast<int>(skill_reset_tokens_start.value));
+}
 
 // =====================================================================
 // SkillsSave / SkillsRestore  (declared in player_skills.h)
@@ -66,64 +53,176 @@ bool SkillsRestore(CPlayerSkills& skills, CRestore& restore)
 }
 
 // =====================================================================
-// CPlayerSkills::PrereqMet
+// Setup
 // =====================================================================
-bool CPlayerSkills::PrereqMet(ESkillId id) const
+void CPlayerSkills::EnsureInitialised()
 {
-    int i = static_cast<int>(id);
-    if (i <= 0 || i >= k_MaxSkills) return false;
+    if (m_bInitialised)
+        return;
 
-    ESkillId prereq = k_SkillDefs[i].prereq;
-    if (prereq == ESkillId::None) return true;
-    return HasSkill(prereq);
+    m_bInitialised   = true;
+    m_iPointsBase    = CvarPointsStart();
+    m_iResetTokens  += CvarResetTokensStart();
+}
+
+void CPlayerSkills::Clear()
+{
+    m_iPointsBase    = 0;
+    m_iPointsGranted = 0;
+    m_iResetTokens   = 0;
+    m_bInitialised   = false;
+
+    memset(m_bUnlocked, 0, sizeof(m_bUnlocked));
 }
 
 // =====================================================================
-// CPlayerSkills::TryUnlock
+// Queries
+// =====================================================================
+bool CPlayerSkills::AnyUnlocked() const
+{
+    for (int i = 1; i < k_MaxSkills; ++i)
+    {
+        if (m_bUnlocked[i])
+            return true;
+    }
+    return false;
+}
+
+int CPlayerSkills::SpentPoints() const
+{
+    int spent = 0;
+    for (int i = 1; i < k_MaxSkills; ++i)
+    {
+        if (!m_bUnlocked[i])
+            continue;
+
+        // A Skill cut from the tree keeps its reserved id but has no row to
+        // charge for, so an old save that bought it gets those points back.
+        const SkillDef& def = k_SkillDefs[i];
+        if (!def.name || !def.name[0])
+            continue;
+
+        spent += def.cost;
+    }
+    return spent;
+}
+
+int CPlayerSkills::AvailablePoints() const
+{
+    return std::max(0, TotalPoints() - SpentPoints());
+}
+
+// =====================================================================
+// CPlayerSkills::PrereqMet
+//   Defers to the shared rule so the client cannot disagree about what
+//   gates a Skill.
+// =====================================================================
+bool CPlayerSkills::PrereqMet(ESkillId id) const
+{
+    return SkillPrereqMet(static_cast<int>(id),
+        [this](ESkillId prereq) { return HasSkill(prereq); });
+}
+
+// =====================================================================
+// Mutations
 // =====================================================================
 bool CPlayerSkills::TryUnlock(ESkillId id)
 {
+    EnsureInitialised();
+
     int i = static_cast<int>(id);
     if (i <= 0 || i >= k_MaxSkills) return false;
     if (m_bUnlocked[i]) return false;
+
+    // A Skill with no row is a reserved id, not something buyable.
+    const SkillDef& def = k_SkillDefs[i];
+    if (!def.name || !def.name[0]) return false;
+
     if (!PrereqMet(id)) return false;
+    if (AvailablePoints() < def.cost) return false;
 
-    int cost = k_SkillDefs[i].cost;
-    if (m_iSkillPoints < cost) return false;
-
-    m_bUnlocked[i]  = true;
-    m_iSkillPoints -= cost;
+    // Nothing is decremented: spending is derived from what is unlocked.
+    m_bUnlocked[i] = true;
     return true;
+}
+
+bool CPlayerSkills::TryReset()
+{
+    EnsureInitialised();
+
+    if (m_iResetTokens <= 0)
+        return false;
+
+    // Refuse rather than burn a Token on a tree with nothing in it.
+    if (!AnyUnlocked())
+        return false;
+
+    --m_iResetTokens;
+    memset(m_bUnlocked, 0, sizeof(m_bUnlocked));
+    return true;
+}
+
+void CPlayerSkills::AddSkillPoints(int pts)
+{
+    EnsureInitialised();
+
+    if (pts <= 0)
+        return;
+
+    m_iPointsGranted += pts;
+}
+
+void CPlayerSkills::AddResetTokens(int tokens)
+{
+    EnsureInitialised();
+
+    if (tokens <= 0)
+        return;
+
+    m_iResetTokens += tokens;
+}
+
+// =====================================================================
+// CPlayerSkills::BuildUnlockedMask
+// =====================================================================
+void CPlayerSkills::BuildUnlockedMask(unsigned char* mask) const
+{
+    if (!mask) return;
+
+    memset(mask, 0, k_SkillMaskBytes);
+    for (int i = 1; i < k_MaxSkills; ++i)
+    {
+        if (m_bUnlocked[i])
+            SkillMaskSet(mask, i, true);
+    }
 }
 
 // =====================================================================
 // SendSkillTreeToClient
+//
+// State only: one bit per unlocked Skill, then unspent Skill Points,
+// then banked Reset Tokens.  Position, cost, prerequisites and tier all
+// come from the shared table, and "available" is a display state the
+// client derives from what is sent here.  The server stays authoritative
+// where it matters -- TryUnlock and TryReset validate independently of
+// anything the client believes.
 // =====================================================================
 void SendSkillTreeToClient(CBasePlayer* pPlayer)
 {
     if (!pPlayer || gmsgSkillTree == 0) return;
 
-    const CPlayerSkills& sk = pPlayer->m_skills;
-    int count = k_MaxSkills - 1; // skip index 0 (None)
+    CPlayerSkills& sk = pPlayer->m_skills;
+    sk.EnsureInitialised();
+
+    unsigned char mask[k_SkillMaskBytes];
+    sk.BuildUnlockedMask(mask);
 
     MESSAGE_BEGIN(MSG_ONE, gmsgSkillTree, NULL, pPlayer->pev);
-    WRITE_BYTE(count);
 
-    for (int i = 1; i < k_MaxSkills; ++i)
-    {
-        const SkillDef& def = k_SkillDefs[i];
-        bool unlocked  = sk.m_bUnlocked[i];
-        bool available = !unlocked && sk.PrereqMet(static_cast<ESkillId>(i))
-                         && sk.m_iSkillPoints >= def.cost;
+    for (int i = 0; i < k_SkillMaskBytes; ++i)
+        WRITE_BYTE(mask[i]);
 
-        WRITE_BYTE(i);
-        WRITE_BYTE((unsigned char)def.gridCol);
-        WRITE_BYTE((unsigned char)def.gridRow);
-        WRITE_BYTE((unsigned char)def.cost);
-        WRITE_BYTE((unsigned char)static_cast<int>(def.prereq));
-        WRITE_BYTE((unlocked ? 1 : 0) | (available ? 2 : 0) | (static_cast<int>(def.tier) << 2));
-    }
-
-    WRITE_BYTE((unsigned char)std::min(sk.m_iSkillPoints, 255));
+    WRITE_BYTE((unsigned char)std::min(sk.AvailablePoints(), 255));
+    WRITE_BYTE((unsigned char)std::min(sk.ResetTokens(), 255));
     MESSAGE_END();
 }

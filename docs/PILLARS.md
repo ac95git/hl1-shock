@@ -21,10 +21,10 @@ same commit as the code change.
 
 | # | Pillar | Status | One-line state |
 | --- | --- | --- | --- |
-| 1 | [Exploration](#1-exploration) | **Not started** | No code. |
+| 1 | [Exploration](#1-exploration) | **Not started** | Its rewards exist — Row Grants, Skill Points, Reset Tokens are all findable entities — but no map places one, so nothing is explored *for* yet. |
 | 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar. Numbers untuned. Melee/reload skills still do nothing. |
 | 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. |
-| 4 | [Skill trees](#4-skill-trees) | **Scaffolded** | Full tree unlocks, saves, and renders. Six of nineteen skills now have effects; the rest are inert. A Skill can hold only one prerequisite, which already bites. |
+| 4 | [Skill trees](#4-skill-trees) | **Scaffolded** | Full tree unlocks, saves, and renders; points and Reset Tokens are earned and spent. Six of nineteen skills have effects; the rest are inert, which is what still keeps this off Playable. |
 | 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work. Client-side model only — the server-owned rebuild is designed and scheduled. |
 
 ---
@@ -49,13 +49,20 @@ code is worth writing:
 
 ### Next step
 
-The reward loop has its first concrete answer: **Row Grants**. Inventory capacity grows from things found
-in the world rather than from Skills (see pillar 5), so a hidden cache off the critical path permanently
-increases what the player can carry. That is exploration's first real mechanic, and it arrives as part of
-inventory iteration 3.
+The reward loop has two concrete answers now, and the question at the top of this section is settled: it is
+**both** items and Skill Points.
 
-Skill points remain unearnable — `m_iSkillPoints` is still hardcoded to 20 for UI testing. Whether
-exploration should *also* award them is open.
+**Row Grants.** Inventory capacity grows from things found in the world rather than from Skills (see
+pillar 5), so a hidden cache off the critical path permanently increases what the player can carry.
+
+**Skill Points and Reset Tokens.** Both are found in the world and nowhere else — `skill_points_start`
+defaults to 0, so a player who explores nothing unlocks nothing (see pillar 4). `item_skillpoint` and
+`item_resettoken` are placeable entities today. The tree is deliberately sized so it is completable only by
+near-exhaustive exploration, which makes reach — not just speed — the thing exploration buys.
+
+What is still missing is the same thing in both cases: **maps**. Every mechanism exists and nothing places
+one, because vanilla Half-Life maps cannot be edited to hold them. Until there are custom maps, both loops
+are reachable only through `inv_addrows` and `skill_addpoints`.
 
 ### Acceptance criteria (draft)
 
@@ -360,31 +367,51 @@ The most complete system by line count, and the one furthest from affecting play
 
 ### What exists
 
+**Definitions** — `game_shared/skill_defs.h`, compiled into both DLLs
+
+- 19 skill definitions across Combat, Mobility, Survivability, the Pulse and the Infusion.
+- Each `SkillDef` carries id, display name, description, icon, grid column/row, cost, **two**
+  prerequisites, and a visual tier (`Minor` / `Medium` / `Major`). Both prerequisites are required, so a
+  connector line always means "you need this".
+- `SkillPrereqMet` is the one implementation of the gating rule; server and client both call it.
+
 **Server** — `dlls/player_skills.cpp` / `dlls/player_skills.h`
 
-- 15 skill definitions across Combat, Mobility, Survivability, plus four test-branch nodes added to validate
-  connector rendering.
-- Each `SkillDef` carries id, display name, description, grid column/row, cost, prerequisite, and a visual
-  tier (`Minor` / `Medium` / `Major`).
-- `TryUnlock()` validates prerequisite, cost, and duplicate unlock — server-authoritative.
+- Per-player state only: points earned, Reset Tokens banked, and the unlocked array.
+- **Points are earned, not held.** `m_iPointsBase` (captured once from `skill_points_start`) plus
+  `m_iPointsGranted` (found in the world) is what the player has *ever* had; what they have *left* is that
+  minus the summed cost of everything unlocked. Nothing decrements. Following the `inv_rows` precedent of
+  storing the inputs and deriving the answer buys three things: a reset is `memset` on the unlocked array
+  with no refund code to get wrong, retuning a cost corrects existing saves instead of leaking points, and
+  a Skill cut from the tree refunds itself on the next load.
+- `TryUnlock()` validates prerequisites, cost, and duplicate unlock — server-authoritative.
+- `TryReset()` spends one Reset Token and clears every unlocked Skill. It refuses on an empty tree, so a
+  Token can never be burned for nothing.
+- **Two pickups**, `item_skillpoint` and `item_resettoken` (`dlls/items.cpp`), both plain `CItem`s taken on
+  contact. Neither is an Item Type: they occupy no Cells and a full Grid cannot refuse them, which matters
+  because a progression reward left on the floor reads as a bug.
 - State lives in `CBasePlayer::m_skills` (`dlls/player.h:362`) and saves/restores through a
   `TYPEDESCRIPTION` table (`dlls/player.cpp:3057`, `:3079`).
 
 **Networking**
 
-- `gmsgSkillTree`, variable length: one byte count, then 6 bytes per node, then the player's skill points.
-  Unlocked / available / tier are packed into a single flags byte (tier in bits 2–3).
+- `gmsgSkillTree`, **fixed** length: a bitmask of unlocked Skills, one bit per id, then the player's unspent
+  Skill Points, then their banked Reset Tokens. 5 bytes at nineteen Skills, down from 116. Static Skill data
+  is shared rather than sent — see [ADR-0008](adr/0008-skill-definitions-are-shared-not-networked.md).
 - Client → server is the `skill_unlock <id>` console command (`dlls/client.cpp:647`); on success the server
-  re-sends the whole tree.
-- Client handler: `CHudAmmo::MsgFunc_SkillTree` in `cl_dll/ammo.cpp:559`.
+  re-sends the state.
+- Client handler: `CHudAmmo::MsgFunc_SkillTree` in `cl_dll/ammo.cpp`. It drops any message whose size
+  disagrees with `k_SkillMaskBytes` rather than misreading it.
 
 **Client** — `cl_dll/vgui_skilltree.cpp` / `.h`
 
 - `CSkillTreeView`, a plain C++ helper owned by `CInventoryPanel` rather than a VGUI panel of its own.
 - Tier-sized nodes, lazily loaded HUD sprite icons, edge-anchored connector lines that prefer vertical
   routing, hover tooltips, and a skill-point counter.
-- Labels and descriptions come from a **client-local** metadata table, not from the wire — so adding a skill
-  requires editing the server `SkillDef` array *and* the client table.
+- Labels, descriptions, icons, positions, costs, prerequisites and tiers all come from the shared
+  `k_SkillDefs`. Adding a skill is one table row. The old client-local `k_SkillUiInfo` copy is gone.
+- "Available" is derived client-side from the unlocked mask and the shared table. That is a display
+  decision, not an authority change — `TryUnlock` re-validates everything server-side.
 
 ### What's missing
 
@@ -395,47 +422,79 @@ The most complete system by line count, and the one furthest from affecting play
 - `MedExpert` is a **root** node despite belonging conceptually to the medical branch, because every skill
   in that column is inert and gating a working skill behind one would charge points for nothing. It should
   be re-parented once `MoreHealth` or `HealthRegen` does something — a data change, not a structural one.
-- **A way to earn points.** `m_iSkillPoints` defaults to 20 for UI testing (`dlls/player_skills.h:58`).
-- **A bug:** `SprintSpeed` lists itself as its own prerequisite (`dlls/player_skills.cpp:22`), so
-  `PrereqMet()` requires the skill to already be unlocked and the node can never become available.
+- **Anywhere to earn points.** The mechanism exists — `item_skillpoint` and `item_resettoken` are placeable
+  entities — but no map places one, so in practice points still come from `skill_addpoints`. Blocked on
+  custom maps, exactly as Row Grants are.
+- **A bug:** `SprintSpeed` lists itself as its own prerequisite (`game_shared/skill_defs.h`), so
+  `SkillPrereqMet()` requires the skill to already be unlocked and the node can never become available.
+  Left in place deliberately — the curation pass cuts the node, which removes the bug with it.
 - Tooltip layout debt — heuristic text measurement rather than font metrics. See
   [TECH_DEBT.md](TECH_DEBT.md).
 
-### Wanted: two prerequisites per Skill
+### Two prerequisites per Skill — DONE
 
-A `SkillDef` holds exactly **one** prerequisite, and that single id runs the whole length of the system:
-the server table, one prereq byte per node on the wire, `SkillNode::prereqId` on the client
-(`cl_dll/vgui_skilltree.h:35`), and one connector line per node
-(`cl_dll/vgui_skilltree.cpp:227-235`). A Skill gated on two branches cannot be expressed.
+A `SkillDef` now holds two prerequisites and requires both. **Follow-Up** (id 18) was the Skill that
+forced it — a crowbar payoff for a Pulse deflect, which used to hang off `CrowbarDamage` alone, so a
+player could take it having never touched the Pulse tree for a Skill that does nothing without deflecting.
+It is now gated on `CrowbarDamage` **and** `PulseRecharge`.
 
-This bit for the first time with **Follow-Up** (id 18), which is a crowbar payoff for a Pulse deflect and
-therefore wants a prerequisite in each branch. It hangs off `CrowbarDamage` alone as a result, so a player
-can take it having never touched the Pulse tree — for a Skill that does nothing without deflecting. It is
-listed in the crowbar branch and marked in `player_skills.cpp` as owing a second prerequisite.
+It cost nothing on the wire. [ADR-0008](adr/0008-skill-definitions-are-shared-not-networked.md) moved
+static Skill data into `game_shared/skill_defs.h`, so prerequisites are no longer sent at all and the
+message-size ceiling that used to bound this stopped applying. A third prerequisite would be equally free.
 
-What it would take, all mechanical and none of it hard:
+The connector loop builds one edge per prerequisite, so a two-gated node draws two lines. Both mean the
+same thing — every line is a requirement — which is why only AND is supported. An OR gate would need a
+second line style before it could be read.
 
-- `SkillDef` gains `prereq2`; `PrereqMet` requires both.
-- `SendSkillTreeToClient` grows from 6 to 7 bytes per node, and `MsgFunc_SkillTree` (`cl_dll/ammo.cpp:589`)
-  reads the extra byte.
-- `SkillNode` gains `prereqId2`; the connector loop draws a second line.
+### Wanted: distant Skills are anonymized
 
-**Watch the message size.** At 6 bytes per node the tree currently costs 116 bytes of a 192-byte user
-message (19 Skills, after `MedExpert`). At 7 bytes it would be 135, leaving room for roughly eight more
-Skills before the message has to be chunked the way `gmsgInventory` already is.
+Skills more than a few prerequisite hops from the player's unlocked set should render as `???` — no name,
+no description, no icon — and reveal as the player approaches them. The far end of the tree becomes a
+silhouette to be discovered rather than a shopping list read on hour one, which is the same instinct
+behind the tree having no text labels on its nodes at all.
 
-Deliberately deferred rather than forgotten: altering skill logic was out of scope for the work that
-surfaced it.
+Cheap whenever it is wanted: the client holds the whole graph and the unlocked mask, so it is a
+breadth-first walk from the unlocked set plus a branch in the node and tooltip render. Nothing needs
+designing first, and no server or wire change is involved.
 
 ### Next step
 
-Fix the `SprintSpeed` prerequisite, then wire the first effects: the three Pulse nodes (see pillar 2), which
-are server-only and give this pillar its first Skills that change play. Movement skills — `HighJump`,
-`SprintSpeed` — need `pm_shared/` and therefore touch both DLLs; leave them until after.
+The shared definition table ([ADR-0008](adr/0008-skill-definitions-are-shared-not-networked.md)), two
+prerequisites, and the points/Tokens economy are all in. The remaining work, in order:
 
-Note that `CrowbarParry` (id 12) is being renamed to `PulseWindow` rather than removed. Ids stay stable —
-only the meaning changes, which is safe precisely because no skill currently has one. It is the one free
-opportunity to repurpose an id, and it should not be treated as a precedent once skills start doing things.
+1. **Curation.** Cut `CrowbarSpeed`, `FastReload`, `HighJump` and `SprintSpeed` from the table — all four
+   need prediction work in `pm_shared/` and both DLLs. Their enum entries stay, so the ids remain reserved
+   and the Skills return later with the same numbers. Re-parent `ExtraDamage` (loses `FastReload`) and
+   `MedExpert`. Re-cost and re-column the surviving 15.
+2. **The UI pass.** Six columns fitted to the panel, cost drawn on each node, and the hover bubble rebuilt
+   on real font metrics (see [TECH_DEBT.md](TECH_DEBT.md)).
+3. **The nine remaining effects**, each following `PulseWindowFor` / `PulseRechargeFor`.
+
+### The economy
+
+Both cvars default to **0**: every Skill Point and every Reset Token is found in the world. Neither is
+capped — the ceiling on each is how many pickups a map places, and a cap would let a found pickup silently
+do nothing.
+
+| Cvar | Default | What it does |
+| --- | --- | --- |
+| `skill_points_start` | 0 | Skill Points a new game begins with |
+| `skill_reset_tokens_start` | 0 | Reset Tokens a new game begins with |
+
+Cheat-gated `skill_addpoints <n>` and `skill_addtokens <n>` mirror `inv_addrows`.
+
+The target is a tree **completable only by near-exhaustive exploration**: total findable points roughly
+equal to the tree's total cost, so a player who sweeps every optional space affords essentially everything
+by the end while a player on the critical path affords perhaps 60–70% and must genuinely choose. That is
+what makes Reset Tokens matter for the majority case without denying completionists the top of the tree.
+Roughly 5–10 Tokens across the campaign, with the first appearing around 20% in: enough that the tree is
+meant to be experimented with, not agonised over.
+
+None of this is placeable yet — see "What's missing".
+
+Note that `CrowbarParry` (id 12) was renamed to `PulseWindow` rather than removed. Ids stay stable —
+only the meaning changed, which was safe precisely because no skill had one at the time. It was the one
+free opportunity to repurpose an id, and it is not a precedent now that skills do things.
 
 Note that inventory capacity was considered as the first Skill effect and deliberately moved to exploration
 instead (pillar 5). Nothing in the inventory work will give this pillar an effect, so it stays Scaffolded

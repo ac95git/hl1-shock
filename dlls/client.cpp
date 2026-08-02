@@ -674,6 +674,47 @@ void ClientCommand(edict_t* pEntity)
 				SendSkillTreeToClient(player);
 		}
 	}
+	else if (FStrEq(pcmd, "skill_reset"))
+	{
+		// Spends one Reset Token and clears the whole tree.  The client asks
+		// twice before sending this; the server does not model that -- it
+		// validates the Token and the tree and does what it is told.
+		if (player->m_skills.TryReset())
+		{
+			ClientPrint(pev, HUD_PRINTCENTER, "Skill Tree reset.\n");
+			SendSkillTreeToClient(player);
+		}
+	}
+	else if (FStrEq(pcmd, "skill_addpoints"))
+	{
+		// Cheat-gated tuning aid, mirroring inv_addrows: spend against the
+		// tree without hunting for pickups first. See docs/PILLARS.md.
+		if (0 != g_psv_cheats->value)
+		{
+			const int n = (CMD_ARGC() >= 2) ? atoi(CMD_ARGV(1)) : 1;
+			player->m_skills.AddSkillPoints(n);
+
+			ClientPrint(pev, HUD_PRINTCONSOLE,
+				UTIL_VarArgs("Granted %d Skill Point(s); %d unspent of %d earned.\n",
+					n, player->m_skills.AvailablePoints(), player->m_skills.TotalPoints()));
+
+			SendSkillTreeToClient(player);
+		}
+	}
+	else if (FStrEq(pcmd, "skill_addtokens"))
+	{
+		if (0 != g_psv_cheats->value)
+		{
+			const int n = (CMD_ARGC() >= 2) ? atoi(CMD_ARGV(1)) : 1;
+			player->m_skills.AddResetTokens(n);
+
+			ClientPrint(pev, HUD_PRINTCONSOLE,
+				UTIL_VarArgs("Granted %d Reset Token(s); %d banked.\n",
+					n, player->m_skills.ResetTokens()));
+
+			SendSkillTreeToClient(player);
+		}
+	}
 	else if (g_pGameRules->ClientCommand(player, pcmd))
 	{
 		// MenuSelect returns true only if the command is properly handled,  so don't print a warning

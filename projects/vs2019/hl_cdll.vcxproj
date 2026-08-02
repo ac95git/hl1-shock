@@ -196,6 +196,7 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClCompile Include="..\..\cl_dll\hud_pulse.cpp" />
     <ClCompile Include="..\..\game_shared\filesystem_utils.cpp" />
     <ClInclude Include="..\..\game_shared\inventory_defs.h" />
+    <ClInclude Include="..\..\game_shared\skill_defs.h" />
     <ClCompile Include="..\..\game_shared\vgui_checkbutton2.cpp" />
     <ClCompile Include="..\..\game_shared\vgui_grid.cpp" />
     <ClCompile Include="..\..\game_shared\vgui_helpers.cpp" />

@@ -577,32 +577,22 @@ bool CHudAmmo::MsgFunc_SkillTree(const char* pszName, int iSize, void* pbuf)
 {
 	BEGIN_READ(pbuf, iSize);
 
-	int count = READ_BYTE();
+	// State only -- everything else about a Skill comes from the shared
+	// definition table.  A size mismatch means the client and server
+	// disagree about k_MaxSkills, so drop the message rather than
+	// misread it.
+	if (iSize != k_SkillMaskBytes + 2)
+		return true;
 
-	// Use a fixed-size local array; k_MaxSkills is at most a few dozen entries.
-	static SkillNode nodes[64];
-	const int safeCount = (count < 64) ? count : 63;
-
-	for (int i = 0; i < safeCount; ++i)
-	{
-		SkillNode& n = nodes[i];
-		n.id = READ_BYTE();
-		n.gridCol = READ_BYTE();
-		n.gridRow = READ_BYTE();
-		n.cost = READ_BYTE();
-		n.prereqId = READ_BYTE();
-		int flags = READ_BYTE();
-		n.bUnlocked  = (flags & 1) != 0;
-		n.bAvailable = (flags & 2) != 0;
-		n.tier       = static_cast<ENodeTier>((flags >> 2) & 0x3);
-		n.displayName = nullptr;
-		n.description = nullptr;
-	}
+	unsigned char unlockedMask[k_SkillMaskBytes];
+	for (int i = 0; i < k_SkillMaskBytes; ++i)
+		unlockedMask[i] = (unsigned char)READ_BYTE();
 
 	int skillPoints = READ_BYTE();
+	int resetTokens = READ_BYTE();
 
 	if (gViewPort && gViewPort->m_pInventoryPanel)
-		gViewPort->m_pInventoryPanel->UpdateSkillTree(nodes, safeCount, skillPoints);
+		gViewPort->m_pInventoryPanel->UpdateSkillTree(unlockedMask, skillPoints, resetTokens);
 
 	return true;
 }

@@ -58,7 +58,8 @@ inline int gmsgWeapons = 0;
 // Inventory item count sync (max 12-char engine limit): BYTE itemId, BYTE count
 inline int gmsgInventoryItem = 0;
 
-// Skill tree sync: variable-length (see SendSkillTreeToClient)
+// Skill tree sync: fixed-length state only -- unlocked mask, Skill Points,
+// Reset Tokens.  Definitions are shared, not sent (see SendSkillTreeToClient).
 inline int gmsgSkillTree = 0;
 
 // Inventory sync: variable-length, sent in chunks (see SendInventoryToClient)

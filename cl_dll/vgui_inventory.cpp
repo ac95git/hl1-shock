@@ -357,6 +357,8 @@ void CInventoryPanel::Close()
 {
     CloseContextMenu();
     m_gridView.CancelDrag();
+    // An armed Reset must not still be armed when the panel is opened again.
+    m_skillTreeView.CancelResetConfirm();
     setVisible(false);
     if (gViewPort) gViewPort->UpdateCursorState();
 }
@@ -740,6 +742,7 @@ void CInventoryPanel::mousePressed(vgui::MouseCode code, vgui::Panel* panel)
             m_eActiveTab = (nb == 0) ? EInventoryTab::Inventory : EInventoryTab::Upgrades;
             m_gridView.CancelDrag();
             m_skillTreeView.HandleMouseMove(-1, -1);
+            m_skillTreeView.CancelResetConfirm();
             return;
         }
     }

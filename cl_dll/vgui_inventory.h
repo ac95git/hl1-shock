@@ -170,9 +170,9 @@ public:
     int GridRows()       const { return m_gridRows; }
     int GridRowsToDraw() const { return m_gridRowsToDraw; }
 
-    // Skill-tree data update (call from UserMessage handler)
-    void UpdateSkillTree(const SkillNode* nodes, int count, int skillPoints)
-    { m_skillTreeView.UpdateNodes(nodes, count, skillPoints); }
+    // Skill-tree state update (call from UserMessage handler)
+    void UpdateSkillTree(const unsigned char* unlockedMask, int skillPoints, int resetTokens)
+    { m_skillTreeView.UpdateState(unlockedMask, skillPoints, resetTokens); }
 
     void CloseContextMenu();
 

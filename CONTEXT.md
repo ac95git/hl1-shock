@@ -73,15 +73,24 @@ _Avoid_: rounds, ammunition items, bullets
 ### Skills
 
 **Skill**:
-An unlockable player ability. Once unlocked it is never lost — there is no respec.
+An unlockable player ability. Unlocking is one-way; only a Reset Token undoes it, and it undoes all of
+them at once.
 _Avoid_: perk, talent, upgrade, ability; and "installed", "bought", or "learned" for unlocking
 
 **Skill Point**:
-The currency spent to unlock a Skill.
+The currency spent to unlock a Skill. Found in the world, never awarded for progress, and never lost —
+spending one is recorded by the Skill it bought rather than by a balance, so a Reset returns it.
 _Avoid_: point, XP, credit
 
+**Reset Token**:
+A consumable that returns every unlocked Skill and refunds every Skill Point spent. All or nothing —
+there is no unlocking a single Skill. Banked as a count rather than carried, and spent from the Skill
+Tree, so it occupies no Cells and cannot be dropped.
+_Avoid_: respec token, refund, reroll
+
 **Skill Tree**:
-The full set of Skills and the prerequisites between them.
+The full set of Skills and the prerequisites between them. A Skill may be gated on two, and both are
+required.
 _Avoid_: upgrade tree, talent tree, perk tree
 
 ### The Infusion

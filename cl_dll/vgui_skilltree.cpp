@@ -66,71 +66,72 @@ static void WrapTooltipText(const char* text, int maxCharsPerLine, std::vector<s
 }
 
 // =====================================================================
-// Client-side skill metadata used for labels and tooltips.
-// The usermessage only sends ids and state bits, so the text lives here.
-// =====================================================================
-struct SkillUiInfo
-{
-    const char* displayName;
-    const char* description;
-    const char* spriteName;
-};
-
-static const SkillUiInfo k_SkillUiInfo[] =
-{
-    { "None",           "",                                  nullptr },
-    { "Crowbar Reach",  "+25% melee range.",                "d_crowbar" },
-    { "Crowbar Force",  "+50% melee damage.",               "d_crowbar" },
-    { "Fast Reload",    "-20% reload time.",                "d_9mmhandgun" },
-    { "Weapon Mastery", "+10% weapon damage.",              "d_9mmar" },
-    { "High Jump",      "+30% jump height.",                nullptr },
-    { "Sprint",         "+15% movement speed.",             nullptr },
-    { "Fall Resist",    "-50% fall damage.",                nullptr },
-    { "Fortitude",      "+25 max health.",                  "cross" },
-    { "Armor Expert",   "Armor absorbs 10% more damage.",   "suit_full" },
-    { "Regen",          "Slowly regenerate health.",        "cross" },
-    { "Crowbar Speed",  "+30% crowbar attack speed.",       "d_crowbar" },
-    { "Pulse Window",   "+0.15s Pulse Window.",             "suit_full" },
-    { "Battery Capacity", "+50 max battery.",               "suit_full" },
-    { "Battery Regen",  "Regenerate armor over time.",      "suit_full" },
-    { "Pulse Recharge", "-33% Pulse Recharge.",             "suit_full" },
-    { "Pulse Discharge", "Negated hits vent energy at your crosshair.", "suit_full" },
-    { "Pulse Rebound",  "A deflect skips the Recharge. Once, until you sit through a normal one.", "suit_full" },
-    { "Follow-Up",      "After a deflect, your next crowbar hit lands far harder.", "d_crowbar" },
-    { "Med Expert",     "+5s Infusion duration.",           "cross" },
-};
-
-static const SkillUiInfo* GetSkillUiInfo(int id)
-{
-    if (id < 0 || id >= (int)(sizeof(k_SkillUiInfo) / sizeof(k_SkillUiInfo[0])))
-        return nullptr;
-    return &k_SkillUiInfo[id];
-}
-
-// =====================================================================
 // CSkillTreeView
+//
+// Names, descriptions, sprites, positions, costs, prerequisites and
+// tiers all come from k_SkillDefs, which the client and server share.
+// The server sends state and nothing else.
 // =====================================================================
 CSkillTreeView::CSkillTreeView()
     : m_iSkillPoints(0)
-{}
+{
+    RebuildNodeList();
+}
 
-void CSkillTreeView::UpdateNodes(const SkillNode* nodes, int count, int skillPoints)
+// =====================================================================
+// RebuildNodeList - which Skills have a node in the tree
+//
+// An id with no name is a reserved id rather than a Skill: ids are
+// frozen, so a Skill removed from the tree keeps its number and simply
+// stops appearing.
+// =====================================================================
+void CSkillTreeView::RebuildNodeList()
+{
+    m_nodes.clear();
+    for (int i = 1; i < k_MaxSkills; ++i)
+    {
+        const SkillDef& def = k_SkillDefs[i];
+        if (def.id == ESkillId::None || !def.name || !def.name[0])
+            continue;
+        m_nodes.push_back(i);
+    }
+
+    m_nodeRects.clear();
+    m_nodeSprites.clear();
+    m_lastW = 0;
+}
+
+void CSkillTreeView::UpdateState(const unsigned char* unlockedMask, int skillPoints, int resetTokens)
 {
     m_iSkillPoints = skillPoints;
-    m_nodes.assign(nodes, nodes + count);
-    for (auto& node : m_nodes)
-    {
-        const SkillUiInfo* info = GetSkillUiInfo(node.id);
-        if (!info) continue;
-        if (!node.displayName) node.displayName = info->displayName;
-        if (!node.description) node.description = info->description;
-    }
-    // Invalidate cached rects and sprites (node IDs may have changed)
-    m_lastW = 0;
-    m_nodeSprites.clear();
+    m_iResetTokens = resetTokens;
+
+    if (unlockedMask)
+        memcpy(m_unlockedMask, unlockedMask, k_SkillMaskBytes);
+    else
+        memset(m_unlockedMask, 0, k_SkillMaskBytes);
+
     m_iHoverNode = -1;
     m_iHoverX = -1;
     m_iHoverY = -1;
+
+    // The state we were confirming against has just changed underneath us.
+    m_flResetConfirmUntil = 0.0f;
+}
+
+// =====================================================================
+// IsAvailable - prereqs met, not held, and affordable
+// =====================================================================
+bool CSkillTreeView::IsAvailable(int skillId) const
+{
+    const SkillDef* def = GetSkillDef(skillId);
+    if (!def || IsUnlocked(skillId))
+        return false;
+
+    if (!SkillPrereqMet(skillId, [this](ESkillId prereq) { return IsUnlocked(static_cast<int>(prereq)); }))
+        return false;
+
+    return m_iSkillPoints >= def->cost;
 }
 
 // =====================================================================// EnsureSprites – lazily load HUD sprites for each node
@@ -141,9 +142,7 @@ void CSkillTreeView::EnsureSprites()
     for (int i = 0; i < (int)m_nodes.size(); ++i)
     {
         if (m_nodeSprites[i].hSprite != 0) continue;
-        const SkillUiInfo* info = GetSkillUiInfo(m_nodes[i].id);
-        if (!info || !info->spriteName) continue;
-        const char* name = info->spriteName;
+        const char* name = k_SkillDefs[m_nodes[i]].spriteName;
         if (!name) continue;
         int idx = gHUD.GetSpriteIndex(name);
         if (idx < 0) continue;
@@ -169,10 +168,10 @@ void CSkillTreeView::RebuildRects(int x0, int y0, int areaW, int areaH)
 
     for (int i = 0; i < (int)m_nodes.size(); ++i)
     {
-        const SkillNode& n = m_nodes[i];
-        int tierIdx = (int)n.tier < 3 ? (int)n.tier : 0;
+        const SkillDef& def = k_SkillDefs[m_nodes[i]];
+        int tierIdx = (int)def.tier < 3 ? (int)def.tier : 0;
         int nw = k_TierNodeW[tierIdx];
-        int left = n.gridCol * k_ColStep + (k_ColStep - nw) / 2;
+        int left = def.gridCol * k_ColStep + (k_ColStep - nw) / 2;
         int right = left + nw;
 
         if (first)
@@ -193,11 +192,11 @@ void CSkillTreeView::RebuildRects(int x0, int y0, int areaW, int areaH)
 
     for (int i = 0; i < (int)m_nodes.size(); ++i)
     {
-        const SkillNode& n = m_nodes[i];
-        int tierIdx = (int)n.tier < 3 ? (int)n.tier : 0;
+        const SkillDef& def = k_SkillDefs[m_nodes[i]];
+        int tierIdx = (int)def.tier < 3 ? (int)def.tier : 0;
         int nw = k_TierNodeW[tierIdx], nh = k_TierNodeH[tierIdx];
-        int cx = centeredX0 + n.gridCol * k_ColStep + (k_ColStep - nw) / 2;
-        int cy = y0 + n.gridRow * k_RowStep + (k_RowStep - nh) / 2;
+        int cx = centeredX0 + def.gridCol * k_ColStep + (k_ColStep - nw) / 2;
+        int cy = y0 + def.gridRow * k_RowStep + (k_RowStep - nh) / 2;
         m_nodeRects[i] = { cx, cy, nw, nh };
     }
     m_lastX0 = x0; m_lastY0 = y0; m_lastW = areaW; m_lastH = areaH;
@@ -218,6 +217,37 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
     ctx->drawSetColor(100, 60, 200, 80);
     ctx->drawOutlinedRect(x0, y0, x0 + areaW, y0 + areaH);
 
+    // ---- Reset button ----
+    //
+    // Top-right, opposite the Skill Point readout and clear of the node
+    // field, which is centered and starts below nodeTopOffset.  The box is
+    // drawn here; its label goes out with the rest of the text at the end of
+    // the paint, because text drawn before a sprite gets eaten (see
+    // docs/TECH_DEBT.md, "VGUI Draw Order").
+    if (ResetArmed() && gHUD.m_flTime > m_flResetConfirmUntil)
+        m_flResetConfirmUntil = 0.0f;
+
+    const bool bCanReset = (m_iResetTokens > 0);
+    m_resetBtnRect = { x0 + areaW - k_ResetBtnW - 8, y0 + 3, k_ResetBtnW, k_ResetBtnH };
+
+    if (ResetArmed())
+    {
+        FillRGBA(m_resetBtnRect.x, m_resetBtnRect.y, m_resetBtnRect.w, m_resetBtnRect.h, 90, 20, 20, 220);
+        ctx->drawSetColor(255, 90, 70, 0);
+    }
+    else if (bCanReset)
+    {
+        FillRGBA(m_resetBtnRect.x, m_resetBtnRect.y, m_resetBtnRect.w, m_resetBtnRect.h, 30, 25, 25, 160);
+        ctx->drawSetColor(200, 120, 80, 80);
+    }
+    else
+    {
+        FillRGBA(m_resetBtnRect.x, m_resetBtnRect.y, m_resetBtnRect.w, m_resetBtnRect.h, 20, 20, 20, 120);
+        ctx->drawSetColor(90, 90, 90, 140);
+    }
+    ctx->drawOutlinedRect(m_resetBtnRect.x, m_resetBtnRect.y,
+        m_resetBtnRect.x + m_resetBtnRect.w, m_resetBtnRect.y + m_resetBtnRect.h);
+
     // Load sprites (no-op after first successful load)
     EnsureSprites();
 
@@ -226,19 +256,39 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
         RebuildRects(x0, y0 + nodeTopOffset, areaW, areaH - nodeTopOffset);
 
     // ---- Connector lines between nodes and their prerequisites ----
+    //
+    // One edge per prerequisite, so a Skill gated on two branches draws
+    // two lines.  Every line means the same thing: you need this.
+    struct ConnEdge { int from; int to; };
+    std::vector<ConnEdge> edges;
+    edges.reserve(m_nodes.size() * 2);
+
     for (int i = 0; i < (int)m_nodes.size(); ++i)
     {
-        const SkillNode& n = m_nodes[i];
-        if (n.prereqId < 0) continue;
+        const SkillDef& def = k_SkillDefs[m_nodes[i]];
+        const ESkillId prereqs[2] = { def.prereq, def.prereq2 };
 
-        // Find prereq index
-        int prereqIdx = -1;
-        for (int j = 0; j < (int)m_nodes.size(); ++j)
-            if (m_nodes[j].id == n.prereqId) { prereqIdx = j; break; }
-        if (prereqIdx < 0) continue;
+        for (int slot = 0; slot < 2; ++slot)
+        {
+            if (prereqs[slot] == ESkillId::None)
+                continue;
+
+            int prereqIdx = -1;
+            for (int j = 0; j < (int)m_nodes.size(); ++j)
+                if (m_nodes[j] == static_cast<int>(prereqs[slot])) { prereqIdx = j; break; }
+            if (prereqIdx < 0) continue;
+
+            edges.push_back({ prereqIdx, i });
+        }
+    }
+
+    for (int e = 0; e < (int)edges.size(); ++e)
+    {
+        const int prereqIdx = edges[e].from;
+        const int childIdx  = edges[e].to;
 
         const IRect& ra = m_nodeRects[prereqIdx];
-        const IRect& rb = m_nodeRects[i];
+        const IRect& rb = m_nodeRects[childIdx];
 
         int acx = ra.x + ra.w / 2;
         int acy = ra.y + ra.h / 2;
@@ -247,22 +297,22 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
         int dx = bcx - acx;
         int dy = bcy - acy;
 
-        // Compute sibling order so children sharing one prereq fan out cleanly.
+        // Compute sibling order so edges leaving one prerequisite fan out cleanly.
         std::vector<int> siblings;
-        siblings.reserve(m_nodes.size());
-        for (int j = 0; j < (int)m_nodes.size(); ++j)
+        siblings.reserve(edges.size());
+        for (int j = 0; j < (int)edges.size(); ++j)
         {
-            if (m_nodes[j].prereqId == n.prereqId)
+            if (edges[j].from == prereqIdx)
                 siblings.push_back(j);
         }
 
-        // C++98-safe sort by center X, then center Y.
+        // C++98-safe sort by child center X, then center Y.
         for (int a = 0; a < (int)siblings.size(); ++a)
         {
             for (int b = a + 1; b < (int)siblings.size(); ++b)
             {
-                const IRect& ra2 = m_nodeRects[siblings[a]];
-                const IRect& rb2 = m_nodeRects[siblings[b]];
+                const IRect& ra2 = m_nodeRects[edges[siblings[a]].to];
+                const IRect& rb2 = m_nodeRects[edges[siblings[b]].to];
                 int ax2 = ra2.x + ra2.w / 2;
                 int bx2 = rb2.x + rb2.w / 2;
                 int ay2 = ra2.y + ra2.h / 2;
@@ -281,7 +331,7 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
         int siblingIndex = 0;
         for (int j = 0; j < (int)siblings.size(); ++j)
         {
-            if (siblings[j] == i)
+            if (siblings[j] == e)
             {
                 siblingIndex = j;
                 break;
@@ -307,7 +357,7 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
             bx = bRight ? rb.x : (rb.x + rb.w);
         }
 
-        bool pathUnlocked = m_nodes[prereqIdx].bUnlocked;
+        bool pathUnlocked = IsUnlocked(m_nodes[prereqIdx]);
         if (pathUnlocked)
             ctx->drawSetColor(255, 170, 0, 40);
         else
@@ -319,7 +369,7 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
         {
             int trunkX = ax + siblingOffset;
             int approachY = by - (by > ay ? 12 : -12);  // offset 12px above/below child
-            
+
             ctx->drawFilledRect(std::min(ax, trunkX) - 1, ay - 1, std::max(ax, trunkX) + 1, ay + 1);
             ctx->drawFilledRect(trunkX - 1, std::min(ay, approachY) - 1, trunkX + 1, std::max(ay, approachY) + 1);
             ctx->drawFilledRect(std::min(trunkX, bx) - 1, approachY - 1, std::max(trunkX, bx) + 1, approachY + 1);
@@ -329,7 +379,7 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
         {
             int trunkY = ay + siblingOffset;
             int approachX = bx - (bx > ax ? 12 : -12);  // offset 12px left/right of child
-            
+
             ctx->drawFilledRect(ax - 1, std::min(ay, trunkY) - 1, ax + 1, std::max(ay, trunkY) + 1);
             ctx->drawFilledRect(std::min(ax, approachX) - 1, trunkY - 1, std::max(ax, approachX) + 1, trunkY + 1);
             ctx->drawFilledRect(approachX - 1, std::min(trunkY, by) - 1, approachX + 1, std::max(trunkY, by) + 1);
@@ -339,23 +389,27 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
 
     for (int i = 0; i < (int)m_nodes.size(); ++i)
     {
-        const SkillNode& n = m_nodes[i];
+        const int skillId = m_nodes[i];
+        const SkillDef& def = k_SkillDefs[skillId];
+        const bool bUnlocked  = IsUnlocked(skillId);
+        const bool bAvailable = IsAvailable(skillId);
+
         IRect& r = m_nodeRects[i];
         // Tier-based sizing
-        int tierIdx = (int)n.tier < 3 ? (int)n.tier : 0;
+        int tierIdx = (int)def.tier < 3 ? (int)def.tier : 0;
         int stripeH = k_TierStripeH[tierIdx];
         int borderW = k_TierBorderW[tierIdx];
 
         int br, bg, bb_col;
         int fr, fg, fb_col;
 
-        if (n.bUnlocked)
+        if (bUnlocked)
         {
             // Fully unlocked: orange fill
             br = 200; bg = 120; bb_col = 0;
             fr = 255; fg = 170; fb_col = 0;
         }
-        else if (n.bAvailable)
+        else if (bAvailable)
         {
             // Can be unlocked: bright gold border, dark fill
             br = 60;  bg = 50;  bb_col = 0;
@@ -370,17 +424,17 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
 
         // Fill + border
         FillRGBA(r.x, r.y, r.w, r.h, br, bg, bb_col, 180);
-        ctx->drawSetColor(fr, fg, fb_col, n.bAvailable ? 20 : 80);
+        ctx->drawSetColor(fr, fg, fb_col, bAvailable ? 20 : 80);
         ctx->drawOutlinedRect(r.x, r.y, r.x + r.w, r.y + r.h);
         if (borderW >= 2)
         {
             // Double outline for Major nodes: second rect inset by 1 px
-            ctx->drawSetColor(fr, fg, fb_col, n.bAvailable ? 60 : 140);
+            ctx->drawSetColor(fr, fg, fb_col, bAvailable ? 60 : 140);
             ctx->drawOutlinedRect(r.x + 1, r.y + 1, r.x + r.w - 1, r.y + r.h - 1);
         }
 
         // Top accent stripe (height driven by tier)
-        ctx->drawSetColor(fr, fg, fb_col, n.bUnlocked ? 0 : 100);
+        ctx->drawSetColor(fr, fg, fb_col, bUnlocked ? 0 : 100);
         ctx->drawFilledRect(r.x, r.y, r.x + r.w, r.y + stripeH);
 
         // Sprite icon (native size, centered)
@@ -397,9 +451,9 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
                     int drawX = r.x + (r.w - sprW) / 2;
                     int drawY = r.y + 3 + (iconAreaH - sprH) / 2;
                     // Tint: white=unlocked, gold=available, grey=locked
-                    int tr = n.bUnlocked ? 255 : (n.bAvailable ? 255 : 100);
-                    int tg = n.bUnlocked ? 255 : (n.bAvailable ? 200 :  80);
-                    int tb = n.bUnlocked ? 255 : (n.bAvailable ?  60 :  80);
+                    int tr = bUnlocked ? 255 : (bAvailable ? 255 : 100);
+                    int tg = bUnlocked ? 255 : (bAvailable ? 200 :  80);
+                    int tb = bUnlocked ? 255 : (bAvailable ?  60 :  80);
                     SPR_Set(ns.hSprite, tr, tg, tb);
                     SPR_DrawAdditive(0, drawX, drawY, &ns.rc);
                 }
@@ -411,11 +465,11 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
     // ---- Hover tooltip bubble ----
     if (m_iHoverNode >= 0 && m_iHoverNode < (int)m_nodes.size() && m_iHoverNode < (int)m_nodeRects.size())
     {
-        const SkillNode& n = m_nodes[m_iHoverNode];
-        if (n.description && n.description[0] != '\0')
+        const SkillDef& def = k_SkillDefs[m_nodes[m_iHoverNode]];
+        if (def.description && def.description[0] != '\0')
         {
-            const char* title = n.displayName ? n.displayName : "Skill";
-            const char* desc  = n.description;
+            const char* title = def.name ? def.name : "Skill";
+            const char* desc  = def.description;
             int titleLen = (int)strlen(title);
             constexpr int kPadX = 6;
             constexpr int kFrameInset = 2;
@@ -497,27 +551,36 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
         }
     }
 
-    // ---- Empty state message ----
-    if (m_nodes.empty() && smallFont)
-    {
-        static const char* msg = "No skill data received from server.";
-        int len = (int)strlen(msg);
-        ctx->drawSetTextFont(smallFont);
-        ctx->drawSetTextColor(120, 120, 120, 0);
-        ctx->drawSetTextPos(x0 + areaW / 4, y0 + areaH / 2 - 5);
-        ctx->drawPrintText(msg, len);
-    }
-
     // Draw top-left title text after sprites to avoid stale text cursor state
     // affecting sprite rendering in this pass.
     if (smallFont)
     {
-        char spStr[32]; snprintf(spStr, sizeof(spStr), "Skill Points: %d", m_iSkillPoints);
+        char spStr[64];
+        snprintf(spStr, sizeof(spStr), "Skill Points: %d    Reset Tokens: %d",
+            m_iSkillPoints, m_iResetTokens);
         int len = (int)strlen(spStr);
         ctx->drawSetTextFont(smallFont);
         ctx->drawSetTextColor(255, 200, 60, 0);
         ctx->drawSetTextPos(x0 + 8, y0 + 6);
         ctx->drawPrintText(spStr, len);
+
+        // The Reset button's label, deferred to here with the rest of the text.
+        const char* resetLabel = ResetArmed() ? "CONFIRM - 1 TOKEN" : "RESET TREE";
+        int resetLen = (int)strlen(resetLabel);
+
+        int labelW = 0, labelH = 0;
+        smallFont->getTextSize(resetLabel, labelW, labelH);
+
+        if (ResetArmed())
+            ctx->drawSetTextColor(255, 180, 160, 0);
+        else if (m_iResetTokens > 0)
+            ctx->drawSetTextColor(220, 160, 110, 0);
+        else
+            ctx->drawSetTextColor(110, 110, 110, 0);
+
+        ctx->drawSetTextPos(m_resetBtnRect.x + std::max(2, (m_resetBtnRect.w - labelW) / 2),
+                            m_resetBtnRect.y + std::max(0, (m_resetBtnRect.h - labelH) / 2));
+        ctx->drawPrintText(resetLabel, resetLen);
     }
 
     ctx->drawSetTextPos(0, 0);
@@ -528,6 +591,34 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
 // =====================================================================
 bool CSkillTreeView::HandleMousePress(CInventoryPanel* ctx, int localX, int localY)
 {
+    // The Reset button first -- it sits outside the node field, but testing it
+    // first also means a click that lands on it can never also hit a node.
+    if (m_resetBtnRect.w > 0 &&
+        localX >= m_resetBtnRect.x && localX < m_resetBtnRect.x + m_resetBtnRect.w &&
+        localY >= m_resetBtnRect.y && localY < m_resetBtnRect.y + m_resetBtnRect.h)
+    {
+        if (m_iResetTokens <= 0)
+            return true; // hit but not actionable
+
+        if (ResetArmed())
+        {
+            gEngfuncs.pfnClientCmd("skill_reset\n");
+            m_flResetConfirmUntil = 0.0f;
+            // A falling tone for the commit, against the rising one that armed
+            // it: the tree switching off, not an action being refused.
+            PlaySound("common/wpn_hudoff.wav", 1.0f);
+        }
+        else
+        {
+            m_flResetConfirmUntil = gHUD.m_flTime + k_ResetConfirmTime;
+            PlaySound("common/wpn_hudon.wav", 1.0f);
+        }
+        return true;
+    }
+
+    // Anything else the player does disarms the confirmation.
+    m_flResetConfirmUntil = 0.0f;
+
     if (m_nodeRects.size() != m_nodes.size())
         return false;
 
@@ -537,12 +628,12 @@ bool CSkillTreeView::HandleMousePress(CInventoryPanel* ctx, int localX, int loca
         if (localX < r.x || localX >= r.x + r.w || localY < r.y || localY >= r.y + r.h)
             continue;
 
-        SkillNode& n = m_nodes[i];
-        if (!n.bAvailable || n.bUnlocked) return true; // hit but not actionable
+        const int skillId = m_nodes[i];
+        if (!IsAvailable(skillId)) return true; // hit but not actionable
 
         // Send unlock command to server
         char cmd[64];
-        snprintf(cmd, sizeof(cmd), "skill_unlock %d\n", n.id);
+        snprintf(cmd, sizeof(cmd), "skill_unlock %d\n", skillId);
         gEngfuncs.pfnClientCmd(cmd);
         PlaySound("common/wpn_select.wav", 1.0f);
         return true;
@@ -578,11 +669,14 @@ void CSkillTreeView::HandleMouseMove(int localX, int localY)
 // =====================================================================
 const char* CSkillTreeView::GetTooltip(int localX, int localY) const
 {
+    if (m_nodeRects.size() != m_nodes.size())
+        return nullptr;
+
     for (int i = 0; i < (int)m_nodes.size(); ++i)
     {
         const IRect& r = m_nodeRects[i];
         if (localX >= r.x && localX < r.x + r.w && localY >= r.y && localY < r.y + r.h)
-            return m_nodes[i].description;
+            return k_SkillDefs[m_nodes[i]].description;
     }
     return nullptr;
 }

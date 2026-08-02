@@ -5,53 +5,34 @@
 #include <VGUI_Font.h>
 #include <cstdint>
 
+#include "skill_defs.h"
+
 class CInventoryPanel;
-
-// =====================================================================
-// ENodeTier
-//   Mirrors the server-side definition in dlls/player_skills.h.
-//   Encoded in bits 2-3 of the flags byte sent via gmsgSkillTree.
-// =====================================================================
-enum class ENodeTier : uint8_t
-{
-    Minor  = 0,   // small node  – cheap/root skills
-    Medium = 1,   // medium node – mid-tree skills
-    Major  = 2,   // large node  – powerful end-tree skills
-};
-
-// =====================================================================
-// SkillNode
-//   Describes one node in the skill tree.  The server sends the full
-//   list via a UserMessage; the client stores a copy here.
-// =====================================================================
-struct SkillNode
-{
-    int         id          = 0;
-    const char* displayName = nullptr;   // points into a string pool
-    const char* description = nullptr;
-    int         gridCol     = 0;         // column in the skill-tree grid
-    int         gridRow     = 0;         // row    in the skill-tree grid
-    int         cost        = 1;         // skill-point cost to unlock
-    int         prereqId    = -1;        // prerequisite node id, or -1 for root
-    ENodeTier   tier        = ENodeTier::Minor;
-    bool        bUnlocked   = false;
-    bool        bAvailable  = false;     // prereq met AND player has enough points
-};
 
 // =====================================================================
 // CSkillTreeView
 //   Plain C++ helper � not a VGUI panel.
 //   CInventoryPanel owns one of these and delegates skill-tree
 //   painting and input to it.
+//
+//   The view reads every Skill's name, description, position, cost,
+//   prerequisites and tier straight out of k_SkillDefs.  The only
+//   things it is told by the server are which Skills are unlocked and
+//   how many Skill Points are unspent -- see
+//   docs/adr/0008-skill-definitions-are-shared-not-networked.md.
 // =====================================================================
 class CSkillTreeView
 {
 public:
     CSkillTreeView();
 
-    // Update node data from a server message (or local init for testing).
-    // Copies the array; strings must remain valid for the lifetime of the view.
-    void UpdateNodes(const SkillNode* nodes, int count, int skillPoints);
+    // Apply a server state sync: an unlocked mask (k_SkillMaskBytes long),
+    // the player's unspent Skill Points, and their banked Reset Tokens.
+    void UpdateState(const unsigned char* unlockedMask, int skillPoints, int resetTokens);
+
+    // Drops the Reset button out of its armed state.  Called when the panel
+    // closes so a confirmation can never survive being walked away from.
+    void CancelResetConfirm() { m_flResetConfirmUntil = 0.0f; }
 
     // Paint the skill tree into the given area.
     // ctx  � owning CInventoryPanel (friend; gives access to draw methods)
@@ -76,19 +57,48 @@ private:
     // Cached sprite handle for a node icon (loaded lazily in EnsureSprites).
     struct NodeSprite { HSPRITE hSprite = 0; Rect rc = {}; };
 
+    // Rebuild m_nodes from k_SkillDefs.  A Skill is in the tree if it has
+    // an id and a name; anything else is a reserved id with no node.
+    void RebuildNodeList();
+
     // Populate m_nodeRects from the current layout.
     void RebuildRects(int x0, int y0, int areaW, int areaH);
 
     // Lazily load HUD sprites for each node (no-op if already loaded).
     void EnsureSprites();
 
-    std::vector<SkillNode>   m_nodes;
+    bool IsUnlocked(int skillId) const { return SkillMaskGet(m_unlockedMask, skillId); }
+
+    // Prereqs met, not already unlocked, and affordable.  A display state
+    // the client derives; the server validates unlocks independently.
+    bool IsAvailable(int skillId) const;
+
+    // Skill ids present in the tree, in k_SkillDefs order.
+    std::vector<int>         m_nodes;
     std::vector<IRect>       m_nodeRects;    // parallel to m_nodes, set in Paint()
     std::vector<NodeSprite>  m_nodeSprites;  // parallel to m_nodes, loaded lazily
+
+    unsigned char            m_unlockedMask[k_SkillMaskBytes] = {};
     int                      m_iSkillPoints = 0;
+    int                      m_iResetTokens = 0;
     int                      m_iHoverNode = -1;
     int                      m_iHoverX = -1;
     int                      m_iHoverY = -1;
+
+    // The Reset button, and its two-stage confirmation.
+    //
+    // A reset discards an entire playthrough's progression and cannot be
+    // undone -- the Token is spent too -- so it deliberately does not share
+    // the single-click, no-confirm treatment a node unlock gets.  The second
+    // click has a different label in a different colour, so a double-click
+    // aimed at the first cannot carry through to the second.
+    IRect m_resetBtnRect = {};
+    float m_flResetConfirmUntil = 0.0f;   // client time the armed state expires
+    static constexpr float k_ResetConfirmTime = 3.0f;
+    static constexpr int   k_ResetBtnW = 116;
+    static constexpr int   k_ResetBtnH = 16;
+
+    bool ResetArmed() const { return m_flResetConfirmUntil > 0.0f; }
 
     // Cached layout geometry
     int m_lastX0 = 0, m_lastY0 = 0, m_lastW = 0, m_lastH = 0;

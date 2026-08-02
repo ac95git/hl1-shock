@@ -49,7 +49,7 @@ Out of scope: engine-level changes — graphics upgrades, physics, and anything 
 
 ## Custom systems
 
-- Skill tree — server `dlls/player_skills.cpp` / `.h`, client `cl_dll/vgui_skilltree.cpp` / `.h`
+- Skill tree — definitions `game_shared/skill_defs.h` (both DLLs), server state `dlls/player_skills.cpp` / `.h`, client `cl_dll/vgui_skilltree.cpp` / `.h`
 - Inventory — `cl_dll/vgui_inventory.cpp`, `cl_dll/vgui_inventory_grid.cpp` and headers
 
-Skill ids are networked and saved: keep them stable once added. Server `SkillDef` data and the client's local metadata table are edited together — see [instructions/04-CUSTOM-FEATURES.md](instructions/04-CUSTOM-FEATURES.md).
+Skill ids are saved and are bit positions in the sync message: keep them stable once added, and never reuse a removed one. All static Skill data is one shared table — see [instructions/04-CUSTOM-FEATURES.md](instructions/04-CUSTOM-FEATURES.md).

@@ -95,41 +95,73 @@ why it may be used at full health and why a second one is refused.
 Healing lands as whole HP every 0.25s through an accumulator, so `infusion_rate` may be any value — it
 does not have to divide evenly into the tick.
 
+## Skill Points and Reset Tokens
+
+Both are banked counters on `CPlayerSkills`, not Item Types — they occupy no Cells and a full Grid cannot
+refuse them. Both are found in the world: `item_skillpoint` and `item_resettoken` are plain `CItem`s taken
+on contact.
+
+| Cvar | Default | What it does |
+| --- | --- | --- |
+| `skill_points_start` | 0 | Skill Points a new game begins with |
+| `skill_reset_tokens_start` | 0 | Reset Tokens a new game begins with |
+
+| Command | What it does |
+| --- | --- |
+| `skill_unlock <id>` | Spend points on a Skill |
+| `skill_reset` | Spend one Reset Token, clearing every unlocked Skill |
+| `skill_addpoints <n>` | **Cheat-gated.** Grant Skill Points without a pickup |
+| `skill_addtokens <n>` | **Cheat-gated.** Grant Reset Tokens without a pickup |
+
+Neither cvar is capped, deliberately: the ceiling on each is how many pickups a map places, and a cap
+would let a found pickup silently do nothing.
+
+**Points are never decremented.** `m_iPointsBase` + `m_iPointsGranted` is what the player has ever earned;
+what is *left* is that minus the summed cost of everything unlocked, computed on demand by `SpentPoints()`.
+Follow this if you add anything that spends points — store what was earned, derive what was spent. It is
+why `TryReset()` is a `memset` with no refund logic, why retuning a `cost` corrects existing saves rather
+than leaking points, and why a Skill cut from the tree refunds itself on the next load.
+
+Raising `skill_points_start` is the way to work on the tree UI without hunting for pickups.
+
 ## Adding a Skill
 
-Skill definitions live in [dlls/player_skills.h](../dlls/player_skills.h) and [dlls/player_skills.cpp](../dlls/player_skills.cpp).
+Everything static about a Skill lives in one table, [game_shared/skill_defs.h](../game_shared/skill_defs.h),
+compiled into both DLLs. Adding a Skill is one enum entry and one table row — there is no second table to
+keep in step, and no networking change. See
+[ADR-0008](../docs/adr/0008-skill-definitions-are-shared-not-networked.md).
 
-1. Add a new entry to `ESkillId` in [dlls/player_skills.h](../dlls/player_skills.h).
-2. Increase `_Count` automatically by keeping the enum ordered and the new id before `_Count`.
-3. Add a matching `SkillDef` entry to `k_SkillDefs[]` in [dlls/player_skills.cpp](../dlls/player_skills.cpp).
-4. Set these fields for the new skill:
+1. Add a new entry to `ESkillId`, before `_Count`, which sizes everything else.
+2. Add a matching row to `k_SkillDefs[]`. **The table is indexed positionally by id**, so the row must sit
+   at its id's index or every Skill after it shifts onto the wrong node.
+3. Set the fields:
    - `id` must match the new `ESkillId`
    - `name` is the display label
-   - `description` is the tooltip text
+   - `description` is the hover text
+   - `spriteName` is a HUD sprite from `sprites/hud.txt`; `nullptr` renders the node without an icon
    - `gridCol` and `gridRow` place the node in the tree
-   - `cost` controls the unlock cost
-   - `prereq` links to another `ESkillId`, or `ESkillId::None` for a root skill
-   - `tier` controls the visual size of the node in the client UI
-5. Update any game logic that should react to the skill being unlocked.
+   - `cost` is the Skill Point cost
+   - `prereq` and `prereq2` each link to another `ESkillId`, or `ESkillId::None`. **Both are required** —
+     a Skill with `None` in both slots is a root.
+   - `tier` controls the visual size of the node
+4. Update the game logic that should react to the Skill being unlocked. Read the modifier server-side from
+   `m_skills` at the point the effect is computed, following `PulseWindowFor` / `PulseRechargeFor` in
+   [dlls/player_pulse.cpp](../dlls/player_pulse.cpp). Never apply an effect in prediction as well.
 
-The server sends skill state to the client through `SendSkillTreeToClient()` in [dlls/player_skills.cpp](../dlls/player_skills.cpp). If the new skill changes the tree layout or availability rules, update that function as needed.
+`SendSkillTreeToClient()` needs no change: it sends only which Skills are unlocked and how many points are
+unspent. Position, cost, prerequisites and tier are already on the client.
 
-## Linking a Skill to a Sprite
+## Removing a Skill
 
-Sprite selection is currently client-side in [cl_dll/vgui_skilltree.cpp](../cl_dll/vgui_skilltree.cpp).
-
-1. Open [cl_dll/vgui_skilltree.cpp](../cl_dll/vgui_skilltree.cpp).
-2. Find the `k_SkillUiInfo[]` table near the top of the file. It holds the display name, description
-   **and** sprite name — the wire message carries only ids and state bits, so all three live here.
-3. Add or edit the entry for the new skill id. **The table is indexed positionally by id**, so a new
-   entry must be appended in id order or every tooltip after it shifts onto the wrong node.
-4. Use the sprite name from the HUD sprite set defined in `sprites/hud.txt`.
-5. If the sprite name is not present in `hud.txt`, the node will still work but will render without an icon.
-
-The lookup is by numeric skill id, so the client does not need a networking change just to show a different icon.
+Delete the row's contents but **never reuse the id**. Ids are frozen twice over — they index the saved
+unlocked array *and* they are bit positions in the sync message, so handing one to a different Skill
+silently reassigns what old saves unlocked. A removed Skill keeps its `ESkillId` entry as a reserved id
+and can return later with the same number.
 
 ## Notes
 
 - Keep skill ids stable once they are saved or sent over the network.
-- If you change the tier system later, update both the server `SkillDef` data and the client `SkillNode` struct.
-- The skill tree UI also uses the local metadata table in [cl_dll/vgui_skilltree.cpp](../cl_dll/vgui_skilltree.cpp) for labels and descriptions.
+- Client and server derive `k_MaxSkills` and `k_SkillMaskBytes` from the same constant, so they cannot
+  disagree about the Skill set. `MsgFunc_SkillTree` drops a message whose size does not match.
+- "Available" is computed client-side for display. The server re-validates every unlock in `TryUnlock()`,
+  so a client that lies about availability still cannot unlock anything.

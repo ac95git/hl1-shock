@@ -467,6 +467,14 @@ cvar_t sv_busters = {"sv_busters", "0", FCVAR_SERVER};
 cvar_t inv_rows_start = {"inv_rows_start", "5"};
 cvar_t inv_rows_max = {"inv_rows_max", "9"};
 
+// Skill Tree economy.  Both default to zero: every Skill Point and every
+// Reset Token is found in the world.  Deliberately uncapped -- the ceiling on
+// each is how many pickups a map places, and a cap would let a found pickup
+// silently do nothing.  Raise skill_points_start to work on the tree UI
+// without hunting for pickups first.  See docs/PILLARS.md pillar 4.
+cvar_t skill_points_start = {"skill_points_start", "0"};
+cvar_t skill_reset_tokens_start = {"skill_reset_tokens_start", "0"};
+
 // The Pulse.  Tuning knobs -- see docs/PILLARS.md pillar 2.  The Recharge is
 // deliberately asymmetric: a Shield that negated something recovers faster than
 // one that negated nothing, so good reads chain and whiffs strand you.
@@ -580,6 +588,9 @@ void GameDLLInit()
 
 	CVAR_REGISTER(&inv_rows_start);
 	CVAR_REGISTER(&inv_rows_max);
+
+	CVAR_REGISTER(&skill_points_start);
+	CVAR_REGISTER(&skill_reset_tokens_start);
 
 	CVAR_REGISTER(&pulse_window);
 	CVAR_REGISTER(&pulse_window_bonus);

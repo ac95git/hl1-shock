@@ -360,6 +360,74 @@ class CItemSyringe : public CItem
 
 LINK_ENTITY_TO_CLASS(item_syringe, CItemSyringe);
 
+
+//=========================================================
+// Skill Points and Reset Tokens.
+//
+// Both are banked counters on CPlayerSkills rather than Item Types, so
+// neither occupies a Cell and neither can be refused by a full Grid --
+// which matters, because a progression reward that stays on the floor
+// reads as a bug.  Both are taken on contact: a Skill Point carries no
+// decision, and a Reset Token is spent from the Upgrades tab, not from
+// the world, so there is nothing to deliberate over at the pickup.
+//
+// Both models are placeholders -- see docs/ART_DEBT.md.
+//=========================================================
+class CItemSkillPoint : public CItem
+{
+	void Spawn() override
+	{
+		Precache();
+		SET_MODEL(ENT(pev), "models/w_longjump.mdl");
+		CItem::Spawn();
+	}
+	void Precache() override
+	{
+		PRECACHE_MODEL("models/w_longjump.mdl");
+		PRECACHE_SOUND("items/gunpickup2.wav");
+	}
+	bool MyTouch(CBasePlayer* pPlayer) override
+	{
+		pPlayer->m_skills.AddSkillPoints(1);
+
+		ClientPrint(pPlayer->pev, HUD_PRINTCENTER, "Skill Point acquired.\n");
+		EMIT_SOUND(ENT(pPlayer->pev), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM);
+
+		SendSkillTreeToClient(pPlayer);
+		return true;
+	}
+};
+
+LINK_ENTITY_TO_CLASS(item_skillpoint, CItemSkillPoint);
+
+
+class CItemResetToken : public CItem
+{
+	void Spawn() override
+	{
+		Precache();
+		SET_MODEL(ENT(pev), "models/w_security.mdl");
+		CItem::Spawn();
+	}
+	void Precache() override
+	{
+		PRECACHE_MODEL("models/w_security.mdl");
+		PRECACHE_SOUND("items/gunpickup2.wav");
+	}
+	bool MyTouch(CBasePlayer* pPlayer) override
+	{
+		pPlayer->m_skills.AddResetTokens(1);
+
+		ClientPrint(pPlayer->pev, HUD_PRINTCENTER, "Reset Token acquired.\n");
+		EMIT_SOUND(ENT(pPlayer->pev), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM);
+
+		SendSkillTreeToClient(pPlayer);
+		return true;
+	}
+};
+
+LINK_ENTITY_TO_CLASS(item_resettoken, CItemResetToken);
+
 class CItemLongJump : public CItem
 {
 	void Spawn() override
