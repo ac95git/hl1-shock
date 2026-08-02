@@ -94,7 +94,13 @@ void ApplyMultiDamage(entvars_t* pevInflictor, entvars_t* pevAttacker)
 	if (!gMultiDamage.pEntity)
 		return;
 
-	gMultiDamage.pEntity->TakeDamage(pevInflictor, pevAttacker, gMultiDamage.amount, gMultiDamage.type);
+	// Weapon Mastery. Here rather than in each weapon: every player weapon
+	// that deals damage through a trace funnels into this one call, so the
+	// Skill covers all of them without a list to keep up to date. A non-player
+	// attacker comes back unscaled.
+	const float flAmount = SkillScaleWeaponDamage(pevAttacker, gMultiDamage.amount);
+
+	gMultiDamage.pEntity->TakeDamage(pevInflictor, pevAttacker, flAmount, gMultiDamage.type);
 }
 
 

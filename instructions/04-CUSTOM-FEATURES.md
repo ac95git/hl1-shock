@@ -134,6 +134,9 @@ Raising `skill_points_start` is the way to work on the tree UI without hunting f
 | `skill_health_regen_rate` | 0.5 | Regeneration, HP per second |
 | `skill_battery_regen_rate` | 0.5 | Battery Regen, armor per second |
 | `skill_battery_bonus` | 50 | Extra max armor from Battery Capacity |
+| `skill_crowbar_range_scale` | 1.25 | Crowbar Reach multiplies the 32-unit swing trace |
+| `skill_crowbar_damage_scale` | 1.5 | Crowbar Force multiplies crowbar damage |
+| `skill_weapon_damage_scale` | 1.1 | Weapon Mastery multiplies all player-dealt damage |
 
 Two rules that are easy to break:
 
@@ -143,6 +146,22 @@ Two rules that are easy to break:
 - **Regeneration is not an Infusion.** `CPlayerRegen` has no duration, icon or start; see
   [CONTEXT.md](../CONTEXT.md). It shares only the fractional accumulator, which is load-bearing at these
   rates — 0.5 HP/s rounded to whole points per tick would round the whole effect away.
+- **Scale player damage at the chokepoints, not per weapon.** `SkillScaleWeaponDamage` is called from
+  `ApplyMultiDamage` and from the direct-`TakeDamage` branch of `RadiusDamage` — every player weapon
+  reaches one or the other. Do not scale before the branch in `RadiusDamage`: the other side already goes
+  through `ApplyMultiDamage` and would be scaled twice.
+
+### Effects in shared weapon code
+
+Weapon files like `crowbar.cpp` compile into **both** DLLs for client prediction, and `m_skills` exists
+only on the server. So a Skill effect there must sit inside `#ifndef CLIENT_DLL`, and so must the
+`game.h` include that its tuning cvar needs.
+
+Accept the consequence rather than working around it: the client's copy of the trace still uses base
+values, so it can predict a different *animation* than the server resolves. That is cosmetic. The
+alternative — telling the client which Skills are unlocked so it can predict them — would put the client
+in the business of deciding whether a hit landed, which is exactly what the server-authoritative rule
+exists to prevent.
 
 ## Adding a Skill
 

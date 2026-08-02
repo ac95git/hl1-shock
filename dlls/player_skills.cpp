@@ -246,6 +246,25 @@ int PlayerMaxArmor(CBasePlayer* pPlayer)
 }
 
 // =====================================================================
+// SkillScaleWeaponDamage
+// =====================================================================
+float SkillScaleWeaponDamage(entvars_t* pevAttacker, float flDamage)
+{
+    if (!pevAttacker || flDamage <= 0.0f)
+        return flDamage;
+
+    CBaseEntity* pAttacker = CBaseEntity::Instance(pevAttacker);
+    if (!pAttacker || !pAttacker->IsPlayer())
+        return flDamage;
+
+    CBasePlayer* pPlayer = (CBasePlayer*)pAttacker;
+    if (!pPlayer->m_skills.HasSkill(ESkillId::ExtraDamage))
+        return flDamage;
+
+    return flDamage * std::max(0.0f, skill_weapon_damage_scale.value);
+}
+
+// =====================================================================
 // SendSkillTreeToClient
 //
 // State only: one bit per unlocked Skill, then unspent Skill Points,

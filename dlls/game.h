@@ -60,6 +60,9 @@ extern cvar_t skill_fall_damage_scale;
 extern cvar_t skill_health_regen_rate;
 extern cvar_t skill_battery_regen_rate;
 extern cvar_t skill_battery_bonus;
+extern cvar_t skill_crowbar_range_scale;
+extern cvar_t skill_crowbar_damage_scale;
+extern cvar_t skill_weapon_damage_scale;
 
 // The Pulse.  Every one of these is a starting guess to be judged in play.
 extern cvar_t pulse_window;

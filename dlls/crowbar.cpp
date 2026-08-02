@@ -21,6 +21,13 @@
 #include "player.h"
 #include "gamerules.h"
 
+// This file is compiled into the client too, for weapon prediction. Both Skill
+// effects below are server-only, so the tuning cvars they read come with them.
+#ifndef CLIENT_DLL
+#include "game.h"
+#include <algorithm>
+#endif
+
 
 #define CROWBAR_BODYHIT_VOLUME 128
 #define CROWBAR_WALLHIT_VOLUME 512
@@ -157,7 +164,19 @@ bool CCrowbar::Swing(bool fFirst)
 
 	UTIL_MakeVectors(m_pPlayer->pev->v_angle);
 	Vector vecSrc = m_pPlayer->GetGunPosition();
-	Vector vecEnd = vecSrc + gpGlobals->v_forward * 32;
+
+	float flRange = 32.0f;
+#ifndef CLIENT_DLL
+	// Crowbar Reach. Server-only, because m_skills does not exist client-side
+	// and the client must never decide whether a hit landed. The client's copy
+	// of this trace only picks which swing animation plays, so an unlocked
+	// player swinging at the far edge of the extended reach can see a miss
+	// animation for a hit that landed. Cosmetic, and narrow at +8 units.
+	if (m_pPlayer->m_skills.HasSkill(ESkillId::CrowbarRange))
+		flRange *= std::max(1.0f, skill_crowbar_range_scale.value);
+#endif
+
+	Vector vecEnd = vecSrc + gpGlobals->v_forward * flRange;
 
 	UTIL_TraceLine(vecSrc, vecEnd, dont_ignore_monsters, ENT(m_pPlayer->pev), &tr);
 
@@ -235,6 +254,11 @@ bool CCrowbar::Swing(bool fFirst)
 			// subsequent swings do half
 			flDamage = gSkillData.plrDmgCrowbar / 2;
 		}
+
+		// Crowbar Force. Before the Follow-Up, so a primed swing multiplies the
+		// already-stronger hit rather than a base one.
+		if (m_pPlayer->m_skills.HasSkill(ESkillId::CrowbarDamage))
+			flDamage *= std::max(0.0f, skill_crowbar_damage_scale.value);
 
 		// A deflect primes the next crowbar HIT. Consumed here rather than in
 		// PrimaryAttack so a swing that connects with nothing costs nothing.

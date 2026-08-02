@@ -22,9 +22,9 @@ same commit as the code change.
 | # | Pillar | Status | One-line state |
 | --- | --- | --- | --- |
 | 1 | [Exploration](#1-exploration) | **Not started** | Its rewards exist — Row Grants, Skill Points, Reset Tokens are all findable entities — but no map places one, so nothing is explored *for* yet. |
-| 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar. Numbers untuned. Melee skills still do nothing. |
+| 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar. Melee Skills now land too. Numbers untuned. |
 | 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. |
-| 4 | [Skill trees](#4-skill-trees) | **Scaffolded** | Curated to 15 Skills; unlocks, saves and renders; points and Reset Tokens are earned and spent. Twelve have effects; the three melee/weapon-damage ones are all that keep this off Playable. |
+| 4 | [Skill trees](#4-skill-trees) | **Playable** | 15 curated Skills, **all with effects**. Points and Reset Tokens are earned and spent, the tree fits any screen, and nothing in it lies about what it does. Numbers untuned; no map places a Skill Point yet. |
 | 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work. Client-side model only — the server-owned rebuild is designed and scheduled. |
 
 ---
@@ -362,9 +362,10 @@ table row, one `EItemTypeId`, one `CItem` subclass, one FGD line, one `case`.
 
 ## 4. Skill trees
 
-**Status: Scaffolded**
+**Status: Playable**
 
-The most complete system by line count, and the one furthest from affecting play.
+Every Skill in the tree changes how the game plays. The pillar's own acceptance criterion — "every unlocked
+skill has an observable effect" — is met, which is what moved this off Scaffolded.
 
 ### What exists
 
@@ -444,10 +445,8 @@ The most complete system by line count, and the one furthest from affecting play
 
 ### What's missing
 
-- **Three of the fifteen effects.** Twelve work: the four Pulse Skills and `CrowbarFollowUp` via
-  `dlls/player_pulse.cpp`, `MedExpert` via `dlls/player_infusion.cpp`, `MoreHealth`, `ArmorEfficiency` and
-  `FallResistance` in `dlls/player.cpp`, and `HealthRegen` / `BatteryRegen` / `BatteryCapacity`. Still
-  inert: `CrowbarRange`, `CrowbarDamage`, `ExtraDamage` — the last thing between this pillar and Playable.
+- **Nothing, for the effects.** All fifteen Skills in the tree now do something. What is left is tuning:
+  every number is a first guess, and none has been judged against a full playthrough.
 
   `MoreHealth` is the one that does not follow the read-it-where-it-is-computed pattern, and could not:
   max health is durable state rather than a value recomputed per hit, so `ApplySkillHealthBonus` is
@@ -514,11 +513,27 @@ designing first, and no server or wire change is involved.
 The shared definition table ([ADR-0008](adr/0008-skill-definitions-are-shared-not-networked.md)), two
 prerequisites, the points/Tokens economy, the curation pass and the UI pass are all in. What remains:
 
-**The three remaining effects** — `CrowbarRange`, `CrowbarDamage` and `ExtraDamage` — each following
-`PulseWindowFor` / `PulseRechargeFor`: a modifier read server-side from `m_skills`, applied where the
-effect is computed, never touched in prediction. That is the last thing between this pillar and Playable.
+**Tuning, and maps.** Every effect exists; not one number has been judged against a full playthrough, and
+no map places a Skill Point, so the economy is still theoretical. Nothing else here is blocked on code.
 
-Survivability values and regeneration are both done. Two notes from that work worth keeping:
+Notes from the effects work worth keeping:
+
+**Weapon Mastery is applied at two chokepoints, not per weapon** — `ApplyMultiDamage`
+(`dlls/weapons.cpp`) and the direct-`TakeDamage` branch of `RadiusDamage` (`dlls/combat.cpp`). Every
+player weapon funnels through one or the other, so "every weapon you carry" is true by construction rather
+than by a list somebody has to maintain. Scaling before the branch in `RadiusDamage` would apply it twice,
+because the other branch already goes through `ApplyMultiDamage`.
+
+Two consequences that fall out and are worth knowing rather than rediscovering. **The Pulse Discharge is
+scaled by it**, because `FireDischarge` passes the player as attacker — defensible (it is the suit's
+energy, fired by the player) but emergent rather than designed. And **a player's own explosives hurt them
+10% more**, since `RadiusDamage` does not care that attacker and victim are the same entity.
+
+**Crowbar Reach is server-only and slightly desyncs the animation.** `crowbar.cpp` compiles into both DLLs
+for prediction, and `m_skills` does not exist client-side, so the client's copy of the swing trace still
+uses 32 units. It only picks which swing animation plays — damage is server-side either way — so at the
+far edge of the extended reach an unlocked player can see a miss animation for a hit that landed. Narrow
+at +8 units, and the alternative is letting the client decide whether a hit landed.
 
 **`CPlayerRegen`** (`dlls/player_regen.cpp`) holds `HealthRegen` and `BatteryRegen`. It is deliberately
 **not** an Infusion — CONTEXT.md draws that line, and it has no duration, no icon and no start; it is
@@ -569,9 +584,13 @@ grant Rows later without rework.
 
 ### Acceptance criteria (draft)
 
-- Every unlocked skill has an observable effect.
-- Skill points are earned through play, not seeded.
-- Skill ids stay stable; save games from before a skill was added still load.
+- ~~Every unlocked skill has an observable effect.~~ **Met** — all 15 Skills in the tree do something.
+- ~~Skill points are earned through play, not seeded.~~ **Met structurally** — `skill_points_start` is 0
+  and points come only from `item_skillpoint`. Not yet met *in practice*: no map places one, so the only
+  source today is the `skill_addpoints` cheat.
+- ~~Skill ids stay stable; save games from before a skill was added still load.~~ **Met, and enforced** —
+  a `static_assert` keeps `k_SkillDefs` in id order, and a Skill cut from the tree keeps its reserved id
+  and refunds its cost on load rather than corrupting the save.
 
 ---
 
