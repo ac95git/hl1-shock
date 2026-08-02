@@ -168,8 +168,27 @@ Until the icons are distinct, either the tree keeps text labels or it is unreada
 and the art are the same decision.
 
 ### What to look for
-One distinct icon per Skill, legible at 24–32px, grouped so a branch reads as a branch — a shared motif
-or palette per column, with the individual Skill distinguishable inside it.
+One distinct icon per Skill, grouped so a branch reads as a branch — a shared motif or palette per column,
+with the individual Skill distinguishable inside it.
+
+### The size constraint, which is not obvious
+**`SPR_DrawAdditive` draws at native size. There is no scaled sprite draw in the HUD API** — the Inventory
+Grid hit the same wall. So a node cannot shrink an icon to fit; the node is sized *from* the icon
+(`RebuildNodeMetrics`), and the whole tree is then scaled to the panel.
+
+HUD sprites make this worse by being **resolution-bucketed**: `hud.txt` defines each sprite at 320/640/
+1280/2560, and the engine picks the bucket for the current screen. `item_healthkit` is 44px at 640 and
+88px at 1280. The `dmg_*` family is **128×128** at 1280 — over twice a node — which is why none of them
+are used despite being the best semantic fits (`dmg_shock` for the Discharge, `dmg_chem` for Med Expert).
+
+Consequences for the replacement art:
+
+- **One fixed size, not a bucketed set.** A single size at every resolution makes node geometry stable.
+- **Small.** Seven columns must fit `panelW - 264`. Anything over ~64px forces nodes so large the tree
+  stops fitting on a 1280-wide screen.
+- Below 1024×768 the icons are dropped rather than spilled — seven columns of icons cannot fit the
+  ~340px tree area at 640×480 at any node size. That is a limit of the layout, not of the art.
 
 ### Done when
-Every Skill in the tree has its own icon, and a player can tell two Skills apart without hovering either.
+Every Skill in the tree has its own icon, a player can tell two Skills apart without hovering either, and
+the icons are one fixed size small enough that the tree fits a 1280-wide screen without scaling.

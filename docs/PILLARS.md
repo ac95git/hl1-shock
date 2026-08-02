@@ -416,7 +416,27 @@ The most complete system by line count, and the one furthest from affecting play
 
 - `CSkillTreeView`, a plain C++ helper owned by `CInventoryPanel` rather than a VGUI panel of its own.
 - Tier-sized nodes, lazily loaded HUD sprite icons, edge-anchored connector lines that prefer vertical
-  routing, hover tooltips, and a skill-point counter.
+  routing, hover tooltips, a skill-point counter and the Reset button.
+- **The tree fits the panel, and nodes fit their icons.** Node size is derived from the largest loaded
+  sprite (`RebuildNodeMetrics`), the grid step from the largest node, and then one uniform scale fits the
+  whole thing to the area — never magnifying past the designed size, and stopping at `k_MinScale` (0.55).
+  That replaces a hardcoded 100px step which needed a ~1600px-wide screen and was silently clipped below
+  it, because `RebuildRects` clamps the centering offset at zero.
+
+  Sizing from the sprites is not decoration. `SPR_DrawAdditive` draws at **native size** — there is no
+  scaled sprite draw in the HUD API — and HUD sprites are **resolution-bucketed**, so the same icon is
+  44px at 640 and 88px at 1280. Any fixed node size therefore clips its icon at one resolution or wastes
+  space at another. Icons are dropped rather than spilled when they cannot fit, which happens only at
+  640×480. See [ART_DEBT.md](ART_DEBT.md) for what this demands of the replacement art.
+- **No text labels on nodes, by design** — an icon and a cost, nothing else. Reading the tree means
+  hovering, which is the same instinct behind the anonymization feature below. This makes icon
+  distinctness *blocking* rather than cosmetic; see [ART_DEBT.md](ART_DEBT.md).
+- **Cost is drawn on each node**, coloured for affordable / reachable-but-unaffordable / gated. It is the
+  most important number on the screen now that points are scarce, and it used to be visible nowhere at
+  all — `SkillNode::cost` was parsed and never drawn.
+- **The hover bubble** carries name, description and a `Requires:` list naming unmet prerequisites, which
+  is what makes a two-prerequisite tree with no labels navigable — a node greys out and the bubble is the
+  only thing that says why. Laid out from real font metrics; see [TECH_DEBT.md](TECH_DEBT.md).
 - Labels, descriptions, icons, positions, costs, prerequisites and tiers all come from the shared
   `k_SkillDefs`. Adding a skill is one table row. The old client-local `k_SkillUiInfo` copy is gone.
 - "Available" is derived client-side from the unlocked mask and the shared table. That is a display
@@ -434,8 +454,6 @@ The most complete system by line count, and the one furthest from affecting play
   custom maps, exactly as Row Grants are.
 - **Node icons.** The tree is deliberately label-free, which makes icon distinctness *blocking* rather than
   cosmetic — and today five Skills share `suit_full`. See [ART_DEBT.md](ART_DEBT.md).
-- Tooltip layout debt — heuristic text measurement rather than font metrics. See
-  [TECH_DEBT.md](TECH_DEBT.md).
 
 ### Two prerequisites per Skill — DONE
 
@@ -489,13 +507,11 @@ designing first, and no server or wire change is involved.
 ### Next step
 
 The shared definition table ([ADR-0008](adr/0008-skill-definitions-are-shared-not-networked.md)), two
-prerequisites, the points/Tokens economy and the curation pass are all in. What remains:
+prerequisites, the points/Tokens economy, the curation pass and the UI pass are all in. What remains:
 
-1. **The UI pass.** Seven columns fitted to the panel rather than hardcoded steps, cost drawn on each node,
-   and the hover bubble rebuilt on real font metrics (see [TECH_DEBT.md](TECH_DEBT.md)). Note the tree
-   currently needs a wide screen: seven columns at `k_ColStep` 100 is 700px, and the tree area is
-   `panelW - 264`.
-2. **The nine remaining effects**, each following `PulseWindowFor` / `PulseRechargeFor`.
+**The nine remaining effects**, each following `PulseWindowFor` / `PulseRechargeFor` — a modifier read
+server-side from `m_skills`, applied where the effect is computed, never touched in prediction. That is
+the last thing between this pillar and Playable, and the only work left that touches nothing else.
 
 ### The economy
 

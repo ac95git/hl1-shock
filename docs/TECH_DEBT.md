@@ -199,13 +199,39 @@ forget because interleaved drawing is the obvious way to write it.
 - A panel can draw sprites and text in natural order without text loss.
 - The deferral lists are gone.
 
-## Skill Tree Tooltip Layout Reliability
+## Skill Tree Tooltip Layout Reliability — RESOLVED 2026-08-02
+
+Closed by doing what step 2 below only offered conditionally. It hedged: *"Replace fixed char-width
+constants with proper text measurement **if available in VGUI APIs**; if unavailable, centralize width
+constants per font and calibrate once."* It **is** available —
+[`utils/vgui/include/VGUI_Font.h`](../utils/vgui/include/VGUI_Font.h) exposes
+`getTextSize(text, wide, tall)` and `getTall()`. The heuristics were never necessary, and every one of
+them is gone: `kTitleCharW = 11`, `kDescCharW = 7`, the hardcoded 12px line height, and the three-pass
+width-fitting loop that existed only because the estimate and the wrap disagreed.
+
+`CSkillTreeView::BuildTooltip` is now the single layout function step 1 asked for. It measures the title
+and body with one model, wraps the body to a **pixel** width, and returns a `TooltipLayout` carrying the
+final rect, the line height and the laid-out lines together — so the box cannot disagree with what is
+drawn into it. It is one pass, not iterative.
+
+Wrapping is exact rather than iterative because of the order: wrap at the maximum allowed width, then
+shrink the box to the widest line actually produced. Shrinking to a line's own width can never make that
+line overflow, so no second pass is needed.
+
+Both pathological inputs from step 3 are handled: explicit `\n` breaks a line, and a word wider than the
+box is broken by character instead of overhanging. The bubble is clamped to the tree area on all four
+sides, flipping to the other side of the node before clamping.
+
+All four acceptance criteria are met. Steps 4 and 5 (a debug bounds-drawing mode, and validation at
+minimum resolutions) were not done and are no longer needed for this entry — geometry is now derived from
+measurement rather than tuned by eye, so there is nothing to eyeball. Low-resolution *layout* is a
+separate matter and is handled by the fit-to-area scaling described in PILLARS pillar 4.
 
 ### Scope
 - Client skill tree UI in [cl_dll/vgui_skilltree.cpp](../cl_dll/vgui_skilltree.cpp)
 - Specifically the hover tooltip bubble shown for skill descriptions
 
-### Current State (as of 2026-05-09)
+### Current State (as of 2026-05-09, superseded)
 The skill tree has received multiple layout and UX improvements:
 - Nodes are centered in the panel.
 - Node labels were removed; tooltip carries the detail.

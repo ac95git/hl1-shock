@@ -1,4 +1,4 @@
-//=========================================================
+﻿//=========================================================
 // skill_defs.h
 //
 // The single definition of every Skill: what it is called, what
@@ -157,45 +157,45 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 
 	// 1-2: melee, col 0
 	{ ESkillId::CrowbarRange,    "Crowbar Reach",    "Your crowbar connects from 25% further away.",                "d_crowbar",      0,  0,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor  },
-	{ ESkillId::CrowbarDamage,   "Crowbar Force",    "Crowbar hits land 50% harder.",                               "d_crowbar",      0,  1,  2,  ESkillId::CrowbarRange,    ESkillId::None,          ENodeTier::Medium },
+	{ ESkillId::CrowbarDamage,   "Crowbar Force",    "Crowbar hits land 50% harder.",                               "d_skull",        0,  1,  2,  ESkillId::CrowbarRange,    ESkillId::None,          ENodeTier::Medium },
 
 	SKILL_RESERVED(FastReload),
 
 	// 4: armaments, col 4. A column of one for now -- reserved as much as
 	// filled: gun Skills belong together, and this is where the next ones go.
-	{ ESkillId::ExtraDamage,     "Weapon Mastery",   "Every weapon you carry deals 10% more damage.",               "d_9mmar",        4,  0,  3,  ESkillId::None,            ESkillId::None,          ENodeTier::Major  },
+	{ ESkillId::ExtraDamage,     "Weapon Mastery",   "Every weapon you carry deals 10% more damage.",               "d_9mmAR",        4,  0,  3,  ESkillId::None,            ESkillId::None,          ENodeTier::Major  },
 
 	SKILL_RESERVED(HighJump),
 	// Also carried a self-prerequisite bug, which goes away with the row.
 	SKILL_RESERVED(SprintSpeed),
 
 	// 7-10: survivability, cols 5-6
-	{ ESkillId::FallResistance,  "Sure Footing",     "Falls deal half as much damage.",                             "cross",          6,  1,  1,  ESkillId::MoreHealth,      ESkillId::None,          ENodeTier::Minor  },
-	{ ESkillId::MoreHealth,      "Fortitude",        "+25 maximum health.",                                         "cross",          5,  0,  2,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor  },
+	{ ESkillId::FallResistance,  "Sure Footing",     "Falls deal half as much damage.",                             "item_longjump",  6,  1,  1,  ESkillId::MoreHealth,      ESkillId::None,          ENodeTier::Minor  },
+	{ ESkillId::MoreHealth,      "Fortitude",        "+25 maximum health.",                                         "item_healthkit", 5,  0,  2,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor  },
 	{ ESkillId::ArmorEfficiency, "Armor Expert",     "Armor absorbs 10% more of every blow.",                       "suit_full",      5,  1,  2,  ESkillId::MoreHealth,      ESkillId::None,          ENodeTier::Medium },
 	{ ESkillId::HealthRegen,     "Regeneration",     "Wounds slowly close on their own.",                           "cross",          5,  2,  3,  ESkillId::ArmorEfficiency, ESkillId::None,          ENodeTier::Major  },
 
 	SKILL_RESERVED(CrowbarSpeed),
 
 	// 12: the Pulse, col 1
-	{ ESkillId::PulseWindow,     "Pulse Window",     "The Shield stands 0.15s longer.",                             "suit_full",      1,  0,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor  },
+	{ ESkillId::PulseWindow,     "Pulse Window",     "The Shield stands 0.15s longer.",                             "autoaim_c",      1,  0,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor  },
 
 	// 13-14: the suit, col 3
-	{ ESkillId::BatteryCapacity, "Battery Capacity", "The suit holds 50 more armor.",                               "suit_full",      3,  0,  2,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor  },
-	{ ESkillId::BatteryRegen,    "Battery Regen",    "The suit slowly rebuilds its own armor.",                     "suit_full",      3,  1,  3,  ESkillId::BatteryCapacity, ESkillId::None,          ENodeTier::Major  },
+	{ ESkillId::BatteryCapacity, "Battery Capacity", "The suit holds 50 more armor.",                               "item_battery",   3,  0,  2,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor  },
+	{ ESkillId::BatteryRegen,    "Battery Regen",    "The suit slowly rebuilds its own armor.",                     "suit_empty",     3,  1,  3,  ESkillId::BatteryCapacity, ESkillId::None,          ENodeTier::Major  },
 
 	// 15-17: the Pulse continued, cols 1-2
-	{ ESkillId::PulseRecharge,   "Pulse Recharge",   "The wait between Pulses is a third shorter.",                 "suit_full",      1,  1,  2,  ESkillId::PulseWindow,     ESkillId::None,          ENodeTier::Medium },
-	{ ESkillId::PulseDischarge,  "Pulse Discharge",  "Negated hits vent energy at your crosshair.",                 "suit_full",      1,  2,  3,  ESkillId::PulseRecharge,   ESkillId::None,          ENodeTier::Major  },
-	{ ESkillId::PulseRebound,    "Pulse Rebound",    "A deflect skips the Recharge. Once, until you sit through a normal one.", "suit_full", 2, 2, 3, ESkillId::PulseRecharge, ESkillId::None,     ENodeTier::Major  },
+	{ ESkillId::PulseRecharge,   "Pulse Recharge",   "The wait between Pulses is a third shorter.",                 "flash_empty",    1,  1,  2,  ESkillId::PulseWindow,     ESkillId::None,          ENodeTier::Medium },
+	{ ESkillId::PulseDischarge,  "Pulse Discharge",  "Negated hits vent energy at your crosshair.",                 "d_egon",         1,  2,  3,  ESkillId::PulseRecharge,   ESkillId::None,          ENodeTier::Major  },
+	{ ESkillId::PulseRebound,    "Pulse Rebound",    "A deflect skips the Recharge. Once, until you sit through a normal one.", "flash_beam", 2, 2, 3, ESkillId::PulseRecharge, ESkillId::None,     ENodeTier::Major  },
 
 	// 18: melee payoff, col 0. Gated on both branches: it is a crowbar payoff
 	// for a Pulse deflect, and does nothing for a player who never deflects.
-	{ ESkillId::CrowbarFollowUp, "Follow-Up",        "After a deflect, your next crowbar hit lands far harder.",     "d_crowbar",      0,  2,  3,  ESkillId::CrowbarDamage,   ESkillId::PulseRecharge, ENodeTier::Major  },
+	{ ESkillId::CrowbarFollowUp, "Follow-Up",        "After a deflect, your next crowbar hit lands far harder.",     "d_gauss",        0,  2,  3,  ESkillId::CrowbarDamage,   ESkillId::PulseRecharge, ENodeTier::Major  },
 
 	// 19: medical, col 6. Re-parented off root now that the whole survival
 	// line is shipping -- Regeneration is the node it belongs behind.
-	{ ESkillId::MedExpert,       "Med Expert",       "An Infusion runs 5 seconds longer.",                          "cross",          6,  2,  2,  ESkillId::HealthRegen,     ESkillId::None,          ENodeTier::Medium },
+	{ ESkillId::MedExpert,       "Med Expert",       "An Infusion runs 5 seconds longer.",                          "flash_full",     6,  2,  2,  ESkillId::HealthRegen,     ESkillId::None,          ENodeTier::Medium },
 
 	// 20-21: the alien column, held until it opens
 	SKILL_RESERVED(HiveCapacity),
