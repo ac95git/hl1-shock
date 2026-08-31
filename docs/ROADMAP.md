@@ -456,17 +456,17 @@ Four defects in the reference implementation, all worth not inheriting:
 
 **Shape: Shaped. Documented 2026-08-31 at the user's request; deliberately not built.**
 
-A head hit that does *not* take the head off should still be legible: a distinct sound, and extra blood
-decals. Today a headshot is indistinguishable from a body shot except that the monster dies sooner —
-`TraceAttack` multiplies by `gSkillData.monHead` (`dlls/combat.cpp:1337`) and produces exactly the same
-`SpawnBlood` and `TraceBleed` as any other hit (`:1357-1358`).
+A head hit that does *not* take the head off should still be legible: a distinct sound, and **more blood
+spurting out of the wound**. Today a headshot is indistinguishable from a body shot except that the monster
+dies sooner — `TraceAttack` multiplies by `gSkillData.monHead` (`dlls/combat.cpp:1337`) and then produces
+exactly the same `SpawnBlood` and `TraceBleed` as any other hit (`:1357-1358`).
 
 **The reconciliation rule, which is the reason this is filed here:**
 
 | Head hit | Response |
 | --- | --- |
 | Lethal, and the monster has a headless submodel | **Decapitation** — `common/bodysplat.wav`, skull gib, neck jets |
-| Everything else | **The headshot cue** — an understated sound plus extra decals |
+| Everything else | **The headshot cue** — an understated sound plus a heavier blood spray |
 
 The two can never both fire. Decapitation is the loud, gory, once-per-monster event; the headshot cue is
 the quiet constant one. Ordering them this way also means a monster that has *not* been given a headless
@@ -480,8 +480,36 @@ would put a second system in charge of how loud a kill is. Weapon noise stays en
 `m_iWeaponVolume`. See [PERCEPTION.md](PERCEPTION.md).
 
 **Both halves land in `TraceAttack`**, which already has `ptr->iHitgroup`, already records `m_LastHitGroup`,
-and already calls `SpawnBlood` and `TraceBleed`. Extra decals are more calls of a shape that is already
-there.
+and already calls `SpawnBlood` and `TraceBleed` (`dlls/combat.cpp:1326-1360`). It is the one place that
+knows the hitgroup, the damage and the impact point at once.
+
+#### What the extra blood actually costs
+
+Not nothing, and an earlier draft of this entry implied otherwise. Checked 2026-09-01:
+
+**Damage does not visibly scale the existing spray.** `SpawnBlood` (`dlls/weapons.cpp:132`) emits exactly
+one `TE_BLOODSPRITE` through `UTIL_BloodDrips` (`dlls/util.cpp:1185`), and the only thing damage controls
+is the sprite's *size*: `V_min(V_max(3, amount / 10), 16)`. At melee and pistol damage that expression sits
+**on its floor of 3** — a 10-damage crowbar hit and a 30-damage Backstab produce an identical puff, and
+nothing changes until 40 damage. So a head hit doubling damage buys no visible blood at all.
+
+**And that sprite cannot spurt.** `UTIL_BloodDrips` takes a `direction` argument and **never writes it to
+the message** — `TE_BLOODSPRITE` carries position, two sprite models, colour and size, and nothing else.
+It is a non-directional puff by construction. A jet is `UTIL_BloodStream` (`dlls/util.cpp:1163`), which
+does write a direction and produces `TE_BLOODSTREAM`.
+
+So "more blood spurting" means **additional `UTIL_BloodStream` calls at the wound**, thrown along the shot
+direction with some spread — new code, not a tuned constant.
+
+Which is the strongest argument yet for building this with Decapitation rather than after it: the reference
+implementation's `GibHeadMonster` is *already* one `TE_BLOODSPRITE` plus three `TE_BLOODSTREAM` jets at the
+neck. **The two features want one shared helper at two intensities** — a few jets at the head for a
+survivable hit, more at the stump for a decapitation — rather than two separate blood routines that drift
+apart the way the reference's twelve copies did.
+
+Whatever that helper is, it must route through `UTIL_ShouldShowBlood` and the `g_Language` check.
+Bypassing the gore cvars is one of the four defects listed above as not worth inheriting, and a new blood
+effect is exactly where it would be reintroduced.
 
 Two things to settle before writing it:
 
