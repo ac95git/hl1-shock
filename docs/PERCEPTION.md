@@ -1,0 +1,519 @@
+# Perception — how monsters find the player
+
+The reference for everything a monster knows and how it comes to know it. Read it before touching
+`Look`, `Listen`, the sound list, the monster state machine, or anything that decides whether the player
+has been noticed.
+
+Two halves. **[Part 1](#part-1--what-half-life-does-today)** documents the base SDK exactly as it is, with
+no changes proposed — it is the thing being built on, and most of it is undocumented anywhere else.
+**[Part 2](#part-2--the-model-this-mod-adds)** is the model this mod layers on top, settled 2026-08-31 and
+not yet built.
+
+What is intended and unbuilt is tracked in [ROADMAP.md](ROADMAP.md#pillar-6-stealth); what exists today is
+in [PILLARS.md](PILLARS.md#6-stealth). Vocabulary is in [CONTEXT.md](../CONTEXT.md) — **Concealment**,
+**Suspicion**, **Search**, **Post**, **Perception Profile**, **Backstab**.
+
+**Last updated:** 2026-08-31 (branch `hl-shock`, at `ff03310` — design settled, no code written)
+
+---
+
+## Part 1 — what Half-Life does today
+
+### Where perception runs
+
+`CBaseMonster::RunAI()` (`dlls/monsterstate.cpp:61`) calls `Look(m_flDistLook)` and `Listen()` once per
+monster think — but **only when a client is in the monster's PVS, or the monster is already in combat**
+(`dlls/monsterstate.cpp:82`). A monster in an unvisited part of the map perceives nothing and costs nothing.
+That gate is why adding work inside `Look` is affordable.
+
+### Sight — `CBaseMonster::Look`
+
+`dlls/monsters.cpp:298`. Collects entities and sets the sight bits of `m_afConditions`.
+
+It gathers with `UTIL_EntitiesInBox(pList, 100, ...)` filtered to `FL_CLIENT | FL_MONSTER`
+(`dlls/monsters.cpp:317`) — a box of side `2 × iDistance`, **not limited to PVS**, capped at 100 entities.
+A monster flagged `SF_MONSTER_PRISONER` sees nothing at all (`:310`), and nothing with `health <= 0` is
+ever considered (`:324`).
+
+Each candidate then passes exactly **four** tests and nothing else (`dlls/monsters.cpp:328`):
+
+| Test | Meaning |
+| --- | --- |
+| `IRelationship(pSightEnt) != R_NO` | there is some relationship, hostile or otherwise |
+| `FInViewCone(pSightEnt)` | inside the forward cone, width `m_flFieldOfView` |
+| `!FBitSet(pSightEnt->pev->flags, FL_NOTARGET)` | the `notarget` cheat is off |
+| `FVisible(pSightEnt)` | an unobstructed trace |
+
+There is no light term, no stance term, no speed term, and no time term. Sight is instantaneous and binary.
+
+What a passing entity produces:
+
+- It is pushed onto the `m_pLink` list, which `BestVisibleEnemy()` (`:2418`) later walks.
+- If it is the player, `bits_COND_SEE_CLIENT` is set (`:351`) — used by scripted AI, and by
+  `SF_MONSTER_WAIT_TILL_SEEN`, which additionally requires the *player* to be facing the monster before it
+  activates (`:332-348`).
+- If it is already `m_hEnemy`, `bits_COND_SEE_ENEMY` is set (`:357-361`).
+- Its relationship sets one of `bits_COND_SEE_NEMESIS` / `SEE_HATE` / `SEE_DISLIKE` / `SEE_FEAR`
+  (`:365-384`). `R_AL` sets nothing.
+
+**`SEE_HATE`, `SEE_DISLIKE` and `SEE_NEMESIS` are the bits that lead to acquisition.** Everything else in
+that list is presentation, scripting, or tracking of an enemy already held.
+
+Range defaults are `m_flDistLook = 2048` and `m_flDistTooFar = 1024` (`dlls/monsters.cpp:2032-2033`).
+
+Field of view varies far more than the range does, and it is already the sharpest per-monster difference in
+the game. `m_flFieldOfView` is a dot product, so **lower is wider**:
+
+| Value | Angle | Monsters |
+| --- | --- | --- |
+| `-1` | 360° | nihilanth |
+| `VIEW_FIELD_FULL` | 360° | controller, turret family |
+| `-0.707` | 270° | apache |
+| `-0.5` | 180° | leech |
+| `-0.2` | ~203° | gargantua |
+| `0` | 180° | osprey, snark |
+| `0.2` | ~157° | human grunt, alien grunt, bullsquid, flyer |
+| `0.3` | ~145° | big momma |
+| `VIEW_FIELD_WIDE` | wide | assassin, alien slave, barney, scientist, ichthyosaur |
+| `0.5` | 120° | zombie, headcrab, houndeye, barnacle, bloater, gman, roach, rat, the player |
+| `0.9` | ~50° | hornet |
+
+### Acquisition — `CBaseMonster::GetEnemy`
+
+`dlls/monsters.cpp:3334`. Runs only when `bits_COND_SEE_HATE | SEE_DISLIKE | SEE_NEMESIS` is set (`:3338`),
+takes `BestVisibleEnemy()`, and swaps `m_hEnemy` **only if the current schedule can be interrupted by
+`bits_COND_NEW_ENEMY`** (`:3348-3356`) — a deliberate Valve guard, commented as not a good permanent fix.
+The previous enemy is pushed onto a small stack (`PushEnemy` / `PopEnemy`, `:1166`) so a monster returns to
+an older target when the current one is gone.
+
+So the whole chain is: `Look` sets a relationship bit → `GetEnemy` sets `m_hEnemy` → `GetIdealState`
+promotes to `MONSTERSTATE_COMBAT`. **One frame, start to finish.**
+
+### Tracking an acquired enemy — `CBaseMonster::CheckEnemy`
+
+`dlls/monsters.cpp:1052`. Runs against `m_hEnemy` and maintains:
+
+- `bits_COND_ENEMY_OCCLUDED` from `!FVisible` (`:1060-1066`).
+- `bits_COND_ENEMY_TOOFAR` beyond `m_flDistTooFar` (`:1130-1136`).
+- `bits_COND_ENEMY_FACING_ME` (`:1103-1108`).
+- `m_vecEnemyLKP`, the last known position — updated when the enemy is seen, and *trailed slightly behind*
+  by its velocity so the monster aims where it was rather than where it is (`:1111-1115`). Also updated when
+  the enemy is unseen but unoccluded within 256 units, on the reasoning that it must be beside or behind the
+  monster (`:1121-1128`).
+
+`CSquadMonster::CheckEnemy` (`dlls/squadmonster.cpp:387`) additionally pastes the LKP to the squad leader
+when it is fresh, and copies it back from the leader when it is not.
+
+### The state machine — `CBaseMonster::GetIdealState`
+
+`dlls/monsterstate.cpp:118`.
+
+| From | To | On |
+| --- | --- | --- |
+| IDLE | COMBAT | `bits_COND_NEW_ENEMY` (`:141`) |
+| IDLE | ALERT | light or heavy damage, or a `bits_SOUND_COMBAT`/`bits_SOUND_DANGER` sound (`:143-165`) |
+| IDLE | ALERT | a smell (`:166-169`) |
+| ALERT | COMBAT | `NEW_ENEMY` or `SEE_ENEMY` (`:180-184`) |
+| ALERT | ALERT | any heard sound — turns to face it and nothing more (`:185-192`) |
+| COMBAT | ALERT | **`m_hEnemy == NULL`, and nothing else** (`:201-206`) |
+
+That last row is the important one. **A monster in combat never de-escalates while its enemy exists.**
+Losing sight, losing the trail, and the player leaving the area all do nothing. There is no give-up path in
+the base game.
+
+Note also what an IDLE monster does on hearing a plain player noise: `MakeIdealYaw` toward it (`:161`), and
+the state change is gated on `COMBAT|DANGER`, which `bits_SOUND_PLAYER` is not. **It turns and that is all.**
+
+`CSquadMonster::GetIdealState` (`dlls/squadmonster.cpp:518`) adds one thing: on `NEW_ENEMY` in IDLE or
+ALERT, it calls `SquadMakeEnemy`, handing the enemy to every squad member not already engaged.
+
+### The player's noise — `CBasePlayer::UpdatePlayerSound`
+
+`dlls/player.cpp:2586-2666`, run every frame. It is complete, correct, and nothing rewards or punishes it.
+
+- **Body volume** is `pev->velocity.Length()`, clamped at 512 (`:2588`, `:2592`). Moving slower is already
+  quieter, so crouching (`PLAYER_DUCKING_MULTIPLIER` 0.333, `pm_shared/pm_shared.cpp:104`) and walking
+  (⅓ speed, `pm_shared/pm_shared.cpp:2949`) already reduce it — as a side effect of speed, not because
+  anything decided they should.
+- **Airborne is silent**; a jump adds 100 (`:2599`, `:2602`).
+- **Weapon volume competes** with body volume and the loudest wins; if the weapon wins, the sound is
+  additionally flagged `bits_SOUND_COMBAT` (`:2608-2614`). The scale is `dlls/weapons.h:415-417` —
+  `LOUD_GUN_VOLUME` 1000, `NORMAL_GUN_VOLUME` 600, `QUIET_GUN_VOLUME` 200.
+- **Volume decays toward its target** rather than snapping, so a monster that listens infrequently still
+  catches a noise that has already stopped (`:2638-2646`).
+- **`m_fNoPlayerSound`** (`dlls/player.h:175`) zeroes it outright (`:2648`). Its own comment calls it a
+  debugging feature. It is a working silent-movement switch that nothing turns on.
+- `bits_SOUND_PLAYER` is OR'd in every frame (`:2664`). Fall damage inserts one separately (`:2759`).
+
+### Hearing and smelling — the sound list
+
+`CSoundEnt` holds up to **`MAX_WORLD_SOUNDS` = 64** entries for the whole world (`dlls/soundent.h:24`) —
+a shared, small pool. `InsertSound(type, origin, volume, duration)` adds one with a lifetime.
+
+Types are single bits (`dlls/soundent.h:26-33`), and **bits above `1 << 6` are free**:
+
+| Bit | Type | Classified as |
+| --- | --- | --- |
+| `1 << 0` | `bits_SOUND_COMBAT` | sound |
+| `1 << 1` | `bits_SOUND_WORLD` | sound |
+| `1 << 2` | `bits_SOUND_PLAYER` | sound |
+| `1 << 3` | `bits_SOUND_CARCASS` | **scent** |
+| `1 << 4` | `bits_SOUND_MEAT` | **scent** |
+| `1 << 5` | `bits_SOUND_DANGER` | sound |
+| `1 << 6` | `bits_SOUND_GARBAGE` | **scent** |
+
+The split is `CSound::FIsSound()` and `CSound::FIsScent()` (`dlls/soundent.cpp:52-73`). It matters: only a
+sound sets `bits_COND_HEAR_SOUND` and only a sound is returned by `PBestSound()` (`dlls/monsters.cpp:409`,
+which returns the **nearest**, not the loudest). Scents set `bits_COND_SMELL` / `bits_COND_SMELL_FOOD`
+instead.
+
+`CBaseMonster::Listen()` (`dlls/monsters.cpp:192`) walks the active list. A sound registers if its type is
+in the monster's mask **and** in the current schedule's `iSoundMask` (`:209` — the two must agree, and the
+code says so in capitals), and if the monster is within `m_iVolume * HearingSensitivity()` (`:224`).
+
+The base sound mask is `WORLD | COMBAT | PLAYER` (`dlls/monsters.cpp:398-403`), and most monsters keep
+`bits_SOUND_PLAYER` — grunts (`dlls/hgrunt.cpp:322`), alien slaves (`dlls/islave.cpp:265`), bullsquids
+(`dlls/bullsquid.cpp:419`), houndeyes, alien grunts, assassins.
+
+**What hearing the player actually causes** is worth stating plainly, because two other documents got it
+wrong: a `MakeIdealYaw` toward the noise, and nothing else. Grunts react strongly to `bits_SOUND_DANGER`
+(`SCHED_TAKE_COVER_FROM_BEST_SOUND`, `dlls/hgrunt.cpp:1966-1981`) — that is the grenade response — but the
+block that would face them toward player noise is **commented out** (`dlls/hgrunt.cpp:1983-1988`).
+
+`SCHED_GRUNT_SWEEP` is not a sweep. It is `TURN_LEFT 179, WAIT 1, TURN_LEFT 179, WAIT 1`
+(`dlls/hgrunt.cpp:1594-1619`) — a look-around-in-place, reached from `SCHED_GRUNT_COMBAT_FACE` after 1.5
+seconds of facing an enemy.
+
+### Light — `Illumination()`
+
+`CBaseEntity::Illumination()` is `GETENTITYILLUM(ENT(pev))`, the engine's light level at the entity
+(`dlls/cbase.h:360`).
+
+`CBasePlayer::Illumination()` **overrides it** to add `m_iWeaponFlash`, clamped to 255
+(`dlls/player.cpp:4567-4575`). `m_iWeaponFlash` is a `CBasePlayer` member (`dlls/player.h:113`), saved
+(`:106`), set by every player gun to `BRIGHT`/`NORMAL`/`DIM_GUN_FLASH` = 512/256/128
+(`dlls/weapons.h:419-421`), and decayed at 256 per second (`dlls/player.cpp:2669`). So firing lights the
+player for roughly a second afterwards, at no cost to whoever reads it.
+
+**Nothing calls `Illumination()`.** `Look` does not consult light in any form. The darkness half of
+concealment is a finished, correct query with no consumer.
+
+Note the asymmetry: monsters use the base implementation, so **a monster firing a weapon illuminates
+nothing**. See [Deliberately not generalised](#deliberately-not-generalised).
+
+### Squads — `CSquadMonster`
+
+`dlls/squadmonster.h` / `.cpp`. Up to `MAX_SQUAD_MEMBERS` = 5 (`dlls/squadmonster.h:54`), formed at
+`StartMonster` via `SquadRecruit(1024, 4)` (`:430`) among monsters of the same `Classify()`, either by
+`pev->netname` or by proximity plus a clear trace.
+
+State held **by the leader** on behalf of the squad:
+
+| Field | Saved | What it is |
+| --- | --- | --- |
+| `m_afSquadSlots` | **no** — commented *"these need to be reset after transitions!"* (`:35`) | which attack slots are taken |
+| `m_vecEnemyLKP` | yes (on `CBaseMonster`) | shared last known position, via `SquadPasteEnemyInfo` / `SquadCopyEnemyInfo` (`:215-235`) |
+| `m_flLastEnemySightTime` | yes (`:37`) | last time **anyone** in the squad saw the enemy |
+| `m_fEnemyEluded` | yes (`:36`) | the squad has lost the enemy |
+
+`m_fEnemyEluded` and `m_flLastEnemySightTime` are declared on the base class and **only the grunt uses
+them** — set true after 5 seconds unseen (`dlls/hgrunt.cpp:377`), consumed once to trigger a "found him!"
+callout when a member relocates the player and the player is not facing them (`:2104-2108`). A squad-level
+lost-track flag, sitting unused on `CSquadMonster`.
+
+`SquadMakeEnemy` (`:243`) hands an enemy to every member not already engaged, pushing their old enemy onto
+the stack first. `SquadMemberInRange(vec, 128)` is the spacing rule `FValidateCover` uses to stop members
+piling onto the same cover (`:544-558`, `:588`).
+
+**Killing the leader dissolves the squad.** `SquadRemove` on the leader nulls every member's
+`m_hSquadLeader` (`:145-181`) and there is no promotion anywhere in the SDK. The survivors keep fighting
+individually but can no longer share enemy information, coordinate slots, or be given an enemy by anyone.
+
+### Death and corpses
+
+**Nothing perceives a death.** `CBaseMonster::Killed` (`dlls/combat.cpp:588`) notifies only `pev->owner`,
+for monstermaker bookkeeping. `CSquadMonster::Killed` (`dlls/squadmonster.cpp:124`) vacates its slot,
+removes itself from the squad, and calls the base — **`SquadRemove` runs before `CBaseMonster::Killed`**,
+so anything wanting to notify squadmates must do so before that line or the member list is already gone.
+
+No sound enters `CSoundEnt` on death. The one death-time insert is `bits_SOUND_CARCASS` at volume 384 for
+30 seconds (`dlls/schedule.cpp:475`), which is classified as a **scent** and appears only in scavenger sound
+masks (bullsquid, houndeye) and in the friendly-NPC masks. Grunts do not listen for it.
+
+**Corpses are invisible.** `Look` skips anything with `health <= 0` (`dlls/monsters.cpp:324`). A body left
+in the middle of a lit corridor is never noticed by anyone, ever.
+
+### A monster's guard position
+
+`m_vecLastPosition` (`dlls/basemonster.h:71`) is commented *"monster sometimes wants to return to where it
+started after an operation"* and is in the save table (`dlls/monsters.cpp:78`). An unused guard-post slot.
+
+`SCHED_GUARD` is a declared common schedule (`dlls/schedule.h:64`) that **only the houndeye implements**
+(`dlls/houndeye.cpp:1206`).
+
+A monster with `pev->target` walks a `path_corner` chain while idle (`dlls/monsters.cpp:2096-2131`, via
+`SCHED_IDLE_WALK`), advanced through `GetNextTarget()` (`:1458-1460`). So an authored patrol route is
+already expressible in map data, and repointing `m_pGoalEnt` is how it is changed.
+
+### What survives a save, and what survives a level change
+
+`CBaseMonster::m_SaveData` (`dlls/monsters.cpp:47-104`) saves `m_MonsterState`, `m_IdealMonsterState`,
+`m_afConditions`, `m_hEnemy`, `m_hOldEnemy[]`, `m_vecEnemyLKP`, `m_vecLastPosition`, `m_afMemory`,
+`m_flFieldOfView`, `m_flDistLook` and `m_flDistTooFar`. Routes and schedules are **not** saved.
+
+`CBaseMonster::Restore` (`:114-135`) already scrubs: clears the route, nulls the schedule, resets
+`m_iTaskStatus` and the activity, and clears `m_afConditions` entirely if there is no enemy. So there is
+precedent for restore-time correction of AI state.
+
+**Save/load and level change run through the same `Restore`.** They are distinguished by
+`SAVERESTOREDATA::fUseLandmark` (`engine/eiface.h:344`), which is non-zero for a landmark transition and
+zero for a plain save load — and `CBasePlayer::Restore` already reads it (`dlls/player.cpp:3193`).
+
+Consequence worth knowing: an `EHANDLE` to the player does not survive a transition, so a transition-carried
+monster comes back with `m_hEnemy` null, its conditions cleared by `Restore`, and `GetIdealState` drops it
+from COMBAT to **ALERT** on the next think. It does not reach IDLE on its own.
+
+### Two corrections
+
+Both [PILLARS.md](PILLARS.md) and [ROADMAP.md](ROADMAP.md) previously stated that grunts investigate player
+noise when they cannot see their enemy, citing `dlls/hgrunt.cpp:1984`. **That code is inside a `/* */`
+block** (`:1983-1988`) and has never run. Corrected in both, 2026-08-31.
+
+Neither document recorded that deaths and corpses are entirely imperceptible, which is load-bearing for
+anything built on stealth. Recorded here.
+
+---
+
+## Part 2 — the model this mod adds
+
+Settled 2026-08-31. Not built. The two decisions with lasting consequences get their own records —
+`adr/0009` for where the meter gates, `adr/0010` for the Backstab — written with the commits that
+implement them.
+
+### The shape in one paragraph
+
+**Concealment** is what the player *is*. **Suspicion** is what a monster *holds*. Concealment sets the rate
+at which Suspicion fills; it does not decide whether it fills. When a monster's Suspicion reaches the
+acquisition threshold, everything below that line happens exactly as Half-Life already does it.
+
+### Concealment
+
+A multiplicative product of four terms, computed per monster/player pair:
+
+| Term | Source | Effect |
+| --- | --- | --- |
+| Angle | dot product against `m_flFieldOfView` | the edge of the cone is far slower than the centre |
+| Distance | fraction of `m_flDistLook` | far is slower than near |
+| Stance | crouched / walking / standing | crouched is slower |
+| Light | `Illumination()` | dark is slower |
+
+The muzzle-flash term arrives free, because `CBasePlayer::Illumination()` already includes it — firing in
+the dark lights the player for about a second and nobody has to write that rule.
+
+Angle, distance and stance carry the first version, so the model is tunable in vanilla Half-Life maps.
+Light is wired from the first commit and contributes, but is not dominant, because **vanilla maps are lit
+for readability rather than for hiding** — it becomes the dominant lever only when there are custom maps
+with dark places in them. That dependency is tracked under [Maps](ROADMAP.md#maps).
+
+### Suspicion
+
+One float per monster, saved. It fills at the Concealment-derived rate while the monster's sight gate
+passes, and drains when it does not. There are two thresholds: a **notice** threshold, which drives the
+player's readout and squad chatter, and an **acquisition** threshold, at which the monster becomes hostile
+exactly as it does today.
+
+### Where it gates
+
+Inside `Look`, and it gates **only the relationship bits** — `bits_COND_SEE_HATE`, `SEE_DISLIKE`,
+`SEE_NEMESIS` — which are the bits `GetEnemy` reads.
+
+Untouched, deliberately: `bits_COND_SEE_CLIENT`, the `m_pLink` list, `SF_MONSTER_WAIT_TILL_SEEN`, and
+`bits_COND_SEE_ENEMY` for an enemy already acquired. So Barney still says hello, scripted AI still receives
+the condition it expects, and an alerted monster still tracks the player at full speed. The change is
+surgical because everything downstream of acquisition is left alone.
+
+### Noise steers the cone; it does not fill the meter
+
+Sound keeps its own path. Hearing the player turns a monster toward the noise — which is already what
+happens — and the commented-out grunt investigate block is restored so a loud noise also draws them to
+walk to it. Turning to face the player collapses the angle term, so the fill rate jumps.
+
+**Sight remains the only thing that fills Suspicion.** That keeps "break line of sight and they stop
+learning about you" true without exception, which is the rule the whole mechanic has to be readable
+through. There is exactly one exception, below.
+
+### Losing the player — de-escalation, Search, Post
+
+Once acquired: if the enemy stays occluded and deals no damage for a give-up interval, Suspicion drains.
+At zero the monster drops `m_hEnemy` and runs a **Search** toward the last known position. Taking damage
+resets the give-up interval, so shooting a grunt and strolling away does not work.
+
+A Search that finds nothing resolves to a **Post**:
+
+- If the mapper gave the monster `pev->target`, advance `m_pGoalEnt` along the authored `path_corner`
+  chain. Authored intent wins, which is how Half-Life already treats `pev->target`.
+- Otherwise, the leader assigns new Posts spread around the last known position, using the existing
+  `SquadMemberInRange(..., 128)` spacing rule so members do not stack.
+
+Either way the monster settles at `MONSTERSTATE_ALERT` with a **permanently raised Suspicion floor** —
+never back to IDLE. A room the player was spotted in stays harder for the rest of the level.
+
+**Across a level change it does return to IDLE.** On restore with `fUseLandmark` set, Suspicion, the raised
+floor and the Post all clear, and a monster with no valid enemy that is not in a script is pushed to
+`MONSTERSTATE_IDLE`. A plain save/load changes nothing, so quickloading is not a "calm everyone down"
+button.
+
+### Squad coordination
+
+**There is no squad-level Suspicion value.** One source of truth: each monster's own meter. The squad
+channel is a set of writes the leader makes.
+
+| Trigger | What the leader does |
+| --- | --- |
+| a member crosses the notice threshold | raise every member's Suspicion to a floor, with a voice line |
+| a member crosses acquisition | `SquadMakeEnemy` — vanilla, unchanged |
+| `m_fEnemyEluded` and enough time since `m_flLastEnemySightTime` | call a **Search**: distribute the LKP, spread the squad |
+
+This reuses `m_fEnemyEluded` and `m_flLastEnemySightTime` where they already live and are already saved.
+
+Killing the leader silently therefore removes the squad's entire coordination layer, permanently, because
+the SDK has no leader promotion. That is a large stealth reward that costs nothing to build.
+
+### Death, witnesses, and the Disturbance
+
+Two mechanisms doing two different jobs.
+
+**Seeing the kill.** At death — before `SquadRemove` — loop the victim's squadmates and nearby monsters.
+Each one passing `FVisible` on the victim jumps to a high Suspicion floor and takes the death position as
+its LKP. A monster that could not see it reacts to nothing.
+
+**Finding the body.** A new sound type, `bits_SOUND_DISTURBANCE` (`1 << 7`, free), inserted at death with a
+duration and **added to `FIsSound()`'s mask** so it behaves as a real sound — which buys
+`bits_COND_HEAR_SOUND`, `PBestSound`, `MakeIdealYaw` and every existing schedule interrupt for nothing.
+Only monsters whose Perception Profile opts in listen for it. It expires on its own, so a level does not
+accumulate permanent distractions, and `Look` never has to look at a corpse.
+
+Reaching a Disturbance raises the squad's Suspicion floor once. **This is the single exception to "only
+sight fills the meter"**, and it is justified because a body is proof rather than a hint.
+
+Watch `MAX_WORLD_SOUNDS`: it is 64 for the whole world. Keep the duration modest and insert only for
+profiles that opt in, or a large firefight will crowd the pool.
+
+### Perception Profiles
+
+A small struct on `CBaseMonster`, set in `Spawn`, defaulting to a conservative profile. Every monster
+participates by default; **"dumber" means a worse profile, never a bypass**, so a dark room works on a
+zombie too, just less. Grunts, assassins, alien grunts and alien slaves are the tuned primaries.
+
+Explicit opt-outs — things that should never be sneaked past — are turrets, apache, osprey, barnacle,
+tentacle (already sound-only and blind) and nihilanth.
+
+### Scripted sequences
+
+A monster with `m_pCine` set accumulates no Suspicion; it is playing a sequence, not perceiving. When the
+script releases it, the normal model applies, so stealth works afterwards.
+
+A new spawnflag additionally lets a mapper mark a monster as ignoring Concealment entirely, for a set piece
+that must fire. Half-Life's pacing leans on monsters spawning into a fight that is going to happen, and
+authored intent has to be able to win. Any spawnflag change lands in `fgd/halflife.fgd` **and** the mod
+directory's `top_mod.fgd` in the same change.
+
+### The readout
+
+Three states — **Unseen**, **Noticed**, **Spotted** — derived server-side from the highest Suspicion among
+every monster that can currently perceive the player, *including monsters the player cannot see*. It is a
+warning, not a mirror.
+
+Quantising to three states means the message fires on threshold crossings only, following `gmsgPulse`'s
+precedent of sending on state change and letting the client run its own clock. The Unseen→Noticed edge gets
+a soft cue; Noticed→Spotted gets a hard one.
+
+### The Backstab
+
+Recorded here only because it is adjacent; it is **independent of everything above** and needs no meter, no
+profile and no squad code.
+
+A Backstab is a melee hit landed in a monster's rear arc. **Positional only** — whether the victim has
+noticed the player does not enter into it, and there is one tier. A curated list of monsters cannot be
+backstabbed, following the precedent of
+[ADR-0005](adr/0005-the-shield-negates-a-curated-damage-list.md): a clever rule always admits something
+wrong.
+
+Not backstabbable: headcrab (and babycrab, which inherits — `dlls/headcrab.cpp:479`), snark, roach, rat,
+leech, hornet, flyer, barnacle, tentacle, controller, turret / miniturret / sentry, apache, osprey,
+nihilanth, and big momma — whose `TakeDamage` clamps `pev->health = flDamage + 1` until her node path
+finishes (`dlls/bigmomma.cpp:588-596`), making her unkillable by construction and any multiplier on her
+meaningless.
+
+**Gargantua is backstabbable, and its damage filter stays untouched.** `GARG_DAMAGE` is
+`DMG_ENERGYBEAM | DMG_CRUSH | DMG_MORTAR | DMG_BLAST` (`dlls/gargantua.cpp:47`); the crowbar is `DMG_CLUB`,
+so `TraceAttack` zeroes the damage and plays a ricochet (`:830-851`) and `TakeDamage` would multiply by
+0.01 on top (`:858-871`). A crowbar therefore never hurts one, however large the multiplier. The
+[Gauss Katana](ROADMAP.md#the-gauss-katana), already proposed as `DMG_ENERGYBEAM`, passes the filter — so
+the endgame melee weapon is what makes a Gargantua stabbable at all.
+
+---
+
+## Deliberately not generalised
+
+**Suspicion governs player acquisition only.** Every other hostile is acquired instantly, exactly as in the
+base game. The scoping is a single `pSightEnt->IsPlayer()` branch in `Look`, and `ConcealmentOf` takes a
+`CBaseEntity*` rather than reading the player directly, so generalising it later is deleting a branch rather
+than a rewrite.
+
+**Recorded for later review**, because most of the model already generalises for free and one part does not:
+
+*Generalises free.* Angle and distance are computed from the target either way. `GETENTITYILLUM` works on
+any entity, so light does too. Stance is player-specific, but monsters never duck, so it is a constant 1.0
+for them.
+
+*Does not generalise.* The muzzle-flash term. `m_iWeaponFlash` lives on `CBasePlayer`
+(`dlls/player.h:113`) and only player weapons set it; monsters use the base `CBaseEntity::Illumination()`,
+which is plain `GETENTITYILLUM`. So a grunt firing an MP5 in a dark room **illuminates nothing**, while the
+player firing the same gun lights up for about a second. Generalise naively and monsters become stealthier
+than the player while shooting, which is exactly backwards. Fixing it means giving monsters an equivalent
+flash value set where they fire, or consciously accepting the asymmetry.
+
+*What it would change.* The pacing of every alien-versus-marine set piece in the vanilla campaign. Those
+fights happen in lit rooms at range and currently trigger the instant two hostiles see each other; under the
+full model they would take a beat, and in a dark room two hostile groups could walk past one another.
+
+*What to check when reviewing.* Whether faction fights still trigger at the same ranges; whether a dark
+room letting two groups miss each other reads as intentional or as broken; and whether the muzzle-flash
+asymmetry has been resolved before any of it is judged.
+
+---
+
+## Known weaknesses
+
+Recorded now so they are not rediscovered as bugs.
+
+- **A round trip across a level boundary launders a room's alert state.** The transition reset is
+  deliberate, and this is its cost.
+- **`MAX_WORLD_SOUNDS` is 64, shared by the whole world.** Disturbance markers compete with gunfire,
+  grenades and the player's own footsteps for the pool.
+- **Circle-strafing into the rear arc trivially Backstabs slow enemies** — zombies and headcrabs, which are
+  exactly the monsters the Follow-Up is already tuned against.
+- **Light is nearly inert until custom maps exist.** Blocked on [Maps](ROADMAP.md#maps), like most of the
+  mod.
+- **Pillar 6's "measurably better off" criterion is not carried by the damage model.** The Backstab is
+  positional and single-tier, so the stealth player's advantage is not fighting at all, and silent leader
+  kills dissolving squads. If that turns out to be too thin in play, the second tier is the obvious lever.
+- **Corpses are still invisible to `Look`.** The Disturbance marker makes a body findable for a while; it
+  does not make a body *visible*, and a monster standing next to one after the marker expires sees nothing.
+
+---
+
+## Tuning
+
+Every number in Part 2 is a first guess and every one is a cvar, following the `pulse_*` and `infusion_*`
+precedent in `dlls/game.cpp`. Nothing here has been judged in play.
+
+The knobs the model needs: Concealment weights per term; Suspicion fill and drain rates; the notice and
+acquisition thresholds; the raised-floor value; the give-up interval; the Search duration; per-profile
+scales; Disturbance volume and duration; the Backstab rear-arc dot threshold and multiplier; and the
+crouch and walk noise multipliers.
+
+A debug view of live Suspicion values ships with the meter rather than after it. Two
+[TECH_DEBT.md](TECH_DEBT.md) entries already ask for debug visualization of custom systems, and a meter
+nobody can see is a meter nobody can tune.

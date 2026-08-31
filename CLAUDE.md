@@ -27,6 +27,7 @@ Referenced by `00-PROJECT-OVERVIEW.md` but **not yet written**: `10-COMMON-TASKS
 | [docs/PILLARS.md](docs/PILLARS.md) | Orienting on what the mod is for, or checking what a gameplay system actually does today. Update it in the same commit as a change that moves a pillar |
 | [docs/ROADMAP.md](docs/ROADMAP.md) | Picking what to build next, or proposing a feature — it records everything intended and unbuilt, the two blockers most of it shares, and the open questions. When an entry is built, its content moves to PILLARS.md and the entry is deleted |
 | [docs/MAP_BRIEF.md](docs/MAP_BRIEF.md) | Building or editing a map — the toolchain that is already in use, the three prerequisites that bite before it, and what a map has to contain for the economy in PILLARS.md to be judged rather than asserted |
+| [docs/PERCEPTION.md](docs/PERCEPTION.md) | Touching `Look`, `Listen`, the sound list, the monster state machine, squads, or anything deciding whether the player has been noticed. Part 1 documents the base SDK's perception exactly as it is; part 2 is the model this mod adds |
 | [docs/adr/](docs/adr/) | Before changing something that looks arbitrary — the decisions recorded there were deliberate and the reasoning is not visible in the code |
 | [docs/TECH_DEBT.md](docs/TECH_DEBT.md) | Touching the skill tree tooltip or the inventory grid — both have known-issue entries with acceptance criteria |
 | [docs/ART_DEBT.md](docs/ART_DEBT.md) | Replacing a placeholder sprite or sound. Records what each stand-in is, why it's wrong, and what the replacement has to achieve |

@@ -9,7 +9,7 @@ same commit as the code change.
 This file records **what exists today**. Intended work that has not been built lives in
 [ROADMAP.md](ROADMAP.md), and each pillar below links to its entries there.
 
-**Last updated:** 2026-08-31 (branch `hl-shock`, after `ff03310` — Row Grant pickup)
+**Last updated:** 2026-08-31 (branch `hl-shock`, after `ff03310` — stealth design settled, perception model documented)
 
 ## Status legend
 
@@ -29,7 +29,7 @@ This file records **what exists today**. Intended work that has not been built l
 | 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. |
 | 4 | [Skill trees](#4-skill-trees) | **Playable** | 15 curated Skills, **all with effects**. Points and Reset Tokens are earned and spent, the tree fits any screen, and nothing in it lies about what it does. Numbers untuned; no map places a Skill Point yet. |
 | 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work over a server-owned model. Row Grants are now placeable; Boxes are the remaining gap. |
-| 6 | [Stealth](#6-stealth) | **Not started** | Half-Life's own perception model is most of the way there and nothing in it is wired to a reward. See [ROADMAP.md](ROADMAP.md#pillar-6-stealth). |
+| 6 | [Stealth](#6-stealth) | **Not started** | No code yet, but the design is settled and the base game's perception model is now written down in [PERCEPTION.md](PERCEPTION.md) — including two things this file previously got wrong. |
 
 ---
 
@@ -834,15 +834,16 @@ would have to mean "everything you do to things that are alive" to contain it.
 ### What exists
 
 No custom code. But an unusual amount of the base game's own machinery is already in place and unused,
-which is why this is a pillar rather than a wish:
+which is why this is a pillar rather than a wish. The full reference is
+[PERCEPTION.md](PERCEPTION.md) — written 2026-08-31, and the first place to look before touching any of
+this. The short version:
 
 - **The noise model is complete and running.** `CBasePlayer::UpdatePlayerSound()` derives a per-frame noise
   volume from the player's velocity, whether they are airborne, whether they jumped, and how loud their
   weapon just was, and posts it as `bits_SOUND_PLAYER` (`dlls/player.cpp:2586-2666`). Crouching and walking
   already make the player quieter, as a side effect of being slower.
-- **Monsters already listen to it** — it is in the default sound mask (`dlls/monsters.cpp:402`) and in most
-  individual ones. Grunts investigate player noise when they cannot see their enemy
-  (`dlls/hgrunt.cpp:1984`).
+- **Monsters listen to it** — it is in the default sound mask (`dlls/monsters.cpp:402`) and in most
+  individual ones.
 - **`CBasePlayer::Illumination()` is implemented and nothing calls it** (`dlls/player.cpp:4567`). It
   returns the engine's light level at the player plus a decaying virtual muzzle flash that every gun sets.
   `CBaseMonster::Look` (`dlls/monsters.cpp:328`) does not consult light at all.
@@ -851,6 +852,16 @@ which is why this is a pillar rather than a wish:
 - **The glock's silencer is one commented-out line** — `dlls/glock.cpp:77`. The submodel, the reduced
   `QUIET_GUN_VOLUME`, the dimmed flash and the `GLOCK_ADD_SILENCER` animation all exist.
 
+**Two corrections to what this file used to say**, both found while writing PERCEPTION.md:
+
+- It claimed grunts investigate player noise when they cannot see their enemy, citing `dlls/hgrunt.cpp:1984`.
+  **That code is commented out** (`:1983-1988`) and has never run. What hearing the player actually causes
+  is a `MakeIdealYaw` toward the noise, and nothing else.
+- It did not record that **deaths and corpses are entirely imperceptible**. `CBaseMonster::Killed` notifies
+  nobody but `pev->owner`, no sound enters `CSoundEnt` on death, and `Look` skips anything with
+  `health <= 0` (`dlls/monsters.cpp:324`). A body in a lit corridor is never noticed by anyone. That is
+  load-bearing for a stealth pillar and was missing from both documents.
+
 ### What's missing
 
 The wiring, and a reason to bother: nothing reads `Illumination()`, nothing rewards not being seen, and the
@@ -858,9 +869,14 @@ player has no way to tell whether they are hidden.
 
 ### Next step
 
-See [ROADMAP.md](ROADMAP.md#pillar-6-stealth) for the four pieces — Concealment, silent movement, silent
-weapons, the Backstab — and the open questions. The cheapest first commit is adding light level to the
-`Look()` gate, which is where `Illumination()` finally gets a caller.
+**The design is settled** as of 2026-08-31 — Concealment, Suspicion, de-escalation and the Search, squad
+coordination, the readout, and a positional Backstab. It is written up in
+[PERCEPTION.md part 2](PERCEPTION.md#part-2--the-model-this-mod-adds), and
+[ROADMAP.md](ROADMAP.md#pillar-6-stealth) holds the build order and what is still open.
+
+The first code commit is the **Backstab**, which came out of the design independent of everything else — no
+meter, no profile, no squad code, just a facing test where crowbar damage is already computed. It is the
+only part of this pillar that can be judged in vanilla maps today.
 
 ### Acceptance criteria (draft)
 

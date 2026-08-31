@@ -147,3 +147,47 @@ _Avoid_: reset, refund, proc, free recharge
 A crowbar swing empowered by having just deflected. Primed by a deflect for a short time and spent on the
 next swing that connects, so missing costs nothing.
 _Avoid_: riposte, counter, punish, parry attack
+
+### Stealth
+
+**Concealment**:
+How hard the player is to perceive, moment to moment. It comes from darkness, stance, distance, and how far
+off a monster's centre of view they are. It sets how quickly a monster learns about the player; it never
+decides whether one can.
+_Avoid_: stealth mode, invisibility, hidden state, sneak
+
+**Suspicion**:
+How close a single monster is to treating the player as an enemy. Every monster holds its own, and a squad
+never holds one between them — a leader raises its members' Suspicion rather than having any of its own.
+_Avoid_: awareness, alertness, aggro, detection meter; and **Alert**, which already names a monster state
+
+**Unseen / Noticed / Spotted**:
+The three states the player is told about — nobody is learning about them, somebody is, somebody has
+finished. They report Suspicion, which is what monsters know, and not Concealment, which is what the player
+is.
+_Avoid_: hidden, detected, exposed; and *concealed* especially, which invites confusion with Concealment
+
+**Search**:
+What a squad does after losing the player: go to where they were last seen, and look. It ends when they
+find the player or give up.
+_Avoid_: sweep, hunt, patrol — the first two already name other behaviour
+
+**Post**:
+The place a monster guards. A Search that finds nothing moves the squad's Posts rather than returning them
+to where they began, so a failed hunt permanently reshapes the space.
+_Avoid_: station (a Station takes items in and gives items out), spot, waypoint, position
+
+**Perception Profile**:
+How good one kind of monster is at perceiving. Every monster has one. A poor Profile makes a monster slower
+to notice things, never blind to something it would otherwise notice.
+_Avoid_: senses, awareness level, difficulty, tier
+
+**Backstab**:
+A melee hit landed in a monster's rear arc. Purely a matter of where the attacker stands — whether the
+monster has noticed them does not enter into it. Some monsters cannot be backstabbed at all.
+_Avoid_: sneak attack, assassination, critical hit, ambush
+
+**Disturbance**:
+What a death leaves behind at the place it happened. Monsters that care about such things can be drawn to
+one, for as long as it lasts.
+_Avoid_: corpse, body, evidence, alert marker

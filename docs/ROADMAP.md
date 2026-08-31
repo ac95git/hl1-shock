@@ -8,7 +8,7 @@ build on, and list the questions that have to be answered before the first line 
 is built, its content moves into PILLARS.md and the entry here is deleted — this file only ever shrinks
 from the top.
 
-**Last updated:** 2026-08-14 (branch `hl-shock`, at `ff03310`)
+**Last updated:** 2026-08-31 (branch `hl-shock`, at `ff03310` — stealth moved from Shaped to Ready)
 
 ## Shape legend
 
@@ -125,103 +125,83 @@ See [The world](#pillar-1-the-world) for what the maps should eventually contain
 
 ## Pillar 6: Stealth
 
-**Shape: Shaped. More of it exists than anyone expects.**
+**Shape: Ready. The design is settled and the first commit is obvious.**
 
 Half-Life has a working perception model that the vanilla game barely uses and never rewards. Stealth here
 is not a new system — it is finishing one Valve left half-connected and then giving the player tools to
 work against it.
 
-### What already exists
+**The whole model now lives in [PERCEPTION.md](PERCEPTION.md)**, written 2026-08-31. Part 1 documents the
+base SDK exactly as it is — sight, hearing, scent, acquisition, the state machine, squads, deaths, and what
+survives a save versus a level change. Part 2 is what this mod adds. That file is the reference; this entry
+is only the build order and what is still open.
 
-**The noise model is complete.** `CBasePlayer::UpdatePlayerSound()` computes a noise volume for the player
-every frame and posts it to the global sound list:
+Two corrections it surfaced about the **base game**, worth knowing before reading anything written before
+it: the claim that grunts investigate player noise is **wrong** — that block is commented out
+(`dlls/hgrunt.cpp:1983-1988`) and has never run — and deaths and corpses are **entirely imperceptible**,
+so nothing reacts to a squadmate dying and no body is ever noticed. The design addresses the first two
+thirds of that (a witness check at the moment of death, and a **Disturbance** marker at the place it
+happened) and deliberately leaves corpses themselves invisible to `Look`.
 
-- Body volume is `pev->velocity.Length()`, clamped at 512 (`dlls/player.cpp:2588`, `:2592`) — so moving
-  slower is *already* quieter, and crouching (`PLAYER_DUCKING_MULTIPLIER` 0.333, `pm_shared/pm_shared.cpp:104`)
-  and walking (`pm_shared/pm_shared.cpp:2949`, ⅓ speed) already reduce it.
-- Airborne is silent; jumping adds 100 (`dlls/player.cpp:2599`, `:2602`).
-- Weapon volume competes with body volume, loudest wins, and if the weapon wins the sound is additionally
-  flagged `bits_SOUND_COMBAT` (`dlls/player.cpp:2608-2614`). The scale is `weapons.h:415-417` —
-  `LOUD_GUN_VOLUME` 1000, `NORMAL` 600, `QUIET` 200.
-- Volume decays toward its target rather than dropping instantly, so a monster that listens infrequently
-  still catches it (`dlls/player.cpp:2638-2646`).
-- `bits_SOUND_PLAYER` is OR'd in every frame (`dlls/player.cpp:2664`).
+### Build order
 
-**Monsters listen for it.** `bits_SOUND_PLAYER` is in the default sound mask (`dlls/monsters.cpp:402`) and
-in most individual ones — grunts (`dlls/hgrunt.cpp:322`), alien slaves (`dlls/islave.cpp:265`), bullsquids
-(`dlls/bullsquid.cpp:419`), houndeyes, agrunts, assassins. Grunts explicitly investigate player noise when
-they cannot see the enemy (`dlls/hgrunt.cpp:1984`).
+Six commits, each independently playable, with the riskiest AI work last and sitting on top of a document
+that already describes what it changes.
 
-**The sight model is a cone plus a trace.** `CBaseMonster::Look` (`dlls/monsters.cpp:298`) gates on four
-things and nothing else (`:328`): a hostile relationship, `FInViewCone`, `!FL_NOTARGET`, and `FVisible`.
-Range is `m_flDistLook`, 2048 units by default (`dlls/monsters.cpp:2033`).
+| # | Commit | Notes |
+| --- | --- | --- |
+| 1 | **Docs** | PERCEPTION.md, the CONTEXT.md terms, the two corrections, the CLAUDE.md index row. **Done 2026-08-31.** No code. |
+| 2 | **The Backstab** | Per-monster flag, the curated exclusion list, a facing test where crowbar damage is already computed, one cvar, `adr/0010`. Adds the headshot entry to [pillar 2](#pillar-2-decapitation) at the same time. Independent of everything else here. |
+| 3 | **Suspicion** | Perception Profile, the meter, the `Look` gate, and a **debug view** built alongside rather than after it. `adr/0009`. |
+| 4 | **The readout** | `gmsgConceal` plus a HUD element, following `CHudPulse`'s send-on-change pattern. |
+| 5 | **The squad half** | De-escalation, the Search, Posts, death witnesses, the Disturbance marker, the level-transition reset. |
+| 6 | **Noise** | A deliberate multiplier on the computed noise volume for crouching and walking. |
 
-**Two switches Valve built and left off:**
+Step 2 goes first despite not being the pillar's centrepiece, because it is the only part judgeable in
+vanilla maps today — it needs no meter, no profile and no squad code.
 
-- `m_fNoPlayerSound` (`dlls/player.h:175`, used at `dlls/player.cpp:2648`) zeroes the player's noise
-  outright. Its own comment calls it "a debugging feature". It is a working silent-movement toggle.
-- `CBasePlayer::Illumination()` (`dlls/player.cpp:4567`) returns the engine's light level at the player
-  (`GETENTITYILLUM`, via `dlls/cbase.h:360`) plus a decaying "virtual muzzle flash" that every gun sets
-  (`m_iWeaponFlash`, `BRIGHT/NORMAL/DIM_GUN_FLASH` = 512/256/128). It is fully implemented, correct, and
-  **nothing calls it.** `Look()` does not consult light at all. The darkness half of concealment is a
-  finished query with no consumer.
+### Deliberately deferred
 
-**The silencer is one commented-out line.** `dlls/glock.cpp:77` is `// pev->body = 1;`. Set it, and the
-model switches to its silenced submodel, the shot drops to `QUIET_GUN_VOLUME` and `DIM_GUN_FLASH`
-(`dlls/glock.cpp:120-130`), and `GLOCK_ADD_SILENCER` (`dlls/weapons.h:490`) is a real attach animation
-already in `v_9mmhandgun.mdl`. Everything except the decision to expose it is done.
+Recorded so they are not rediscovered as gaps.
 
-### What is missing
+**Silent weapons.** `dlls/glock.cpp:77` is `// pev->body = 1;`. Set it and the model switches to its
+silenced submodel, the shot drops to `QUIET_GUN_VOLUME` and `DIM_GUN_FLASH` (`dlls/glock.cpp:120-130`), and
+`GLOCK_ADD_SILENCER` (`dlls/weapons.h:490`) is a real attach animation already in `v_9mmhandgun.mdl`.
+Everything except the decision to expose it is done — and that decision belongs to
+[Evolutions](#weapon-evolutions), where a silencer is the canonical example of "base weapon plus a small
+alteration". Uncommenting it now would pre-decide the Evolutions identity question. The crossbow is already
+`QUIET_GUN_VOLUME` (`dlls/crossbow.cpp:322`) and is the mod's existing quiet weapon whether anyone intended
+it or not.
 
-Very little, structurally — which is why this is Shaped rather than Idea:
+**A second Backstab tier.** The Backstab is positional and single-tier, so the damage model cannot tell a
+stealth kill from a flank. If "measurably better off" proves too thin in play, a larger multiplier when the
+victim has never acquired the player is the obvious lever, and it costs one branch on a test already being
+made.
 
-- **Nothing reads `Illumination()`.** Concealment is one term added to the `Look()` gate.
-- **No stealth is ever rewarded.** A monster that has not seen you takes normal damage from behind.
-- **No player control over noise beyond speed.** Crouching is quieter as a side effect of being slower, not
-  because anything decided it should be.
-- **No feedback.** The player cannot tell whether they are hidden, which makes stealth guesswork rather
-  than a read — the same critique PILLARS levels at Pulsing against hitscan.
+**Stealth Skills.** Ids **22** and **23** are reserved via `SKILL_RESERVED` so a stealth column can open
+later without an id shuffle — the same move already made for the alien column. Nothing gets priced until
+the mechanic has been played. Note the constraint: column 7 is spoken for by the alien branch, and
+`CSkillTreeView` scales the whole tree to fit down to a `k_MinScale` floor of 0.55, so a ninth column risks
+clipping icons that [ART_DEBT.md](ART_DEBT.md) already calls blocking rather than cosmetic.
 
-### The four pieces
-
-**Concealment.** Add light level to the `Look()` gate: below some threshold, `m_flDistLook` shrinks or the
-sight check fails outright. This is where `Illumination()` finally gets a caller, and the muzzle-flash term
-comes free — firing in the dark lights you up for as long as the flash takes to decay, which is a rule
-nobody has to write.
-
-The obvious hazard: vanilla Half-Life maps are lit for readability, not for hiding, so this may do almost
-nothing until there are custom maps built with dark places in them. Another entry blocked on
-[Maps](#maps).
-
-**Silent movement.** `m_fNoPlayerSound` proves the mechanism. The design question is what drives it — a
-Skill, a Module, a crouch bonus, or a suit mode — and whether it is binary (as the debug flag is) or a
-multiplier on the computed volume. A multiplier is almost certainly right: binary silence removes the
-skill from moving carefully.
-
-**Silent weapons.** Uncomment `dlls/glock.cpp:77` and decide what turns it on. The natural home is
-[Evolutions](#weapon-evolutions) — a silencer is the canonical example of "base weapon plus a small
-alteration", and the glock already implements it as *submodel state on the existing weapon*, which is the
-answer to the Evolutions identity question below. The crossbow is already `QUIET_GUN_VOLUME`
-(`dlls/crossbow.cpp:322`) and is the mod's existing quiet weapon whether or not anyone intended it.
-
-**The Backstab.** Nothing exists. It needs a facing test between attacker and victim plus a check that the
-victim has not acquired the player as an enemy, applied in melee damage. Both inputs are available
-server-side: `FInViewCone` is on the monster, and `m_hEnemy` / `bits_COND_SEE_ENEMY` say whether it knows.
-Whether the multiplier is large enough to make stealth a strategy or small enough to make it a bonus is a
-tuning question, and it is the question that decides whether this pillar is real.
+**Generalising perception to monster-vs-monster.** Scoped to the player deliberately. The reasoning —
+including the muzzle-flash asymmetry that makes a naive generalisation exactly backwards — is under
+[Deliberately not generalised](PERCEPTION.md#deliberately-not-generalised). Marked for review, not for
+building.
 
 ### Open questions
 
 - Is stealth **optional** everywhere, or are there encounters designed to be unwinnable head-on? The
-  answer changes level design more than it changes code.
-- Does the player get a **concealment readout**? The HEV suit is a natural excuse for one, and
-  `CHudStatusIcons` is now wired (pillar 3) so a "hidden" icon costs one `MESSAGE_BEGIN`. Against it: an
-  explicit hidden/not-hidden indicator turns a read into a gauge, which is the opposite of what the Pulse
-  does.
-- Do monsters **lose** the player? Half-Life's monsters are persistent once alerted. Breaking line of
-  sight and going quiet has to mean something or stealth is one-shot per encounter.
-- Does any of this apply to **scripted sequences**? Much of Half-Life's pacing is monsters spawning into
-  a fight that is going to happen. Stealth that bypasses a scripted set piece will look like a bug.
+  answer changes level design more than it changes code, and nothing settled above touches it.
+- **How dark is dark?** Vanilla Half-Life maps are lit for readability rather than for hiding, so the light
+  term may do almost nothing until there are custom maps with dark places in them. What light level counts
+  as concealing is a question only [Maps](#maps) can answer.
+- **Which encounters should stealth not be able to skip?** The mapper spawnflag exists to say so; nothing
+  has decided when it ought to be used.
+
+Everything else that used to be open here is settled and recorded in
+[PERCEPTION.md part 2](PERCEPTION.md#part-2--the-model-this-mod-adds): whether monsters lose the player,
+whether the player gets a readout, and how scripted sequences interact.
 
 ### Done when
 
@@ -710,10 +690,14 @@ is designed, and may well change name first.
 | **Evolution** | A durable alteration to a weapon that keeps the weapon's identity — silencer, second barrel, extended magazine. | Avoid *attachment* and *mod*; the first implies removable hardware, the second collides with "the mod". |
 | **Transmission** | A recorded log found in a level and played back. | Avoid *log*, *tape*, *audio diary*, *datapad*. |
 | **Station** | A world entity that takes items in and gives items out. | Avoid *bench*, *workbench*, *terminal*, *fabricator*. *Terminal* especially — it will be wanted for Transmissions. |
-| **Concealment** | The state of being harder or impossible for a monster to see, from darkness and stillness. | Avoid *stealth mode*, *invisibility*, *hidden state*. Stealth is the pillar; Concealment is the mechanic. |
-| **Backstab** | A melee hit on a monster that has not acquired the player, from behind. | Genre-standard and clear. |
 | **Decapitation** | A lethal head hit that removes the head: headless submodel, thrown skull, blood from the stump. | Distinct from *gibbing*, which is the whole body and already means something in this codebase. **Headless** names the resulting state. |
 | **Carbon Pickaxe**, **Gauss Katana** | The two custom weapons. | Named already; recorded here so they are used consistently. |
+
+**Graduated 2026-08-31**, when the stealth design was settled: **Concealment** and **Backstab** are now in
+[CONTEXT.md](../CONTEXT.md), joined there by **Suspicion**, **Search**, **Post**, **Perception Profile**,
+**Disturbance**, and the **Unseen / Noticed / Spotted** readout states. Backstab's meaning changed on the
+way across — the proposal here required the victim to be unaware, and the settled term does not; it is
+purely a matter of where the attacker stands.
 
 Note what is deliberately *absent*: there is no proposed term for whatever a recycling Station consumes or
 produces. That is the [open question](#open-questions) about materials, and inventing a noun before
