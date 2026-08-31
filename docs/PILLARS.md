@@ -9,7 +9,7 @@ same commit as the code change.
 This file records **what exists today**. Intended work that has not been built lives in
 [ROADMAP.md](ROADMAP.md), and each pillar below links to its entries there.
 
-**Last updated:** 2026-08-31 (branch `hl-shock`, after `ff03310`)
+**Last updated:** 2026-08-31 (branch `hl-shock`, after `ff03310` — Row Grant pickup)
 
 ## Status legend
 
@@ -28,7 +28,7 @@ This file records **what exists today**. Intended work that has not been built l
 | 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar. Melee Skills now land too. Numbers untuned. |
 | 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. |
 | 4 | [Skill trees](#4-skill-trees) | **Playable** | 15 curated Skills, **all with effects**. Points and Reset Tokens are earned and spent, the tree fits any screen, and nothing in it lies about what it does. Numbers untuned; no map places a Skill Point yet. |
-| 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work. Client-side model only — the server-owned rebuild is designed and scheduled. |
+| 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work over a server-owned model. Row Grants are now placeable; Boxes are the remaining gap. |
 | 6 | [Stealth](#6-stealth) | **Not started** | Half-Life's own perception model is most of the way there and nothing in it is wired to a reward. See [ROADMAP.md](ROADMAP.md#pillar-6-stealth). |
 
 ---
@@ -62,15 +62,18 @@ The reward loop has two concrete answers now, and the question at the top of thi
 
 **Row Grants.** Inventory capacity grows from things found in the world rather than from Skills (see
 pillar 5), so a hidden cache off the critical path permanently increases what the player can carry.
+`item_rowgrant` is a placeable entity as of 2026-08-31, which closed the last gap here — all three
+exploration rewards are now things a map can hold.
 
 **Skill Points and Reset Tokens.** Both are found in the world and nowhere else — `skill_points_start`
 defaults to 0, so a player who explores nothing unlocks nothing (see pillar 4). `item_skillpoint` and
 `item_resettoken` are placeable entities today. The tree is deliberately sized so it is completable only by
 near-exhaustive exploration, which makes reach — not just speed — the thing exploration buys.
 
-What is still missing is the same thing in both cases: **maps**. Every mechanism exists and nothing places
-one, because vanilla Half-Life maps cannot be edited to hold them. Until there are custom maps, both loops
-are reachable only through `inv_addrows` and `skill_addpoints`.
+What is still missing is the same thing in every case: **maps**. Every mechanism now exists and nothing
+places one, because vanilla Half-Life maps cannot be edited to hold them. Until a map does, all three
+loops are reachable only through `inv_addrows`, `skill_addpoints` and `skill_addtokens`. There is no
+longer any *code* between this pillar and being judged — see [MAP_BRIEF.md](MAP_BRIEF.md).
 
 ### Acceptance criteria (draft)
 
@@ -693,8 +696,12 @@ Iterations 1 and 2 are **done**, and dropping is complete — the model is serve
 capacity-limited, things enter the Inventory deliberately, and anything in it can be dropped back out.
 Remaining:
 
-- **No Row Grant pickup**, so Rows can only be earned via `inv_addrows`. Needs custom maps before it can
-  be placed at all.
+- ~~**No Row Grant pickup.**~~ **Built 2026-08-31.** `item_rowgrant` is a `CItem` granting +1 Row on
+  contact, alongside `item_skillpoint` and `item_resettoken` in `dlls/items.cpp`. It is the only
+  progression pickup with a real ceiling — `inv_rows_max` — so it is also the only one that can arrive
+  with nothing left to give, and it **refuses and stays standing** in that case rather than being
+  consumed for nothing. A map that trips it has placed more Grants than the ceiling allows, and the
+  author should see it still sitting there. Not yet placed by any map.
 - **No Boxes**, so nothing in the world holds items — lootable caches are still future work.
 - No custom Item Types yet — the table holds the four stock ones.
 - The ammo readout overflows its panel when the player carries many ammo types; it needs a taller panel,
@@ -800,10 +807,9 @@ around rather than a problem to solve.
    *Done when a map plays start-to-finish without opening the panel and it feels normal.*
 3. ~~**Containers and the world.**~~ **Postponed 2026-08-01.** Dropping was completed without needing
    containers: weapons became droppable, and a Stack offers "Drop 1" and "Drop all", spawning one world
-   entity per item. What remains under this heading is genuinely future work — lootable Boxes, the loot
-   window, and the `item_inventory_upgrade` pickup that grants Rows. Until that entity exists Rows come
-   only from `inv_addrows`, and it cannot be exercised in-game before there are custom maps to place one
-   in.
+   entity per item. The Row Grant pickup that was also filed here is **built** — `item_rowgrant`, see
+   "What's missing" above. What remains under this heading is genuinely future work: lootable Boxes and
+   the loot window.
 
 Iteration 1 is the only one that is hard to reverse.
 

@@ -121,33 +121,67 @@ correctly. If a candidate set fails this, it does not matter how good it sounds 
 Nothing in the Pulse's audio comes from another weapon, and a deflect is unmistakable over the Pulse that
 preceded it.
 
-## Skill Points and Reset Tokens — world models and pickup sound
+## Progression pickups — world models and pickup sound
 
 ### Scope
-`dlls/items.cpp`, `CItemSkillPoint` and `CItemResetToken`.
+`dlls/items.cpp`, `CItemSkillPoint`, `CItemResetToken` and `CItemRowGrant`, plus the shared
+`SetProgressionLook` helper above them.
 
-### Current stand-in
-- Skill Point — `models/w_longjump.mdl`, the longjump module.
-- Reset Token — `models/w_security.mdl`, the security keycard.
-- Both — `items/gunpickup2.wav`, and a centre-print line for feedback.
+### Current stand-ins
 
-### What's wrong with it
-- Both models already mean something else in Half-Life. The longjump module is a suit upgrade the player
-  can also genuinely find, and the keycard is a door key — walking over either and getting a Skill Point
-  instead is actively misleading, not merely unevocative.
-- The two are indistinguishable in kind. A Skill Point is a common, small reward; a Reset Token is rare
-  and consequential. Nothing about how they look says which is which, or that one is scarce.
-- The pickup is a generic weapon-pickup click. These are the reward for going off the critical path —
-  the sound is the moment exploration pays out, and it currently sounds like picking up ammo.
+| Pickup | Model | Scale | Glow shell |
+| --- | --- | --- | --- |
+| Skill Point | `models/crystal.mdl` — a Xen crystal formation | 0.25 | cyan |
+| Reset Token | `models/sphere.mdl` — a small unused orb | 1.5 | gold |
+| Row Grant | `models/w_isotopebox.mdl` — a shipping case with a handle | 1.0 | green |
+
+All three also use `items/gunpickup2.wav` and a centre-print line.
+
+All three models live in `valve/models` and reach the mod by game-directory fallback, the same route
+`w_adrenaline.mdl` takes for the Syringe. None is referenced anywhere else in this codebase, which is
+why they were free to take.
+
+**Revised 2026-08-31.** The previous stand-ins — `w_longjump.mdl` for the Skill Point and
+`w_security.mdl` for the Reset Token — were *actively misleading* rather than merely unevocative, and
+that is now fixed: the longjump module is a real pickup the player can also find (and Modules will add
+more), and the keycard is a door key. Neither collision remains.
+
+### What's wrong with them
+
+- **The glow shell is carrying the identification, not the models.** `kRenderFxGlowShell` is what says
+  "progression, not equipment" and what ranks the three against each other by colour. That was a
+  deliberate stopgap: it works at a distance and in the dark, and it makes the family legible before the
+  art exists. It is not a substitute for three distinct silhouettes.
+- **`crystal.mdl` is Xen's.** A Skill Point found in a Black Mesa office is not a Xen crystal, and the
+  model will read as scenery once there are actual Xen levels using it as scenery.
+- **`sphere.mdl` is a featureless ball.** It says "special" and nothing further. It ranks correctly
+  against the crystal and communicates nothing on its own.
+- **`w_isotopebox.mdl` suggests hazard, not capacity.** It is a radioactive-materials case. The handle
+  and the box shape are the right idea; the contents label is wrong.
+- **The pickup sound is unchanged and is now the weakest part of this entry.** One generic
+  weapon-pickup click for all three. This is the moment exploration pays out, and it sounds like picking
+  up ammo. The three should not share a sound at all — a Reset Token is rare and should announce itself.
 
 ### What to look for
-Two clearly *different* small pickups that read as progression rather than equipment, and that rank
-against each other at a glance — the Token should look rarer than the Point. Neither should resemble
-anything already in the HEV/keycard vocabulary.
+
+Three clearly *different* small pickups that read as progression rather than equipment, and that rank
+against each other at a glance — the Token should look rarer than the Point, and the Row Grant should
+read as *storage*. None should resemble anything in the HEV/keycard vocabulary.
+
+Two constraints the current set established and a replacement should respect:
+
+- **Distinct shape classes, not just distinct colours.** Faceted shard / smooth orb / handled box is the
+  right kind of separation, because it survives being seen in silhouette or in the dark.
+- **The Row Grant must not look like a Box.** Lootable Boxes are future work and will use
+  `w_weaponbox.mdl`; two things that grow what the player can carry must not look identical. This is why
+  the better metaphor was deliberately passed over.
+
+Whether the glow shell stays once the models are distinct is an open decision — as a permanent family
+marker it is defensible, but it should then be a choice rather than a leftover.
 
 ### Done when
-A player who has never read a manual can tell the two apart on sight, and neither is mistaken for a
-longjump module or a keycard.
+A player who has never read a manual can tell all three apart on sight, none is mistaken for equipment,
+and the Reset Token does not sound like ammo.
 
 ## The Skill Tree — node icons are load-bearing
 

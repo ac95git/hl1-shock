@@ -362,28 +362,52 @@ LINK_ENTITY_TO_CLASS(item_syringe, CItemSyringe);
 
 
 //=========================================================
-// Skill Points and Reset Tokens.
+// Progression pickups -- Skill Points, Reset Tokens and Row Grants.
 //
-// Both are banked counters on CPlayerSkills rather than Item Types, so
-// neither occupies a Cell and neither can be refused by a full Grid --
-// which matters, because a progression reward that stays on the floor
-// reads as a bug.  Both are taken on contact: a Skill Point carries no
-// decision, and a Reset Token is spent from the Upgrades tab, not from
-// the world, so there is nothing to deliberate over at the pickup.
+// None of the three is an Item Type.  All are banked counters, so none
+// occupies a Cell and a full Grid can refuse none of them -- which
+// matters, because a progression reward that stays on the floor reads
+// as a bug.  All are taken on contact, because none carries a decision
+// at the moment of the pickup: a Skill Point is spent from the tree, a
+// Reset Token from the Upgrades tab, and a Row Grant spends itself.
 //
-// Both models are placeholders -- see docs/ART_DEBT.md.
+// Every model below is a placeholder -- see docs/ART_DEBT.md.
 //=========================================================
+
+// The three are dressed alike so they read as one family, and apart from
+// equipment.  The glow shell is doing work the models cannot: every stand-in
+// is a borrowed prop that already means something else in Half-Life, and the
+// shell is what says "progression" before the player is near enough to make
+// out the shape.  Rank rides on colour -- cyan is common, gold is scarce.
+//
+// Two things that are not obvious.  renderamt is shell THICKNESS here rather
+// than opacity (the precedent is dlls/player.cpp:749), and pev->scale is
+// networked (dlls/client.cpp:1490), so a prop built at the wrong size can be
+// brought down to pickup scale without an art pass.
+static void SetProgressionLook(entvars_t* pev, const Vector& colour, float scale)
+{
+	pev->renderfx = kRenderFxGlowShell;
+	pev->rendercolor = colour;
+	pev->renderamt = 25;
+	pev->scale = scale;
+}
+
+// crystal.mdl is a Xen crystal formation, 54x54x94 units -- taller than the
+// player, hence the quarter scale.  It replaces w_longjump.mdl, which was
+// actively misleading rather than merely unevocative: the longjump module is
+// a real pickup the player can also find, and Modules will add more of them.
 class CItemSkillPoint : public CItem
 {
 	void Spawn() override
 	{
 		Precache();
-		SET_MODEL(ENT(pev), "models/w_longjump.mdl");
+		SET_MODEL(ENT(pev), "models/crystal.mdl");
+		SetProgressionLook(pev, Vector(0, 200, 255), 0.25f);
 		CItem::Spawn();
 	}
 	void Precache() override
 	{
-		PRECACHE_MODEL("models/w_longjump.mdl");
+		PRECACHE_MODEL("models/crystal.mdl");
 		PRECACHE_SOUND("items/gunpickup2.wav");
 	}
 	bool MyTouch(CBasePlayer* pPlayer) override
@@ -401,17 +425,22 @@ class CItemSkillPoint : public CItem
 LINK_ENTITY_TO_CLASS(item_skillpoint, CItemSkillPoint);
 
 
+// sphere.mdl is a small unused orb (8x8x6), scaled up slightly.  A smooth
+// ball is deliberately a different shape class from the Skill Point's
+// faceted shard, so the two are told apart at a glance -- which the old
+// w_security.mdl could not manage, being a literal door key.
 class CItemResetToken : public CItem
 {
 	void Spawn() override
 	{
 		Precache();
-		SET_MODEL(ENT(pev), "models/w_security.mdl");
+		SET_MODEL(ENT(pev), "models/sphere.mdl");
+		SetProgressionLook(pev, Vector(255, 190, 40), 1.5f);
 		CItem::Spawn();
 	}
 	void Precache() override
 	{
-		PRECACHE_MODEL("models/w_security.mdl");
+		PRECACHE_MODEL("models/sphere.mdl");
 		PRECACHE_SOUND("items/gunpickup2.wav");
 	}
 	bool MyTouch(CBasePlayer* pPlayer) override
@@ -427,6 +456,68 @@ class CItemResetToken : public CItem
 };
 
 LINK_ENTITY_TO_CLASS(item_resettoken, CItemResetToken);
+
+
+//=========================================================
+// The Row Grant -- a permanent +1 to the Inventory's Row count.
+//
+// Named item_rowgrant, not item_inventory_upgrade as docs/MAP_BRIEF.md
+// proposed: CONTEXT.md settles the term as "Row Grant" and lists
+// "upgrade" among the words to avoid for it.
+//
+// w_isotopebox.mdl is a shipping case with a handle, which is as close as
+// Half-Life's model set gets to "you can carry more".  Deliberately NOT
+// w_weaponbox.mdl, which is the better metaphor and is already spoken for:
+// lootable Boxes will use it, and the two things that grow what a player
+// carries must not look identical.
+//=========================================================
+class CItemRowGrant : public CItem
+{
+	void Spawn() override
+	{
+		Precache();
+		SET_MODEL(ENT(pev), "models/w_isotopebox.mdl");
+		SetProgressionLook(pev, Vector(80, 255, 80), 1.0f);
+		CItem::Spawn();
+	}
+	void Precache() override
+	{
+		PRECACHE_MODEL("models/w_isotopebox.mdl");
+		PRECACHE_SOUND("items/gunpickup2.wav");
+	}
+	bool MyTouch(CBasePlayer* pPlayer) override
+	{
+		// Rows are the one progression reward with a real ceiling
+		// (inv_rows_max), so this is the one pickup that can arrive with
+		// nothing left to give.  It refuses and stays standing rather than
+		// being consumed for nothing -- a map that trips this has placed
+		// more Grants than the ceiling allows, and the author wants to see
+		// it still sitting there.
+		if (pPlayer->m_inventory.GrantRows(1) <= 0)
+		{
+			// ItemTouch fires every frame of the overlap, so the refusal
+			// is throttled where the success below does not need to be.
+			if (gpGlobals->time >= m_flNextRefusalMessage)
+			{
+				ClientPrint(pPlayer->pev, HUD_PRINTCENTER, "Your Grid is already at its maximum size.\n");
+				m_flNextRefusalMessage = gpGlobals->time + 3.0f;
+			}
+			return false;
+		}
+
+		ClientPrint(pPlayer->pev, HUD_PRINTCENTER, "Inventory Row gained.\n");
+		EMIT_SOUND(ENT(pPlayer->pev), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM);
+
+		SendInventoryToClient(pPlayer);
+		return true;
+	}
+
+	// Deliberately not in a save table: it is a message throttle, and the
+	// worst a reload can cost is one repeated centre-print.
+	float m_flNextRefusalMessage = 0;
+};
+
+LINK_ENTITY_TO_CLASS(item_rowgrant, CItemRowGrant);
 
 class CItemLongJump : public CItem
 {

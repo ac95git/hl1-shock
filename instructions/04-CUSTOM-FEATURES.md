@@ -71,7 +71,7 @@ represent a state that lasts a known duration.
 | `inv_drop <entry> <kind> <id>` | Drop one item off a Stack |
 | `inv_dropall <entry> <kind> <id>` | Drop a whole Stack, one world entity per item |
 | `inv_sync` | Ask the server to resend the Inventory |
-| `inv_addrows <n>` | **Cheat-gated.** Grant Rows without an upgrade pickup — the tuning aid for judging the Row ceiling by eye |
+| `inv_addrows <n>` | **Cheat-gated.** Grant Rows without an `item_rowgrant` pickup — the tuning aid for judging the Row ceiling by eye |
 
 | Cvar | Default | What it does |
 | --- | --- | --- |
@@ -95,11 +95,21 @@ why it may be used at full health and why a second one is refused.
 Healing lands as whole HP every 0.25s through an accumulator, so `infusion_rate` may be any value — it
 does not have to divide evenly into the tick.
 
-## Skill Points and Reset Tokens
+## Progression pickups — Skill Points, Reset Tokens, Row Grants
 
-Both are banked counters on `CPlayerSkills`, not Item Types — they occupy no Cells and a full Grid cannot
-refuse them. Both are found in the world: `item_skillpoint` and `item_resettoken` are plain `CItem`s taken
-on contact.
+All three are banked counters rather than Item Types — they occupy no Cells and a full Grid cannot refuse
+them. All three are found in the world and taken on contact: `item_skillpoint`, `item_resettoken` and
+`item_rowgrant` are plain `CItem`s in `dlls/items.cpp`, sharing a `SetProgressionLook` helper that gives
+them a common glow-shell family look (see [ART_DEBT.md](../docs/ART_DEBT.md) — every model is a
+placeholder).
+
+Skill Points and Reset Tokens bank on `CPlayerSkills`; a Row Grant calls `CPlayerInventory::GrantRows(1)`
+and is spent immediately. **The Row Grant is the only one with a real ceiling** (`inv_rows_max`), so it is
+also the only one that can be refused — when the Grid is already at maximum it stays standing in the world
+rather than being consumed for nothing.
+
+Adding another progression pickup is one class in `dlls/items.cpp`, one `LINK_ENTITY_TO_CLASS`, and one
+FGD line. No new file, so no project change.
 
 | Cvar | Default | What it does |
 | --- | --- | --- |

@@ -1683,8 +1683,16 @@
 @PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_longjump.mdl") = item_longjump : "Longjump Module" []
 @PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_security.mdl") = item_security : "Security card" []
 @PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_adrenaline.mdl") = item_syringe : "Health Syringe" []
-@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models\w_longjump.mdl") = item_skillpoint : "Skill Point" []
-@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models\w_security.mdl") = item_resettoken : "Reset Token" []
+// Progression pickups. All three are banked counters rather than Item Types:
+// they occupy no Cells and a full Grid cannot refuse them.
+//
+// NOTE: item_skillpoint renders in the editor at the model's authored size.
+// In game it is drawn at 0.25 scale (~13x13x24 units), so trust the bounding
+// box for placement, not the crystal. See docs/ART_DEBT.md -- every model
+// here is a placeholder.
+@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/crystal.mdl") = item_skillpoint : "Skill Point" []
+@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/sphere.mdl") = item_resettoken : "Reset Token" []
+@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_isotopebox.mdl") = item_rowgrant : "Row Grant (+1 Inventory Row)" []
 @PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_suit.mdl") = item_suit : "HEV Suit" 
 [
 	spawnflags(Flags) =

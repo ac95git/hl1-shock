@@ -7,7 +7,8 @@ Six systems are complete code that no level exercises. [PILLARS.md](PILLARS.md) 
 its six pillars and cannot, because tuning needs a level to tune against. [ROADMAP.md](ROADMAP.md#maps)
 files this as the mod's most-shared blocker. This document is the brief that entry asks for.
 
-**Last updated:** 2026-08-02 (branch `hl-shock`)
+**Last updated:** 2026-08-31 (branch `hl-shock`) — the one code dependency is resolved; this brief is
+now entirely map work.
 
 ## Correcting the record first
 
@@ -119,7 +120,7 @@ that ratio needs a level with a shape.
 
 ### The placement spec
 
-PILLARS sets the campaign economy: a 33-point tree, findable points roughly equal to that total, a
+PILLARS sets the campaign economy: a 35-point tree, findable points roughly equal to that total, a
 critical-path player affording 60–70%, roughly one Skill Point per optional space, and 5–10 Reset Tokens
 across the campaign with the first around 20% in.
 
@@ -133,7 +134,7 @@ play produces a readable result:
 | Reset Token | 1 | In the second optional space | Does the first Token arriving after some commitment feel like a reprieve or an anticlimax? |
 | Health Syringe | 1 | Critical path | Baseline. |
 | Health Syringe | 1 | Optional space | Is a Syringe worth a detour, or does it read as a medkit and get skipped? |
-| Row Grant | 1 | Deepest optional space | Blocked — see below. |
+| Row Grant | 1 | Deepest optional space | Is a permanent +1 Row worth the deepest detour on the map? |
 
 A player who sweeps the map ends with 5 points; one who does not ends with 2. If those two players do not
 feel meaningfully different at the tree, the tree's costs are wrong, and that is a finding no amount of
@@ -156,13 +157,21 @@ A player who explores is measurably better off at the Skill Tree than one who do
 pillar 1's own acceptance criterion, and would be the first time it has been evaluated rather than
 asserted.
 
-## The one code dependency
+## The one code dependency — resolved 2026-08-31
 
-**The Row Grant entity does not exist.** PILLARS' inventory iteration 3 names it `item_inventory_upgrade`
-and records it as unwritten; Rows come only from `inv_addrows`. It is small — a `CItem` subclass calling
-the existing grant path, the same shape as `CItemSkillPoint` — and it needs an FGD line to be placeable.
+**The Row Grant entity now exists.** `item_rowgrant` is a `CItem` subclass calling the existing grant
+path, the same shape as `CItemSkillPoint`, with an FGD line beside the other two progression pickups.
 
-Everything else in the spec above is placeable today.
+It is **not** named `item_inventory_upgrade`, as this brief originally proposed. CONTEXT.md settles the
+term as *Row Grant* and lists "upgrade" among the words to avoid for it; the glossary wins.
+
+One behaviour a mapper has to know. It is the only progression pickup with a real ceiling —
+`inv_rows_max` defaults to 9 against an `inv_rows_start` of 5 — so a campaign has room for exactly
+**four** Grants. A fifth is refused and **left standing in the world** rather than consumed for nothing.
+That is deliberate and visible: a Grant that disappeared for no effect would be indistinguishable from a
+bug, and an over-placed map should be obvious to its author.
+
+Everything in the spec above is now placeable.
 
 ## What this brief does not decide
 

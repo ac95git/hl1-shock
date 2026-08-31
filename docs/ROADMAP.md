@@ -104,12 +104,16 @@ this list is **finished code with no way to encounter it in play**:
 | Skill Points | `item_skillpoint` | `skill_addpoints` |
 | Reset Tokens | `item_resettoken` | `skill_addtokens` |
 | Health Syringe | `item_syringe` | `give item_syringe` |
-| Row Grants | *(entity not written)* | `inv_addrows` |
+| Row Grants | `item_rowgrant` | `inv_addrows` |
 | Exploration (pillar 1) | — | nothing |
 | Transmissions | *(not written)* | nothing |
 
 Vanilla Half-Life maps cannot be edited to hold any of it, so the economy in PILLARS pillar 4 — a tree
 completable only by near-exhaustive exploration — is entirely theoretical. Nobody has ever played it.
+
+**As of 2026-08-31 there is no code left in the way.** `item_rowgrant` was the last unwritten entity
+(see [MAP_BRIEF.md](MAP_BRIEF.md#the-one-code-dependency), now resolved), so every row in the table
+above except Transmissions is placeable today. What remains is entirely map work.
 
 This does not need to be the full campaign. **One map** that places Skill Points off the critical path, a
 Syringe, and a Row Grant would move pillars 1, 3, 4 and 5 from "designed" to "judged", and every tuning
