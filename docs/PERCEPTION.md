@@ -401,12 +401,20 @@ profiles that opt in, or a large firefight will crowd the pool.
 
 ### Perception Profiles
 
-A small struct on `CBaseMonster`, set in `Spawn`, defaulting to a conservative profile. Every monster
-participates by default; **"dumber" means a worse profile, never a bypass**, so a dark room works on a
-zombie too, just less. Grunts, assassins, alien grunts and alien slaves are the tuned primaries.
+A small struct describing how well one *kind* of monster perceives, defaulting to a conservative profile.
+Every monster participates by default; **"dumber" means a worse profile, never a bypass**, so a dark room
+works on a zombie too, just less. Grunts, assassins, alien grunts and alien slaves are the tuned primaries.
 
 Explicit opt-outs — things that should never be sneaked past — are turrets, apache, osprey, barnacle,
 tentacle (already sound-only and blind) and nihilanth.
+
+**Reach it through a virtual, not a member set in `Spawn`.** `Spawn()` does not re-run on restore — only
+`FCAP_MUST_SPAWN` entities get one, everything else gets `Restore()` and `Precache()` and nothing more
+(`dlls/cbase.cpp:380-389`) — so anything set there and not saved comes back default-constructed after every
+load. That is why Valve saves `m_flFieldOfView` despite every monster assigning it in `Spawn`. A profile is
+a property of the monster's *type* and can never differ between two instances, so paying save-game bytes
+for it would be wrong twice over. `CanBackstab()` already takes this shape; see
+[ADR-0010](adr/0010-the-backstab-is-positional.md#why-a-virtual-and-not-a-flag).
 
 ### Scripted sequences
 
@@ -428,22 +436,30 @@ Quantising to three states means the message fires on threshold crossings only, 
 precedent of sending on state change and letting the client run its own clock. The Unseen→Noticed edge gets
 a soft cue; Noticed→Spotted gets a hard one.
 
-### The Backstab
+### The Backstab — built 2026-08-31
 
 Recorded here only because it is adjacent; it is **independent of everything above** and needs no meter, no
-profile and no squad code.
+profile and no squad code. It is the only part of pillar 6 that exists today.
 
 A Backstab is a melee hit landed in a monster's rear arc. **Positional only** — whether the victim has
-noticed the player does not enter into it, and there is one tier. A curated list of monsters cannot be
-backstabbed, following the precedent of
-[ADR-0005](adr/0005-the-shield-negates-a-curated-damage-list.md): a clever rule always admits something
-wrong.
+noticed the player does not enter into it, and there is one tier. The full reasoning, the rejected
+alternatives and the exclusion list's four separate justifications are in
+[ADR-0010](adr/0010-the-backstab-is-positional.md).
+
+`CBaseMonster::FInRearArc` (`dlls/combat.cpp`) is the test — the same 2D comparison against `pev->angles`
+that `FInViewCone` makes, so "behind" is the exact complement of "in front". It deliberately does **not**
+call `UTIL_MakeVectors`, because its caller is mid-attack and still needs `gpGlobals->v_forward`.
+`CBaseMonster::CanBackstab()` is the opt-out, virtual and per class.
+
+It is applied in `CCrowbar::Swing` between Crowbar Force and the Follow-Up, so every stage multiplies the
+already-stronger hit and the largest number a player can produce is every bonus at once. Two cvars:
+`backstab_damage_scale` (3) and `backstab_arc_dot` (-0.5, the rear 120°).
 
 Not backstabbable: headcrab (and babycrab, which inherits — `dlls/headcrab.cpp:479`), snark, roach, rat,
-leech, hornet, flyer, barnacle, tentacle, controller, turret / miniturret / sentry, apache, osprey,
-nihilanth, and big momma — whose `TakeDamage` clamps `pev->health = flDamage + 1` until her node path
-finishes (`dlls/bigmomma.cpp:588-596`), making her unkillable by construction and any multiplier on her
-meaningless.
+leech, hornet, flyer, barnacle, tentacle, tentacle maw, controller, turret / miniturret / sentry, apache,
+osprey, nihilanth, and big momma — whose `TakeDamage` clamps `pev->health = flDamage + 1` until her node
+path finishes (`dlls/bigmomma.cpp:588-596`), making her unkillable by construction and any multiplier on
+her meaningless.
 
 **Gargantua is backstabbable, and its damage filter stays untouched.** `GARG_DAMAGE` is
 `DMG_ENERGYBEAM | DMG_CRUSH | DMG_MORTAR | DMG_BLAST` (`dlls/gargantua.cpp:47`); the crowbar is `DMG_CLUB`,

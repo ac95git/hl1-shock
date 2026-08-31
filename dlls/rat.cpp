@@ -32,6 +32,8 @@ public:
 	void Spawn() override;
 	void Precache() override;
 	void SetYawSpeed() override;
+	// Too small and too erratic to have a back worth getting behind.
+	bool CanBackstab() override { return false; }
 	int Classify() override;
 };
 LINK_ENTITY_TO_CLASS(monster_rat, CRat);

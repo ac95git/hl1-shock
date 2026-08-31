@@ -43,6 +43,9 @@ public:
 	bool Restore(CRestore& restore) override;
 	static TYPEDESCRIPTION m_SaveData[];
 	int ObjectCaps() override { return CBaseMonster::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+	// A transport aircraft. It is scenery that drops grunts, not a target
+	// the player can walk behind.
+	bool CanBackstab() override { return false; }
 
 	void Spawn() override;
 	void Precache() override;

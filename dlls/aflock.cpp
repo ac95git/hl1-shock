@@ -66,6 +66,8 @@ public:
 	void Spawn() override;
 	void Precache() override;
 	void SpawnCommonCode();
+	// Too small and too erratic to have a back worth getting behind.
+	bool CanBackstab() override { return false; }
 	void EXPORT IdleThink();
 	void BoidAdvanceFrame();
 	void EXPORT FormFlock();

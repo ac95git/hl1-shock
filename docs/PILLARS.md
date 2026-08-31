@@ -9,7 +9,7 @@ same commit as the code change.
 This file records **what exists today**. Intended work that has not been built lives in
 [ROADMAP.md](ROADMAP.md), and each pillar below links to its entries there.
 
-**Last updated:** 2026-08-31 (branch `hl-shock`, after `ff03310` — stealth design settled, perception model documented)
+**Last updated:** 2026-08-31 (branch `hl-shock`, after `3c34028` — the Backstab)
 
 ## Status legend
 
@@ -25,11 +25,11 @@ This file records **what exists today**. Intended work that has not been built l
 | # | Pillar | Status | One-line state |
 | --- | --- | --- | --- |
 | 1 | [Exploration](#1-exploration) | **Not started** | Its rewards exist — Row Grants, Skill Points, Reset Tokens are all findable entities — but no map places one, so nothing is explored *for* yet. |
-| 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar. Melee Skills now land too. Numbers untuned. |
+| 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar. Melee Skills land, and the Backstab gives melee its first positional decision. Numbers untuned. |
 | 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. |
 | 4 | [Skill trees](#4-skill-trees) | **Playable** | 15 curated Skills, **all with effects**. Points and Reset Tokens are earned and spent, the tree fits any screen, and nothing in it lies about what it does. Numbers untuned; no map places a Skill Point yet. |
 | 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work over a server-owned model. Row Grants are now placeable; Boxes are the remaining gap. |
-| 6 | [Stealth](#6-stealth) | **Not started** | No code yet, but the design is settled and the base game's perception model is now written down in [PERCEPTION.md](PERCEPTION.md) — including two things this file previously got wrong. |
+| 6 | [Stealth](#6-stealth) | **Not started** | No stealth code — no Concealment, no Suspicion, no readout. The design is settled ([PERCEPTION.md](PERCEPTION.md)), and its first commit turned out to be positional rather than stealth-gated, so the Backstab landed in pillar 2 instead. |
 
 ---
 
@@ -173,6 +173,29 @@ read from `m_skills` where the value is computed, rather than through a hook of 
   works. `m_flNextAttack` is owned by the client frame to frame, so the two sides shortening the reload
   differently would hitch at the end of every one. Both read the same cvar through
   `dlls/skill_tuning.h`, and both read the same `m_skills` — see pillar 4.
+
+**The Backstab** — `CBaseMonster::FInRearArc` (`dlls/combat.cpp`) plus `CanBackstab()`, applied in
+`CCrowbar::Swing`. A melee hit landed in a monster's rear arc deals `backstab_damage_scale`× (3) when the
+angle beats `backstab_arc_dot` (-0.5, the rear 120°).
+
+It is filed here rather than under stealth on purpose. It was designed as pillar 6's payoff and came out
+**positional only** — whether the victim has noticed the player does not enter into it — which makes it a
+melee mechanic that stealth happens to make easy to set up, rather than a stealth mechanic. The reasoning,
+the rejected alternatives and the exclusion list are in
+[ADR-0010](adr/0010-the-backstab-is-positional.md).
+
+Three things worth knowing rather than rediscovering:
+
+- **It stacks between Crowbar Force and the Follow-Up**, so each stage multiplies an already-stronger hit
+  and the largest number a player can produce is every bonus at once. 3× is tuned to land just short of
+  one-shotting a grunt at full melee investment (10 × 1.5 × 3 × 1.1 = 49.5 against 50 health), on the
+  grounds that a reliable one-shot removes any reason to fight a grunt head-on.
+- **`CanBackstab()` is a virtual, not a saved flag**, because `Spawn()` does not re-run on restore
+  (`dlls/cbase.cpp:380-389`) and the exclusion list is per class rather than per instance. **Any future
+  per-monster-type property should take the same shape** — the Perception Profile especially.
+- **`FInRearArc` does not call `UTIL_MakeVectors`**, unlike `FInViewCone`. It is called partway through
+  resolving a hit, and `gpGlobals->v_forward` still holds the player's aim vector needed by `TraceAttack`
+  and the Follow-Up knockback.
 
 Which leaves **Crowbar Speed** (id 11) as the only combat Skill that does nothing. It is no longer
 blocked on prediction; it is blocked on the crowbar's first-swing/follow-up damage rule, which reads
@@ -874,9 +897,14 @@ coordination, the readout, and a positional Backstab. It is written up in
 [PERCEPTION.md part 2](PERCEPTION.md#part-2--the-model-this-mod-adds), and
 [ROADMAP.md](ROADMAP.md#pillar-6-stealth) holds the build order and what is still open.
 
-The first code commit is the **Backstab**, which came out of the design independent of everything else — no
-meter, no profile, no squad code, just a facing test where crowbar damage is already computed. It is the
-only part of this pillar that can be judged in vanilla maps today.
+**The Backstab is built and is filed under [pillar 2](#2-enhanced-combat)**, because it came out positional
+— awareness does not gate it — which makes it a melee mechanic rather than a stealth one. It was this
+pillar's first commit and is the only piece judgeable in vanilla maps, but it is not stealth and this
+pillar should not take credit for it.
+
+What is next is the **Suspicion meter**: a Perception Profile per monster, the meter itself, the gate in
+`Look`, and a debug view built alongside it rather than after — a meter nobody can see is a meter nobody
+can tune, and [TECH_DEBT.md](TECH_DEBT.md) already asks for exactly that.
 
 ### Acceptance criteria (draft)
 

@@ -88,6 +88,12 @@ extern cvar_t infusion_rate;
 extern cvar_t infusion_duration;
 extern cvar_t infusion_duration_bonus;
 
+// The Backstab.  Server-only: the multiplier is applied where crowbar damage is
+// computed, inside the #ifndef CLIENT_DLL guard, so the client never predicts
+// it and these do not belong in skill_tuning.h.
+extern cvar_t backstab_damage_scale;
+extern cvar_t backstab_arc_dot;
+
 // Engine Cvars
 inline cvar_t* g_psv_gravity;
 inline cvar_t* g_psv_aim;

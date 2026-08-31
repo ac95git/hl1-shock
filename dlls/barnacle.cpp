@@ -37,6 +37,8 @@ public:
 	void Spawn() override;
 	void Precache() override;
 	CBaseEntity* TongueTouchEnt(float* pflLength);
+	// Ceiling-mounted. There is no back to get behind.
+	bool CanBackstab() override { return false; }
 	int Classify() override;
 	void HandleAnimEvent(MonsterEvent_t* pEvent) override;
 	void EXPORT BarnacleThink();

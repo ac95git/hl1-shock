@@ -61,6 +61,10 @@ void CCrowbar::Precache()
 	PRECACHE_SOUND("weapons/cbar_hitbod3.wav");
 	PRECACHE_SOUND("weapons/cbar_miss1.wav");
 
+	// Backstab cue. Placeholder -- see docs/ART_DEBT.md.
+	PRECACHE_SOUND("debris/bustflesh1.wav");
+	PRECACHE_SOUND("debris/bustflesh2.wav");
+
 	m_usCrowbar = PRECACHE_EVENT(1, "events/crowbar.sc");
 }
 
@@ -261,6 +265,27 @@ bool CCrowbar::Swing(bool fFirst)
 		if (m_pPlayer->m_skills.HasSkill(ESkillId::CrowbarDamage))
 			flDamage *= std::max(0.0f, skill_crowbar_damage_scale.value);
 
+		// The Backstab. Purely positional -- whether the victim has noticed the
+		// player does not enter into it, so this lands mid-fight on anything
+		// you can get behind. See docs/adr/0010-the-backstab-is-positional.md.
+		//
+		// Sits between Crowbar Force and the Follow-Up for the same reason
+		// Force sits before the Follow-Up: each stage multiplies the
+		// already-stronger hit, so the biggest number the player can produce
+		// is every bonus at once rather than whichever happens to be last.
+		//
+		// FInRearArc deliberately does not touch gpGlobals->v_forward, which
+		// still holds the player's aim vector and is needed below.
+		CBaseMonster* pVictim = pEntity ? pEntity->MyMonsterPointer() : nullptr;
+		const bool bBackstab =
+			pVictim &&
+			pVictim->IsAlive() &&
+			pVictim->CanBackstab() &&
+			pVictim->FInRearArc(m_pPlayer->pev->origin, backstab_arc_dot.value);
+
+		if (bBackstab)
+			flDamage *= std::max(1.0f, backstab_damage_scale.value);
+
 		// A deflect primes the next crowbar HIT. Consumed here rather than in
 		// PrimaryAttack so a swing that connects with nothing costs nothing.
 		const bool bFollowUp = PulseTakeCrowbarFollowUp(m_pPlayer, flDamage);
@@ -298,6 +323,26 @@ bool CCrowbar::Swing(bool fFirst)
 					EMIT_SOUND(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/cbar_hitbod3.wav", 1, ATTN_NORM);
 					break;
 				}
+
+				// The Backstab gets its own cue, on a different channel and in a
+				// different timbre from the crowbar's own body-hit sound, which
+				// lands in the same instant. ART_DEBT.md records why that
+				// matters: the Pulse's first sound set failed not because the
+				// samples were bad but because the deflect shared a timbre with
+				// the Pulse and arrived a fraction of a second later, so it was
+				// simply not heard. This would fail the same way.
+				//
+				// EMIT_SOUND does not reach CSoundEnt, so this tells the player
+				// what happened without telling any monster. Weapon noise stays
+				// entirely owned by m_iWeaponVolume below -- see
+				// docs/PERCEPTION.md.
+				if (bBackstab)
+				{
+					EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_VOICE,
+						RANDOM_LONG(0, 1) == 0 ? "debris/bustflesh1.wav" : "debris/bustflesh2.wav",
+						1.0, ATTN_NORM, 0, 85 + RANDOM_LONG(0, 10));
+				}
+
 				m_pPlayer->m_iWeaponVolume = CROWBAR_BODYHIT_VOLUME;
 				if (!pEntity->IsAlive())
 					return true;

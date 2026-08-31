@@ -54,6 +54,10 @@ typedef enum
 class CBaseTurret : public CBaseMonster
 {
 public:
+	// VIEW_FIELD_FULL, and a machine bolted to a surface. CTurret,
+	// CMiniTurret and CSentry all inherit this.
+	bool CanBackstab() override { return false; }
+
 	void Spawn() override;
 	void Precache() override;
 	bool KeyValue(KeyValueData* pkvd) override;

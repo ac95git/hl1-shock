@@ -40,6 +40,10 @@
 class CController : public CSquadMonster
 {
 public:
+	// VIEW_FIELD_FULL -- it sees in every direction, so "behind" names
+	// nothing. Excluded on that ground rather than for being difficult.
+	bool CanBackstab() override { return false; }
+
 	bool Save(CSave& save) override;
 	bool Restore(CRestore& restore) override;
 	static TYPEDESCRIPTION m_SaveData[];

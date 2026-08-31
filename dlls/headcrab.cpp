@@ -73,6 +73,9 @@ public:
 	void Precache() override;
 	void RunTask(Task_t* pTask) override;
 	void StartTask(Task_t* pTask) override;
+	// Too small and too erratic to have a back worth getting behind.
+	// CBabyCrab inherits this.
+	bool CanBackstab() override { return false; }
 	void SetYawSpeed() override;
 	void EXPORT LeapTouch(CBaseEntity* pOther);
 	Vector Center() override;

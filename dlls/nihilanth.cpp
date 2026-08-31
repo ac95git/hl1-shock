@@ -27,6 +27,9 @@
 class CNihilanth : public CBaseMonster
 {
 public:
+	// m_flFieldOfView is -1: 360 degrees. "Behind" names nothing.
+	bool CanBackstab() override { return false; }
+
 	bool Save(CSave& save) override;
 	bool Restore(CRestore& restore) override;
 	static TYPEDESCRIPTION m_SaveData[];

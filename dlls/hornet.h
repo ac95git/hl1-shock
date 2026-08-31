@@ -38,6 +38,8 @@ public:
 	void Spawn() override;
 	void Precache() override;
 	int Classify() override;
+	// Too small and too erratic to have a back worth getting behind.
+	bool CanBackstab() override { return false; }
 	int IRelationship(CBaseEntity* pTarget) override;
 	bool Save(CSave& save) override;
 	bool Restore(CRestore& restore) override;

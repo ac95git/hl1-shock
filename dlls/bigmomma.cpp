@@ -178,6 +178,12 @@ public:
 	void Precache() override;
 	bool KeyValue(KeyValueData* pkvd) override;
 	void Activate() override;
+	// Her TakeDamage below clamps health to flDamage + 1 until the node path
+	// finishes, so she is unkillable by construction and any multiplier
+	// applied to a hit on her is eaten before it means anything. Excluded
+	// because it would silently do nothing, not because she is a boss --
+	// the Gargantua IS backstabbable.
+	bool CanBackstab() override { return false; }
 	bool TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType) override;
 
 	void RunTask(Task_t* pTask) override;

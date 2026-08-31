@@ -33,6 +33,9 @@ class CApache : public CBaseMonster
 	void Precache() override;
 	int Classify() override { return CLASS_HUMAN_MILITARY; }
 	int BloodColor() override { return DONT_BLEED; }
+	// A flying machine with a 270-degree view. Nothing to stab, nowhere
+	// to stand, and no rear arc worth the name.
+	bool CanBackstab() override { return false; }
 	void Killed(entvars_t* pevAttacker, int iGib) override;
 	void GibMonster() override;
 

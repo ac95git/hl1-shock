@@ -155,6 +155,22 @@ public:
 	virtual CBaseEntity* BestVisibleEnemy();		// finds best visible enemy for attack
 	virtual bool FInViewCone(CBaseEntity* pEntity); // see if pEntity is in monster's view cone
 	virtual bool FInViewCone(Vector* pOrigin);		// see if given location is in monster's view cone
+
+	// The Backstab -- see docs/adr/0010-the-backstab-is-positional.md.
+	//
+	// FInRearArc is the complement of FInViewCone: is vecOrigin behind me,
+	// by more than flArcDot?  Unlike FInViewCone it does NOT write
+	// gpGlobals->v_forward, because its callers are mid-attack and still
+	// need their own aim vector afterwards.
+	bool FInRearArc(const Vector& vecOrigin, float flArcDot);
+
+	// Can this monster be backstabbed at all?  A virtual rather than a
+	// spawn-time flag for two reasons: the exclusion list is per CLASS, not
+	// per instance, so a subclass inherits the answer for free; and Spawn()
+	// does not re-run on restore (dlls/cbase.cpp:380 -- only FCAP_MUST_SPAWN
+	// entities get one), so a flag set there would come back wrong after
+	// every save load and would have to be added to the save table to fix.
+	virtual bool CanBackstab() { return true; }
 	void HandleAnimEvent(MonsterEvent_t* pEvent) override;
 
 	virtual int CheckLocalMove(const Vector& vecStart, const Vector& vecEnd, CBaseEntity* pTarget, float* pflDist); // check validity of a straight move through space

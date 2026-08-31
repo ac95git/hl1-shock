@@ -74,6 +74,8 @@ class CLeech : public CBaseMonster
 public:
 	void Spawn() override;
 	void Precache() override;
+	// Too small and too erratic to have a back worth getting behind.
+	bool CanBackstab() override { return false; }
 
 	void EXPORT SwimThink();
 	void EXPORT DeadThink();

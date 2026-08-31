@@ -40,6 +40,8 @@ public:
 	void Spawn() override;
 	void Precache() override;
 	void SetYawSpeed() override;
+	// Too small and too erratic to have a back worth getting behind.
+	bool CanBackstab() override { return false; }
 	void EXPORT MonsterThink() override;
 	void Move(float flInterval) override;
 	void PickNewDest(int iCondition);

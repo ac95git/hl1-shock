@@ -1217,6 +1217,37 @@ bool CBaseMonster::FInViewCone(Vector* pOrigin)
 }
 
 //=========================================================
+// FInRearArc - is vecOrigin behind this monster, by more
+// than flArcDot?  The complement of FInViewCone, and the
+// only test the Backstab makes -- see
+// docs/adr/0010-the-backstab-is-positional.md.
+//
+// Same 2D comparison against pev->angles that FInViewCone
+// uses, so "behind" means the exact opposite of "in front"
+// rather than a second, separate notion of where a monster
+// is looking.
+//
+// It computes forward from yaw directly instead of calling
+// UTIL_MakeVectors, which writes gpGlobals->v_forward.
+// CCrowbar::Swing calls this partway through resolving a
+// hit and still needs the player's aim vector afterwards
+// for TraceAttack and the Follow-Up knockback, so clobbering
+// it here would be a very quiet bug.  Monsters are upright
+// (MOVETYPE_STEP, pitch 0), so this matches FInViewCone's
+// v_forward.Make2D() in every case that occurs.
+//=========================================================
+bool CBaseMonster::FInRearArc(const Vector& vecOrigin, float flArcDot)
+{
+	const float flYaw = pev->angles.y * (M_PI / 180.0f);
+	const Vector2D vec2Forward(cos(flYaw), sin(flYaw));
+
+	Vector2D vec2LOS = (vecOrigin - pev->origin).Make2D();
+	vec2LOS = vec2LOS.Normalize();
+
+	return DotProduct(vec2LOS, vec2Forward) < flArcDot;
+}
+
+//=========================================================
 // FVisible - returns true if a line can be traced from
 // the caller's eyes to the target
 //=========================================================

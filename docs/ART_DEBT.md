@@ -38,6 +38,37 @@ a code change, so consider a cvar for the sprite name if this turns into much it
 ### Done when
 The effect is recognisably the mod's own, and nobody mistakes it for a houndeye.
 
+## The Backstab — hit cue
+
+### Scope
+`dlls/crowbar.cpp`, in the body-hit branch of `CCrowbar::Swing`.
+
+### Current stand-in
+`debris/bustflesh1.wav` / `bustflesh2.wav`, randomised, pitched down to 85–95, played on `CHAN_VOICE`.
+Borrowed from `func_breakable`'s flesh material (`dlls/func_break.cpp:669-672`).
+
+### What's wrong with it
+- It is the sound of a **breakable crate made of meat**, and a player who has smashed one will know it.
+- It is a wet burst. A Backstab is a heavy, precise, committed hit — it wants weight and impact, not gore.
+  The gore reading also collides with [Decapitation](ROADMAP.md#pillar-2-decapitation), which is a
+  genuinely gory event and should own that timbre.
+- Two samples is thin for something the player will hear constantly once melee is invested in.
+
+### What to look for
+A dry, heavy, low-frequency impact — the *thump* of a hit landing where it should. It must not share a
+timbre with `weapons/cbar_hitbod1-3.wav`, which plays in the **same instant** on `CHAN_ITEM`.
+
+That constraint is the transferable lesson from the Pulse entry above: the Pulse's first sound set failed
+not because the samples were bad but because the Pulse and the deflect shared a timbre and landed a
+fraction of a second apart, so the deflect was simply not heard. This is the same failure mode with an even
+smaller gap — zero.
+
+Being on a separate channel is what makes a distinct sample audible at all; it does not make a
+similar-sounding one distinguishable.
+
+### Done when
+A player can tell a Backstab landed with their eyes shut, and does not think something broke.
+
 ## The Health Syringe — icon, world model and sounds
 
 ### Scope

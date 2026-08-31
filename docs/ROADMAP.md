@@ -151,7 +151,7 @@ that already describes what it changes.
 | # | Commit | Notes |
 | --- | --- | --- |
 | 1 | **Docs** | PERCEPTION.md, the CONTEXT.md terms, the two corrections, the CLAUDE.md index row. **Done 2026-08-31.** No code. |
-| 2 | **The Backstab** | Per-monster flag, the curated exclusion list, a facing test where crowbar damage is already computed, one cvar, `adr/0010`. Adds the headshot entry to [pillar 2](#pillar-2-decapitation) at the same time. Independent of everything else here. |
+| 2 | **The Backstab** | `CanBackstab()`, the curated exclusion list, `FInRearArc`, two cvars, `adr/0010`, and the headshot entry under [pillar 2](#headshots-and-how-they-reconcile-with-this). **Done 2026-08-31.** |
 | 3 | **Suspicion** | Perception Profile, the meter, the `Look` gate, and a **debug view** built alongside rather than after it. `adr/0009`. |
 | 4 | **The readout** | `gmsgConceal` plus a HUD element, following `CHudPulse`'s send-on-change pattern. |
 | 5 | **The squad half** | De-escalation, the Search, Posts, death witnesses, the Disturbance marker, the level-transition reset. |
@@ -451,6 +451,50 @@ Four defects in the reference implementation, all worth not inheriting:
 - **No prediction risk.** All of it is server-side damage response, so nothing here is blocked on
   [the prediction problem](#the-prediction-problem). Rare, in this document, and it is the main argument for
   doing it sooner than its size suggests.
+
+### Headshots, and how they reconcile with this
+
+**Shape: Shaped. Documented 2026-08-31 at the user's request; deliberately not built.**
+
+A head hit that does *not* take the head off should still be legible: a distinct sound, and extra blood
+decals. Today a headshot is indistinguishable from a body shot except that the monster dies sooner —
+`TraceAttack` multiplies by `gSkillData.monHead` (`dlls/combat.cpp:1337`) and produces exactly the same
+`SpawnBlood` and `TraceBleed` as any other hit (`:1357-1358`).
+
+**The reconciliation rule, which is the reason this is filed here:**
+
+| Head hit | Response |
+| --- | --- |
+| Lethal, and the monster has a headless submodel | **Decapitation** — `common/bodysplat.wav`, skull gib, neck jets |
+| Everything else | **The headshot cue** — an understated sound plus extra decals |
+
+The two can never both fire. Decapitation is the loud, gory, once-per-monster event; the headshot cue is
+the quiet constant one. Ordering them this way also means a monster that has *not* been given a headless
+submodel still gets feedback for a head hit, so the cue is useful long before the art exists — which is
+the opposite of Decapitation's problem, where the art is the schedule.
+
+**"Discreet" means understated feedback to the attacker, not quieter in the world.** The cue is played to
+the player and never enters `CSoundEnt`. Damage never does — what monsters hear is the *gun*, via
+`UpdatePlayerSound`'s weapon volume — so a quieter head hit would do nothing while the weapon is loud, and
+would put a second system in charge of how loud a kill is. Weapon noise stays entirely owned by
+`m_iWeaponVolume`. See [PERCEPTION.md](PERCEPTION.md).
+
+**Both halves land in `TraceAttack`**, which already has `ptr->iHitgroup`, already records `m_LastHitGroup`,
+and already calls `SpawnBlood` and `TraceBleed`. Extra decals are more calls of a shape that is already
+there.
+
+Two things to settle before writing it:
+
+- **The shotgun fires the cue N times.** Buckshot arrives as separate `TraceAttack` calls, one per pellet,
+  so a face full of shot would stack a dozen overlapping cues. This is the same problem Decapitation has
+  and needs the same answer — count head pellets in `TraceAttack`, fire once from `TakeDamage` — which is
+  an argument for building the two together rather than in sequence.
+- **Player hits only, or monster-on-monster too?** It is player feedback, so gating on the attacker being
+  the player is almost certainly right, and it avoids a firefight between grunts and aliens turning into a
+  percussion section.
+
+It will need an [ART_DEBT.md](ART_DEBT.md) entry when built, under the same constraint the Backstab cue
+already carries: it must not share a timbre with the sound landing in the same instant.
 
 ### Open questions
 

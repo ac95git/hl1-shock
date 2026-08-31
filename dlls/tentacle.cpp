@@ -37,6 +37,9 @@ class CTentacle : public CBaseMonster
 public:
 	CTentacle();
 
+	// Blind, rooted, and radially symmetric. There is no back to get behind.
+	bool CanBackstab() override { return false; }
+
 	void Spawn() override;
 	void Precache() override;
 	bool KeyValue(KeyValueData* pkvd) override;
@@ -1036,6 +1039,8 @@ class CTentacleMaw : public CBaseMonster
 public:
 	void Spawn() override;
 	void Precache() override;
+	// Scenery at the bottom of the pit, not a combatant.
+	bool CanBackstab() override { return false; }
 };
 
 LINK_ENTITY_TO_CLASS(monster_tentaclemaw, CTentacleMaw);

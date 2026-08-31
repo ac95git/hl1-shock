@@ -37,6 +37,8 @@ class CSqueakGrenade : public CGrenade
 	void Spawn() override;
 	void Precache() override;
 	int Classify() override;
+	// Too small and too erratic to have a back worth getting behind.
+	bool CanBackstab() override { return false; }
 	void EXPORT SuperBounceTouch(CBaseEntity* pOther);
 	void EXPORT HuntThink();
 	int BloodColor() override { return BLOOD_COLOR_YELLOW; }

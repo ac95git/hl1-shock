@@ -541,6 +541,18 @@ cvar_t infusion_duration = {"infusion_duration", "10"};
 // infusion_duration is tuned -- the same choice pulse_window_bonus makes.
 cvar_t infusion_duration_bonus = {"infusion_duration_bonus", "5"};
 
+// The Backstab -- see docs/adr/0010-the-backstab-is-positional.md.
+//
+// 3x is chosen so a fully invested melee build very nearly one-shots a grunt
+// and does not quite: 10 base, x1.5 Crowbar Force, x3 here, x1.1 Weapon Mastery
+// is 49.5 against 50 health.  Landing on the wrong side of a round number on
+// purpose, because the moment this reliably one-shots a grunt there is no
+// reason left to ever fight one head-on.  First guess; judge it in play.
+cvar_t backstab_damage_scale = {"backstab_damage_scale", "3"};
+// A dot product against the victim's own facing, matching m_flFieldOfView's
+// units, so lower is a NARROWER rear arc.  -0.5 is the rear 120 degrees.
+cvar_t backstab_arc_dot = {"backstab_arc_dot", "-0.5"};
+
 static bool SV_InitServer()
 {
 	if (!FileSystem_LoadFileSystem())
@@ -642,6 +654,9 @@ void GameDLLInit()
 	CVAR_REGISTER(&pulse_followup_time);
 	CVAR_REGISTER(&pulse_followup_damage);
 	CVAR_REGISTER(&pulse_followup_knockback);
+
+	CVAR_REGISTER(&backstab_damage_scale);
+	CVAR_REGISTER(&backstab_arc_dot);
 
 	// REGISTER CVARS FOR SKILL LEVEL STUFF
 	// Agrunt
