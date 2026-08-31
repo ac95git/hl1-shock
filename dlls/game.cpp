@@ -553,6 +553,9 @@ cvar_t backstab_damage_scale = {"backstab_damage_scale", "3"};
 // units, so lower is a NARROWER rear arc.  -0.5 is the rear 120 degrees.
 cvar_t backstab_arc_dot = {"backstab_arc_dot", "-0.5"};
 
+// Damage debug readout -- see game.h.  Throwaway diagnostic, off by default.
+cvar_t debug_damage = {"debug_damage", "0"};
+
 static bool SV_InitServer()
 {
 	if (!FileSystem_LoadFileSystem())
@@ -657,6 +660,8 @@ void GameDLLInit()
 
 	CVAR_REGISTER(&backstab_damage_scale);
 	CVAR_REGISTER(&backstab_arc_dot);
+
+	CVAR_REGISTER(&debug_damage);
 
 	// REGISTER CVARS FOR SKILL LEVEL STUFF
 	// Agrunt

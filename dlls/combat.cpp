@@ -30,8 +30,74 @@
 #include "weapons.h"
 #include "func_break.h"
 #include "player_skills.h" // SkillScaleWeaponDamage
+#include "game.h"		   // debug_damage and the readout below
+
+#include <cstdarg>
+#include <cstdio>
 
 extern Vector VecBModelOrigin(entvars_t* pevBModel);
+
+//=========================================================
+// Damage debug readout -- see game.h.  THROWAWAY DIAGNOSTIC.
+//
+// Centre-printed through ClientPrint rather than built as a HUD element,
+// because ClientPrint already exists, needs no user message and no client
+// code, and this is meant to be deleted rather than maintained.
+//
+// The whole line has to fit one gmsgTextMsg string, so both buffers are
+// deliberately small.
+//=========================================================
+static char g_szDamageDetail[96];
+
+void DebugDamageDetail(const char* fmt, ...)
+{
+	// Clear rather than return when off, so a detail stashed while the cvar
+	// was set cannot surface against an unrelated hit later.
+	g_szDamageDetail[0] = '\0';
+
+	if (debug_damage.value == 0)
+		return;
+
+	va_list argptr;
+	va_start(argptr, fmt);
+	vsnprintf(g_szDamageDetail, sizeof(g_szDamageDetail), fmt, argptr);
+	va_end(argptr);
+}
+
+void DebugDamageReport(CBaseEntity* pVictim, entvars_t* pevAttacker, float flDamage, float flHealthBefore)
+{
+	if (debug_damage.value == 0 || !pVictim)
+		return;
+
+	// Player-dealt damage only.  A grunt-versus-alien firefight would
+	// otherwise overwrite the line several times a second and the readout
+	// would never be about the hit you just landed.
+	CBaseEntity* pAttacker = pevAttacker ? CBaseEntity::Instance(pevAttacker) : nullptr;
+	if (!pAttacker || !pAttacker->IsPlayer())
+	{
+		g_szDamageDetail[0] = '\0';
+		return;
+	}
+
+	char szLine[190];
+
+	if (g_szDamageDetail[0] != '\0')
+	{
+		snprintf(szLine, sizeof(szLine), "%s\n%s\n%.0f landed   hp %.0f -> %.0f\n",
+			STRING(pVictim->pev->classname), g_szDamageDetail,
+			flDamage, flHealthBefore, pVictim->pev->health);
+	}
+	else
+	{
+		snprintf(szLine, sizeof(szLine), "%s\n%.0f landed   hp %.0f -> %.0f\n",
+			STRING(pVictim->pev->classname),
+			flDamage, flHealthBefore, pVictim->pev->health);
+	}
+
+	ClientPrint(pAttacker->pev, HUD_PRINTCENTER, szLine);
+
+	g_szDamageDetail[0] = '\0';
+}
 
 #define GERMAN_GIB_COUNT 4
 #define HUMAN_GIB_COUNT 6
@@ -895,6 +961,10 @@ bool CBaseMonster::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, f
 	// do the damage
 	pev->health -= flTake;
 
+	// Reported after the health change so it can show both sides of it, and
+	// here rather than in ApplyMultiDamage because this is where the figure
+	// that actually landed exists -- hitgroup and Weapon Mastery included.
+	DebugDamageReport(this, pevAttacker, flTake, pev->health + flTake);
 
 	// HACKHACK Don't kill monsters in a script.  Let them break their scripts first
 	if (m_MonsterState == MONSTERSTATE_SCRIPT)

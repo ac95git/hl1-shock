@@ -94,6 +94,30 @@ extern cvar_t infusion_duration_bonus;
 extern cvar_t backstab_damage_scale;
 extern cvar_t backstab_arc_dot;
 
+// ---------------------------------------------------------
+// Damage debug readout.  THROWAWAY DIAGNOSTIC -- delete the cvar and both
+// functions once the numbers are settled.
+//
+// Every damage number in this mod is a first guess (docs/PILLARS.md) and a
+// multiplier the player cannot see is a multiplier nobody can tune.  With
+// debug_damage set, each hit the PLAYER lands prints centred on screen:
+// what was hit, how the figure was arrived at, what actually landed, and
+// the health either side of it.
+//
+// Defined in combat.cpp, next to the damage code they report on.
+// ---------------------------------------------------------
+class CBaseEntity;
+
+extern cvar_t debug_damage;
+
+// Stash a breakdown for the next report, printf-style.  Called by a weapon
+// that still holds its individual multipliers as separate numbers -- by the
+// time damage reaches TakeDamage they have all been folded into one float.
+void DebugDamageDetail(const char* fmt, ...);
+
+// Called where damage actually lands, with the figure that arrived.
+void DebugDamageReport(CBaseEntity* pVictim, entvars_t* pevAttacker, float flDamage, float flHealthBefore);
+
 // Engine Cvars
 inline cvar_t* g_psv_gravity;
 inline cvar_t* g_psv_aim;

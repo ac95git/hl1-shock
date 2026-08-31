@@ -249,7 +249,8 @@ bool CCrowbar::Swing(bool fFirst)
 		// JoshA: Changed from < -> <= to fix the full swing logic since client weapon prediction.
 		// -1.0f + 1.0f = 0.0f. UTIL_WeaponTimeBase is always 0 with client weapon prediction (0 time base vs curtime base)
 		float flDamage;
-		if ((m_flNextPrimaryAttack + 1.0f <= UTIL_WeaponTimeBase()) || g_pGameRules->IsMultiplayer())
+		const bool bFirstSwing = (m_flNextPrimaryAttack + 1.0f <= UTIL_WeaponTimeBase()) || g_pGameRules->IsMultiplayer();
+		if (bFirstSwing)
 		{
 			// first swing does full damage
 			flDamage = gSkillData.plrDmgCrowbar;
@@ -260,9 +261,12 @@ bool CCrowbar::Swing(bool fFirst)
 			flDamage = gSkillData.plrDmgCrowbar / 2;
 		}
 
+		const float flBaseDamage = flDamage;
+
 		// Crowbar Force. Before the Follow-Up, so a primed swing multiplies the
 		// already-stronger hit rather than a base one.
-		if (m_pPlayer->m_skills.HasSkill(ESkillId::CrowbarDamage))
+		const bool bForce = m_pPlayer->m_skills.HasSkill(ESkillId::CrowbarDamage);
+		if (bForce)
 			flDamage *= std::max(0.0f, skill_crowbar_damage_scale.value);
 
 		// The Backstab. Purely positional -- whether the victim has noticed the
@@ -289,6 +293,22 @@ bool CCrowbar::Swing(bool fFirst)
 		// A deflect primes the next crowbar HIT. Consumed here rather than in
 		// PrimaryAttack so a swing that connects with nothing costs nothing.
 		const bool bFollowUp = PulseTakeCrowbarFollowUp(m_pPlayer, flDamage);
+
+		// Damage debug readout. Stashed only when the target will actually
+		// reach TakeDamage, so a swing into a wall cannot leave a stale
+		// breakdown for the next hit to pick up. The figure here is
+		// PRE-Weapon-Mastery: that lands later, at ApplyMultiDamage, and the
+		// "landed" number in the report is what finally arrived.
+		if (pVictim)
+		{
+			DebugDamageDetail("%.0f %s%s%s%s = %.0f",
+				flBaseDamage,
+				bFirstSwing ? "1st" : "2nd",
+				bForce ? "  xForce" : "",
+				bBackstab ? "  xBACKSTAB" : "",
+				bFollowUp ? "  xFollowUp" : "",
+				flDamage);
+		}
 
 		pEntity->TraceAttack(m_pPlayer->pev, flDamage, gpGlobals->v_forward, &tr, DMG_CLUB);
 		ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
