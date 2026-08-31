@@ -89,6 +89,21 @@ struct CPlayerSkills
 
     // Fills 'mask' (k_SkillMaskBytes long) with one bit per unlocked Skill.
     void BuildUnlockedMask(unsigned char* mask) const;
+
+    // The inverse.  Kept beside BuildUnlockedMask, and both go through the
+    // SkillMaskGet/SkillMaskSet pair in skill_defs.h, so the packing can
+    // only ever be defined once.
+    //
+    // Inline because the client needs it and player_skills.cpp is not in
+    // the client project: this is how the predicted player learns which
+    // Skills are held (see HUD_SetPredictedSkills).  Points and Reset
+    // Tokens are deliberately not carried -- nothing the client predicts
+    // reads them.
+    void ApplyUnlockedMask(const unsigned char* mask)
+    {
+        for (int i = 1; i < k_MaxSkills; ++i)
+            m_bUnlocked[i] = SkillMaskGet(mask, i);
+    }
 };
 
 // =====================================================================

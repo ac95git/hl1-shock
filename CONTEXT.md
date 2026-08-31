@@ -1,8 +1,13 @@
 # Half-Life Shock
 
 The custom gameplay layer built on top of the Half-Life SDK: exploration, enhanced combat, custom items,
-skill trees, and inventory management. This file defines what the words mean. It is a glossary — how any
-of it is built belongs in [docs/PILLARS.md](docs/PILLARS.md) and [docs/adr/](docs/adr/).
+skill trees, inventory management, and stealth. This file defines what the words mean. It is a glossary —
+how any of it is built belongs in [docs/PILLARS.md](docs/PILLARS.md) and [docs/adr/](docs/adr/).
+
+Every term here is **settled**: it names something that exists, and code, comments and commits are expected
+to use it. Names for things that are only intended are held separately, as proposals, under
+[Proposed vocabulary](docs/ROADMAP.md#proposed-vocabulary) in the roadmap. A term graduates from there to
+here when the feature it names is designed.
 
 ## Language
 

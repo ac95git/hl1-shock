@@ -491,6 +491,9 @@ cvar_t skill_battery_bonus = {"skill_battery_bonus", "50"};
 cvar_t skill_crowbar_range_scale = {"skill_crowbar_range_scale", "1.25"};
 cvar_t skill_crowbar_damage_scale = {"skill_crowbar_damage_scale", "1.5"};
 cvar_t skill_weapon_damage_scale = {"skill_weapon_damage_scale", "1.1"};
+// Scales the reload delay. Read from both DLLs through skill_tuning.h, because
+// the delay it sets is m_flNextAttack, which the client predicts.
+cvar_t skill_reload_time_scale = {"skill_reload_time_scale", "0.8"};
 
 // The Pulse.  Tuning knobs -- see docs/PILLARS.md pillar 2.  The Recharge is
 // deliberately asymmetric: a Shield that negated something recovers faster than
@@ -617,6 +620,7 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_battery_bonus);
 	CVAR_REGISTER(&skill_crowbar_range_scale);
 	CVAR_REGISTER(&skill_crowbar_damage_scale);
+	CVAR_REGISTER(&skill_reload_time_scale);
 	CVAR_REGISTER(&skill_weapon_damage_scale);
 
 	CVAR_REGISTER(&pulse_window);

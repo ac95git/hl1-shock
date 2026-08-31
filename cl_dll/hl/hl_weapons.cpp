@@ -486,6 +486,31 @@ void HUD_GetLastOrg(float* org)
 
 /*
 =====================
+HUD_SetPredictedSkills
+
+Populates the client's copy of the player with the unlocked Skills, so that
+weapon code compiled into both DLLs gets the same answer out of
+m_pPlayer->m_skills.HasSkill() on either side of the wire.
+
+Fed from gmsgSkillTree rather than from a scratch field on clientdata_t, which
+was the other candidate: the mask is already sent, already arrives on spawn and
+on every change, and the clientdata slots that looked free are not.  iuser3 is
+the engine's duck prevention and iuser4 its fire prevention (see
+HUD_TxferPredictionData); what is left is fuser/vuser, and a float would cap the
+id space at 24 bits where the message carries 40.
+
+Nothing here is predicted.  The mask changes only when the server says so -- a
+Skill Point spent, or a Reset -- so it is written on receipt rather than rebuilt
+per frame, and there is no per-frame cost in HUD_WeaponsPostThink at all.
+=====================
+*/
+void HUD_SetPredictedSkills(const unsigned char* unlockedMask)
+{
+	player.m_skills.ApplyUnlockedMask(unlockedMask);
+}
+
+/*
+=====================
 HUD_SetLastOrg
 
 Remember our exact predicted origin so we can draw the egon to the right position.

@@ -1,5 +1,146 @@
 # Technical Debt Register
 
+## Skill State Never Reaches Client-Side Weapon Code — RESOLVED 2026-08-31
+
+Fixed. `HUD_SetPredictedSkills` (`cl_dll/hl/hl_weapons.cpp`) fills the client player's `m_skills` from the
+unlocked mask, and `CPlayerSkills::ApplyUnlockedMask` — the inverse of `BuildUnlockedMask`, and beside it
+in `dlls/player_skills.h` — does the unpacking. Both go through the `SkillMaskGet`/`SkillMaskSet` pair in
+`skill_defs.h`, so the packing is still defined once.
+
+All four acceptance criteria below are met. `dlls/crowbar.cpp` has no `#ifndef CLIENT_DLL` around Crowbar
+Reach, and `FastReload` is unreserved, wired through `CBasePlayerWeapon::DefaultReload`, and in the tree at
+column 4 behind Weapon Mastery.
+
+**Two things the recommendation below got wrong, kept because the reasoning is worth having:**
+
+1. **The mask is fed from the message, not from `clientdata_t`.** Step 1 named `cd->iuser3` and `cd->iuser4`
+   as unwritten and available. They are unwritten by `dlls/client.cpp` but not unclaimed: `HUD_TxferPredictionData`
+   (`cl_dll/entity.cpp:198,210`) labels them *duck prevention* and *fire prevention*, and `pm_shared.cpp:2078`
+   reads `pmove->iuser3`. That leaves the `fuser`/`vuser` floats, and a float caps the id space at 24 bits
+   where `gmsgSkillTree` already carries 40 — a worse ceiling than the one the step warned about.
+
+   `gmsgSkillTree` is the better carrier anyway. It is already sent, already arrives on spawn and on every
+   change, and the mask is not frame-varying state: nothing predicts a Skill unlock, so there is nothing to
+   reconcile per frame and nothing to add to the prediction snapshot. `CHudAmmo::MsgFunc_SkillTree` now has
+   two independent consumers — the panel and the predicted player — and prediction deliberately does not
+   depend on the VGUI panel existing.
+
+2. **Population was not the only thing missing.** The entry says *"The blocker is one word: population.
+   Nothing else is missing."* The tuning cvars were also missing. They are defined and registered in
+   `dlls/game.cpp`, which is not in the client project, so predicted weapon code cannot name
+   `skill_crowbar_range_scale` at all — the `#ifndef CLIENT_DLL` in `crowbar.cpp` was guarding two things,
+   not one, and removing it produced an undefined symbol rather than a working Skill.
+
+   `dlls/skill_tuning.h` is the answer: a `CSkillTuning` looks the cvar up **by name** through
+   `CVAR_GET_POINTER`, which resolves in both DLLs because `HUD_InitClientWeapons`
+   (`hl_weapons.cpp:445-447`) points `g_engfuncs` at the engine's own cvar functions, and a listen server
+   shares one registry between the game DLL and the client. The fallback is the *neutral* value — the Skill
+   reads as not held — rather than a copy of the cvar's default, so there is no second set of defaults to
+   keep in step with `game.cpp`. Only knobs a predicted value depends on belong there; a server-only effect
+   keeps reading its `cvar_t` from `game.h`.
+
+**What this does not unblock:** `SprintSpeed` (6) and `HighJump` (5) stay reserved. They change movement,
+which `pm_shared/` owns, and `pm_shared` runs from `playermove_t` — it cannot reach `m_skills` through any
+of this. `CrowbarSpeed` (11) also stays reserved, but for a new and smaller reason: `CCrowbar::Swing` reads
+`m_flNextPrimaryAttack` to tell a first swing (full damage) from a follow-up (half), so shortening the
+cadence silently makes every swing a follow-up. That is a damage-rule problem, not a prediction one.
+
+The ceiling the entry noted is unchanged in kind and further away in practice: ids ≥ 40 would need a longer
+message. Ids are frozen and only ever grow, so the day that matters is real but distant.
+
+Everything below is the original diagnosis, as written before the fix. Kept because it is what made the
+work small, and because the two places it was wrong are worth more than the entry would be if trimmed.
+
+### Scope
+`cl_dll/hl/hl_weapons.cpp` (`HUD_WeaponsPostThink`), `dlls/client.cpp` (`UpdateClientData`), and every
+weapon file that compiles into both DLLs. Visible at the time at `dlls/crowbar.cpp:169-177`.
+
+### The bug
+Weapon code compiles into **both** DLLs so the client can predict it. `CPlayerSkills m_skills` is a member
+of `CBasePlayer` (`dlls/player.h:370`), and the client has a real `CBasePlayer` — `static CBasePlayer
+player` at `cl_dll/hl/hl_weapons.cpp:40`. **It is never populated.** `HUD_WeaponsPostThink`
+(`hl_weapons.cpp:512`) copies about twenty-five fields from `from->client` into that object every frame —
+ammo, buttons, origin, velocity, FOV, `m_flNextAttack` — and the skill state is not among them.
+
+So any Skill that changes a value the client predicts makes the two copies disagree, and the player sees
+the disagreement. The one shipped case is guarded and documented in place:
+
+```cpp
+float flRange = 32.0f;
+#ifndef CLIENT_DLL
+    if (m_pPlayer->m_skills.HasSkill(ESkillId::CrowbarRange))
+        flRange *= std::max(1.0f, skill_crowbar_range_scale.value);
+#endif
+```
+
+That is tolerable because damage is decided server-side either way and the client's trace only picks which
+swing animation plays — at the far edge of the extended reach an unlocked player can see a miss animation
+for a hit that landed. It is **not** tolerable for reload time, attack rate or movement speed, which the
+client owns frame to frame. Four Skill ids are `SKILL_RESERVED` and cut from the tree for exactly this
+reason: `FastReload` (3), `HighJump` (5), `SprintSpeed` (6), `CrowbarSpeed` (11). *(The entry originally
+listed these as 4, 7 and 8, which are Weapon Mastery, Sure Footing and Fortitude. Corrected here rather
+than left, because a wrong frozen id is the one kind of error in this file that could be copied into
+code.)*
+
+### What is *not* the problem
+
+Three plausible causes are all already handled, which is why this is much smaller than it looks:
+
+- **Not linkage.** `CPlayerSkills::HasSkill` is inline in `dlls/player_skills.h:51-56` and reads only
+  `m_bUnlocked` and `k_MaxSkills`. The header includes nothing but `game_shared/skill_defs.h`, which
+  compiles into both DLLs already ([ADR-0008](adr/0008-skill-definitions-are-shared-not-networked.md)).
+  It links in `cl_dll` today.
+- **Not storage.** The field exists in the client's player object because `hl_weapons.cpp:20` includes
+  `player.h`. It is zero-filled, not absent.
+- **Not the wire.** The client is *already sent* the unlocked mask — `gmsgSkillTree`, fixed 5 bytes,
+  received by `CHudAmmo::MsgFunc_SkillTree` in `cl_dll/ammo.cpp` so the Skill Tree can draw itself. The
+  data is on the client; it is sitting in the HUD, not in the predicted player.
+
+The blocker is one word: **population**. Nothing else is missing.
+
+### Why This Is Debt
+The comment at `dlls/crowbar.cpp:170` currently reads *"m_skills does not exist client-side"*, which is
+the wrong diagnosis and makes the fix look structural. Anyone costing `FastReload` from that comment will
+conclude the client cannot have skill state at all, when in fact it has the storage, the linkage and the
+data, and lacks only the copy.
+
+It is also a silent failure mode. A new Skill that touches a predicted value compiles, links and runs; it
+just desyncs, and only under latency, and only sometimes.
+
+### Recommended Next Steps
+1. **Carry the unlocked mask in a scratch field on `clientdata_t`.** `UpdateClientData`
+   (`dlls/client.cpp:2014-2062`) already pushes ammo and weapon state through `iuser*`, `fuser*` and
+   `vuser*`; `HUD_WeaponsPostThink` reads them straight back. One `int` field carries 32 skill ids, and the
+   tree's highest id today is 21.
+
+   By inspection of `dlls/client.cpp`, `cd->iuser3`, `cd->iuser4`, `cd->fuser1`, `cd->fuser4`, `cd->vuser3.x`
+   and `cd->vuser3.y` are unwritten and available. Confirm none is claimed by the engine before taking one,
+   and prefer an `iuser` field: `vuser` components are `vec_t` (float) and would silently lose bits above
+   2²⁴.
+2. **Rebuild `m_bUnlocked` from the mask** in `HUD_WeaponsPostThink`, next to the existing ammo copies.
+   `BuildUnlockedMask` (`dlls/player_skills.h:91`) already produces the packed form; the inverse belongs
+   beside it so the two cannot drift.
+3. **Then delete the `#ifndef CLIENT_DLL` in `crowbar.cpp`** and confirm the animation desync is gone. That
+   is the cheapest possible proof the mechanism works, because the bug it fixes is already known and
+   reproducible.
+4. **Only then unreserve a Skill.** `FastReload` is the smallest.
+
+Do **not** solve this per feature. Seven features want it, and a mask on the predicted player serves all of
+them through the same `HasSkill` call the server uses — which keeps the
+`PulseWindowFor` / `PulseRechargeFor` pattern (read the modifier where the value is computed) intact on
+both sides instead of forking it.
+
+Note the ceiling this introduces: skill ids ≥ 32 would need a second field. Ids are frozen and only ever
+grow, so the day that matters is real but distant.
+
+### Acceptance Criteria For Closure
+- `m_pPlayer->m_skills.HasSkill(...)` returns the same answer in `cl_dll` and `dlls` for the local player.
+- `dlls/crowbar.cpp` has no `#ifndef CLIENT_DLL` around Crowbar Reach, and no swing at the extended reach
+  plays a miss animation for a hit that landed.
+- One reserved prediction-blocked Skill is unreserved, wired, and shows no visible hitch under artificial
+  latency.
+- No Skill effect is applied twice — the client predicts it, the server decides it, and they agree.
+
 ## The Pulse Discharge Bypasses Every `TraceAttack` Damage Rule — RESOLVED 2026-08-02
 
 Fixed as recommended below, by option 1. `FireDischarge` now copies `gMultiDamage` to a local, runs

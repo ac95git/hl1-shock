@@ -21,11 +21,15 @@
 #include "player.h"
 #include "gamerules.h"
 
-// This file is compiled into the client too, for weapon prediction. Both Skill
-// effects below are server-only, so the tuning cvars they read come with them.
+#include "skill_tuning.h"
+#include <algorithm>
+
+// This file is compiled into the client too, for weapon prediction. Crowbar
+// Force is decided server-side alone, so its cvar comes from game.h under the
+// guard; Crowbar Reach is predicted, so it reads through skill_tuning.h, which
+// resolves the same cvar from either DLL.
 #ifndef CLIENT_DLL
 #include "game.h"
-#include <algorithm>
 #endif
 
 
@@ -165,16 +169,13 @@ bool CCrowbar::Swing(bool fFirst)
 	UTIL_MakeVectors(m_pPlayer->pev->v_angle);
 	Vector vecSrc = m_pPlayer->GetGunPosition();
 
+	// Crowbar Reach. Applied on BOTH sides. The server still decides whether a
+	// hit landed; the client's copy of this trace only picks which swing
+	// animation plays, and it has to reach as far as the server's or an unlocked
+	// player sees a miss animation for a hit that landed.
 	float flRange = 32.0f;
-#ifndef CLIENT_DLL
-	// Crowbar Reach. Server-only, because m_skills does not exist client-side
-	// and the client must never decide whether a hit landed. The client's copy
-	// of this trace only picks which swing animation plays, so an unlocked
-	// player swinging at the far edge of the extended reach can see a miss
-	// animation for a hit that landed. Cosmetic, and narrow at +8 units.
 	if (m_pPlayer->m_skills.HasSkill(ESkillId::CrowbarRange))
-		flRange *= std::max(1.0f, skill_crowbar_range_scale.value);
-#endif
+		flRange *= std::max(1.0f, g_tuneCrowbarRange.Value());
 
 	Vector vecEnd = vecSrc + gpGlobals->v_forward * flRange;
 

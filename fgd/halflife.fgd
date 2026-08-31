@@ -1702,7 +1702,7 @@
 	spawnflags(Flags) = [ 1 : "Initially dark" : 0 : "If this is enabled, the entity will need to be triggered to work." ]
 ]
 
-@PointClass iconsprite("sprites/light.spr") base(Targetname, Target, Angles, ZHLT_point) flags(Light) = light_spot : "The light_spot entity allows you to create direct beams of light (like from a, err, spotlight)." : "http://twhl.info/wiki.php?id=147" 
+@PointClass iconsprite("sprites/light.spr") base(Targetname, Target, Angles, ZHLT_point) flags(Light, Angle) = light_spot : "The light_spot entity allows you to create direct beams of light (like from a, err, spotlight)." : "http://twhl.info/wiki.php?id=147" 
 [
 	_cone(integer) : "Inner (bright) angle" : 30 : "The angle of the cone formed around the directional axis. The area inside this cone will contain the brightest light."
 	_cone2(integer) : "Outer (fading) angle" : 45 : "As above, although the area inside this cone will fade increasingly towards the outer edges."
@@ -2655,6 +2655,13 @@
 		1: "On"
 		2: "Toggle"
 	]
+]
+
+// Custom to this mod. Implementation in projects/vs2019/trigger_print.cpp --
+// prints its message to the console when used.
+@PointClass base(Targetname) = trigger_print : "Print message to console"
+[
+	message(string) : "Message text" : "Hello world"
 ]
 
 @SolidClass base(Trigger) = trigger_teleport : "Trigger teleport" []

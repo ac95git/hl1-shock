@@ -50,6 +50,7 @@ enum class ESkillId : int
 	CrowbarFollowUp     = 18, // the swing after a deflect hits harder
 
 	// ---- Armaments ----
+	FastReload          = 3,  // reload delay -20%
 	ExtraDamage         = 4,  // all weapon damage +10%
 
 	// ---- Survivability ----
@@ -58,14 +59,21 @@ enum class ESkillId : int
 	ArmorEfficiency     = 9,  // armor absorbs 10% more damage
 	HealthRegen         = 10, // slowly regenerate health out of combat
 
-	// ---- Reserved: cut from the tree pending prediction work ----
-	// All four change attack rate, reload timing or movement, every one of
-	// which is client-predicted -- doing them properly means pm_shared/ and
-	// both DLLs. They keep their ids and return unchanged when that work
-	// happens; they simply have no row in k_SkillDefs meanwhile.
-	FastReload          = 3,  // reload time -20%
+	// ---- Reserved: cut from the tree pending movement prediction ----
+	// Both change how the player MOVES, which pm_shared/ owns and neither
+	// m_skills nor the weapon prediction path reaches. They keep their ids
+	// and return unchanged when that work happens; they simply have no row
+	// in k_SkillDefs meanwhile.
+	//
+	// FastReload used to sit here for a different reason -- weapon-side
+	// prediction -- which is fixed, so it is in the tree above.
 	HighJump            = 5,  // jump height +30%
 	SprintSpeed         = 6,  // movement speed +15%
+
+	// Reserved for a different reason: swing speed is predicted and reachable
+	// now, but the crowbar's attack cadence is entangled with the first-swing
+	// /follow-up damage rule at crowbar.cpp, which reads m_flNextPrimaryAttack
+	// to decide which it was. Retuning one retunes the other.
 	CrowbarSpeed        = 11, // crowbar swing speed +30%
 
 	// ---- The Pulse ----
@@ -145,10 +153,10 @@ struct SkillDef
 //   col0       col1     col2     col3     col4     col5     col6
 //
 // r0 Reach     Window            Capacity Mastery Fortitude
-// r1 Force     Recharge          BattRegen        ArmorExp  FallResist
+// r1 Force     Recharge          BattRegen Reload ArmorExp  FallResist
 // r2 Follow-Up Discharge Rebound                  Regen     MedExpert
 //
-// Total cost is 33 points, which is the target for how many Skill Points get
+// Total cost is 35 points, which is the target for how many Skill Points get
 // placed across a campaign -- see docs/PILLARS.md pillar 4.
 inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 {
@@ -159,10 +167,10 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	{ ESkillId::CrowbarRange,    "Crowbar Reach",    "Your crowbar connects from 25% further away.",                "d_crowbar",      0,  0,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor  },
 	{ ESkillId::CrowbarDamage,   "Crowbar Force",    "Crowbar hits land 50% harder.",                               "d_skull",        0,  1,  2,  ESkillId::CrowbarRange,    ESkillId::None,          ENodeTier::Medium },
 
-	SKILL_RESERVED(FastReload),
-
-	// 4: armaments, col 4. A column of one for now -- reserved as much as
-	// filled: gun Skills belong together, and this is where the next ones go.
+	// 3-4: armaments, col 4. Mastery is the root and Fast Reload hangs off it,
+	// rather than the reverse: the cheap utility Skill should not be the toll
+	// gate in front of the column's headline effect.
+	{ ESkillId::FastReload,      "Fast Reload",      "Every magazine you feed goes in 20% quicker.",                "d_9mmhandgun",   4,  1,  2,  ESkillId::ExtraDamage,     ESkillId::None,          ENodeTier::Medium },
 	{ ESkillId::ExtraDamage,     "Weapon Mastery",   "Every weapon you carry deals 10% more damage.",               "d_9mmAR",        4,  0,  3,  ESkillId::None,            ESkillId::None,          ENodeTier::Major  },
 
 	SKILL_RESERVED(HighJump),

@@ -1,12 +1,15 @@
 # Gameplay Pillars — Progress
 
-The five things this mod is actually about. Everything inherited from the base SDK is scaffolding; this
+The things this mod is actually about. Everything inherited from the base SDK is scaffolding; this
 document tracks the custom gameplay on top of it.
 
 This is a living document. When a pillar's state changes, update its section and the summary table in the
 same commit as the code change.
 
-**Last updated:** 2026-08-02 (branch `hl-shock`, at `d709eef`)
+This file records **what exists today**. Intended work that has not been built lives in
+[ROADMAP.md](ROADMAP.md), and each pillar below links to its entries there.
+
+**Last updated:** 2026-08-31 (branch `hl-shock`, after `ff03310`)
 
 ## Status legend
 
@@ -26,12 +29,17 @@ same commit as the code change.
 | 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. |
 | 4 | [Skill trees](#4-skill-trees) | **Playable** | 15 curated Skills, **all with effects**. Points and Reset Tokens are earned and spent, the tree fits any screen, and nothing in it lies about what it does. Numbers untuned; no map places a Skill Point yet. |
 | 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work. Client-side model only — the server-owned rebuild is designed and scheduled. |
+| 6 | [Stealth](#6-stealth) | **Not started** | Half-Life's own perception model is most of the way there and nothing in it is wired to a reward. See [ROADMAP.md](ROADMAP.md#pillar-6-stealth). |
 
 ---
 
 ## 1. Exploration
 
 **Status: Not started**
+
+**Planned:** [Transmissions](ROADMAP.md#pillar-1-transmissions), [the world](ROADMAP.md#pillar-1-the-world)
+— the facility, interactable props, Xen, and Stations. All of it downstream of
+[maps](ROADMAP.md#maps).
 
 ### What exists
 
@@ -75,6 +83,9 @@ are reachable only through `inv_addrows` and `skill_addpoints`.
 
 **Status: Playable**
 
+**Planned:** [weapons](ROADMAP.md#pillar-2-weapons) — the Carbon Pickaxe, the Gauss Katana, Evolutions,
+weapon handling and viewmodel hands — and [monsters and bosses](ROADMAP.md#pillar-2-monsters-and-bosses).
+
 The Pulse is the first custom mechanic in the mod that changes how the game plays, and the first Skill
 effect of any kind.
 
@@ -106,12 +117,17 @@ deflect. The player therefore can never be Ready while a Shield is still standin
 coexist and the "window always runs its full duration" invariant holds. Granting it at deflect time was
 considered and rejected for exactly that reason.
 
-**Ten tuning cvars**, registered in `dlls/game.cpp` — eight for behaviour, two for the ring's look.
+**Fifteen tuning cvars**, registered in `dlls/game.cpp` — thirteen for behaviour, two for the ring's
+look — plus `hud_pulse_tint`, which is client-side and `FCVAR_ARCHIVE` because it is a comfort setting
+rather than a tuning knob.
 
 **Feedback** — nested rings plus a `TE_DLIGHT` flash, and sounds on Pulse, on each deflect, on a denied
-press, and on Recharge completing. All stock placeholder assets. Deflects use randomised
-`weapons/ric1-5.wav`: a ricochet rather than another electrical noise, because the electrical one landed a
-fraction of a second after the Pulse's own in the same timbre and was simply not heard.
+press, and on Recharge completing. All stock placeholder assets. The Pulse is `weapons/cbar_miss1.wav` and
+a deflect is `weapons/cbar_hit1/2.wav`, randomised and pitched: a swing and an impact, because the first
+attempt used two electrical samples and the deflect landed a fraction of a second after the Pulse's own in
+the same timbre and was simply not heard. The set is placeholder but the *property* is not — see
+[ART_DEBT.md](ART_DEBT.md), which makes "the Pulse and the deflect must not share a timbre" the bar any
+replacement has to clear.
 
 The ring geometry is cvar-driven — `pulse_ring_style` picks `TE_BEAMCYLINDER` (a ring expanding along the
 ground, borrowed from the houndeye) or `TE_BEAMTORUS` (screen-aligned and centred on the player, so it
@@ -132,13 +148,36 @@ the fill off its own clock from the duration it was given. A whole Pulse costs t
 instead of one per frame. `CPlayerPulse::ForgetSentState()`, called where `m_fInitHUD` is handled in
 `UpdateClientData`, forces a resend after the client's HUD is reset so the bar cannot go stale.
 
-Everything else in this pillar is still only *descriptions*: Crowbar Reach, Crowbar Force, Fast Reload,
-Weapon Mastery and Crowbar Speed change nothing.
+**Four melee and damage Skills.** The first three follow the `PulseWindowFor` pattern — the modifier is
+read from `m_skills` where the value is computed, rather than through a hook of its own:
+
+- **Crowbar Reach** (id 1) scales the swing trace by `skill_crowbar_range_scale` (1.25) in
+  `CCrowbar::Swing`, on **both** sides. The server still decides whether a hit landed; the client's copy
+  of the trace only picks which swing animation plays, and now reaches as far as the server's.
+- **Crowbar Force** (id 2) scales crowbar damage by `skill_crowbar_damage_scale` (1.5),
+  applied *before* the Follow-Up so a primed swing multiplies the already-stronger hit rather than a
+  base one.
+- **Weapon Mastery** (id 4) scales every player weapon by `skill_weapon_damage_scale` (1.1), at two
+  chokepoints rather than per weapon — `ApplyMultiDamage` and the direct-`TakeDamage` branch of
+  `RadiusDamage`. Why it is two, and the two consequences that fall out of it, are under
+  [pillar 4](#4-skill-trees).
+- **Fast Reload** (id 3) scales the reload delay by `skill_reload_time_scale` (0.8) in
+  `CBasePlayerWeapon::DefaultReload` — the one place every clip-fed weapon funnels through, so the
+  glock, MP5, python, crossbow and RPG all get it without a per-weapon list. The shotgun does not: it
+  feeds shells one at a time and never calls `DefaultReload`.
+
+  This is the first Skill that changes a **predicted** value, and it is the proof the prediction fix
+  works. `m_flNextAttack` is owned by the client frame to frame, so the two sides shortening the reload
+  differently would hitch at the end of every one. Both read the same cvar through
+  `dlls/skill_tuning.h`, and both read the same `m_skills` — see pillar 4.
+
+Which leaves **Crowbar Speed** (id 11) as the only combat Skill that does nothing. It is no longer
+blocked on prediction; it is blocked on the crowbar's first-swing/follow-up damage rule, which reads
+`m_flNextPrimaryAttack` to decide which swing it was, so retuning the cadence retunes the damage.
 
 ### What's missing
 
-- Melee reach/damage/speed multipliers in `dlls/weapons.cpp` and the crowbar implementation.
-- Reload-time and global damage modifiers.
+- Attack-rate modifiers — see Crowbar Speed above.
 - A custom Shield sprite; `sprites/shockwave.spr` is standing in.
 - **Tuning.** Every number is a first guess, and `pulse_ring_style` still has to be judged one way or the
   other so the winner can become the default.
@@ -244,11 +283,15 @@ Recorded now so they are not rediscovered as bugs:
 Tune. The mechanic is confirmed to feel rewarding in play against headcrabs, zombies and alien slaves;
 every number behind it is still a first guess.
 
-The pattern for every Skill effect after this one is set by `PulseWindowFor` / `PulseRechargeFor` in
-`dlls/player_pulse.cpp`: a modifier is read server-side from `m_skills`, applied where the effect is
-computed, and never touched in prediction. The nine remaining Skills should follow it rather than each
-inventing their own hook. Reload and attack-rate Skills are deliberately *not* among them — those are
-client-predicted and were cut from the tree until that work is done.
+The pattern set by `PulseWindowFor` / `PulseRechargeFor` in `dlls/player_pulse.cpp` — a modifier read
+from `m_skills` where the effect is computed — is now what every Skill in the tree does, and it held: no
+Skill invented its own hook. Fast Reload is the first one to run through it on *both* sides, and it needed
+no new pattern to do so: the same `HasSkill` call, in the same place, in a file that happens to compile
+into the client too.
+
+Weapon Mastery is the one that needed care in *where* the modifier is read, because "every weapon you
+carry" is a claim about coverage rather than about one call site. The two-chokepoint answer and the two
+consequences it produces are recorded under [pillar 4](#4-skill-trees), with the rest of the effects work.
 
 ### Acceptance criteria (draft)
 
@@ -261,6 +304,9 @@ client-predicted and were cut from the tree until that work is done.
 ## 3. Custom items
 
 **Status: Playable**
+
+**Planned:** [Modules](ROADMAP.md#pillar-3-modules) — Dash, Hook, and possibly the Pulse — plus the item
+side of [Stations](ROADMAP.md#stations).
 
 The framework landed with inventory iteration 1, and the **Health Syringe** is the first item in the mod
 that Half-Life does not have.
@@ -364,6 +410,10 @@ table row, one `EItemTypeId`, one `CItem` subclass, one FGD line, one `case`.
 
 **Status: Playable**
 
+**Planned:** the five reserved ids, each now waiting on its own thing rather than on one shared blocker.
+`SprintSpeed` and `HighJump` need `pm_shared/`; `CrowbarSpeed` needs the crowbar's first-swing damage rule
+untangled from its cadence; `HiveCapacity` and `HiveRegrowth` are held for the alien column below.
+
 Every Skill in the tree changes how the game plays. The pillar's own acceptance criterion — "every unlocked
 skill has an observable effect" — is met, which is what moved this off Scaffolded.
 
@@ -371,12 +421,13 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
 
 **Definitions** — `game_shared/skill_defs.h`, compiled into both DLLs
 
-- **15 Skills in the tree**, across seven columns: Melee (0), the Pulse (1–2), the suit (3), Armaments (4),
-  Survivability (5–6). Total cost **33 points**, which is the target for how many Skill Points a campaign
+- **16 Skills in the tree**, across seven columns: Melee (0), the Pulse (1–2), the suit (3), Armaments (4),
+  Survivability (5–6). Total cost **35 points**, which is the target for how many Skill Points a campaign
   places.
-- **Six reserved ids** with no row: `FastReload`, `HighJump`, `SprintSpeed` and `CrowbarSpeed` are cut
-  pending prediction work; `HiveCapacity` and `HiveRegrowth` are held for the alien column below. A
-  reserved row is `SKILL_RESERVED(id)` — the id stays frozen and the Skill returns unchanged later.
+- **Five reserved ids** with no row: `HighJump` and `SprintSpeed` need movement prediction (`pm_shared/`);
+  `CrowbarSpeed` is entangled with the crowbar's first-swing damage rule; `HiveCapacity` and
+  `HiveRegrowth` are held for the alien column below. A reserved row is `SKILL_RESERVED(id)` — the id
+  stays frozen and the Skill returns unchanged later, which is exactly what `FastReload` (id 3) just did.
 - A `static_assert` enforces that the table is ordered by id. It is indexed positionally, so a row out of
   place would silently make a save's unlocked bits refer to different abilities — the grouping that reads
   most naturally to a human is exactly the mistake, so it is a compile error.
@@ -529,11 +580,26 @@ scaled by it**, because `FireDischarge` passes the player as attacker — defens
 energy, fired by the player) but emergent rather than designed. And **a player's own explosives hurt them
 10% more**, since `RadiusDamage` does not care that attacker and victim are the same entity.
 
-**Crowbar Reach is server-only and slightly desyncs the animation.** `crowbar.cpp` compiles into both DLLs
-for prediction, and `m_skills` does not exist client-side, so the client's copy of the swing trace still
-uses 32 units. It only picks which swing animation plays — damage is server-side either way — so at the
-far edge of the extended reach an unlocked player can see a miss animation for a hit that landed. Narrow
-at +8 units, and the alternative is letting the client decide whether a hit landed.
+**The predicted player now knows which Skills are held.** Weapon files compile into both DLLs, and the
+client's `CBasePlayer` (`cl_dll/hl/hl_weapons.cpp`) always had a real `m_skills` — zero-filled, never
+populated. `HUD_SetPredictedSkills` fills it from the same `gmsgSkillTree` message the Skill Tree panel
+draws itself from, so `m_pPlayer->m_skills.HasSkill(...)` gives the same answer on both sides.
+
+Two decisions inside that are worth knowing rather than rediscovering:
+
+- **Fed from the message, not from `clientdata_t`.** A scratch field on `clientdata_t` was the obvious
+  route and it does not survive inspection: `iuser3` is the engine's duck prevention and `iuser4` its fire
+  prevention (`HUD_TxferPredictionData`), and what remains is `fuser`/`vuser`, whose floats would cap the
+  id space at 24 bits where the message already carries 40. The mask changes only when the server says so,
+  so there is nothing to reconcile per frame and nothing to add to the prediction snapshot.
+- **Tuning cvars needed their own route.** They are registered in `game.cpp`, which is server-only, so
+  predicted weapon code cannot name them. `dlls/skill_tuning.h` looks them up by name through
+  `CVAR_GET_POINTER`, which works in both DLLs because `HUD_InitClientWeapons` points `g_engfuncs` at the
+  engine's cvar functions and a listen server shares one registry. Only knobs a predicted value depends on
+  belong there; a server-only effect keeps reading its `cvar_t` from `game.h`.
+
+`SprintSpeed` and `HighJump` are *not* unblocked by this. They change movement, which `pm_shared/` owns,
+and nothing in that path reaches `m_skills`.
 
 **`CPlayerRegen`** (`dlls/player_regen.cpp`) holds `HealthRegen` and `BatteryRegen`. It is deliberately
 **not** an Infusion — CONTEXT.md draws that line, and it has no duration, no icon and no start; it is
@@ -584,7 +650,7 @@ grant Rows later without rework.
 
 ### Acceptance criteria (draft)
 
-- ~~Every unlocked skill has an observable effect.~~ **Met** — all 15 Skills in the tree do something.
+- ~~Every unlocked skill has an observable effect.~~ **Met** — all 16 Skills in the tree do something.
 - ~~Skill points are earned through play, not seeded.~~ **Met structurally** — `skill_points_start` is 0
   and points come only from `item_skillpoint`. Not yet met *in practice*: no map places one, so the only
   source today is the `skill_addpoints` cheat.
@@ -597,6 +663,9 @@ grant Rows later without rework.
 ## 5. Inventory management
 
 **Status: Playable**
+
+**Planned:** a [Modules](ROADMAP.md#pillar-3-modules) tab, and a
+[Transmissions](ROADMAP.md#pillar-1-transmissions) list that is deliberately *not* an Inventory change.
 
 ### What exists
 
@@ -745,6 +814,53 @@ Iteration 1 is the only one that is hard to reverse.
   did not move.
 - Inventory contents *and* layout survive save/load and level transitions.
 - Lowering an `inv_rows_*` cvar never destroys or displaces anything a player is carrying.
+
+---
+
+## 6. Stealth
+
+**Status: Not started**
+
+Added as a pillar 2026-08-02. It is not filed under enhanced combat because it is the *alternative* to
+combat — it moves enemy perception, player movement, weapon choice and level layout at once, and pillar 2
+would have to mean "everything you do to things that are alive" to contain it.
+
+### What exists
+
+No custom code. But an unusual amount of the base game's own machinery is already in place and unused,
+which is why this is a pillar rather than a wish:
+
+- **The noise model is complete and running.** `CBasePlayer::UpdatePlayerSound()` derives a per-frame noise
+  volume from the player's velocity, whether they are airborne, whether they jumped, and how loud their
+  weapon just was, and posts it as `bits_SOUND_PLAYER` (`dlls/player.cpp:2586-2666`). Crouching and walking
+  already make the player quieter, as a side effect of being slower.
+- **Monsters already listen to it** — it is in the default sound mask (`dlls/monsters.cpp:402`) and in most
+  individual ones. Grunts investigate player noise when they cannot see their enemy
+  (`dlls/hgrunt.cpp:1984`).
+- **`CBasePlayer::Illumination()` is implemented and nothing calls it** (`dlls/player.cpp:4567`). It
+  returns the engine's light level at the player plus a decaying virtual muzzle flash that every gun sets.
+  `CBaseMonster::Look` (`dlls/monsters.cpp:328`) does not consult light at all.
+- **`m_fNoPlayerSound`** (`dlls/player.h:175`) is a working silent-movement switch, labelled in its own
+  comment as a debugging feature.
+- **The glock's silencer is one commented-out line** — `dlls/glock.cpp:77`. The submodel, the reduced
+  `QUIET_GUN_VOLUME`, the dimmed flash and the `GLOCK_ADD_SILENCER` animation all exist.
+
+### What's missing
+
+The wiring, and a reason to bother: nothing reads `Illumination()`, nothing rewards not being seen, and the
+player has no way to tell whether they are hidden.
+
+### Next step
+
+See [ROADMAP.md](ROADMAP.md#pillar-6-stealth) for the four pieces — Concealment, silent movement, silent
+weapons, the Backstab — and the open questions. The cheapest first commit is adding light level to the
+`Look()` gate, which is where `Illumination()` finally gets a caller.
+
+### Acceptance criteria (draft)
+
+- A player can cross an occupied room unseen, through choices they made — light, speed, weapon.
+- Doing so leaves them measurably better off than fighting through.
+- No stealth state is decided client-side.
 
 ---
 

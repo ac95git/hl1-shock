@@ -18,6 +18,8 @@ bool CL_IsDead();
 float UTIL_SharedRandomFloat(unsigned int seed, float low, float high);
 int UTIL_SharedRandomLong(unsigned int seed, int low, int high);
 
+void HUD_SetPredictedSkills(const unsigned char* unlockedMask);
+
 int HUD_GetWeaponAnim();
 void HUD_SendWeaponAnim(int iAnim, int body, bool force);
 void HUD_PlaySound(const char* sound, float volume);

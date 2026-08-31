@@ -6,7 +6,7 @@ Index of project documentation. Read the linked file when a task touches its are
 
 A Half-Life GoldSrc mod based on [TWHL's Half-Life Updated](https://github.com/twhl-community/halflife-updated), with custom gameplay systems added on top (player skill tree, VGUI inventory). C++17, VGUI1, Visual Studio 2019/2022 on Windows, Makefiles on Linux.
 
-The mod is built around five gameplay pillars — exploration, enhanced combat, custom items, skill trees, inventory management. [docs/PILLARS.md](docs/PILLARS.md) tracks what each one actually does today; read it before proposing feature work.
+The mod is built around six gameplay pillars — exploration, enhanced combat, custom items, skill trees, inventory management, stealth. [docs/PILLARS.md](docs/PILLARS.md) tracks what each one actually does today; read it before proposing feature work, and [docs/ROADMAP.md](docs/ROADMAP.md) for what is intended and unbuilt.
 
 ## Agent instructions
 
@@ -24,7 +24,9 @@ Referenced by `00-PROJECT-OVERVIEW.md` but **not yet written**: `10-COMMON-TASKS
 | File | Read it when |
 | --- | --- |
 | [CONTEXT.md](CONTEXT.md) | Naming anything in the custom gameplay layer. It is the glossary — match its vocabulary in code, comments, and commits, and add to it when a new term is settled |
-| [docs/PILLARS.md](docs/PILLARS.md) | Orienting on what the mod is for, checking what a gameplay system actually does today, or picking what to build next. Update it in the same commit as a change that moves a pillar |
+| [docs/PILLARS.md](docs/PILLARS.md) | Orienting on what the mod is for, or checking what a gameplay system actually does today. Update it in the same commit as a change that moves a pillar |
+| [docs/ROADMAP.md](docs/ROADMAP.md) | Picking what to build next, or proposing a feature — it records everything intended and unbuilt, the two blockers most of it shares, and the open questions. When an entry is built, its content moves to PILLARS.md and the entry is deleted |
+| [docs/MAP_BRIEF.md](docs/MAP_BRIEF.md) | Building or editing a map — the toolchain that is already in use, the three prerequisites that bite before it, and what a map has to contain for the economy in PILLARS.md to be judged rather than asserted |
 | [docs/adr/](docs/adr/) | Before changing something that looks arbitrary — the decisions recorded there were deliberate and the reasoning is not visible in the code |
 | [docs/TECH_DEBT.md](docs/TECH_DEBT.md) | Touching the skill tree tooltip or the inventory grid — both have known-issue entries with acceptance criteria |
 | [docs/ART_DEBT.md](docs/ART_DEBT.md) | Replacing a placeholder sprite or sound. Records what each stand-in is, why it's wrong, and what the replacement has to achieve |

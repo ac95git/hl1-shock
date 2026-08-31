@@ -137,6 +137,7 @@ Raising `skill_points_start` is the way to work on the tree UI without hunting f
 | `skill_crowbar_range_scale` | 1.25 | Crowbar Reach multiplies the 32-unit swing trace |
 | `skill_crowbar_damage_scale` | 1.5 | Crowbar Force multiplies crowbar damage |
 | `skill_weapon_damage_scale` | 1.1 | Weapon Mastery multiplies all player-dealt damage |
+| `skill_reload_time_scale` | 0.8 | Fast Reload multiplies `DefaultReload`'s delay |
 
 Two rules that are easy to break:
 
@@ -153,15 +154,35 @@ Two rules that are easy to break:
 
 ### Effects in shared weapon code
 
-Weapon files like `crowbar.cpp` compile into **both** DLLs for client prediction, and `m_skills` exists
-only on the server. So a Skill effect there must sit inside `#ifndef CLIENT_DLL`, and so must the
-`game.h` include that its tuning cvar needs.
+Weapon files like `crowbar.cpp` and `weapons_shared.cpp` compile into **both** DLLs for client prediction.
+`m_skills` is populated on both sides, so `m_pPlayer->m_skills.HasSkill(...)` gives the same answer in
+either — `HUD_SetPredictedSkills` (`cl_dll/hl/hl_weapons.cpp`) fills the client's copy from the same
+`gmsgSkillTree` message the Skill Tree panel draws from.
 
-Accept the consequence rather than working around it: the client's copy of the trace still uses base
-values, so it can predict a different *animation* than the server resolves. That is cosmetic. The
-alternative — telling the client which Skills are unlocked so it can predict them — would put the client
-in the business of deciding whether a hit landed, which is exactly what the server-authoritative rule
-exists to prevent.
+**Decide which side of the wire the effect belongs on, and be consistent:**
+
+| The effect changes | Where it goes | Reads its cvar from |
+| --- | --- | --- |
+| A value the client predicts — `m_flNextAttack`, `m_flNextPrimaryAttack`, a trace that picks an animation | both DLLs, no guard | `dlls/skill_tuning.h` |
+| Damage, health, armour, anything the server alone resolves | inside `#ifndef CLIENT_DLL` | `game.h`, include also guarded |
+
+The rule behind the table is unchanged: **the server decides, the client agrees.** Predicting a Skill does
+not mean the client gets a vote on whether a hit landed — Crowbar Reach extends the client's trace only so
+that it plays the right swing animation for a hit the *server* resolved.
+
+Two traps:
+
+- **A tuning cvar is not visible from the client.** They are defined and registered in `dlls/game.cpp`,
+  which is not in the client project, so naming `skill_crowbar_range_scale` in unguarded code is an
+  undefined symbol. Add a `CSkillTuning` to `dlls/skill_tuning.h` instead; it resolves the cvar by name
+  through `CVAR_GET_POINTER`, which works in both DLLs. Put only predicted knobs there.
+- **A `CSkillTuning` falls back to the *neutral* value**, not to the cvar's default, so a failed lookup
+  reads as the Skill not being held rather than as a number the two sides disagree about. That is
+  deliberate — it keeps a second copy of every default out of the header.
+
+`pm_shared/` is still out of reach. It runs from `playermove_t`, not `CBasePlayer`, so a Skill that changes
+movement speed or jump height cannot use any of this; `SprintSpeed` and `HighJump` stay `SKILL_RESERVED`
+for that reason.
 
 ## Adding a Skill
 

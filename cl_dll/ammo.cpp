@@ -28,6 +28,7 @@
 
 #include "ammohistory.h"
 #include "vgui_TeamFortressViewport.h"
+#include "com_weapons.h"
 
 WEAPON* gpActiveSel; // NULL means off, 1 means just the menu bar, otherwise
 					 // this points to the active weapon menu item
@@ -590,6 +591,12 @@ bool CHudAmmo::MsgFunc_SkillTree(const char* pszName, int iSize, void* pbuf)
 
 	int skillPoints = READ_BYTE();
 	int resetTokens = READ_BYTE();
+
+	// Two consumers, and they are independent on purpose: the panel draws the
+	// tree, the predicted player answers HasSkill() for weapon code that
+	// compiles into both DLLs.  Prediction must not depend on the VGUI panel
+	// having been created.
+	HUD_SetPredictedSkills(unlockedMask);
 
 	if (gViewPort && gViewPort->m_pInventoryPanel)
 		gViewPort->m_pInventoryPanel->UpdateSkillTree(unlockedMask, skillPoints, resetTokens);

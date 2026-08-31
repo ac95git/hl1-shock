@@ -18,6 +18,9 @@
 #include "player.h"
 #include "weapons.h"
 #include "gamerules.h"
+#include "skill_tuning.h"
+
+#include <algorithm>
 
 // Precaches the ammo and queues the ammo info for sending to clients
 void AddAmmoNameToAmmoRegistry(const char* szAmmoname, const char* weaponName)
@@ -84,6 +87,19 @@ bool CBasePlayerWeapon::DefaultReload(int iClipSize, int iAnim, float fDelay, in
 
 	if (j == 0)
 		return false;
+
+	// Fast Reload. Here rather than in each weapon, for the same reason Weapon
+	// Mastery lives in ApplyMultiDamage: this is the one place every clip-fed
+	// weapon funnels through, so "you reload faster" is true by construction
+	// instead of by a list somebody has to maintain. The shotgun is the one
+	// exception and feeds shells in one at a time -- see shotgun.cpp.
+	//
+	// Read through skill_tuning.h, not game.h: this function compiles into the
+	// client too, and m_flNextAttack is predicted frame to frame, so a client
+	// that shortened the delay differently from the server would hitch at the
+	// end of every reload.
+	if (m_pPlayer->m_skills.HasSkill(ESkillId::FastReload))
+		fDelay *= std::max(0.0f, g_tuneReloadTime.Value());
 
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + fDelay;
 
