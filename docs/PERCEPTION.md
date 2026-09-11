@@ -597,13 +597,48 @@ base class as **"Ignore Concealment"**, in both `fgd/halflife.fgd` and the mod d
 
 ### The readout
 
-Three states — **Unseen**, **Noticed**, **Spotted** — derived server-side from the highest Suspicion among
-every monster that can currently perceive the player, *including monsters the player cannot see*. It is a
-warning, not a mirror.
+**Built 2026-09-02.**
+
+Three states — **Unseen**, **Noticed**, **Spotted** (`EConcealState`, `dlls/perception.h`) — derived
+server-side by `CBasePlayer::SyncConcealState` from the highest Suspicion among every monster that can
+currently perceive the player, *including monsters the player cannot see*. It is a warning, not a mirror:
+being told that something behind you has started to notice is information available no other way, and it is
+what makes breaking contact a decision rather than a guess.
 
 Quantising to three states means the message fires on threshold crossings only, following `gmsgPulse`'s
-precedent of sending on state change and letting the client run its own clock. The Unseen→Noticed edge gets
-a soft cue; Noticed→Spotted gets a hard one.
+precedent of sending on state change and letting the client run its own clock.
+
+The scan runs at 10Hz over a 2048-unit sphere — `m_flDistLook`'s default, which nothing in the SDK raises,
+so nothing outside it can have been filling a meter. Two filters make *"can currently perceive"* true rather
+than approximate:
+
+- **A monster that does not run the meter is skipped unless it already has the player as its enemy.** An
+  opted-out profile sits pinned at 1.0 permanently, so reading its meter would report Spotted from a turret
+  three rooms away. This is also what makes the readout behave sensibly under `suspicion_enable 0`, where it
+  degrades to a two-state Hidden/Spotted display rather than reporting Spotted forever.
+- **A monster whose `m_flSuspicionTime` is more than half a second old is skipped.** `Look` does not run at
+  all without a client in PVS (`dlls/monsterstate.cpp:82`), so such a monster's meter is *frozen* rather
+  than draining, and a frozen value is not perception.
+
+`CHudConceal` (`cl_dll/hud_conceal.cpp`) draws an icon in the bottom-left suit cluster, immediately after
+health, armour and the Pulse — read the way those are read, as a glance at the corner, rather than as a mark
+in the middle of the room the player is trying to read. It rests in the cluster's own dim yellow when
+Unseen, turns **amber** when Noticed and **red** when Spotted: a change of hue rather than of brightness, so
+the two read apart at the edge of vision.
+
+The two transitions get different *shapes* of cue rather than different strengths of one: Unseen→Noticed
+lifts briefly to full and eases back; Noticed→Spotted **blinks** three times, so it registers as something
+happening rather than something being true. `hud_conceal 0` turns it off, which is how to judge whether it
+is carrying the mechanic or merely decorating it.
+
+It positions itself from `CHudPulse::RightEdge()` rather than repeating the Pulse's layout arithmetic, so it
+cannot drift when the Pulse moves. The icon is a **placeholder** — the flashlight's own `flash_full`, which
+turns red at low battery in the opposite corner — recorded in
+[ART_DEBT.md](ART_DEBT.md#the-concealment-readout--icon).
+
+The suit is only half a gate. The *resting* icon needs it, because it lines up with suit readouts that are
+absent without one and would otherwise float alone in an empty corner. The **warnings draw regardless** —
+Concealment is not suit hardware and applies from the first map, before the player has a suit at all.
 
 ### The Backstab — built 2026-08-31
 

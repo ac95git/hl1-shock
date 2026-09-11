@@ -4266,6 +4266,11 @@ void CBasePlayer::UpdateClientData()
 		// its icon or it heals invisibly for the rest of its duration.
 		m_infusion.ForgetSentIcon();
 
+		// And the Concealment readout, which would otherwise sit blank until
+		// the next threshold crossing -- i.e. a player who loads a save while
+		// Noticed would be told nothing at all.
+		ForgetConcealState();
+
 		if (!m_fGameHUDInitialized)
 		{
 			MESSAGE_BEGIN(MSG_ONE, gmsgInitHUD, NULL, pev);
@@ -4288,6 +4293,11 @@ void CBasePlayer::UpdateClientData()
 		// Send the initial skill-tree state to the newly connected client.
 		SendSkillTreeToClient(this);
 	}
+
+	// The Concealment readout.  Runs on its own 10Hz clock inside, because it
+	// walks the monsters near the player and a three-state readout cannot show
+	// anything finer.
+	SyncConcealState();
 
 	if (m_iHideHUD != m_iClientHideHUD)
 	{

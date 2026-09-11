@@ -414,6 +414,9 @@ void CHud::Init()
 	m_TextMessage.Init();
 	m_StatusIcons.Init();
 	m_PickupPrompt.Init();
+	// No ordering dependency: the Concealment icon lays itself out from
+	// m_Pulse.RightEdge() at draw time, not from anything Init sets up.
+	m_Conceal.Init();
 	GetClientVoiceMgr()->Init(&g_VoiceStatusHelper, (vgui::Panel**)&gViewPort);
 
 	m_Menu.Init();
@@ -570,6 +573,13 @@ void CHud::VidInit()
 	m_StatusIcons.VidInit();
 	m_PickupPrompt.VidInit();
 	m_Pulse.VidInit();
+
+	// VidInit is called BY NAME, not by walking m_pHudList the way Draw and
+	// Reset are -- so a new HUD element must be added here as well as to
+	// CHud::Init, or it silently never gets one. The Concealment icon was
+	// invisible for exactly that reason: its sprite rect is fetched here, and
+	// Draw returns early without it.
+	m_Conceal.VidInit();
 	GetClientVoiceMgr()->VidInit();
 }
 

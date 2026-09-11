@@ -20,6 +20,27 @@ class CBaseEntity;
 class CBaseMonster;
 
 /**
+*	@brief What the player is told about how well they are hidden.
+*
+*	Three states rather than a number, for two reasons.  A meter invites the
+*	player to read the meter instead of the room, and a quantised value only
+*	has to cross the wire when it changes -- three messages for a whole
+*	approach rather than one every frame.  Mirrored by #defines in
+*	cl_dll/hud_conceal.cpp.
+*
+*	It is a WARNING, not a mirror: it reports the highest Suspicion held by any
+*	monster that can currently perceive the player, including monsters the
+*	player cannot see.  Being told you have been noticed by something behind you
+*	is the entire value of it.
+*/
+enum EConcealState
+{
+	CONCEAL_UNSEEN = 0, //!< nothing is filling a meter on you
+	CONCEAL_NOTICED,	//!< something is past suspicion_notice -- break contact now
+	CONCEAL_SPOTTED,	//!< something has acquired you, or is about to
+};
+
+/**
 *	@brief How well one KIND of monster perceives.
 *
 *	Reached through CBaseMonster::GetPerceptionProfile(), a virtual rather than

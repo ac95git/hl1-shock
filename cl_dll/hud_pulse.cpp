@@ -81,6 +81,40 @@ bool CHudPulse::MsgFunc_Pulse(const char* pszName, int iSize, void* pbuf)
 	return true;
 }
 
+//=========================================================
+// Layout, shared with anything that sits after the Pulse.
+//
+// The armour readout starts at 3 * spriteW, then spends its own sprite width
+// plus three digits. The Pulse icon sits immediately after that, and its
+// charge bar immediately after the icon.
+//=========================================================
+int CHudPulse::IconX() const
+{
+	if (!m_prc)
+		return 0;
+
+	const int spriteW = m_prc->right - m_prc->left;
+
+	return 3 * spriteW + spriteW
+		+ gHUD.GetHudNumberWidth(100, 3, DHN_DRAWZERO)
+		+ spriteW / 2;
+}
+
+int CHudPulse::BarWidth(int spriteW)
+{
+	return (spriteW / 5) > 3 ? (spriteW / 5) : 3;
+}
+
+int CHudPulse::RightEdge() const
+{
+	if (!m_prc)
+		return 0;
+
+	const int spriteW = m_prc->right - m_prc->left;
+
+	return IconX() + spriteW + spriteW / 4 + BarWidth(spriteW);
+}
+
 bool CHudPulse::Draw(float flTime)
 {
 	if ((gHUD.m_iHideHUDDisplay & (HIDEHUD_ALL | HIDEHUD_HEALTH)) != 0)
@@ -120,11 +154,7 @@ bool CHudPulse::Draw(float flTime)
 
 	const int y = ScreenHeight - gHUD.m_iFontHeight - gHUD.m_iFontHeight / 2;
 
-	// The armour readout starts at 3 * spriteW, then spends its own sprite
-	// width plus three digits. Sit immediately after that.
-	const int x = 3 * spriteW + spriteW
-		+ gHUD.GetHudNumberWidth(100, 3, DHN_DRAWZERO)
-		+ spriteW / 2;
+	const int x = IconX();
 
 	int r = PULSE_COLOR_R;
 	int g = PULSE_COLOR_G;
@@ -170,7 +200,7 @@ bool CHudPulse::Draw(float flTime)
 	SPR_DrawAdditive(0, x, y - iOffset, m_prc);
 
 	// Vertical charge bar, immediately right of the icon, filling bottom-up.
-	const int barW = (spriteW / 5) > 3 ? (spriteW / 5) : 3;
+	const int barW = BarWidth(spriteW);
 	const int barX = x + spriteW + spriteW / 4;
 	const int barY = y - iOffset;
 	const int barH = m_iHeight;

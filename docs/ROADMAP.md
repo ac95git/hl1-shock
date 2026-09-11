@@ -125,8 +125,8 @@ See [The world](#pillar-1-the-world) for what the maps should eventually contain
 
 ## Pillar 6: Stealth
 
-**Shape: Building. Steps 1–3 and 6 are done — everything that decides whether the player is noticed.
-Step 4 (the readout) is next, and step 5 is everything after acquisition.**
+**Shape: Building. Steps 1–4 and 6 are done — everything that decides whether the player is noticed, and
+telling them about it. Step 5, everything after acquisition, is all that remains.**
 
 Half-Life has a working perception model that the vanilla game barely uses and never rewards. Stealth here
 is not a new system — it is finishing one Valve left half-connected and then giving the player tools to
@@ -154,7 +154,7 @@ that already describes what it changes.
 | 1 | **Docs** | PERCEPTION.md, the CONTEXT.md terms, the two corrections, the CLAUDE.md index row. **Done 2026-08-31.** No code. |
 | 2 | **The Backstab** | `CanBackstab()`, the curated exclusion list, `FInRearArc`, two cvars, `adr/0010`, and the headshot entry under [pillar 2](#headshots-and-how-they-reconcile-with-this). **Done 2026-08-31.** |
 | 3 | **Suspicion** | Perception Profile, the meter, the `Look` gate, the `debug_suspicion` view, `SF_MONSTER_IGNORE_CONCEALMENT`, `adr/0009`. **Done 2026-09-01.** |
-| 4 | **The readout** | `gmsgConceal` plus a HUD element, following `CHudPulse`'s send-on-change pattern. |
+| 4 | ~~**The readout**~~ | `gmsgConceal` plus `CHudConceal`, following `CHudPulse`'s send-on-change pattern. **Done 2026-09-02.** |
 | 5 | **[The post-aggro step](#the-post-aggro-step)** | Everything that happens *after* a monster acquires the player: de-escalation, the Search, Posts, aim-versus-facing, death witnesses, the Disturbance marker, the level-transition reset. Attempted 2026-09-02 and reverted — see below. |
 | 6 | ~~**Noise**~~ | A deliberate multiplier on the computed noise volume for crouching and walking. **Done 2026-09-02**, pulled forward: without it a crouched player could not get within crowbar reach without being heard, so the Backstab's own approach did not work. |
 

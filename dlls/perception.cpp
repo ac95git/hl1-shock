@@ -16,8 +16,10 @@
 #include "cbase.h"
 #include "monsters.h"
 #include "scripted.h"
+#include "player.h"
 #include "game.h"
 #include "perception.h"
+#include "UserMessages.h"
 
 #include <cmath>
 #include <cstdio>
@@ -242,6 +244,92 @@ void CBaseMonster::SuspicionFromDamage(entvars_t* pevAttacker)
 
 	m_flSuspicion = 1.0f;
 	m_flSuspicionTime = gpGlobals->time;
+}
+
+//=========================================================
+// CBasePlayer::SyncConcealState -- the readout.
+//
+// Derived server-side from the highest Suspicion held by any monster that can
+// currently perceive the player, INCLUDING monsters the player cannot see.
+// That is the whole value of it: a warning rather than a mirror.  Being told
+// something behind you has started to notice is information the player cannot
+// get any other way, and it is what makes breaking contact a decision instead
+// of a guess.
+//
+// Quantised to three states so the wire sees threshold crossings rather than a
+// value every frame -- gmsgPulse's precedent.
+//=========================================================
+void CBasePlayer::SyncConcealState()
+{
+	if (gmsgConceal == 0)
+		return;
+
+	if (gpGlobals->time < m_flNextConcealThink)
+		return;
+
+	m_flNextConcealThink = gpGlobals->time + 0.1f;
+
+	float flHighest = 0.0f;
+
+	// m_flDistLook's default is 2048 and nothing in the SDK raises it, so
+	// nothing outside that radius can have been filling a meter on us.
+	CBaseEntity* pEnt = NULL;
+	while ((pEnt = UTIL_FindEntityInSphere(pEnt, pev->origin, 2048)) != NULL)
+	{
+		if (pEnt == this || pEnt->IsPlayer())
+			continue;
+
+		CBaseMonster* pMonster = pEnt->MyMonsterPointer();
+
+		if (!pMonster || !pMonster->IsAlive())
+			continue;
+
+		const int iRelationship = pMonster->IRelationship(this);
+
+		if (iRelationship != R_NM && iRelationship != R_HT && iRelationship != R_DL)
+			continue;
+
+		// A monster that does not run the meter -- an opted-out profile, or the
+		// whole model switched off -- sits pinned at 1.0 forever, so reading its
+		// meter would report SPOTTED from a turret three rooms away.  Those
+		// count only once they have actually taken the player as an enemy.
+		const bool bUsesMeter = suspicion_enable.value != 0 && pMonster->GetPerceptionProfile().bUsesSuspicion;
+
+		if (!bUsesMeter)
+		{
+			if (pMonster->m_hEnemy == this)
+				flHighest = 1.0f;
+
+			continue;
+		}
+
+		// Look does not run at all for a monster with no client in its PVS
+		// (dlls/monsterstate.cpp:82), which means its meter is frozen rather
+		// than draining.  A stale value is not perception, so require that the
+		// monster has actually looked recently.  This is the filter that makes
+		// "can currently perceive the player" true rather than approximate.
+		if (gpGlobals->time - pMonster->m_flSuspicionTime > 0.5f)
+			continue;
+
+		if (pMonster->m_flSuspicion > flHighest)
+			flHighest = pMonster->m_flSuspicion;
+	}
+
+	int iState = CONCEAL_UNSEEN;
+
+	if (flHighest >= suspicion_acquire.value)
+		iState = CONCEAL_SPOTTED;
+	else if (flHighest >= suspicion_notice.value)
+		iState = CONCEAL_NOTICED;
+
+	if (iState == m_iConcealSentState)
+		return;
+
+	m_iConcealSentState = iState;
+
+	MESSAGE_BEGIN(MSG_ONE, gmsgConceal, NULL, pev);
+	WRITE_BYTE(iState);
+	MESSAGE_END();
 }
 
 //=========================================================

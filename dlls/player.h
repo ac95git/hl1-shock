@@ -386,6 +386,27 @@ public:
 	// the first frame after a restore.
 	int m_iPromptKind = 0;
 	int m_iPromptId = 0;
+
+	// ---- The Concealment readout ----
+	//
+	// Last EConcealState pushed to the client; -1 forces the next sync to send.
+	// Not saved, for the reason m_iSentState is not: the client's HUD is reset
+	// on load and ForgetConcealState() re-syncs it.
+	int m_iConcealSentState = -1;
+
+	// The scan below walks every monster near the player, so it runs on its own
+	// clock rather than every frame.  Ten times a second is far finer than a
+	// three-state readout can show.
+	float m_flNextConcealThink = 0;
+
+	// Walks the monsters that can currently perceive this player, quantises the
+	// highest Suspicion among them, and sends it if it crossed a threshold.
+	// Defined in dlls/perception.cpp, with the model it reports on.
+	void SyncConcealState();
+
+	// Makes the next sync send unconditionally.  Called when the client's HUD
+	// is reset, so the readout cannot be left showing a stale state.
+	void ForgetConcealState() { m_iConcealSentState = -1; }
 };
 
 inline void CBasePlayer::SetWeaponBit(int id)

@@ -481,6 +481,12 @@ public:
 	bool Draw(float flTime) override;
 	bool MsgFunc_Pulse(const char* pszName, int iSize, void* pbuf);
 
+	// Right edge of the Pulse icon and its charge bar, in screen pixels.
+	// Anything laid out after the Pulse -- the Concealment icon -- starts from
+	// here rather than repeating the arithmetic, so it cannot drift when the
+	// Pulse moves.
+	int RightEdge() const;
+
 private:
 	int m_iState = 0;         // EPulseState, mirrored from the server
 	float m_flStateStart = 0; // client time the current state began
@@ -494,6 +500,43 @@ private:
 	int m_iHeight = 0;
 
 	struct cvar_s* m_pCvarTint = nullptr;
+
+	// Layout, shared by Draw and RightEdge.
+	int IconX() const;
+	static int BarWidth(int spriteW);
+};
+
+//
+//-----------------------------------------------------
+//
+// The Concealment readout: an icon in the suit cluster after the Pulse, tinted
+// by how noticed the player is. The server sends threshold crossings only.
+// See cl_dll/hud_conceal.cpp and dlls/perception.cpp.
+//
+class CHudConceal : public CHudBase
+{
+public:
+	bool Init() override;
+	bool VidInit() override;
+	void Reset() override;
+	bool Draw(float flTime) override;
+	bool MsgFunc_Conceal(const char* pszName, int iSize, void* pbuf);
+
+private:
+	int m_iState = 0;		  // EConcealState, mirrored from the server
+	float m_flStateStart = 0; // client time the current state began
+
+	struct cvar_s* m_pCvarEnable = nullptr;
+
+	// Placeholder icon. Handle fetched lazily in Draw, as CHudBattery and
+	// CHudPulse do, because the sprites are not loaded yet at VidInit time.
+	HSPRITE m_hSprite = 0;
+	Rect* m_prc = nullptr;
+
+	// The suit icon's size, which this lines up against -- the placeholder is
+	// a different size from the readouts it sits beside.
+	int m_iSuitWidth = 0;
+	int m_iSuitHeight = 0;
 };
 
 class CHudStatusIcons : public CHudBase
@@ -630,6 +673,7 @@ public:
 	CHudStatusIcons m_StatusIcons;
 	CHudPickupPrompt m_PickupPrompt;
 	CHudPulse m_Pulse;
+	CHudConceal m_Conceal;
 
 	void Init();
 	void VidInit();

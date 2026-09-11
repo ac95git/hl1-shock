@@ -29,7 +29,7 @@ This file records **what exists today**. Intended work that has not been built l
 | 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. |
 | 4 | [Skill trees](#4-skill-trees) | **Playable** | 15 curated Skills, **all with effects**. Points and Reset Tokens are earned and spent, the tree fits any screen, and nothing in it lies about what it does. Numbers untuned; no map places a Skill Point yet. |
 | 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work over a server-owned model. Row Grants are now placeable; Boxes are the remaining gap. |
-| 6 | [Stealth](#6-stealth) | **Partial** | Concealment and Suspicion are live: monsters no longer acquire the player on sight, they fill a meter at a rate set by angle, distance, stance and light. No readout yet, and no de-escalation — once acquired, a monster stays acquired. |
+| 6 | [Stealth](#6-stealth) | **Partial** | Concealment and Suspicion are live: monsters no longer acquire the player on sight, they fill a meter at a rate set by angle, distance, stance and light, and the player is warned by `CHudConceal`. Quiet movement is deliberate. Nothing after acquisition has changed — once acquired, a monster stays acquired. |
 
 ---
 
@@ -848,7 +848,8 @@ Iteration 1 is the only one that is hard to reverse.
 
 ## 6. Stealth
 
-**Status: Partial**
+**Status: Partial** — everything up to the moment a monster notices the player is built, and the player is
+told about it. Everything after that moment is the base game.
 
 Added as a pillar 2026-08-02. It is not filed under enhanced combat because it is the *alternative* to
 combat — it moves enemy perception, player movement, weapon choice and level layout at once, and pillar 2
@@ -931,9 +932,12 @@ this. The short version:
 
 ### What's missing
 
-**The player cannot tell.** There is no readout, so being hidden and being about to be spotted look
-identical from behind the crosshair — which makes the mechanic unplayable rather than merely unpolished.
-That is the next commit.
+**A readout the player has not yet judged.** `CHudConceal` is an icon in the suit cluster after the Pulse:
+dim yellow when hidden, amber when noticed, red and blinking when spotted. Its sprite is a placeholder — the
+flashlight's own icon, which is a genuine confusion risk and is recorded in
+[ART_DEBT.md](ART_DEBT.md#the-concealment-readout--icon). Whether three states is the right granularity, and
+whether a corner icon is read in time mid-approach, are questions only play answers — `hud_conceal 0` turns
+it off for comparison.
 
 **Nothing searches.** A monster that loses the player gives up and returns to ALERT where it stands, but it
 does not go and look: no Search toward the last known position, no Post to settle at, no squad channel, and

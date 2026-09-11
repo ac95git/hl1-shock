@@ -102,5 +102,7 @@ void LinkUserMessages()
 
 	gmsgPulse = REG_USER_MSG("Pulse", 2);
 
+	gmsgConceal = REG_USER_MSG("Conceal", 1);
+
 	gmsgStatusIcon = REG_USER_MSG("StatusIcon", -1);
 }

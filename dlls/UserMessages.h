@@ -75,6 +75,12 @@ inline int gmsgPickupPrompt = 0;
 // from the duration, so a Recharge costs three messages rather than one a frame.
 inline int gmsgPulse = 0;
 
+// Concealment state: 1 byte (EConcealState).  Sent only on a threshold
+// crossing -- the whole point of quantising a continuous meter to three states
+// is that the wire sees three events rather than a value every frame.
+// See dlls/perception.cpp and cl_dll/hud_conceal.cpp.
+inline int gmsgConceal = 0;
+
 // Status icon: BYTE enable, STRING sprite name, then BYTE r/g/b when enabling.
 // CHudStatusIcons shipped with the SDK complete but with no sender anywhere in
 // dlls/; the Infusion is the first thing to use it. Variable length because it

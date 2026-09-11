@@ -69,6 +69,46 @@ similar-sounding one distinguishable.
 ### Done when
 A player can tell a Backstab landed with their eyes shut, and does not think something broke.
 
+## The Concealment readout — icon
+
+### Scope
+`cl_dll/hud_conceal.cpp`, `k_ConcealSprite`.
+
+### Current stand-in
+`flash_full` from `sprites/hud.txt` — **the flashlight readout's own icon**. Drawn additively in the
+bottom-left suit cluster after the Pulse, tinted by state: the HUD's own `RGB_YELLOWISH` at `MIN_ALPHA` when
+Unseen, amber when Noticed, red when Spotted.
+
+Chosen because it is the one stock HUD icon that is about light and being seen, and because it exists in
+all four resolution blocks of `hud.txt`. That second property is not optional: `autoaim_c`, the other
+plausible candidate, has no 320 entry, and `GetSpriteIndex` returns -1 for a missing name, which
+`GetSpriteRect` does not check.
+
+### What's wrong with it
+- **It is the flashlight.** `CHudFlashlight` draws this same icon top-right and turns it **red when the
+  battery is low** (`cl_dll/flashlight.cpp:113-116`). A red flashlight icon in the corner will read as a low
+  battery before it reads as *you have been spotted* — the worst possible confusion for the one state that
+  most needs to be read instantly.
+- It says *light*. Light is one of four Concealment terms and deliberately the weakest; the readout is about
+  being **noticed**, not about being lit.
+- It is a different size from the suit icons it sits beside (32×32 against 40×40 at 640), so it is centred
+  on them vertically rather than sharing their top edge, and still looks borrowed.
+
+### What to look for
+An eye or sight-line silhouette in the visual language of the suit readouts beside it, reading at the suit
+icon's size at every resolution — 20×20 at 320 through 120×120 at 2560. **Greyscale**, because the tint is
+applied additively and a coloured source comes out wrong.
+
+The mod has no `sprites/hud.txt` of its own; it falls back to Half-Life's. Adding any new HUD icon therefore
+means shipping a mod-side `hud.txt` containing **all four** resolution blocks, not just the new line.
+
+If the flashlight is replaced by night vision, the night-vision readout must not reuse this icon either —
+the collision above just moves.
+
+### Done when
+Nobody reads it as the flashlight, and a glance at the corner mid-fight tells Noticed from Spotted without a
+second look.
+
 ## The Health Syringe — icon, world model and sounds
 
 ### Scope
