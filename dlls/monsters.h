@@ -52,6 +52,12 @@
 #define SF_MONSTER_WAIT_FOR_SCRIPT 128 //spawnflag that makes monsters wait to check for attacking until the script is done or they've been attacked
 #define SF_MONSTER_PREDISASTER 256	   //this is a predisaster scientist or barney. Influences how they speak.
 #define SF_MONSTER_FADECORPSE 512	   // Fade out corpse after death
+// This monster ignores Concealment entirely and acquires the player the
+// instant it sees them, as in the base game.  For a set piece that has to
+// fire -- authored intent has to be able to beat stealth.  See
+// docs/PERCEPTION.md.  1024 rather than the free 8 because apache.cpp already
+// spends 8 on SF_NOWRECKAGE.
+#define SF_MONSTER_IGNORE_CONCEALMENT 1024
 #define SF_MONSTER_FALL_TO_GROUND 0x80000000
 
 // specialty spawnflags

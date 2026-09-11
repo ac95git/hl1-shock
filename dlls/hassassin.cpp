@@ -66,6 +66,8 @@ public:
 	void SetYawSpeed() override;
 	int Classify() override;
 	int ISoundMask() override;
+	// A stealth operative herself. One of the four primaries.
+	const PerceptionProfile& GetPerceptionProfile() override { return g_ProfileTrained; }
 	void Shoot();
 	void HandleAnimEvent(MonsterEvent_t* pEvent) override;
 	Schedule_t* GetSchedule() override;

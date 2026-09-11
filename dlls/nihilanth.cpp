@@ -29,6 +29,9 @@ class CNihilanth : public CBaseMonster
 public:
 	// m_flFieldOfView is -1: 360 degrees. "Behind" names nothing.
 	bool CanBackstab() override { return false; }
+	// The final boss of a scripted arena fight. There is nowhere to hide and
+	// nothing the fight would gain from him hesitating.
+	const PerceptionProfile& GetPerceptionProfile() override { return g_ProfileAlwaysAware; }
 
 	bool Save(CSave& save) override;
 	bool Restore(CRestore& restore) override;

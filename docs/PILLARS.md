@@ -29,7 +29,7 @@ This file records **what exists today**. Intended work that has not been built l
 | 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. |
 | 4 | [Skill trees](#4-skill-trees) | **Playable** | 15 curated Skills, **all with effects**. Points and Reset Tokens are earned and spent, the tree fits any screen, and nothing in it lies about what it does. Numbers untuned; no map places a Skill Point yet. |
 | 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work over a server-owned model. Row Grants are now placeable; Boxes are the remaining gap. |
-| 6 | [Stealth](#6-stealth) | **Not started** | No stealth code — no Concealment, no Suspicion, no readout. The design is settled ([PERCEPTION.md](PERCEPTION.md)), and its first commit turned out to be positional rather than stealth-gated, so the Backstab landed in pillar 2 instead. |
+| 6 | [Stealth](#6-stealth) | **Partial** | Concealment and Suspicion are live: monsters no longer acquire the player on sight, they fill a meter at a rate set by angle, distance, stance and light. No readout yet, and no de-escalation — once acquired, a monster stays acquired. |
 
 ---
 
@@ -848,7 +848,7 @@ Iteration 1 is the only one that is hard to reverse.
 
 ## 6. Stealth
 
-**Status: Not started**
+**Status: Partial**
 
 Added as a pillar 2026-08-02. It is not filed under enhanced combat because it is the *alternative* to
 combat — it moves enemy perception, player movement, weapon choice and level layout at once, and pillar 2
@@ -856,20 +856,64 @@ would have to mean "everything you do to things that are alive" to contain it.
 
 ### What exists
 
-No custom code. But an unusual amount of the base game's own machinery is already in place and unused,
-which is why this is a pillar rather than a wish. The full reference is
+**Concealment and Suspicion, since 2026-09-01.** A monster no longer acquires the player the frame it sees
+them. It fills a per-monster meter at a rate set by four multiplied terms — how central the player is in
+that monster's own cone, how far away as a fraction of that monster's own sight range, whether the player is
+crouched or moving slowly, and how brightly lit they are — and only becomes hostile when the meter fills.
+Every number is a cvar, `debug_suspicion 1` shows the live meters, and `suspicion_enable 0` restores vanilla
+acquisition exactly so the two can be compared in play.
+
+Seven things about it are worth knowing rather than rediscovering:
+
+- **It gates three condition bits and nothing else.** `SEE_HATE`, `SEE_DISLIKE` and `SEE_NEMESIS`, for the
+  player only. Everything downstream of acquisition is untouched, which is the whole reason the vanilla
+  campaign still plays the way it did. The four rejected placements are in
+  [adr/0009](adr/0009-suspicion-gates-the-relationship-bits.md).
+- **Shooting something acquires it immediately.** Not from the settled design — `TakeDamage` turns a monster
+  toward the attack but never sets `m_hEnemy`, so gating `Look` alone would have left a monster the player
+  shot standing there for seconds. Being shot fills the meter outright.
+- **Monster aim never came from monster facing, and stealth is what exposed it.** `ShootAtEnemy` aims at
+  `m_vecEnemyLKP`; `pev->angles` is not consulted and `SetBlending` blends pitch only, so a grunt shoots
+  accurately through its own back whenever anything refreshes its LKP. Vanilla, and **still true** — the gate
+  only made it a normal thing to witness. Diagnosis and the proposed one-function fix are in
+  [the post-aggro step](ROADMAP.md#the-post-aggro-step).
+- **Nothing after acquisition changed, and that is enforced in one line.** `UpdateSuspicion` pins the meter
+  full the moment the player becomes a monster's enemy, so combat is byte-for-byte the base game. Every
+  combat complaint therefore has exactly two possible causes — vanilla, or the fact that this mod lets you
+  reach vanilla states Half-Life never expected — and never a third.
+- **So once acquired, a monster keeps the player forever.** `GetIdealState`'s only exit from COMBAT is a
+  null enemy and nothing sets one. De-escalation was attempted and reverted on 2026-09-02; it and the
+  aim-versus-facing problem are [the post-aggro step](ROADMAP.md#the-post-aggro-step).
+- **The per-monster FOV table carries through for free.** Angle and distance are scaled to each monster's
+  own `m_flFieldOfView` and `m_flDistLook`, so the sharpest existing difference between monsters becomes a
+  difference in how hard each is to sneak past, with no second table to maintain.
+- **Light barely matters yet.** It is the mildest of the four terms deliberately: vanilla maps are lit for
+  readability, not for hiding. It becomes a real lever only with custom maps.
+- **Quiet movement is now a decision, not a side effect.** `UpdatePlayerSound` made a crouched player
+  quieter only because they were slower, which left an audible radius of ~107 units against a crowbar that
+  reaches ~32 — so the Backstab's own approach was impossible. `noise_stance_duck` / `noise_stance_walk`
+  scale the **body** volume only; firing is exactly as loud crouched as standing, because a quiet weapon is
+  the silencer and that is deferred.
+
+The Perception Profile that scales all this is a **virtual**, not a member set in `Spawn` — `Spawn()` does
+not re-run on restore, so anything set there and not saved comes back default after every load. `CanBackstab`
+already took that shape and anything else per-class must too.
+
+Underneath it, an unusual amount of the base game's own machinery was already in place and unused, which is
+why this was a pillar rather than a wish. The full reference is
 [PERCEPTION.md](PERCEPTION.md) — written 2026-08-31, and the first place to look before touching any of
 this. The short version:
 
 - **The noise model is complete and running.** `CBasePlayer::UpdatePlayerSound()` derives a per-frame noise
   volume from the player's velocity, whether they are airborne, whether they jumped, and how loud their
   weapon just was, and posts it as `bits_SOUND_PLAYER` (`dlls/player.cpp:2586-2666`). Crouching and walking
-  already make the player quieter, as a side effect of being slower.
+  made the player quieter as a side effect of being slower; the stance multipliers above now do it on
+  purpose.
 - **Monsters listen to it** — it is in the default sound mask (`dlls/monsters.cpp:402`) and in most
   individual ones.
-- **`CBasePlayer::Illumination()` is implemented and nothing calls it** (`dlls/player.cpp:4567`). It
-  returns the engine's light level at the player plus a decaying virtual muzzle flash that every gun sets.
-  `CBaseMonster::Look` (`dlls/monsters.cpp:328`) does not consult light at all.
+- **`CBasePlayer::Illumination()`** (`dlls/player.cpp:4567`) returns the engine's light level at the player
+  plus a decaying virtual muzzle flash that every gun sets. It had no callers at all until Concealment; the
+  muzzle-flash half of the light term arrived free because of it.
 - **`m_fNoPlayerSound`** (`dlls/player.h:175`) is a working silent-movement switch, labelled in its own
   comment as a debugging feature.
 - **The glock's silencer is one commented-out line** — `dlls/glock.cpp:77`. The submodel, the reduced
@@ -887,8 +931,13 @@ this. The short version:
 
 ### What's missing
 
-The wiring, and a reason to bother: nothing reads `Illumination()`, nothing rewards not being seen, and the
-player has no way to tell whether they are hidden.
+**The player cannot tell.** There is no readout, so being hidden and being about to be spotted look
+identical from behind the crosshair — which makes the mechanic unplayable rather than merely unpolished.
+That is the next commit.
+
+**Nothing searches.** A monster that loses the player gives up and returns to ALERT where it stands, but it
+does not go and look: no Search toward the last known position, no Post to settle at, no squad channel, and
+deaths and corpses are still imperceptible. Giving up is currently a timer rather than a behaviour.
 
 ### Next step
 
@@ -902,9 +951,10 @@ coordination, the readout, and a positional Backstab. It is written up in
 pillar's first commit and is the only piece judgeable in vanilla maps, but it is not stealth and this
 pillar should not take credit for it.
 
-What is next is the **Suspicion meter**: a Perception Profile per monster, the meter itself, the gate in
-`Look`, and a debug view built alongside it rather than after — a meter nobody can see is a meter nobody
-can tune, and [TECH_DEBT.md](TECH_DEBT.md) already asks for exactly that.
+What is next is **the readout** — three states, Unseen / Noticed / Spotted, derived server-side from the
+highest Suspicion among every monster that can currently perceive the player, sent only on a threshold
+crossing. Until it exists the meter is invisible outside `debug_suspicion`, and a stealth mechanic the
+player cannot read is not a mechanic.
 
 ### Acceptance criteria (draft)
 

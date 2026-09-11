@@ -553,8 +553,59 @@ cvar_t backstab_damage_scale = {"backstab_damage_scale", "3"};
 // units, so lower is a NARROWER rear arc.  -0.5 is the rear 120 degrees.
 cvar_t backstab_arc_dot = {"backstab_arc_dot", "-0.5"};
 
+// Concealment and Suspicion -- see docs/PERCEPTION.md part 2 and
+// docs/adr/0009-suspicion-gates-the-relationship-bits.md.  Every one of these
+// is a first guess and none has been judged in play.
+//
+// A master switch first, so the whole gate can be A/B'd against vanilla
+// acquisition mid-game without a rebuild.  0 restores the base game exactly.
+cvar_t suspicion_enable = {"suspicion_enable", "1"};
+// Meter units per second at full exposure, before the Perception Profile's
+// scale.  1 means a monster staring at a standing, lit, point-blank player
+// takes about a second to acquire them -- and the same monster looking at a
+// crouched player in a dark doorway at range takes the better part of a
+// minute, because the Concealment terms multiply.
+cvar_t suspicion_fill = {"suspicion_fill", "1.0"};
+// Units per second while the player is not visible.  Roughly three seconds
+// from full to forgotten.
+cvar_t suspicion_drain = {"suspicion_drain", "0.35"};
+// The two thresholds.  Acquisition is the top of the meter, which is where
+// everything the base game already does takes over unchanged.  Notice is what
+// the player's readout is derived from -- it exists now so the debug view can
+// mark it; the HUD element that uses it is the next commit.
+cvar_t suspicion_notice = {"suspicion_notice", "0.35"};
+cvar_t suspicion_acquire = {"suspicion_acquire", "1.0"};
+
+// The four Concealment terms.  Each is the exposure fraction at the WORST end
+// of that term -- at the rim of the cone, at the limit of sight, crouched, in
+// the dark.  None is ever 0: a term that could reach zero would zero the whole
+// product and make stealth absolute, which is a bug rather than a build.
+cvar_t conceal_angle_edge = {"conceal_angle_edge", "0.25"};
+cvar_t conceal_dist_far = {"conceal_dist_far", "0.25"};
+cvar_t conceal_stance_duck = {"conceal_stance_duck", "0.4"};
+cvar_t conceal_stance_walk = {"conceal_stance_walk", "0.7"};
+// Deliberately the mildest of the four.  Vanilla maps are lit for readability
+// rather than for hiding, so light cannot be the dominant lever until there
+// are maps with dark places in them.
+cvar_t conceal_light_dark = {"conceal_light_dark", "0.5"};
+
+// Noise.  UpdatePlayerSound already makes a slow player quiet, but only as a
+// side effect of velocity, and that accident was not nearly enough: a crouched
+// approach still put a sound inside a grunt's hearing radius at melee range,
+// which turned him around and collapsed the Concealment angle term exactly as
+// the player arrived to Backstab him.  These make quiet movement a decision.
+//
+// Sized against the crowbar rather than by feel: a crouched player moves at
+// roughly 107 units/sec, monsters hear a sound out to its volume in units, and
+// the crowbar reaches about 32.  0.3 puts a crouched approach just inside that.
+cvar_t noise_stance_duck = {"noise_stance_duck", "0.3"};
+cvar_t noise_stance_walk = {"noise_stance_walk", "0.6"};
+
 // Damage debug readout -- see game.h.  Throwaway diagnostic, off by default.
 cvar_t debug_damage = {"debug_damage", "0"};
+// Live Suspicion readout -- see perception.h.  Shares the screen centre with
+// debug_damage, so do not run both at once.
+cvar_t debug_suspicion = {"debug_suspicion", "0"};
 
 static bool SV_InitServer()
 {
@@ -661,7 +712,21 @@ void GameDLLInit()
 	CVAR_REGISTER(&backstab_damage_scale);
 	CVAR_REGISTER(&backstab_arc_dot);
 
+	CVAR_REGISTER(&suspicion_enable);
+	CVAR_REGISTER(&suspicion_fill);
+	CVAR_REGISTER(&suspicion_drain);
+	CVAR_REGISTER(&suspicion_notice);
+	CVAR_REGISTER(&suspicion_acquire);
+	CVAR_REGISTER(&noise_stance_duck);
+	CVAR_REGISTER(&noise_stance_walk);
+	CVAR_REGISTER(&conceal_angle_edge);
+	CVAR_REGISTER(&conceal_dist_far);
+	CVAR_REGISTER(&conceal_stance_duck);
+	CVAR_REGISTER(&conceal_stance_walk);
+	CVAR_REGISTER(&conceal_light_dark);
+
 	CVAR_REGISTER(&debug_damage);
+	CVAR_REGISTER(&debug_suspicion);
 
 	// REGISTER CVARS FOR SKILL LEVEL STUFF
 	// Agrunt

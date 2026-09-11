@@ -126,6 +126,9 @@ public:
 	void SetYawSpeed() override;
 	int Classify() override;
 	int ISoundMask() override;
+	// A trained soldier: quicker to notice, slower to forget. One of the four
+	// primaries stealth is tuned against -- see docs/PERCEPTION.md.
+	const PerceptionProfile& GetPerceptionProfile() override { return g_ProfileTrained; }
 	void HandleAnimEvent(MonsterEvent_t* pEvent) override;
 	bool FCanCheckAttacks() override;
 	bool CheckMeleeAttack1(float flDot, float flDist) override;

@@ -15,6 +15,8 @@
 
 #pragma once
 
+#include "perception.h"
+
 //
 // generic Monster
 //
@@ -111,6 +113,12 @@ public:
 
 	bool m_AllowItemDropping = true;
 
+	// Suspicion -- this monster's own belief that the player is there, 0 to 1.
+	// The only state the perception model adds, and it is saved: a quickload
+	// must not be a "calm everyone down" button.  See docs/PERCEPTION.md.
+	float m_flSuspicion = 0.0f;
+	float m_flSuspicionTime = 0.0f; // when the meter was last advanced
+
 	bool Save(CSave& save) override;
 	bool Restore(CRestore& restore) override;
 
@@ -171,6 +179,34 @@ public:
 	// entities get one), so a flag set there would come back wrong after
 	// every save load and would have to be added to the save table to fix.
 	virtual bool CanBackstab() { return true; }
+
+	// Perception -- see docs/PERCEPTION.md part 2 and
+	// docs/adr/0009-suspicion-gates-the-relationship-bits.md.
+	//
+	// GetPerceptionProfile is a virtual for the same two reasons CanBackstab
+	// is one: a profile describes a monster's TYPE, and Spawn() does not
+	// re-run on restore.
+	virtual const PerceptionProfile& GetPerceptionProfile() { return g_ProfileDefault; }
+
+	// How hidden pTarget is from this monster right now -- 0 fully exposed,
+	// 1 invisible.  Takes a CBaseEntity* rather than reading the player
+	// directly so that generalising the model later is deleting a branch in
+	// Look rather than a rewrite; see PERCEPTION.md, "Deliberately not
+	// generalised".
+	float ConcealmentOf(CBaseEntity* pTarget);
+
+	// Advances the meter one think and answers whether the player may be
+	// acquired.  pTarget is the player when this monster can see one and is
+	// hostile to them, NULL otherwise.  Called once per Look either way,
+	// because a meter that only moved while the player was visible would
+	// never drain.
+	bool UpdateSuspicion(CBaseEntity* pTarget);
+
+	// Fills the meter outright when the player deals damage.  TakeDamage does
+	// not set m_hEnemy, so without this a monster the player shot would wait
+	// out its own meter before fighting back.
+	void SuspicionFromDamage(entvars_t* pevAttacker);
+
 	void HandleAnimEvent(MonsterEvent_t* pEvent) override;
 
 	virtual int CheckLocalMove(const Vector& vecStart, const Vector& vecEnd, CBaseEntity* pTarget, float* pflDist); // check validity of a straight move through space

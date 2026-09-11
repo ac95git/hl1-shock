@@ -2583,6 +2583,16 @@ void CBasePlayer::UpdatePlayerSound()
 	// now calculate the best target volume for the sound. If the player's weapon
 	// is louder than his body/movement, use the weapon volume, else, use the body volume.
 
+	// Moving quietly on purpose -- see docs/PERCEPTION.md.  Deliberately NOT
+	// folded into iBodyVolume, because the weapon-versus-body comparison below
+	// is also what decides whether bits_SOUND_COMBAT gets set, and that bit is
+	// what promotes a monster from IDLE to ALERT.  Scale the body volume before
+	// that comparison and the weapon starts winning comparisons it used to
+	// lose, so crouching would promote a fading gunshot into a COMBAT sound
+	// that a standing player's would not have been -- crouching would alert
+	// monsters MORE.  Applied in the body branch only, where it belongs.
+	float flBodyNoiseScale = 1.0f;
+
 	if (FBitSet(pev->flags, FL_ONGROUND))
 	{
 		iBodyVolume = pev->velocity.Length();
@@ -2593,6 +2603,20 @@ void CBasePlayer::UpdatePlayerSound()
 		{
 			iBodyVolume = 512;
 		}
+
+		// Velocity alone already made a crouched or walking player quieter, but
+		// only as a side effect of being slower, and it was not enough to get
+		// within crowbar reach (32 units) of a grunt without being heard.
+		//
+		// Body only: a quiet WEAPON is the silencer, deferred to Evolutions,
+		// and stance has no business making gunfire quieter.  Firing is exactly
+		// as loud crouched as standing.
+		const float flRunSpeed = pev->maxspeed > 0.0f ? pev->maxspeed : 320.0f;
+
+		if ((pev->flags & FL_DUCKING) != 0)
+			flBodyNoiseScale = std::max(0.0f, noise_stance_duck.value);
+		else if (pev->velocity.Length2D() <= flRunSpeed * 0.5f)
+			flBodyNoiseScale = std::max(0.0f, noise_stance_walk.value);
 	}
 	else
 	{
@@ -2614,7 +2638,7 @@ void CBasePlayer::UpdatePlayerSound()
 	}
 	else
 	{
-		m_iTargetVolume = iBodyVolume;
+		m_iTargetVolume = (int)(iBodyVolume * flBodyNoiseScale);
 	}
 
 	// decay weapon volume over time so bits_SOUND_COMBAT stays set for a while

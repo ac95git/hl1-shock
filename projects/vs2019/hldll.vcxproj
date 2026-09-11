@@ -180,6 +180,7 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClCompile Include="..\..\dlls\pathcorner.cpp" />
     <ClCompile Include="..\..\dlls\plane.cpp" />
     <ClCompile Include="..\..\dlls\plats.cpp" />
+    <ClCompile Include="..\..\dlls\perception.cpp" />
     <ClCompile Include="..\..\dlls\player.cpp" />
     <ClCompile Include="..\..\dlls\player_infusion.cpp" />
     <ClCompile Include="..\..\dlls\player_inventory.cpp" />
@@ -280,6 +281,7 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClInclude Include="..\..\dlls\monsters.h" />
     <ClInclude Include="..\..\dlls\nodes.h" />
     <ClInclude Include="..\..\dlls\plane.h" />
+    <ClInclude Include="..\..\dlls\perception.h" />
     <ClInclude Include="..\..\dlls\player.h" />
     <ClInclude Include="..\..\dlls\player_infusion.h" />
     <ClInclude Include="..\..\dlls\player_inventory.h" />

@@ -36,6 +36,9 @@ class CApache : public CBaseMonster
 	// A flying machine with a 270-degree view. Nothing to stab, nowhere
 	// to stand, and no rear arc worth the name.
 	bool CanBackstab() override { return false; }
+	// Airborne, above the lighting the player is hiding in, and every
+	// encounter with one is an authored set piece.
+	const PerceptionProfile& GetPerceptionProfile() override { return g_ProfileAlwaysAware; }
 	void Killed(entvars_t* pevAttacker, int iGib) override;
 	void GibMonster() override;
 

@@ -39,6 +39,10 @@ public:
 
 	// Blind, rooted, and radially symmetric. There is no back to get behind.
 	bool CanBackstab() override { return false; }
+	// Blind by design and driven entirely by the sound list. It is already
+	// the game's one stealth encounter; Concealment has nothing to add and
+	// could only break it.
+	const PerceptionProfile& GetPerceptionProfile() override { return g_ProfileAlwaysAware; }
 
 	void Spawn() override;
 	void Precache() override;

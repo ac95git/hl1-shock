@@ -76,6 +76,8 @@ public:
 	void SetYawSpeed() override;
 	int Classify() override;
 	int ISoundMask() override;
+	// One of the four primaries -- a disciplined soldier of the other side.
+	const PerceptionProfile& GetPerceptionProfile() override { return g_ProfileTrained; }
 	void HandleAnimEvent(MonsterEvent_t* pEvent) override;
 	void SetObjectCollisionBox() override
 	{

@@ -45,6 +45,9 @@ public:
 	void SetYawSpeed() override;
 	int ISoundMask() override;
 	int Classify() override;
+	// One of the four primaries. Squad-capable and deliberate, unlike the
+	// scavengers it shares a map with.
+	const PerceptionProfile& GetPerceptionProfile() override { return g_ProfileTrained; }
 	int IRelationship(CBaseEntity* pTarget) override;
 	void HandleAnimEvent(MonsterEvent_t* pEvent) override;
 	bool CheckRangeAttack1(float flDot, float flDist) override;

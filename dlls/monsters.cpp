@@ -101,6 +101,13 @@ TYPEDESCRIPTION CBaseMonster::m_SaveData[] =
 		DEFINE_FIELD(CBaseMonster, m_scriptState, FIELD_INTEGER),
 		DEFINE_FIELD(CBaseMonster, m_pCine, FIELD_CLASSPTR),
 		DEFINE_FIELD(CBaseMonster, m_AllowItemDropping, FIELD_BOOLEAN),
+
+		// Suspicion is saved for the same reason m_flFieldOfView is: nothing
+		// re-establishes it on restore.  FIELD_TIME on the stamp so the engine
+		// rebases it -- a raw float would come back as an absolute time from
+		// the old level and hand UpdateSuspicion a nonsense delta.
+		DEFINE_FIELD(CBaseMonster, m_flSuspicion, FIELD_FLOAT),
+		DEFINE_FIELD(CBaseMonster, m_flSuspicionTime, FIELD_TIME),
 };
 
 //IMPLEMENT_SAVERESTORE( CBaseMonster, CBaseToggle );
@@ -299,6 +306,12 @@ void CBaseMonster::Look(int iDistance)
 {
 	int iSighted = 0;
 
+	// Suspicion -- see docs/PERCEPTION.md part 2.  The meter has to be
+	// advanced once per Look whether or not the player turns up in the list
+	// below, because a meter that only moved while the player was visible
+	// would never drain.
+	bool bSuspicionUpdated = false;
+
 	// DON'T let visibility information from last frame sit around!
 	ClearConditions(bits_COND_SEE_HATE | bits_COND_SEE_DISLIKE | bits_COND_SEE_ENEMY | bits_COND_SEE_FEAR | bits_COND_SEE_NEMESIS | bits_COND_SEE_CLIENT);
 
@@ -360,18 +373,44 @@ void CBaseMonster::Look(int iDistance)
 						iSighted |= bits_COND_SEE_ENEMY;
 					}
 
+					const int iRelationship = IRelationship(pSightEnt);
+
+					// The Suspicion gate.  Scoped to the player and to the
+					// three hostile relationships, so a friendly monster's
+					// meter is never touched and every other hostile is still
+					// acquired instantly, exactly as in the base game.
+					//
+					// It gates ONLY the relationship bits, which are the bits
+					// GetEnemy reads.  bits_COND_SEE_CLIENT above, the m_pLink
+					// list, SF_MONSTER_WAIT_TILL_SEEN and SEE_ENEMY for an
+					// enemy already held are all left alone -- so Barney still
+					// says hello, scripted AI still gets the condition it
+					// expects, and an alerted monster still tracks the player
+					// at full speed.  See adr/0009.
+					bool bMayAcquire = true;
+
+					if (pSightEnt->IsPlayer() &&
+						(iRelationship == R_NM || iRelationship == R_HT || iRelationship == R_DL))
+					{
+						bSuspicionUpdated = true;
+						bMayAcquire = UpdateSuspicion(pSightEnt);
+					}
+
 					// don't add the Enemy's relationship to the conditions. We only want to worry about conditions when
 					// we see monsters other than the Enemy.
-					switch (IRelationship(pSightEnt))
+					switch (iRelationship)
 					{
 					case R_NM:
-						iSighted |= bits_COND_SEE_NEMESIS;
+						if (bMayAcquire)
+							iSighted |= bits_COND_SEE_NEMESIS;
 						break;
 					case R_HT:
-						iSighted |= bits_COND_SEE_HATE;
+						if (bMayAcquire)
+							iSighted |= bits_COND_SEE_HATE;
 						break;
 					case R_DL:
-						iSighted |= bits_COND_SEE_DISLIKE;
+						if (bMayAcquire)
+							iSighted |= bits_COND_SEE_DISLIKE;
 						break;
 					case R_FR:
 						iSighted |= bits_COND_SEE_FEAR;
@@ -386,6 +425,11 @@ void CBaseMonster::Look(int iDistance)
 			}
 		}
 	}
+
+	// No hostile sight of the player this think -- drain.  Also runs for a
+	// SF_MONSTER_PRISONER, which skips the whole block above.
+	if (!bSuspicionUpdated)
+		UpdateSuspicion(NULL);
 
 	SetConditions(iSighted);
 }

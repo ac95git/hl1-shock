@@ -125,7 +125,8 @@ See [The world](#pillar-1-the-world) for what the maps should eventually contain
 
 ## Pillar 6: Stealth
 
-**Shape: Ready. The design is settled and the first commit is obvious.**
+**Shape: Building. Steps 1–3 and 6 are done — everything that decides whether the player is noticed.
+Step 4 (the readout) is next, and step 5 is everything after acquisition.**
 
 Half-Life has a working perception model that the vanilla game barely uses and never rewards. Stealth here
 is not a new system — it is finishing one Valve left half-connected and then giving the player tools to
@@ -152,10 +153,50 @@ that already describes what it changes.
 | --- | --- | --- |
 | 1 | **Docs** | PERCEPTION.md, the CONTEXT.md terms, the two corrections, the CLAUDE.md index row. **Done 2026-08-31.** No code. |
 | 2 | **The Backstab** | `CanBackstab()`, the curated exclusion list, `FInRearArc`, two cvars, `adr/0010`, and the headshot entry under [pillar 2](#headshots-and-how-they-reconcile-with-this). **Done 2026-08-31.** |
-| 3 | **Suspicion** | Perception Profile, the meter, the `Look` gate, and a **debug view** built alongside rather than after it. `adr/0009`. |
+| 3 | **Suspicion** | Perception Profile, the meter, the `Look` gate, the `debug_suspicion` view, `SF_MONSTER_IGNORE_CONCEALMENT`, `adr/0009`. **Done 2026-09-01.** |
 | 4 | **The readout** | `gmsgConceal` plus a HUD element, following `CHudPulse`'s send-on-change pattern. |
-| 5 | **The squad half** | De-escalation, the Search, Posts, death witnesses, the Disturbance marker, the level-transition reset. |
-| 6 | **Noise** | A deliberate multiplier on the computed noise volume for crouching and walking. |
+| 5 | **[The post-aggro step](#the-post-aggro-step)** | Everything that happens *after* a monster acquires the player: de-escalation, the Search, Posts, aim-versus-facing, death witnesses, the Disturbance marker, the level-transition reset. Attempted 2026-09-02 and reverted — see below. |
+| 6 | ~~**Noise**~~ | A deliberate multiplier on the computed noise volume for crouching and walking. **Done 2026-09-02**, pulled forward: without it a crouched player could not get within crowbar reach without being heard, so the Backstab's own approach did not work. |
+
+### The post-aggro step
+
+Renamed from "the squad half", because the squad work turned out to be the smaller part of it.
+
+Everything up to acquisition is built and behaves. Everything after it is the base game, and the base game
+was never built for a player who can choose *not* to be seen. This step was attempted on 2026-09-02 and
+**reverted the same day** — not because the code was wrong, but because it was being written as patches to
+symptoms in a commit that was supposed to be about detection. The diagnosis is worth more than the code was,
+so it is kept here.
+
+**Aim is not facing.** `ShootAtEnemy` (`dlls/monsters.cpp:3234`) aims from the gun position at
+`m_vecEnemyLKP`. `pev->angles` is not consulted; `SetBlending` blends pitch only; there is no yaw blend and
+no check that the target is in front. A monster with a live LKP fires at full accuracy through its own back
+while its model faces elsewhere. **The turn is cosmetic — only the LKP is real.**
+
+**The LKP has four writers**, and the first attempt gated exactly one of them:
+
+| Writer | Notes |
+| --- | --- |
+| `CheckEnemy`, enemy in cone and visible | legitimate |
+| `CheckEnemy` "behind or beside", ≤256 units | the anti-cheese hack this mod wants to *undo* |
+| `TakeDamage` → `m_vecEnemyLKP = pevInflictor->origin` | shoot a monster from behind and it gets a perfect fix |
+| `SquadCopyEnemyInfo` | one squadmate with eyes on you feeds the whole squad |
+
+**So the seam is `ShootAtEnemy`, not the writers.** Clamp the shot to the monster's own cone — fire along
+facing when the LKP falls outside it — and "get behind it" means something for every monster at once, with
+no LKP bookkeeping and no per-monster schedule surgery. One function. That is the change to try first.
+
+**And nothing de-escalates.** `GetIdealState`'s only exit from `MONSTERSTATE_COMBAT` is a null enemy. A
+monster that loses the player therefore cycles
+`ESTABLISH_LINE_OF_FIRE → ELOF_FAIL → TAKE_COVER_FROM_ENEMY → SCHED_FAIL` for as long as the player stays in
+its PVS, hidden and unreachable — idle two seconds at a time, throwing a debug spark on every failed cover
+search (`dlls/schedule.cpp:189`, `#ifdef DEBUG` only), and walking to cover nodes 384 units away in between.
+This is **vanilla**, reachable in the base game by aggroing a grunt and hiding; the mod only makes it a
+normal thing to do rather than a freak one. Leaving PVS parks the monster silently in `TASK_WAIT_PVS`
+instead — still stuck, just quiet.
+
+The give-up that fixes it must key on **contact** (last sight, or last damage) rather than on the meter, or
+a monster under fire from an unseen attacker will quietly time out mid-firefight.
 
 Step 2 goes first despite not being the pillar's centrepiece, because it is the only part judgeable in
 vanilla maps today — it needs no meter, no profile and no squad code.

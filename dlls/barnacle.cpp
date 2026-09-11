@@ -39,6 +39,9 @@ public:
 	CBaseEntity* TongueTouchEnt(float* pflLength);
 	// Ceiling-mounted. There is no back to get behind.
 	bool CanBackstab() override { return false; }
+	// It does not see at all -- it grabs what touches its tongue. Light and
+	// stance are meaningless to it, so let it keep working exactly as it does.
+	const PerceptionProfile& GetPerceptionProfile() override { return g_ProfileAlwaysAware; }
 	int Classify() override;
 	void HandleAnimEvent(MonsterEvent_t* pEvent) override;
 	void EXPORT BarnacleThink();

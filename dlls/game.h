@@ -94,6 +94,22 @@ extern cvar_t infusion_duration_bonus;
 extern cvar_t backstab_damage_scale;
 extern cvar_t backstab_arc_dot;
 
+// Concealment and Suspicion.  Server-only -- the client predicts nothing about
+// what a monster believes, so these do not belong in skill_tuning.h.
+// See docs/PERCEPTION.md and dlls/perception.h.
+extern cvar_t suspicion_enable;
+extern cvar_t suspicion_fill;
+extern cvar_t suspicion_drain;
+extern cvar_t suspicion_notice;
+extern cvar_t suspicion_acquire;
+extern cvar_t noise_stance_duck;
+extern cvar_t noise_stance_walk;
+extern cvar_t conceal_angle_edge;
+extern cvar_t conceal_dist_far;
+extern cvar_t conceal_stance_duck;
+extern cvar_t conceal_stance_walk;
+extern cvar_t conceal_light_dark;
+
 // ---------------------------------------------------------
 // Damage debug readout.  THROWAWAY DIAGNOSTIC -- delete the cvar and both
 // functions once the numbers are settled.
@@ -109,6 +125,10 @@ extern cvar_t backstab_arc_dot;
 class CBaseEntity;
 
 extern cvar_t debug_damage;
+
+// Live Suspicion readout -- see dlls/perception.h.  Also throwaway, and it
+// shares the screen centre with debug_damage.
+extern cvar_t debug_suspicion;
 
 // Stash a breakdown for the next report, printf-style.  Called by a weapon
 // that still holds its individual multipliers as separate numbers -- by the

@@ -1016,6 +1016,12 @@ bool CBaseMonster::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, f
 
 			MakeIdealYaw(m_vecEnemyLKP);
 
+			// Being shot is proof.  TakeDamage turns the monster toward the
+			// attack but never sets m_hEnemy, so without this the Suspicion
+			// gate would leave a monster the player shot standing there until
+			// its meter caught up.  See dlls/perception.cpp.
+			SuspicionFromDamage(pevAttacker);
+
 			// add pain to the conditions
 			// !!!HACKHACK - fudged for now. Do we want to have a virtual function to determine what is light and
 			// heavy damage per monster class?

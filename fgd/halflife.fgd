@@ -179,6 +179,7 @@
 		128: "WaitForScript" 	: 0
 		256: "Pre-Disaster" 	: 0
 		512: "Fade Corpse"	: 0
+		1024: "Ignore Concealment" : 0
 	]
 	
 	allow_item_dropping(choices) : "Allow Item Dropping" : 1 : "This controls whether this NPC will drop items on death" =

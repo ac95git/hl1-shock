@@ -46,6 +46,9 @@ public:
 	// A transport aircraft. It is scenery that drops grunts, not a target
 	// the player can walk behind.
 	bool CanBackstab() override { return false; }
+	// Scenery that drops grunts. Sneaking past it is not a thing that can
+	// happen, so the meter would only ever be noise.
+	const PerceptionProfile& GetPerceptionProfile() override { return g_ProfileAlwaysAware; }
 
 	void Spawn() override;
 	void Precache() override;

@@ -57,6 +57,9 @@ public:
 	// VIEW_FIELD_FULL, and a machine bolted to a surface. CTurret,
 	// CMiniTurret and CSentry all inherit this.
 	bool CanBackstab() override { return false; }
+	// A machine with an unobstructed 360-degree sensor. Nothing about
+	// crouching in the dark should fool it.
+	const PerceptionProfile& GetPerceptionProfile() override { return g_ProfileAlwaysAware; }
 
 	void Spawn() override;
 	void Precache() override;

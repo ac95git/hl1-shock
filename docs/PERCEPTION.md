@@ -6,14 +6,18 @@ has been noticed.
 
 Two halves. **[Part 1](#part-1--what-half-life-does-today)** documents the base SDK exactly as it is, with
 no changes proposed — it is the thing being built on, and most of it is undocumented anywhere else.
-**[Part 2](#part-2--the-model-this-mod-adds)** is the model this mod layers on top, settled 2026-08-31 and
-not yet built.
+**[Part 2](#part-2--the-model-this-mod-adds)** is the model this mod layers on top, settled 2026-08-31.
+Concealment, Suspicion, the Perception Profile and the Backstab are **built**; de-escalation, the Search,
+the Post, the squad channel, the Disturbance, the readout and the noise multiplier are not. Each section
+below says which it is.
 
 What is intended and unbuilt is tracked in [ROADMAP.md](ROADMAP.md#pillar-6-stealth); what exists today is
 in [PILLARS.md](PILLARS.md#6-stealth). Vocabulary is in [CONTEXT.md](../CONTEXT.md) — **Concealment**,
 **Suspicion**, **Search**, **Post**, **Perception Profile**, **Backstab**.
 
-**Last updated:** 2026-08-31 (branch `hl-shock`, at `ff03310` — design settled, no code written)
+**Last updated:** 2026-09-02 (branch `hl-shock` — **everything before acquisition is built**: Concealment,
+Suspicion, the Perception Profile, the noise multipliers. Everything after acquisition is deferred to
+[the post-aggro step](ROADMAP.md#the-post-aggro-step). The readout is next)
 
 ---
 
@@ -104,6 +108,29 @@ promotes to `MONSTERSTATE_COMBAT`. **One frame, start to finish.**
 `CSquadMonster::CheckEnemy` (`dlls/squadmonster.cpp:387`) additionally pastes the LKP to the squad leader
 when it is fresh, and copies it back from the leader when it is not.
 
+### Aim does not come from facing
+
+Worth stating on its own, because it is invisible until stealth makes it visible and it looks like a bug
+when it appears.
+
+A monster's shot direction is `ShootAtEnemy` (`dlls/monsters.cpp:3234`), which aims from the gun position at
+`m_vecEnemyLKP`. **`pev->angles` does not enter into it.** `CHGrunt::Shoot` (`dlls/hgrunt.cpp:788`) is
+typical: it calls `UTIL_MakeVectors(pev->angles)` only to throw the shell casing, and `SetBlending(0, ...)`
+blends **pitch** alone — there is no yaw blend and no check that the target is in front.
+
+So a monster with a live LKP fires at full accuracy through its own back while its model faces elsewhere.
+The turn is cosmetic; only the LKP is real.
+
+Two things feed a monster an LKP it did not see:
+
+- the *"behind or beside"* clause in `CheckEnemy` (`:1165`) — enemy within 256 units, unoccluded and outside
+  the view cone, and the monster is simply handed the enemy's exact origin. It is an anti-cheese hack
+  against standing where a monster cannot see you, and it sets `iUpdatedLKP`, so in a squad that position is
+  then **pasted to every squadmate**.
+- `SquadCopyEnemyInfo`, which is squad information sharing and legitimate.
+
+This mod withholds the first for the player; see part 2.
+
 ### The state machine — `CBaseMonster::GetIdealState`
 
 `dlls/monsterstate.cpp:118`.
@@ -183,6 +210,29 @@ block that would face them toward player noise is **commented out** (`dlls/hgrun
 `SCHED_GRUNT_SWEEP` is not a sweep. It is `TURN_LEFT 179, WAIT 1, TURN_LEFT 179, WAIT 1`
 (`dlls/hgrunt.cpp:1594-1619`) — a look-around-in-place, reached from `SCHED_GRUNT_COMBAT_FACE` after 1.5
 seconds of facing an enemy.
+
+### A monster that fails schedules throws sparks
+
+Not perception, but it is how a perception bug first shows itself, so it belongs here.
+
+`FScheduleValid` (`dlls/schedule.cpp:179-191`) has a Valve debug aid: when a task fails and
+`m_failSchedule == SCHED_NONE`, it emits `UTIL_Sparks` above the monster's head. **It is inside `#ifdef
+DEBUG`**, so it appears in this mod's Debug builds and never in a Release one.
+
+Sparks therefore mean *"this monster is failing schedules"* — a symptom, never a cause. The usual cause is a
+pathing or cover task that cannot succeed, and the usual consequence is `SCHED_FAIL`
+(`TASK_STOP_MOVING, ACT_IDLE, TASK_WAIT 2, TASK_WAIT_PVS`, `dlls/defaultai.cpp:30`), which looks exactly
+like the monster has become unresponsive.
+
+The grunt has a reachable version of this loop with no exit: `ENEMY_OCCLUDED` →
+`SCHED_GRUNT_ESTABLISH_LINE_OF_FIRE` → `TASK_GET_PATH_TO_ENEMY` fails → `SCHED_GRUNT_ELOF_FAIL` →
+`SCHED_TAKE_COVER_FROM_ENEMY`, whose schedule (`dlls/hgrunt.cpp:1493`) sets **no** fail schedule — so a
+failed `TASK_FIND_COVER_FROM_ENEMY` sparks, drops to `SCHED_FAIL`, waits, and starts again. In between
+successful cover searches it can walk to a node 384 units away, which is how a "stuck" grunt also manages to
+wander out of the room.
+
+In the base game this is rare because nothing makes losing the player a normal event. Under this mod it is
+the *point*, which is why [de-escalation](#losing-the-player--de-escalation-search-post) is not optional.
 
 ### Light — `Illumination()`
 
@@ -286,9 +336,9 @@ anything built on stealth. Recorded here.
 
 ## Part 2 — the model this mod adds
 
-Settled 2026-08-31. Not built. The two decisions with lasting consequences get their own records —
-`adr/0009` for where the meter gates, `adr/0010` for the Backstab — written with the commits that
-implement them.
+Settled 2026-08-31. The two decisions with lasting consequences have their own records —
+[`adr/0009`](adr/0009-suspicion-gates-the-relationship-bits.md) for where the meter gates,
+[`adr/0010`](adr/0010-the-backstab-is-positional.md) for the Backstab.
 
 ### The shape in one paragraph
 
@@ -296,41 +346,95 @@ implement them.
 at which Suspicion fills; it does not decide whether it fills. When a monster's Suspicion reaches the
 acquisition threshold, everything below that line happens exactly as Half-Life already does it.
 
-### Concealment
+### Concealment — built 2026-09-01
 
-A multiplicative product of four terms, computed per monster/player pair:
+`CBaseMonster::ConcealmentOf(CBaseEntity*)` (`dlls/perception.cpp`). Returns 0 (fully exposed) to 1
+(invisible). Internally it multiplies four **exposure** fractions and returns what is left over, so the
+name the code carries and the name the design carries are complements of each other.
+
+Four terms, computed per monster/player pair:
 
 | Term | Source | Effect |
 | --- | --- | --- |
-| Angle | dot product against `m_flFieldOfView` | the edge of the cone is far slower than the centre |
-| Distance | fraction of `m_flDistLook` | far is slower than near |
-| Stance | crouched / walking / standing | crouched is slower |
-| Light | `Illumination()` | dark is slower |
+| Term | Source | Worst-case exposure | Effect |
+| --- | --- | --- | --- |
+| Angle | dot product against the monster's **own** `m_flFieldOfView` | `conceal_angle_edge` 0.25 | the rim of the cone is far slower than the centre |
+| Distance | fraction of the monster's **own** `m_flDistLook` | `conceal_dist_far` 0.25 | far is slower than near |
+| Stance | `FL_DUCKING`, else speed against `pev->maxspeed` | `conceal_stance_duck` 0.4, `conceal_stance_walk` 0.7 | crouched is slower; slow is slower |
+| Light | `Illumination()` | `conceal_light_dark` 0.5 | dark is slower |
+
+Each cvar is that term's exposure at its *worst* end. **None of them is ever zero**, and that is a rule
+rather than a default: a term that could reach zero would zero the product and make stealth absolute, which
+is a bug and not a build.
+
+Both the angle and the distance term are scaled to the individual monster's own cone and range, so the
+per-monster FOV table in part 1 — already the sharpest difference between monsters in the game — carries
+straight through into how hard each one is to sneak past, without a second table having to say so.
+
+The stance term treats **standing still as walking**: a player who has stopped moving is not the one giving
+themselves away. Speed is compared against half of `pev->maxspeed`, which puts vanilla walk (⅓ speed) and
+crouch-walk comfortably under the line and a run comfortably over it.
 
 The muzzle-flash term arrives free, because `CBasePlayer::Illumination()` already includes it — firing in
 the dark lights the player for about a second and nobody has to write that rule.
 
 Angle, distance and stance carry the first version, so the model is tunable in vanilla Half-Life maps.
-Light is wired from the first commit and contributes, but is not dominant, because **vanilla maps are lit
-for readability rather than for hiding** — it becomes the dominant lever only when there are custom maps
-with dark places in them. That dependency is tracked under [Maps](ROADMAP.md#maps).
+Light is wired from the first commit and contributes, but is deliberately the mildest of the four, because
+**vanilla maps are lit for readability rather than for hiding** — it becomes the dominant lever only when
+there are custom maps with dark places in them. That dependency is tracked under [Maps](ROADMAP.md#maps).
 
-### Suspicion
+### Suspicion — built 2026-09-01
 
-One float per monster, saved. It fills at the Concealment-derived rate while the monster's sight gate
-passes, and drains when it does not. There are two thresholds: a **notice** threshold, which drives the
-player's readout and squad chatter, and an **acquisition** threshold, at which the monster becomes hostile
-exactly as it does today.
+`CBaseMonster::m_flSuspicion`, one float per monster, 0 to 1, **saved** — a quickload is not a "calm
+everyone down" button. `m_flSuspicionTime` is saved alongside it as a `FIELD_TIME` so the engine rebases it
+across a transition.
 
-### Where it gates
+It is advanced by `UpdateSuspicion`, called **exactly once per `Look`** whether or not the player is in
+sight — a meter that only moved while the player was visible would never drain. It fills at
+`(1 - Concealment) × suspicion_fill × profile.flFillScale` per second while a hostile monster can see the
+player, and drains at `suspicion_drain × profile.flDrainScale` when it cannot.
+
+Two thresholds: `suspicion_notice` (0.35), which drives the player's readout and squad chatter, and
+`suspicion_acquire` (1.0), at which the monster becomes hostile exactly as it does today.
+
+Three cases short-circuit the meter, in this order:
+
+| Case | Behaviour |
+| --- | --- |
+| `suspicion_enable 0`, or a profile with `bUsesSuspicion` false | pinned full, acquisition allowed — vanilla, restored exactly |
+| `SF_MONSTER_IGNORE_CONCEALMENT` (1024) | pinned full — the mapper said this set piece has to fire |
+| `m_pCine != NULL` | **frozen**, not filled: performing, not perceiving. The gate answers from whatever the meter already holds, so when the script releases the monster the model resumes from where it left off |
+
+And one more, which is not a special case so much as a boundary: while `m_hEnemy` **is** the player the
+meter is pinned full. Dropping an enemy is de-escalation, which this does not own; the meter must not
+quietly become a give-up timer under a monster that is actively shooting.
+
+### Where it gates — [adr/0009](adr/0009-suspicion-gates-the-relationship-bits.md)
 
 Inside `Look`, and it gates **only the relationship bits** — `bits_COND_SEE_HATE`, `SEE_DISLIKE`,
-`SEE_NEMESIS` — which are the bits `GetEnemy` reads.
+`SEE_NEMESIS` — which are the bits `GetEnemy` reads. Scoped further to `pSightEnt->IsPlayer()`, so every
+other hostile is still acquired the instant it is seen and a friendly monster's meter is never touched at
+all.
 
-Untouched, deliberately: `bits_COND_SEE_CLIENT`, the `m_pLink` list, `SF_MONSTER_WAIT_TILL_SEEN`, and
-`bits_COND_SEE_ENEMY` for an enemy already acquired. So Barney still says hello, scripted AI still receives
-the condition it expects, and an alerted monster still tracks the player at full speed. The change is
-surgical because everything downstream of acquisition is left alone.
+Untouched, deliberately: `bits_COND_SEE_CLIENT`, the `m_pLink` list, `SF_MONSTER_WAIT_TILL_SEEN`,
+`bits_COND_SEE_FEAR`, and `bits_COND_SEE_ENEMY` for an enemy already acquired. So Barney still says hello,
+scripted AI still receives the condition it expects, fleeing still works, and an alerted monster still
+tracks the player at full speed. The change is surgical because everything downstream of acquisition is left
+alone. The ADR has the four rejected placements and what each would have broken.
+
+### The debug view — built 2026-09-01
+
+`debug_suspicion 1` centre-prints the four highest live meters, four times a second, with a bar, the raw
+value, the Concealment that produced it, and a `NOTICED` marker past `suspicion_notice`:
+
+```
+hgrunt         [======....] 0.62  cnc 0.38  NOTICED
+zombie         [=.........] 0.08  cnc 0.71
+```
+
+Built alongside the meter rather than after it, because every number above is a first guess and a meter
+nobody can see is a meter nobody can tune. It shares the screen centre with `debug_damage`, so the two
+should not be run together.
 
 ### Noise steers the cone; it does not fill the meter
 
@@ -338,15 +442,67 @@ Sound keeps its own path. Hearing the player turns a monster toward the noise �
 happens — and the commented-out grunt investigate block is restored so a loud noise also draws them to
 walk to it. Turning to face the player collapses the angle term, so the fill rate jumps.
 
+**The quiet half — built 2026-09-02.** That turn is the mechanic working, but it needs something to work
+*against*, and until now there was nothing. `UpdatePlayerSound` made a crouching player quieter only as a
+side effect of being slower, which left a crouched approach at roughly 107 volume — and since `Listen`
+hears a sound out to its volume in units (`dlls/monsters.cpp:231`) while the crowbar reaches about 32, a
+crouched player could never get close enough to Backstab anything without turning it around first. The
+approach the Backstab exists for was impossible.
+
+`noise_stance_duck` (0.3) and `noise_stance_walk` (0.6) scale the **body** volume in `UpdatePlayerSound`,
+giving a crouched approach an audible radius of about 32 units instead of 107. They deliberately do not
+touch `m_iWeaponVolume`: firing is exactly as loud crouched as standing, because a quiet *weapon* is the
+silencer, which is [deferred to Evolutions](ROADMAP.md#deliberately-deferred).
+
+Two properties of the base model that this inherits and that make it behave better than the multiplier
+alone suggests: a **stationary** player makes no body noise at all (volume is velocity), and volume decays
+at 250/sec rather than snapping, so stopping goes quiet within a fraction of a second while a monster that
+listens infrequently still catches a noise that has already ended.
+
 **Sight remains the only thing that fills Suspicion.** That keeps "break line of sight and they stop
 learning about you" true without exception, which is the rule the whole mechanic has to be readable
-through. There is exactly one exception, below.
+through. There are two exceptions — the Disturbance, below, and damage.
+
+### Damage fills the meter outright — built 2026-09-01
+
+Not in the settled design, because the design did not anticipate what the base game does here.
+`CBaseMonster::TakeDamage` sets `m_vecEnemyLKP` and turns the monster toward the attack, but **it never sets
+`m_hEnemy`** (`dlls/combat.cpp:998-1017`). Acquisition comes only through `Look` and `GetEnemy`. So with the
+gate in place and nothing else, a monster the player shot would stand and take it for however long its meter
+needed — measured, in a dark room at range, in whole seconds.
+
+`SuspicionFromDamage` fills the meter to full for player-dealt damage, called from that same block. Being
+shot is proof, on the same reasoning that admits the Disturbance: a body is proof, and so is a bullet.
+
+Player-dealt only, for the same reason the sight gate is scoped that way — every other hostile is acquired
+instantly regardless.
+
+### Everything after acquisition is deferred, deliberately
+
+**Nothing below this line is built, and the boundary is enforced in one place:** `UpdateSuspicion` pins the
+meter to 1.0 the moment `m_hEnemy` is the player and returns. Past that point the meter has no effect on
+anything, so combat is byte-for-byte the base game.
+
+That is a property worth keeping rather than an accident. It means every combat complaint has exactly two
+possible causes — vanilla, or the fact that this mod lets you reach vanilla states that Half-Life never
+expected you to reach — and never a third.
+
+The post-aggro work was attempted on 2026-09-02 and reverted the same day. What it found is recorded in
+[ROADMAP.md](ROADMAP.md#the-post-aggro-step) rather than here, because it is a plan and not a description
+of the code. The short version: **aim is not facing**, the LKP has four writers, and the right seam is
+`ShootAtEnemy` rather than the four writers.
 
 ### Losing the player — de-escalation, Search, Post
 
-Once acquired: if the enemy stays occluded and deals no damage for a give-up interval, Suspicion drains.
-At zero the monster drops `m_hEnemy` and runs a **Search** toward the last known position. Taking damage
-resets the give-up interval, so shooting a grunt and strolling away does not work.
+**None of this is built.** Once acquired, a monster keeps the player forever — `GetIdealState`'s only exit
+from `MONSTERSTATE_COMBAT` is a null enemy, and nothing sets one. This is the base game's behaviour,
+unchanged, and it is the first item of [the post-aggro step](ROADMAP.md#the-post-aggro-step).
+
+Intended: if the enemy stays occluded and deals no damage for a give-up interval, Suspicion drains. At the
+floor the monster drops `m_hEnemy` and runs a **Search** toward the last known position. Taking damage
+resets the interval, so shooting a monster and strolling away does not work. What holds an enemy must be
+**contact** — last sight or last damage — and not the meter, or a monster under fire from an unseen attacker
+would quietly time out mid-firefight.
 
 A Search that finds nothing resolves to a **Post**:
 
@@ -399,14 +555,26 @@ sight fills the meter"**, and it is justified because a body is proof rather tha
 Watch `MAX_WORLD_SOUNDS`: it is 64 for the whole world. Keep the duration modest and insert only for
 profiles that opt in, or a large firefight will crowd the pool.
 
-### Perception Profiles
+### Perception Profiles — built 2026-09-01
 
-A small struct describing how well one *kind* of monster perceives, defaulting to a conservative profile.
+`struct PerceptionProfile` (`dlls/perception.h`): a fill scale, a drain scale, and a `bUsesSuspicion` flag.
 Every monster participates by default; **"dumber" means a worse profile, never a bypass**, so a dark room
-works on a zombie too, just less. Grunts, assassins, alien grunts and alien slaves are the tuned primaries.
+works on a zombie too, just less.
 
-Explicit opt-outs — things that should never be sneaked past — are turrets, apache, osprey, barnacle,
-tentacle (already sound-only and blind) and nihilanth.
+| Profile | Fill | Drain | Who |
+| --- | --- | --- | --- |
+| `g_ProfileDefault` | 1.0 | 1.0 | everything not named below |
+| `g_ProfileTrained` | 1.5 | 0.5 | human grunt, assassin, alien grunt, alien slave — the four primaries |
+| `g_ProfileAlwaysAware` | — | — | `bUsesSuspicion` false: turret family, apache, osprey, barnacle, tentacle, nihilanth |
+
+The scales are **constants, not cvars**, because the ratio between two profiles is a design statement — a
+grunt notices sooner than a zombie — while the absolute rate is the tuning knob, and that is what
+`suspicion_fill` and `suspicion_drain` are. Promote them if the ratio itself needs dialling in.
+
+The opt-out list is the Backstab's exclusion list minus everything excluded for being *small*. Each entry
+is a machine, an aircraft, or a monster with no eyes to fool — never one excluded for being dangerous. The
+tentacle is the load-bearing one: it is blind, driven entirely by the sound list, and already the vanilla
+game's one stealth encounter, so Concealment has nothing to add to it and could only break it.
 
 **Reach it through a virtual, not a member set in `Spawn`.** `Spawn()` does not re-run on restore — only
 `FCAP_MUST_SPAWN` entities get one, everything else gets `Restore()` and `Precache()` and nothing more
@@ -416,15 +584,16 @@ a property of the monster's *type* and can never differ between two instances, s
 for it would be wrong twice over. `CanBackstab()` already takes this shape; see
 [ADR-0010](adr/0010-the-backstab-is-positional.md#why-a-virtual-and-not-a-flag).
 
-### Scripted sequences
+### Scripted sequences — built 2026-09-01
 
 A monster with `m_pCine` set accumulates no Suspicion; it is playing a sequence, not perceiving. When the
-script releases it, the normal model applies, so stealth works afterwards.
+script releases it, the normal model applies from where the meter stood, so stealth works afterwards.
 
-A new spawnflag additionally lets a mapper mark a monster as ignoring Concealment entirely, for a set piece
-that must fire. Half-Life's pacing leans on monsters spawning into a fight that is going to happen, and
-authored intent has to be able to win. Any spawnflag change lands in `fgd/halflife.fgd` **and** the mod
-directory's `top_mod.fgd` in the same change.
+`SF_MONSTER_IGNORE_CONCEALMENT` (**1024**, `dlls/monsters.h`) additionally lets a mapper mark a monster as
+ignoring Concealment entirely, for a set piece that must fire. Half-Life's pacing leans on monsters spawning
+into a fight that is going to happen, and authored intent has to be able to win. It is 1024 rather than the
+apparently-free 8 because `apache.cpp` already spends 8 on `SF_NOWRECKAGE`. It is in the FGD's `Monster`
+base class as **"Ignore Concealment"**, in both `fgd/halflife.fgd` and the mod directory's `top_mod.fgd`.
 
 ### The readout
 
@@ -510,11 +679,20 @@ Recorded now so they are not rediscovered as bugs.
   grenades and the player's own footsteps for the pool.
 - **Circle-strafing into the rear arc trivially Backstabs slow enemies** — zombies and headcrabs, which are
   exactly the monsters the Follow-Up is already tuned against.
+- **Getting behind an acquired monster does nothing for gunfire.** Aim reads the LKP, not facing, so a
+  monster you are standing behind still shoots you accurately whenever anything refreshes its LKP. Deferred,
+  with the diagnosis, to [the post-aggro step](ROADMAP.md#the-post-aggro-step).
 - **Light is nearly inert until custom maps exist.** Blocked on [Maps](ROADMAP.md#maps), like most of the
   mod.
 - **Pillar 6's "measurably better off" criterion is not carried by the damage model.** The Backstab is
   positional and single-tier, so the stealth player's advantage is not fighting at all, and silent leader
   kills dissolving squads. If that turns out to be too thin in play, the second tier is the obvious lever.
+- **A monster outside the player's PVS does not drain.** `RunAI` skips `Look` entirely in that case
+  (`dlls/monsterstate.cpp:82`), so Suspicion freezes rather than decaying while the player is elsewhere.
+  Judged correct rather than merely tolerable — forgetting should cost time *in the room* — but it does mean
+  a monster can be left one step below acquisition indefinitely.
+- **The meter advances once per think, not once per frame.** A monster in a state that thinks rarely fills
+  more slowly per second than the cvar implies. Intentional; worth knowing before tuning against a stopwatch.
 - **Corpses are still invisible to `Look`.** The Disturbance marker makes a body findable for a while; it
   does not make a body *visible*, and a monster standing next to one after the marker expires sees nothing.
 
@@ -525,11 +703,13 @@ Recorded now so they are not rediscovered as bugs.
 Every number in Part 2 is a first guess and every one is a cvar, following the `pulse_*` and `infusion_*`
 precedent in `dlls/game.cpp`. Nothing here has been judged in play.
 
-The knobs the model needs: Concealment weights per term; Suspicion fill and drain rates; the notice and
-acquisition thresholds; the raised-floor value; the give-up interval; the Search duration; per-profile
-scales; Disturbance volume and duration; the Backstab rear-arc dot threshold and multiplier; and the
-crouch and walk noise multipliers.
+The knobs the model needs, and which exist today: Concealment weights per term (`conceal_*`); Suspicion fill
+and drain rates and the two thresholds (`suspicion_fill`, `suspicion_drain`, `suspicion_notice`,
+`suspicion_acquire`); the
+crouch and walk noise multipliers (`noise_stance_duck`, `noise_stance_walk`); and the Backstab's rear-arc
+dot and multiplier (`backstab_*`). Still to come with the features that need them: the Search duration,
+per-profile scales if the constants prove wrong, and Disturbance volume and duration.
 
-A debug view of live Suspicion values ships with the meter rather than after it. Two
-[TECH_DEBT.md](TECH_DEBT.md) entries already ask for debug visualization of custom systems, and a meter
-nobody can see is a meter nobody can tune.
+A debug view of live Suspicion values shipped with the meter rather than after it — `debug_suspicion`,
+described above. Two [TECH_DEBT.md](TECH_DEBT.md) entries already ask for debug visualization of custom
+systems, and a meter nobody can see is a meter nobody can tune.
