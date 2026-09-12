@@ -8,7 +8,7 @@ build on, and list the questions that have to be answered before the first line 
 is built, its content moves into PILLARS.md and the entry here is deleted — this file only ever shrinks
 from the top.
 
-**Last updated:** 2026-08-31 (branch `hl-shock`, at `ff03310` — stealth moved from Shaped to Ready)
+**Last updated:** 2026-09-12 (branch `hl-shock` — Modules shaped: found and kept, the Pulse becomes one)
 
 ## Shape legend
 
@@ -71,16 +71,20 @@ What that leaves:
 
 | Feature | Where it lives | Still blocked on |
 | --- | --- | --- |
-| Dash | [Modules](#pillar-3-modules) | `pm_shared/` — movement, not weapons |
-| Hook | [Modules](#pillar-3-modules) | `pm_shared/` |
+| Dash | [Modules](#pillar-3-modules) | `pm_shared/` — but the long jump's physics-key route reaches it |
+| Hook | [Modules](#pillar-3-modules) | `pm_shared/` — same route |
 | Sprint speed (`SprintSpeed`, id 6) | reserved, cut from the tree | `pm_shared/` |
 | High jump (`HighJump`, id 5) | reserved, cut from the tree | `pm_shared/` |
 | Crowbar swing speed (`CrowbarSpeed`, id 11) | reserved, cut from the tree | the crowbar's own damage rule, below |
 | Draw speed | [Weapon handling](#weapon-handling) | nothing — unblocked |
 
 **The movement four are a genuinely different problem.** `pm_shared/` runs from `playermove_t`, not from
-`CBasePlayer`, so it cannot reach `m_skills` at all — the fix above does not extend to it, and the honest
-next step there is to carry the mask into `playermove_t` rather than to reuse anything built here.
+`CBasePlayer`, so it cannot reach `m_skills` at all — the fix above does not extend to it.
+
+**But a route into it already exists, and the base game uses it.** The long jump module is a predicted
+movement verb gated on player state: the server sets a physics key (`"slj"`, `dlls/items.cpp:584`) and
+`PM_Jump` reads it from `pmove->physinfo` (`pm_shared/pm_shared.cpp:2662`). The same mechanism can carry a
+Module or a movement Skill. Noticed 2026-09-12 while shaping Modules; not yet tried for anything new.
 
 **Crowbar swing speed is no longer a prediction problem.** The cadence is predicted and now reachable, but
 `CCrowbar::Swing` reads `m_flNextPrimaryAttack` to decide whether a swing is a first swing (full damage) or
@@ -748,69 +752,119 @@ result is repeated in twelve files.
 
 ## Pillar 3: Modules
 
-**Shape: Idea, with one large open question the user has already flagged.**
+**Shape: Shaped in intent, 2026-09-12. What a Module is, and the set, are decided; the Pulse's two
+branches and each Module's details are not.**
 
-Findable items that grant the player a new verb, managed from their own tab in the Inventory Panel.
-Proposed set:
+### What a Module is — decided
 
-| Module | What it does |
-| --- | --- |
-| **Dash** | A short dash. Upgradeable. |
-| **Hook** | A grappling hook, in the manner of Opposing Force's barnacle grapple. |
-| **Pulse** | The existing Pulse, converted from suit hardware into a Module. |
+**A Module is a mechanic the player does not have at the start, found partway through the game and kept
+from then on.** Half-Life's long jump module is the model, exactly. Modules are **not swappable** and
+there are no slots: finding one is permanent, and level design may assume any Module the player has
+already passed.
 
-### The precedent is already in the game
+That makes Modules the one kind of reward that changes **what the player can do**, where Skill Points,
+Row Grants and items change how well they do it. It is what gives exploration an access reward — a ledge
+passed early becomes a reason to come back — and it is the missing reason for the backtracking the
+Inventory design already commits maps to.
+
+Rejected on the way: *limited, swappable Modules*. The swap was proposed so a player uncomfortable with
+parrying could leave the Pulse out entirely. It was dropped because a swappable Module is one level design
+can never assume, and because the same comfort goal is met better inside the Pulse's own Skills — below.
+
+### The set
+
+| Module | What it does | Replaces |
+| --- | --- | --- |
+| **Pulse** | The existing Pulse, no longer available from the start. | Suit hardware — the Pulse today comes with the suit at Anomalous Materials |
+| **Dash** | A short, fast movement burst. | **The long jump module**, which serves the same purpose |
+| **Hook** | A grappling hook, in the manner of Opposing Force's barnacle grapple. | — |
+
+The Opposing Force grapple code will be added to the project for reference; nothing about the Hook should
+be designed against guesses until it is.
+
+### The precedent is already in the game — including the prediction route
 
 `m_fLongJump` (`dlls/player.h:176`) is exactly this shape: a bool on the player, saved
-(`dlls/player.cpp:107`), set by walking over `item_longjump` (`dlls/items.cpp:452`), and gating a movement
-verb thereafter. It is a found item that permanently grants a new way to move, and it is in the fiction as
-suit hardware. Modules are that, generalised, with a UI.
+(`dlls/player.cpp:107`), set by walking over `item_longjump` (`dlls/items.cpp:582`), and gating a movement
+verb thereafter. Modules are that, generalised, with a UI.
 
-Note the collision: `models/w_longjump.mdl` is currently the **Skill Point** placeholder
-(`dlls/items.cpp:381`). [ART_DEBT.md](ART_DEBT.md) already calls that misleading; Modules make it worse,
-because the longjump module will read as a Module to anyone who sees one. That entry gets more urgent, not
-less, if this is built.
+**And it already solves the hard part.** The long jump is a movement verb, so it runs in `pm_shared/` and
+is predicted — and the flag reaches it without `playermove_t` ever seeing `CBasePlayer`. The server writes
+a **physics key** (`pfnSetPhysicsKeyValue(edict(), "slj", "1")`, `dlls/items.cpp:584`, re-sent on restore
+at `dlls/player.cpp:3265-3271`) and `PM_Jump` reads it back from `pmove->physinfo`
+(`pm_shared/pm_shared.cpp:2662`). Physinfo is networked to the client for prediction by the engine.
+That is the route for Dash and Hook, and quite possibly for `SprintSpeed` and `HighJump` too — see
+[the prediction problem](#the-prediction-problem), which predates this being noticed.
 
-### The three hard parts
+Dash replacing the long jump means the thing to extend is already the right shape: `CItemLongJump`, the
+`slj` key and the `PM_Jump` branch, rather than a new entity and a new route beside them.
 
-**Movement Modules are client-predicted.** Dash and Hook both move the player, so both hit
-[the prediction problem](#the-prediction-problem) head-on — and the weapon-side fix does not help them:
-`pm_shared/` runs from `playermove_t` and cannot see `m_skills` at all. A dash that resolves server-side
-only will rubber-band on any latency. This is the single largest cost in the Module idea and it should be
-costed before the tab is designed.
+### The Pulse as a Module — two branches instead of a swap
 
-Opposing Force's grapple is not in this codebase. The barnacle's tongue is the nearest existing
-beam-plus-pull behaviour to read for reference, but a player-driven grapple is new movement code in
-`pm_shared/`, which is shared, predicted, and the most dangerous place in the codebase to be wrong.
+The Pulse's Skills split into **two branches** that answer the parry-comfort problem without removing the
+Pulse:
 
-**Limited or unlimited is not a UI question.** The user's own note leaves this open — "limited (swapable)
-or unlimited". It decides the whole feature:
+- **Timing** — the Pulse as it is now: press to raise a Shield, reward for reading an attack. The four
+  existing Skills (`PulseWindow` 12, `PulseRecharge` 15, `PulseDischarge` 16, `PulseRebound` 17) and the
+  `CrowbarFollowUp` (18) that hangs off a deflect all belong here.
+- **Passive** — a **separate, rechargeable health pool** that protects without being timed, for a player
+  who does not want to parry. New Skills, new ids.
 
-- *Unlimited* makes a Module a permanent unlock, identical in kind to the longjump module, and the tab is
-  a display of what you have found. Cheap, and level design can assume any Module the player has passed.
-- *Limited* makes Modules a loadout, with slots, swapping, and a real choice at every Station. Much more
-  interesting, and it means **level design can never assume a Module** — every gap crossable by Dash needs
-  another way across, or the player who swapped it out is stuck.
+**Settled 2026-09-12:**
 
-The second is a commitment across every map in the mod. It should be decided before any map is built, not
-after.
+- **The unskilled Pulse is the Pulse as it is today** — the timed press. Neither branch changes what the
+  Module does before a Skill is spent.
+- **The branches are not exclusive, but investing in both is meant to be inefficient.** No lockout rule,
+  no new line style in the tree: the tree stays AND-only, and the cost of spreading points across both is
+  carried by pricing. A player who goes deep in one branch should be clearly better served than one who
+  splits.
+- **The passive branch is a separate rechargeable health pool.** Damage lands on the pool before armour
+  and health, and the pool refills on its own.
+- **The Pulse is found in the world, early.** It is the player's first Module, and the stretch of game
+  that cannot assume it is short.
 
-**Converting the Pulse costs something specific.** PILLARS pillar 2 is explicit about why the Pulse is
-suit hardware: *"Skills evolve a verb the player already has rather than granting it, which lets level
-design assume it."* Making it a Module withdraws that guarantee. Worse, four Skills hang off it
-(`PulseWindow`, `PulseRecharge`, `PulseDischarge`, `PulseRebound`) plus `CrowbarFollowUp`, so a player
-could spend points on Skills for a Module they are not carrying. Under *unlimited* Modules this is nearly
-harmless; under *limited* it is a live problem needing an answer — grey the branch out, refuse the unlock,
-or accept it.
+**The pool sits next to two things that already absorb damage**, and the design has to say how it differs
+from each:
+
+- **Armour.** The HEV battery is already a second pool in front of health, and `BatteryRegen` (id 14)
+  already makes it refill passively. What separates the Pulse pool from armour today is only the curated
+  damage list and the recharge rule — worth making sharper than that, or the passive branch reads as
+  "more armour".
+- **The timed Shield.** Order in `CBasePlayer::TakeDamage` becomes: a standing Shield refuses the hit
+  outright, then the pool, then armour, then health.
+
+This **reverses a recorded decision**. PILLARS pillar 2 says the Pulse is suit hardware because *"Skills
+evolve a verb the player already has rather than granting it, which lets level design assume it."* As a
+Module, level design may assume it only after its acquisition point. That wants an ADR when it is built,
+since the reasoning it replaces is written down and the new reasoning should be too.
 
 ### Open questions
 
-- Does a Module occupy **Cells**? Its own tab suggests no, which puts it with Reset Tokens (banked, not
-  carried, occupying no Cells and undroppable) rather than with Item Types.
-- What **acquires** one — walking over it, the Pickup Prompt, or a Station?
-- "Dash: upgradeable" — by Skill Points, by Module-specific upgrades, or by finding a better Dash? The
-  first is the cheapest and reuses the whole tree; the third is the most exploration-flavoured.
-- Does the Inventory Panel's existing **Upgrades** tab become the Modules tab, or is this a third tab?
+- **What the pool absorbs.** Only the Shield's curated list
+  ([ADR-0005](adr/0005-the-shield-negates-a-curated-damage-list.md)), so both branches protect against the
+  same things and differ in *how* — or everything, which makes it the clearest difference from armour?
+- **How the pool recharges.** After a delay since the last hit, at a rate — or does it share the Pulse's
+  Recharge clock? And does pressing the Pulse still do anything useful for a passive-branch player?
+- **How the pool is shown.** `CHudPulse` already has a charge bar beside the armour readout; a pool is a
+  second quantity for it to carry, or a readout of its own.
+- **How "inefficient to split" is priced.** The 35-point tree and a 60–70% critical-path budget are the
+  lever; a proving map is what tells whether the pricing does it.
+- **Pulse Skills before the Module is found.** A player could spend points on a branch for a verb they do
+  not have. The [alien column](PILLARS.md#wanted-the-alien-column) already wants "hidden until the player
+  carries it" — the Pulse branch is a second customer for the same rendering machinery, and a reason to
+  build it once.
+- **Dash's input.** The long jump is duck + jump while moving. Does Dash keep that, take its own key, or
+  work in the air?
+- **Is the Hook a weapon or a verb?** Opposing Force's grapple occupies a weapon slot. A Module as defined
+  above is a verb, which argues for its own key — to be read against the reference code.
+- **Vanilla maps place `item_longjump`.** Keeping the classname means stock maps hand out Dash with no
+  edits; renaming it means they hand out nothing.
+- **Acquisition** — walk-over like the long jump, or the Pickup Prompt the suit moved to?
+- **"Dash: upgradeable"** — by Skill Points, which reuses the whole tree and is the pattern the Pulse
+  already follows, or by finding a better Dash?
+- **Where are they shown?** Not a loadout, so the tab is a record of what has been found. The Inventory
+  Panel's second tab is already the Skill Tree ("Upgrades"), so this is a third tab or a section of one.
+  A Module occupies no Cells, like a Reset Token.
 
 ---
 
@@ -953,8 +1007,8 @@ is designed, and may well change name first.
 
 | Provisional term | Proposed meaning | Notes |
 | --- | --- | --- |
-| **Module** | A found thing that grants the player a new verb, managed from its own Inventory Panel tab. | Collides with "the longjump module", which is in-fiction and helps rather than hurts. |
-| **Dash**, **Hook** | The first two Modules. | Plain, and hard to improve on. |
+| **Module** | A mechanic the player does not start with, found partway through the game and kept for good — never swapped. | Deliberately echoes "the longjump module", which is the model. Graduates to CONTEXT.md when the first one is built. |
+| **Dash**, **Hook** | Two of the three Modules; the Pulse is the third. Dash replaces the long jump. | Plain, and hard to improve on. |
 | **Evolution** | A durable alteration to a weapon that keeps the weapon's identity — silencer, second barrel, extended magazine. | Avoid *attachment* and *mod*; the first implies removable hardware, the second collides with "the mod". |
 | **Transmission** | A recorded log found in a level and played back. | Avoid *log*, *tape*, *audio diary*, *datapad*. |
 | **Station** | A world entity that takes items in and gives items out. | Avoid *bench*, *workbench*, *terminal*, *fabricator*. *Terminal* especially — it will be wanted for Transmissions. |
@@ -977,10 +1031,12 @@ answering it would settle the design by accident.
 
 Ranked by how much else is waiting on the answer.
 
-1. **Are Modules limited or unlimited?** Decides whether level design may ever assume a Module, which is a
-   commitment across every map in the mod. Must be answered before the first map is built.
-2. **Does the Pulse become a Module?** Withdraws the guarantee PILLARS pillar 2 relies on, and strands four
-   Skills plus the Follow-Up if the answer is yes and Modules are limited.
+1. ~~**Are Modules limited or unlimited?**~~ **Answered 2026-09-12: neither swappable nor available from
+   the start** — found through the game and kept, like the long jump. Level design may assume a Module
+   past the point it is found. See [Modules](#pillar-3-modules).
+2. ~~**Does the Pulse become a Module?**~~ **Answered 2026-09-12: yes**, with its Skills split into a timing
+   branch and a passive health-pool branch so a player need not parry. Found early; branches not exclusive
+   but priced so splitting is inefficient. The pool's details are open under [Modules](#pillar-3-modules).
 3. **Are weapon handling upgrades Skills or Evolutions?** Two systems currently want to make the same gun
    faster. Building both is the failure mode.
 4. **Does the Carbon Pickaxe replace the crowbar entirely?** Decides whether five Skill enumerators, three

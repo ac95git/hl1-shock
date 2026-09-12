@@ -405,7 +405,7 @@ consequences it produces are recorded under [pillar 4](#4-skill-trees), with the
 
 **Status: Playable**
 
-**Planned:** [Modules](ROADMAP.md#pillar-3-modules) — Dash, Hook, and possibly the Pulse — plus the item
+**Planned:** [Modules](ROADMAP.md#pillar-3-modules) — the Pulse, Dash (replacing the long jump) and Hook — plus the item
 side of [Stations](ROADMAP.md#stations).
 
 The framework landed with inventory iteration 1, and the **Health Syringe** is the first item in the mod
