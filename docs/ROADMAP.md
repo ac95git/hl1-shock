@@ -8,7 +8,7 @@ build on, and list the questions that have to be answered before the first line 
 is built, its content moves into PILLARS.md and the entry here is deleted — this file only ever shrinks
 from the top.
 
-**Last updated:** 2026-09-12 (branch `hl-shock` — Modules shaped: found and kept, the Pulse becomes one)
+**Last updated:** 2026-09-13 (branch `hl-shock` — the monster roster listed; the Panthereye explored)
 
 ## Shape legend
 
@@ -517,17 +517,612 @@ textures; recorded in [ART_DEBT.md](ART_DEBT.md) for later.
 
 ## Pillar 2: Monsters and bosses
 
-**Shape: Idea.**
+**Shape: Idea. A roster was listed on 2026-09-12, to be explored one entry at a time; the Panthereye is
+first and is the only one explored so far.**
 
-Import and reuse existing monsters with light polish, with occasional custom AI. Named candidates:
-**Panthereye** and **Kingpin** — both cut Half-Life monsters. Neither exists in this codebase; there is no
-`panthereye.cpp` or `kingpin.cpp` and no reference anywhere in `dlls/`. Both would be imports of model and
-behaviour, not revivals of dormant code.
+Import and reuse existing monsters with light polish, with occasional custom AI. **Kingpin**, a cut
+Half-Life monster, was named as a candidate before the roster and is not on it; it stays here until
+someone says whether it was dropped.
 
-**Bosses** — more difficult encounters with specific movesets.
+### The roster
 
-> The user's note on bosses ends mid-example: *"specific movesets (e.g."*. What the intended example was
-> is not recorded. Worth filling in — the example probably carries the actual design intent.
+| Entry | Kind | Starts from | Shape |
+| --- | --- | --- | --- |
+| [Panthereye](#panthereye) | Enemy | Half-Life's cut model and sounds; no AI | **Shaped** |
+| [Melee alien grunt](#melee-alien-grunt) | Enemy | `CAGrunt`, bare arm | **Shaped** |
+| [Shelled headcrab](#shelled-headcrab) | Enemy | `CHeadCrab`, recoloured | **Shaped** |
+| [Friendly alien slave](#friendly-alien-slave) | Non-combatant | The slave model on `CTalkMonster` | **Shaped** |
+| [Alien slave boss](#the-alien-slave-boss) | Boss, freed to become the friendly slave | `CISlave` | Idea |
+| [Assassin boss](#the-assassin-boss) | Boss | `CHAssassin` | Idea |
+| [Alien grunt boss](#the-alien-grunt-boss) | Boss | `CAGrunt` | Idea |
+| [Nihilanth](#the-nihilanth) | Boss | `CNihilanth`, new model | Idea |
+
+This also answers the old question of what a boss "moveset" meant: all four bosses are an existing monster
+given **custom attacks**, and two add something more (a dash, and turning into an ally). None is a puzzle.
+
+### Panthereye
+
+**Shape: Shaped 2026-09-13. The behaviour is decided (below); no code.**
+
+**The model is Half-Life legacy content**, a monster Valve cut, not another mod's art. The copy found on
+this machine is in *Half-Life: Extended* (`Half-Life/hl_extended`, per its `liblist.gam`), which ships
+`models/panthereye.mdl`, ten sounds in `sound/panthereye/`, an FGD entry and skill cvars. None of it is in
+this repo, `E:\CustomAssets` or `topmod` yet. Importing means copying the model into the repo's `models/`
+and `topmod/models/`, and the sounds into `topmod/sound/panthereye/`, which does not exist yet.
+
+**Its AI exists, but only compiled.** `hl_extended/dlls/hlex.dll` contains the classes `CPanthereye` and
+`CCinePanther` (`monster_cine_panther`, on `models/cine-panther.mdl`, which is not in the folder). There is
+no source, so "needs AI" means writing it. The strings still show what the AI does:
+
+| Evidence | What it says |
+| --- | --- |
+| `sk_panthereye_health` 60 / 70 / 80 / 100 | Four difficulty levels, where this mod has three. Somewhere between a grunt and an alien grunt |
+| `sk_panthereye_dmg_claw` 13 / 15 / 20 / 25 | A claw attack |
+| `sk_panthereye_dmg_leap` 20 / 25 / 35 / 35 | A leap attack, harder than the claw |
+| FGD: `size(-32 -32 0, 32 32 64)`, `SquadLeader` flag, `body` Diablo / Nightkin | A large hull, squads, two looks |
+
+**What the model gives the AI to work with** — read with `utils/mdltool/mdlinfo.py` plus a sequence dump:
+
+| Sequences | Tagged as | Notes |
+| --- | --- | --- |
+| `get_bug`, `itch`, `shakes` | `ACT_IDLE` | Three idles |
+| `subtle_motion`, `idle_figit` | `ACT_CROUCHIDLE` | It rests crouched |
+| `walk`, `run` | `ACT_WALK`, `ACT_RUN` | About 48 and 200 units/s |
+| `turn_left`, `turn_right` | `ACT_TURN_*` | |
+| `walk_to_crouch` | `ACT_CROUCH` | |
+| `crouch_to_jump` | `ACT_MELEE_ATTACK1` | **The leap.** Event 5 at frame 11 |
+| `attack_primary`, `attack_main_claw`, `attack_simple_claw` | `ACT_MELEE_ATTACK2` | Three claws. `attack_primary` is weighted 5 and hits twice (events 1 and 2); the others hit once (events 3 and 1) |
+| `flinch_light`, `flinch_hard` | small and big flinch | |
+| `death_drop`, `death_simple`, `death_violent` | `ACT_DIESIMPLE` ×2, `ACT_DIEVIOLENT` | |
+| `crawl_on_belly`, `crouch_to_crawl`, `walk_to_stand_1/2`, `flinch` | nothing | **A stalking crawl**, about 43 units/s, with the transitions in and out |
+| `eat_idle`, `eat_turn` | nothing | Feeding on a corpse, with chewing sounds baked in as events. `ACT_EAT` exists and is not used |
+| `wgh_drag` | nothing | 212 frames. Probably a scripted sequence for the cinematic version |
+
+Other facts about the model:
+
+- **Its head is hitgroup 2, not 1.** Half-Life's head is 1, which is what doubles damage
+  (`dlls/combat.cpp:1337`) and what [Decapitation](#pillar-2-decapitation) keys on. Every other hitbox is 0.
+  As shipped, a headshot counts as a chest hit. `TraceAttack` can remap it in one line, with no recompile.
+- **Its eyes glow.** Each of the four face textures has a `_Light` twin flagged additive and fullbright
+  (`0x24`). The engine honours additive (see the katana's hot blade), so the eyes are drawn as light and
+  show in the dark. That is a stealth fact: the player can see a Panthereye in a room they cannot see into.
+- **Two body models, red and blue.** Body 0 is red (`Panther_Bodyfull`), body 1 is blue
+  (`Panther_Bodyfull_Blue`). The FGD calls them Diablo and Nightkin. Both use the same red glowing eyes.
+- **The four skins are eyelid states, not variants.** Skin 0's eye is open, 1 half-shut, 2 narrowed,
+  3 shut and dark. That is enough to blink, and a shut eye is an eye that does not glow.
+- 49 bones including a tail, no attachments, 40 hitboxes.
+- Sounds: two alert, one attack, one death, four idle, two pain.
+
+**What exists to write the AI from.** The headcrab's leap is the template for the jump: an anim event
+(`HC_AE_JUMPATTACK`, `dlls/headcrab.cpp:29`) sets a velocity, and a touch function deals the damage
+(`LeapTouch`, `:341`). Bullsquids and houndeyes are the squad-capable animal pattern. Both attacks would be
+`DMG_SLASH`, which is on the Shield's list ([ADR-0005](adr/0005-the-shield-negates-a-curated-damage-list.md)),
+so the Pulse counters them with no extra work. It needs a Perception Profile (every monster has one) and an
+answer to whether it can be backstabbed.
+
+#### Settled 2026-09-13
+
+- **It stalks.** Once it knows about the player it closes in from cover to cover, crawling on its belly
+  toward them, and growls quietly the whole time. The growl is the player's warning. It is the monster side
+  of pillar 6: here the player is the one being hunted.
+- **Close up, it slashes.** In claw range it attacks whether or not it has been spotted.
+- **Spotted, it rushes and pounces.** When the player sees it, it stops hiding, runs at them and leaps from
+  moderate range.
+- **It never pounces unspotted.** A leap the player could not have seen coming is not fun, so the pounce is
+  only ever the answer to being seen. Being attacked out of nowhere is limited to the slash, and the growl
+  warns before that.
+- **Alone.** No squad code for now: a `CBaseMonster`, not a `CSquadMonster`, and the FGD's `SquadLeader`
+  flag is dropped.
+- **Feeding is a placeable ambush.** A mapper can place it eating, using `eat_idle` and `eat_turn`, which
+  exist for this. The player can come across it busy and choose to sneak past, strike first, or leave.
+- **The red one is the alpha.** Different stats, and it leaps more aggressively. *Assumed:* "the red eye"
+  means body 0, the red body. Both bodies have the same red eyes, so the eyes cannot tell them apart, and
+  the blue body is the normal one.
+
+#### What the settled behaviour costs
+
+- **"Spotted" is a new test, the reverse of Suspicion.** Everything in [PERCEPTION.md](PERCEPTION.md) is a
+  monster perceiving the player. This is the Panthereye asking whether *the player* can see *it*: is it
+  inside the player's view cone, with a clear line from the player's eyes. It has to be written, and its
+  tuning decides the whole encounter. Too wide and it pounces the moment it enters the edge of the screen;
+  too narrow and it is never spotted at all. Its glowing eyes help the test be fair in the dark.
+- **Cover to cover does not exist yet.** `CBaseMonster::FindCover` (`dlls/monsters.cpp:2270`) finds a node
+  the threat cannot see within a distance band, but it does not prefer nodes *closer* to the threat. Getting
+  closer through hidden nodes is a new search, built from the same node graph.
+- **The crawl has no activity tag**, so the base AI will never choose it. Movement plays `ACT_WALK` or
+  `ACT_RUN` (`dlls/schedule.cpp:1128-1151`). The Panthereye picks `crawl_on_belly` by name while stalking,
+  with `crouch_to_crawl` and `walk_to_stand_*` as the transitions. Feeding is picked by name the same way.
+- **There is no growl sound, as far as the names go.** The ten sounds are alert, attack, death, idle and
+  pain. An idle might pass for a growl; if not, it is a new sound and an [ART_DEBT.md](ART_DEBT.md) entry.
+  It plays at low volume and short range. It is a cue for the player and never enters `CSoundEnt`, which a
+  monster's own sounds do not anyway.
+- **The alpha is a keyvalue, not a second classname**: the body picks the stats, the way `item_suit`'s
+  `variant` does.
+
+#### Also settled 2026-09-13
+
+- **Spotted is permanent.** Once spotted, it switches to full combat for good: rush, slash, pounce. Looking
+  away does not send it back to stalking. The encounter has two modes, **stalking** and **combat**, and
+  moves one way between them.
+- **Hurting it counts as being spotted.** A Panthereye the player damages goes straight to combat.
+- **The alpha leaps from further away**, and may skip the stalk entirely and fight head-on from the start.
+  "May" is how it was put; it is the likely shape rather than a decision.
+- **The stalk starts the easy way: when it acquires the player.** Its own perception already exists: `Look`,
+  gated by Suspicion, gives it an enemy exactly as it does every other monster. Acquiring the player *is*
+  the start of the stalk, since stalking is simply what it does with an enemy it has not been spotted by.
+  That needs no code, where a map trigger would need a `Use` handler. The trigger stays a later option if
+  mappers want one.
+- **A feeding Panthereye wakes three ways:** a map trigger, being hurt, or noticing the player through its
+  own Suspicion. Noticing was only wanted if it came cheap, and it does, as long as feeding is the
+  Panthereye's own behaviour rather than a map's `scripted_sequence`. See
+  [How the bullsquid feeds](#how-the-bullsquid-feeds).
+
+Because spotted is one-way, a wrong answer from the "spotted" test is permanent too. A test that fires when
+the Panthereye is only at the very edge of the screen costs the whole stalk, so the test should lean strict.
+
+**Stats are deferred**, by decision: they are set later, against a map. The legacy cvars (60–100 health,
+claw 13–25, leap 20–35) are where the normal one starts; the alpha has no numbers.
+
+#### How the bullsquid feeds
+
+Read 2026-09-13, because it is the base game's only monster that already eats, and the Panthereye's feeding
+should be built on it rather than beside it.
+
+**The bullsquid goes looking for food; nobody places it eating.** Food is a **scent** in `CSoundEnt`, and
+two things leave one:
+
+| Scent | Left by | Lasts |
+| --- | --- | --- |
+| `bits_SOUND_CARCASS` | A monster's corpse, once it has finished dying (`dlls/schedule.cpp:475`). Not a monstermaker's, which fades out instead | 30 s, radius 384 |
+| `bits_SOUND_MEAT` | A gib that comes to rest, if it bleeds (`dlls/combat.cpp:899`) | 25 s, radius 384 |
+
+When it smells either (`bits_COND_SMELL_FOOD`), `CBullsquid::GetSchedule` (`dlls/bullsquid.cpp:1021-1035`)
+sends it to eat. If the food is behind it or out of sight, it plays a sniff first
+(`SCHED_SQUID_SNIFF_AND_EAT`). The schedule (`tlSquidEat`, `:898`) remembers where it was, walks to the scent,
+plays `ACT_EAT` three times, is marked full for 50 seconds (`TASK_EAT`, which only sets
+`m_flHungryTime`, `dlls/monsters.cpp:149`), and walks back to where it started. It does this in combat as well
+as when alert (`:1072`). Garbage gets the same treatment with an inspect animation instead (`SCHED_SQUID_WALLOW`).
+
+**What ends a meal: damage, or a new enemy** (the schedule's interrupt mask, `:920-922`). That second one is
+what makes Suspicion free. `RunAI` runs `Look` every think for any monster in the player's PVS, whatever
+schedule it is in (`dlls/monsterstate.cpp:82-90`). So Suspicion keeps filling while it eats, and the moment it
+completes the monster gains an enemy and the meal breaks. No perception code is needed.
+
+**The exception is a `scripted_sequence`.** Suspicion is frozen while a script holds a monster
+([PERCEPTION.md](PERCEPTION.md), the `m_pCine` row). A Panthereye placed feeding through the map's own
+scripting would be blind until released. Feeding therefore has to be a state of the Panthereye itself: a
+keyvalue it spawns with, starting a looping eat schedule, woken by a `Use` from the map trigger.
+
+Three traps it shows up:
+
+- **`ACT_EAT` finds nothing on the Panthereye.** `eat_idle` and `eat_turn` carry no activity tag, so
+  `TASK_PLAY_SEQUENCE ACT_EAT` fails. The eat schedule plays them by name, like the crawl.
+- **A scent registers only if the current schedule's sound mask includes it.** Every bullsquid schedule that
+  should notice food lists `bits_SOUND_MEAT | bits_SOUND_CARCASS` for exactly that reason, and the code says
+  so in a comment (`:924-927`). A Panthereye schedule that forgets it never smells anything.
+- **`CBullsquid::IgnoreConditions` overwrites the base ignores rather than adding to them** (`iIgnore =`, not
+  `|=`, `:249` and `:257`), and its comment says the opposite of what the test does: it ignores smells for 20
+  seconds *after* being hurt. Vanilla behaviour, not worth copying as written.
+
+**Not decided: should the Panthereye also hunt for food like the bullsquid?** The machinery is there for
+free. A Panthereye drawn to corpse scents would come to the player's kills, so a trail of bodies would bring
+the stalker to the player. That is a strong stealth idea, but nobody has asked for it. It also overlaps the
+planned **Disturbance** marker ([PERCEPTION.md](PERCEPTION.md#death-witnesses-and-the-disturbance)), the
+mod's own version of "a death leaves something behind". The two should be reconciled before either is used
+for this.
+
+### Melee alien grunt
+
+**Shape: Shaped 2026-09-13. The first version is decided and needs no new art; the charge and the weapon
+wait for model work.**
+
+In the Half-Life alpha and beta the alien grunt was planned as a melee monster carrying an **alien
+chainsaw**. This entry brings that back in two stages: a bare-handed brawler now, the chainsaw later.
+
+#### Settled
+
+- **Melee only, on the animations it already has.** `CAGrunt` already punches: `mattack2` and `mattack3`,
+  both `ACT_MELEE_ATTACK1`, fire `AGRUNT_AE_RIGHT_PUNCH` (13) and `AGRUNT_AE_LEFT_PUNCH` (12). Each is a hull
+  trace out to `AGRUNT_MELEE_DIST` (100) for `sk_agrunt_dmg_punch` as `DMG_CLUB`, shoving a player 250 units
+  sideways (`dlls/agrunt.cpp:523-581`). The hornet attack is switched off: `CheckRangeAttack1` answers false.
+  (`AGRUNT_AE_PUNCH` and `AGRUNT_AE_BITE` are defined at `:58-59` but nothing uses them; the model never fires
+  them.)
+- **No hivehand on its arm.** The model's `arm` bodypart has two submodels: `Gun_arm` (0) and `Bare_arm`
+  (1), so `pev->body = 1` removes the gun. The one attachment is on `Bip01 R Hand`, which is where punch blood
+  is drawn, so it still lands on the fist.
+- **A charge is wanted, but needs an animation that does not exist.** No alien grunt model on this machine has
+  one: stock, HD, Half-Life: Extended's four (`agrunt`, `_2`, `_3`, `_noarmor`) and Half-Life: Echoes' all
+  carry the same 32 sequences, reskinned. A charge is new animation on the stock rig, which starts with a
+  decompile.
+- **The alien chainsaw is designed from the ground up, later.** Until it exists the bare arm stands in, and
+  that stand-in is an [ART_DEBT.md](ART_DEBT.md) entry when this is built.
+
+#### What the base AI does to a melee-only grunt
+
+**Only one grunt in a squad will chase.** `GetSchedule` (`dlls/agrunt.cpp:1097-1102`) sends a grunt after
+the player only if it can take `bits_SLOT_AGRUNT_CHASE`, which is a single bit (`dlls/squadmonster.h:40`).
+Every other squad member gets `SCHED_STANDOFF`: stop, stand idle, face the enemy for two seconds, repeat
+(`:690-708`). With hornets, the ones standing still were shooting. Without them, a squad of four melee grunts
+is one brawler and three spectators who fight only if the player walks into reach. **This is the one change
+the first version cannot skip.**
+
+**Its armour cancels the player's melee.** Hitgroup 10 (pelvis, feet, upper spine, back of the head, upper
+arms) takes 20 off any `DMG_BULLET`, `DMG_SLASH` or `DMG_CLUB` hit and ricochets it (`:221-257`). The
+crowbar's 10 becomes 0.1. A full-investment Backstab (49.5) becomes 29.5, and the katana's 40 becomes 20. The
+katana's wave is `DMG_ENERGYBEAM` and ignores the plates. So a monster built to be met in melee is, on most
+of its body, immune to the crowbar: a real design decision, not a detail.
+
+Smaller things worth knowing:
+
+- **The Pulse counters the punch.** `DMG_CLUB` is on the Shield's list
+  ([ADR-0005](adr/0005-the-shield-negates-a-curated-damage-list.md)), so a deflect primes the Follow-Up. The
+  Follow-Up's swing then meets the armour above.
+- **Hitboxes do not follow submodels.** The right forearm's hitbox (group 5) reaches 51 units, the length of
+  the gun, so a shot through the empty air where the hivehand would be still hits.
+- **The aim problem goes away for this variant.** Hornets were the one ranged attack
+  [the post-aggro step](#the-post-aggro-step) had no answer for; a grunt without them has nothing to aim.
+- `FCanCheckAttacks` is overridden so alien grunts can attack enemies they cannot see (`:877`). Harmless
+  here: `CheckMeleeAttack1` still requires sight (`:895`).
+- It keeps the alien grunt's Perception Profile, `g_ProfileTrained`.
+- Every alien grunt model has two unused sequences, `attack3_1` and `attack3_2` (16 frames, looping, no
+  events, no activity). What they show is unknown: worth a look in a model viewer before a charge animation
+  is made from nothing.
+
+#### Also settled 2026-09-13
+
+**The purpose is monster variety.** Each alien grunt variant is there to make an encounter play differently,
+not to replace the stock grunt.
+
+- **Mixed squads.** Melee and hornet grunts fight in the same squad: hornet grunts hold back and shoot, melee
+  grunts close in. That settles the chase slot: a melee grunt chases without competing for
+  `bits_SLOT_AGRUNT_CHASE`, so every melee grunt in a squad is in the fight. Hornet grunts keep the slot
+  rules they have.
+- **No armour on the melee variant.** Its `TraceAttack` skips the hitgroup 10 ricochet, so the crowbar,
+  the Backstab and the Follow-Up all work on it. *Visual gap:* the stock model still wears the plates, so it
+  looks armoured and is not. An unarmoured body is art, and a second ART_DEBT line. Half-Life: Extended's
+  `agrunt_noarmor.mdl` shows the idea exists; where it came from is unknown.
+- **The charge knocks the player back, and the Pulse blocks only its damage.** A deflected charge still
+  shoves. The stock punch already behaves like this: `CheckTraceHullAttack` calls `TakeDamage` but ignores
+  its result and returns the entity it hit (`dlls/combat.cpp:1363-1372`), and the punch applies its shove to
+  whatever comes back. The one thing to fix while there is cosmetic: a deflected punch still plays the hit
+  sound and draws blood on the player, when nothing landed.
+- **The alien chainsaw should, ideally, be a weapon the player can take.** That makes it a new player weapon
+  in Half-Life's `WeaponId` space ([ADR-0002](adr/0002-two-identity-spaces-for-weapons-and-items.md)), with
+  a viewmodel, and a relative of the Carbon Pickaxe and the Gauss Katana: a third melee weapon, which forces
+  the question of what the melee bucket holds.
+
+#### Wanted: a shielded variant
+
+**Shape: Idea**, raised 2026-09-13. An alien grunt that carries a shield of some kind. Nothing is decided,
+including whether it is melee, hornet or both.
+
+**The word is taken.** **Shield** is settled vocabulary in [CONTEXT.md](../CONTEXT.md) for the field a Pulse
+raises, and CONTEXT.md exists to stop one word meaning two things. This needs its own name before it is
+written into code or commits.
+
+What it would build on: the armour code this entry removes from the melee grunt is already a working
+"this part of me stops hits" (`CAGrunt::TraceAttack`). A shield is the same test keyed on **direction**
+rather than hitgroup: hits from in front are stopped, hits from behind land. That is exactly the rear-arc
+test the Backstab already makes (`CBaseMonster::FInRearArc`, `dlls/combat.cpp`), so a shielded grunt is a
+monster the player has to get behind, and pillar 6 already gives them the tools.
+
+Open: carried in the hand or worn? Can it be broken? Does it block the katana's wave and the Pulse's
+Discharge, which are energy? A model with a shield is new art, like the chainsaw.
+
+#### Still open
+
+- **Classname or keyvalue?** To be decided. A keyvalue on `monster_alien_grunt` keeps stock maps unchanged,
+  and the bare arm itself could be that switch. With a shielded variant coming as well, the answer covers
+  three kinds of grunt rather than two.
+- **The chainsaw's design**, from the ground up, and the charge animation. Both wait on model work.
+
+### Shelled headcrab
+
+**Shape: Shaped 2026-09-13. The loop is decided; how the belly is shown and found is not.**
+
+A headcrab with an armoured shell and a soft belly. Proof of concept on a recoloured stock headcrab.
+
+#### Settled
+
+- **It exists to teach the Pulse.** Parry the leap, then hit the exposed belly. The shell is what makes
+  parrying the good answer rather than one answer among several.
+- **The shell works like the alien grunt's armour**: ricochet, tracer, and a cut to the hit, the
+  `CAGrunt::TraceAttack` pattern (`dlls/agrunt.cpp:221-257`), applied everywhere except the belly.
+
+#### Why the loop is cheap
+
+**The headcrab can already tell it was parried.** Its leap damages through `LeapTouch`
+(`dlls/headcrab.cpp:341-362`), which calls the player's `TakeDamage` and ignores the result. The player's
+`TakeDamage` returns **false** when a Shield turns the hit away (`dlls/player.cpp:413-416`). Reading that
+return value is the whole detection: a false from a player means *deflected*, and the shelled crab reacts.
+(`TakeDamage` also returns false when the game rules refuse damage, `:403-406`. That never happens to a
+monster hitting a single-player player, but a strict version asks the Pulse, `WouldNegate`.)
+
+**The leap is a fair thing to parry.** It is telegraphed twice: the attack sound plays when the leap starts
+(`StartTask`, `:384`) and the jump animation winds up before the launch event. The Pulse has already been
+confirmed to feel good against headcrabs ([PILLARS.md](PILLARS.md), pillar 2).
+
+**A deflect already rewards a melee hit.** The Follow-Up, primed by that same deflect, empowers the next
+connecting crowbar swing. The shelled crab makes that loop *required* rather than merely good. The flip
+below works without the Skill; the Skill makes the punish hit harder.
+
+#### What has to be built or decided
+
+**The belly is already exposed by a deflect. Observed in play, 2026-09-13.** A deflected headcrab is
+still in its lunge animation, belly toward the player, and the Pulse leaves it right in front of them. So
+the punish window needs no new state, no flip and no animation: it is **the moment between the deflect and
+the end of the lunge**. (A flipped-over crab was considered first and is not needed. No headcrab model has
+such an animation anyway.)
+
+**Where the window ends** has two natural candidates, both already tracked by the headcrab: the lunge
+sequence finishing (`m_fSequenceFinished`, which is where `RunTask` ends the attack, `dlls/headcrab.cpp:322`)
+or the crab landing (`FL_ONGROUND`). The window is short, which is right for a parry reward, and its exact
+length is a tuning question for play.
+
+**How a hit knows it found the belly.** Two routes, cheapest first:
+
+1. **Any hit inside the window counts as a belly hit.** The deflect sets a short timer on the crab; hits
+   while it runs skip the shell. No hitboxes, no geometry. It matches what the player sees, since a crab
+   deflected in front of them is showing its belly. The obvious first version.
+2. **The hit direction**: a hit travelling into the crab's underside counts, window or not. It also rewards
+   shooting a crab out of the air with no parry, which may or may not be wanted: the entry exists to teach
+   the Pulse, and this route teaches aiming instead.
+
+A belly hitbox compiled into the model is a third route and the most expensive; the stock headcrab's
+thirteen hitboxes are all hitgroup 0.
+
+**What the shell does to a hit, with numbers.** The alien grunt's cut is a flat 20, and a headcrab has 10,
+10 or 20 health (`sk_headcrab_health`, `valve/skill.cfg`). A flat 20 therefore makes every weapon under 20
+per hit do nothing: the crowbar, the glock, each shotgun pellet. Anything over it kills in one: the magnum,
+the crossbow, the katana's 40. That is "immune except to big guns", which undercuts the point. The cut wants
+to be scaled to the crab, or full immunity, and it needs to say which damage types it stops. The alien
+grunt's stops only bullets, slashes and clubs, so explosions, the katana's energy wave and the Pulse's own
+Discharge would all go through.
+
+**The Discharge may skip the lesson.** A melee deflect fires a Discharge at the crosshair
+([ADR-0006](adr/0006-the-discharge-vents-at-the-crosshair.md)), and a player aiming at a leaping crab is
+aiming at it. If the Discharge kills a flipped crab outright, the player never swings. That is either a fine
+reward for the Skill or a hole in the design; `pulse_discharge_melee 0` exists to compare.
+
+**Traps:**
+
+- **The Follow-Up's knockback only throws headcrabs by classname** (`monster_headcrab`, `monster_babycrab`,
+  `dlls/player_pulse.cpp:373-374`). A shelled crab with its own classname is not thrown unless it is added
+  there. The knockback is applied *after* the Follow-Up's damage, so the punish hit lands first and
+  the throw only moves what survives it.
+- **It cannot be backstabbed**: `CHeadCrab` opts out, and a subclass inherits that. Correct here.
+
+#### Art
+
+- **The recolour is a recompile.** `headcrab.mdl` has no skin families, so the shelled crab is a new model
+  file, starting with a decompile.
+- **Half-Life: Extended's headcrab has a belly texture that opens.** Its model carries two skin families,
+  `bottom.bmp` and `bottom_open.bmp`: a precedent for the belly visibly changing when it becomes the target.
+- An ART_DEBT.md line when built, naming the recolour as the stand-in for a real shell.
+
+#### Open
+
+- **Window's end:** the lunge sequence finishing, or the crab landing?
+- **Before the Pulse is found.** The Pulse becomes a found Module ([Modules](#pillar-3-modules)). Before
+  that point a shelled crab can only be beaten by big hits, so maps should not place one before the Pulse,
+  or there should be a second, harder way to flip it.
+- **Can anything else open the window?** An explosion, a shot that interrupts the leap. Or is the Pulse the
+  only key, by design?
+
+### Friendly alien slave
+
+**Shape: Shaped 2026-09-13.** An alien slave who lives in his lab and talks to the player. Not an ally in
+combat.
+
+#### Settled
+
+**Who he is.** He is the [alien slave boss](#the-alien-slave-boss), freed. The player fights a special alien
+slave under the Nihilanth's control; defeating it breaks that control, and from then on he helps the player
+progress the game **through unlockables and information, never through combat**. This entry is what he is
+after the fight. Settled 2026-09-13.
+
+- **There is one of him.** A single character, not a kind of monster a mapper places.
+- **He does not fight.** No following the player, no guarding a zone, no zap, no claws.
+- **He stays in his lab**: talks to the player, now and then walks from one place to another, and performs
+  animations.
+- **His speech grows up with the game.** At first he speaks only alien words. As time passes and the player
+  progresses, he sometimes says English words among them. The English is imported voice lines, from
+  Half-Life 2's vortigaunts and/or Black Mesa.
+- **Shooting him ends the game**, the way killing critical personnel does in Half-Life, but on the first
+  hit rather than on death. He may flinch as it happens.
+- **+use gets one line.** No conversations on the use key. Conversations are map-authored: a trigger when the
+  player enters his room plays them.
+- **He hands things over by working a machine.** He goes to a device, operates it, and it "prepares" the item;
+  then a door on the device opens and the player picks the item up.
+- **The loop is fixed.** Stops in a set order, because either was acceptable and fixed is cheaper.
+- **He moves between points of interest in a loop**, stopping at each. The scientists were checked for such a
+  thing first, and do not have one (below).
+
+#### What the base game already gives
+
+**Most of it is `CTalkMonster` with the fighting left out.** Barney and the scientists get idle chatter, a
+hello, looking at the player, noticing being stared at and answering +use from `CTalkMonster`
+(`dlls/talkmonster.cpp`). Following is **one function** on top of that, `FollowerUse` (`:1398`), attached by
+`SetUse` in each monster's `Spawn` (`dlls/scientist.cpp:691`). A talker that answers +use with speech instead
+of following is the same class with a different use function. The slave has none of this today: `CISlave` is a
+`CSquadMonster` built to fight, so the friendly one is a new talk monster on the slave's model, not a
+modified `CISlave`.
+
+**The model already talks and already performs.** Read with the sequence dump:
+
+| Sequences | Use here |
+| --- | --- |
+| `jibber`, `jabber` | **Talking.** Looping, untagged, with alien words (`aslave/slv_word3/4/5/7`) baked in as sound events |
+| `collar1`, `collar2` | Tugging at his collar |
+| `pushup`, `grab`, `updown`, `downup` | Untagged set pieces, what they show is worth a look in a model viewer |
+| `idle1`–`3`, `walk1`–`2`, `left`, `right`, `crouch` | Standing, moving and turning |
+
+**His voice is alien words, not speech.** `sentences.txt` has `SLV_IDLE0`–`10` and `SLV_ALERT0`–`5`, each a
+string of `slv_word` samples. There are no English lines for a slave anywhere. "Talk" is gibberish unless a
+translation is shown; see below.
+
+**Scientists have no points of interest.** Checked 2026-09-13: their schedules are follow, heal, panic,
+idle stand, cover, hide, startle and fear (`dlls/scientist.cpp:149-393`), and the sitting scientist only
+turns its head and chats in place (`CSittingScientist::SittingThink`, `:1346`). Nothing in Half-Life gives an
+idle monster places to visit; that is a Half-Life 2 idea.
+
+**What does exist is the `path_corner` loop, and it does not stop.** A monster whose `target` names a
+`path_corner` walks the chain on `SCHED_IDLE_WALK` (`dlls/monsters.cpp:2141-2176`), advancing to each
+corner's own target as it passes it (`:1504-1505`). Point the last corner back at the first and it loops
+forever. But **a monster ignores the corner's `wait`**: `CPathCorner::GetDelay` is read only by trains and
+platforms (`dlls/plats.cpp:784`, `dlls/triggers.cpp:2311`), so a monster on a loop never pauses. Out of the
+box that is a slave pacing a circuit, not one who drifts between places.
+
+**So a point of interest is small new code on top of the loop.** At each corner: stop, honour its `wait`, and
+optionally play a set piece named on the corner (`collar1`, `pushup`, `jibber`), then walk on. The loop, the
+save/restore of the corner chain and the pathing are all already there. A random next corner instead of the
+fixed order is a further small step, if the loop reads as mechanical.
+
+`scripted_sequence` and `aiscripted_sequence` can also walk him to a spot and play a set piece there, driven
+by the map rather than by him.
+
+**The game over is map setup, as in vanilla.** Any monster takes a `TriggerTarget` and a `TriggerCondition`
+(`dlls/monsters.cpp:3021-3026`), fired once when the condition is met (`:3130-3131`). Pointed at a
+`player_loadsaved` (`CRevertSaved`, `dlls/player.cpp:5236`), that fades the screen, shows a message and
+reloads the last save (`:5299-5327`). That is how Half-Life fails the player for a critical scientist, and it
+needs no code. **The condition is `AITRIGGER_TAKEDAMAGE`** (`dlls/monsters.h:130`), not `AITRIGGER_DEATH`,
+since the first hit ends the game.
+
+Two things to know about that condition. It fires on **any** damage, not only the player's: a grenade the
+player throws near him counts, which is right, but so would a stray explosion from anything else in the lab,
+so the lab should hold nothing that can hurt him. And a monster holds only **one** trigger condition, so the
+take-damage trigger is the only automatic one he has.
+
+**The flinch is free** as long as the reload waits for it: `player_loadsaved`'s fade and message times are
+keyvalues, and the stock slave has flinch animations (`flinch2`, and one per limb).
+
+**The hand-over is map setup too.** A `scripted_sequence` walks him to the device and plays a set piece; when
+it finishes it fires its own target (`CCineMonster::SequenceDone`, `dlls/scripted.cpp:550-568`), which opens
+the device's door (`func_door`, or any brush entity that opens). The item waits inside from the start, so
+nothing is spawned. The Pickup Prompt reaches it once the door is open. What *starts* the sequence, the player
+reaching a point in the game or pressing something, is a map choice.
+
+**The room conversation is `scripted_sentence`**: a sentence, the speaker, a listener, a radius, whether it
+can refire, and it fires its own target when it plays (`dlls/scripted.cpp:968-1197`). Fired by a
+`trigger_once` at the door.
+
+**Progress has somewhere to live across levels.** `env_global` sets a named state (on, off or dead) in the
+global state table (`CEnvGlobal`, `dlls/buttons.cpp:37-134`), which survives level transitions. One named
+state per stage of his English is enough: a map turns on `slave_english_1` when the player reaches it, and
+he reads the highest one that is on. A counter of his own is the alternative, but he lives in one map, and
+state that has to change while the player is elsewhere belongs in the global table.
+
+**The English lines are imports.** Each needs converting to a sound GoldSrc plays, a `sentences.txt` entry to
+be mixed with his `slv_word` samples, and an [ART_DEBT.md](ART_DEBT.md) line naming where it came from, since
+the voice lines come from other games (Half-Life 2, and Black Mesa, which is Crowbar Collective's work, not
+Valve's). Whether mixing them into one line reads as learning a language or as a glitch is a play question.
+
+**Nobody fights him, and he fights nobody**, with `Classify` returning `CLASS_NONE`: every entry in that row of
+the relationship table is `R_NO` (`dlls/monsters.cpp:2239`), and so is that column in the rows checked. So
+Suspicion ([ADR-0009](adr/0009-suspicion-gates-the-relationship-bits.md)) has nothing to gate either.
+
+**+use needs saying explicitly.** A monster answers the use key only if its `ObjectCaps` includes
+`FCAP_IMPULSE_USE`, as Barney's and the scientist's do (`dlls/barney.cpp:57`, `dlls/scientist.cpp:83`). The
+Pickup Prompt already lets a usable entity win over a pickup behind it
+(`FindLookedAtPickup`, `dlls/player_inventory.cpp:769-792`), so talking to him in a lab full of loot does not
+pick anything up.
+
+#### Traps
+
+- **The talking animations already speak.** `jibber` and `jabber` fire their own word sounds. Playing a
+  `SLV_` sentence over them doubles the voice. Either the animation talks and there is no sentence, or the
+  sentence talks and the animation's sound events are skipped.
+- **`CTalkMonster` turns on a player who keeps shooting it.** Barney warns, then fights back. A non-combatant
+  needs a different answer.
+- **Perception is not a concern**: at `CLASS_NONE` there is nothing to perceive for.
+
+#### What is code and what is map
+
+Almost everything about him is map setup on stock entities. The code is:
+
+- **The monster itself**: a `CTalkMonster` on the slave's model, `CLASS_NONE`, `FCAP_IMPULSE_USE`.
+- **+use plays one line**, picked from his current stage of English.
+- **Stopping at points of interest** on the loop: honour the corner's `wait`, play the corner's set piece.
+- **Reading the English stage** from the global states.
+- **Never turning hostile.** The take-damage trigger ends the game first, but the class must not answer being
+  shot with a fight in the frame before the fade.
+
+#### Open
+
+- **What does he hand over, and when?** Which unlockables, which information, and what starts each hand-over:
+  reaching a point in the game, or the player asking. Information spoken in a mostly-alien voice argues for
+  text on screen (`game_text`, `dlls/maprules.cpp:239`; the mod has no subtitle system).
+- **A player walking in mid-hand-over.** A `scripted_sequence` holds a monster until it ends. A +use press or a
+  room conversation arriving while he is at the machine needs an answer: wait, or refuse.
+
+### The alien slave boss
+
+**Shape: Idea, with its purpose settled 2026-09-13.** A special alien slave under the Nihilanth's control,
+with custom attacks and AI. Defeating it frees it from that control, and from then on it is the
+[friendly alien slave](#friendly-alien-slave): one character, in his lab, who helps the player progress
+through unlockables and information, never by fighting. Its reward was first written as "a Module and some
+items"; that now falls under how the lab slave hands things over.
+
+- **Defeated is not killed.** It needs a health floor where the fight ends: the boss stops and is spared.
+  Shooting the freed slave later ends the game, so the fight has to make "spared" unmistakable.
+- **Two entities. Settled 2026-09-13.** The boss and the lab slave are separate. The boss leaves when defeated
+  and sets a global state (`env_global`), and the lab slave is present only once that state is on.
+- **The collar and the bracelets are the Nihilanth's control. Settled.** They already show it on the stock
+  model, and `collar1` and `collar2` tug at the collar.
+- **The end of the fight is scripted**, so that the slave being freed is noticeable. Settled. It is a
+  sequence the player watches rather than a monster that simply stops. What it shows is open.
+
+**What that asks of the art.** In the stock model the collar and bracelets are part of the one body mesh: the
+model has a single body submodel, and the metal is most likely its chrome texture (`Chrome_1.bmp`, the one
+chrome-flagged texture in `islaveT.mdl`). So a freed slave without them is a mesh edit and a recompile,
+starting with a decompile. The cheap alternatives, if that waits: a second skin where the metal is dark or
+broken, which is a texture edit and still a recompile, or a freed slave who keeps the hardware and shows his
+freedom only in how he behaves. The boss and the lab slave being two entities makes this easy: they can be two
+models.
+
+**What the scripted ending can use.** `scripted_sequence` for the set piece (the stock `collar1` and
+`collar2` are already a slave fighting his collar), `env_beam` or sprite effects for the control breaking,
+`env_shake` and `env_fade`, and a `scripted_sentence` for a first free word. When it finishes, the boss
+removes itself and the global state turns on. All of it is map entities; the only code in the ending is the
+boss knowing its health floor has been reached and firing a target instead of dying.
+- **Which Module?** The set is Pulse, Dash and Hook ([Modules](#pillar-3-modules)). The Pulse is meant to be
+  found early, which suggests Dash or Hook. The fiction has the slave teaching an alien ability, which fits
+  neither obviously.
+- **How do the items arrive?** Handed straight into the Inventory, where a full Grid refuses them, or left in
+  a Box, which is not built yet.
+- Custom attacks: none written down yet.
+
+### The assassin boss
+
+**Shape: Idea.** A human assassin with a dash and custom attacks.
+
+`CHAssassin` already jumps (`ASSASSIN_AE_JUMP` sets a velocity, `dlls/hassassin.cpp:260`, with a 3-second
+cooldown), cloaks by fading `renderamt` down to 20 when not attacking (`RunAI`, `:693`), and throws
+grenades. A dash is a horizontal jump on the same event pattern.
+
+**"Dash" is already a Module's name.** Either the assassin's move gets a different word, or the fight is
+where the player first sees the Dash, and possibly where they win it.
+
+### The alien grunt boss
+
+**Shape: Idea.** An alien grunt with custom attacks. Nothing beyond that is recorded. It shares a base with
+the [melee alien grunt](#melee-alien-grunt), so whichever is built second gets the other's groundwork.
+
+### The Nihilanth
+
+**Shape: Idea.** Custom attacks and a revamped model.
+
+**`CNihilanth` is not schedule AI.** It runs on think functions (`HuntThink`, `Flight`, `NextActivity`),
+with energy spheres it absorbs and throws (`CNihilanthHVR`), and it is a puzzle boss: the spheres protect
+it (`AbsorbSphere`, `dlls/nihilanth.cpp:984`). New attacks go into `NextActivity`, not into schedules.
+
+**A new model must keep the old sequence names**, or the code changes with it. It picks animations by name
+(`float`, `walk_r/l/u/d`, `recharge`, `attack1_open`, `attack1`, `attack2`, `die1`,
+`dlls/nihilanth.cpp:469-839`).
+
+Open: does "custom attacks" keep the sphere puzzle, or turn it into a straight fight like the other three?
+
+### Shared by all of them
 
 What exists to build on: Half-Life's schedule/task AI (`dlls/schedule.cpp`, `dlls/defaultai.cpp`) is a real
 state machine and adding a monster with a custom moveset means new schedules, not new engine work. The
@@ -544,8 +1139,8 @@ Two things this pillar should not rediscover:
   boss attacks are counterable. A new boss whose signature attack is not on that list is a boss the Pulse
   is useless against — which may be the point, but should be a choice.
 
-Open: is a boss a **combat** encounter or a **puzzle**? Half-Life's own answer is mostly the latter
-(Gargantua, Nihilanth, the tentacles), and a mod adding movesets is proposing the former.
+~~Open: is a boss a **combat** encounter or a **puzzle**?~~ The roster answers it for three of the four:
+the slave, assassin and alien grunt bosses are fights. The Nihilanth is the one still open, above.
 
 ---
 
@@ -1045,7 +1640,7 @@ Ranked by how much else is waiting on the answer.
    every encounter.
 6. **Recycling: item → materials, or item → item?** The first introduces a whole new identity space
    alongside `WeaponId` and `EItemTypeId` ([ADR-0002](adr/0002-two-identity-spaces-for-weapons-and-items.md)).
-7. **What was the boss moveset example?** The note ends at *"specific movesets (e.g."* — the example is
-   likely where the actual intent is.
+7. ~~**What was the boss moveset example?**~~ **Answered 2026-09-12 by the roster**: four bosses, each an
+   existing monster with custom attacks. See [Monsters and bosses](#pillar-2-monsters-and-bosses).
 8. **Sounds — offering help or asking for it?** *"here I have little experience and I can help"* reads
    both ways, and the two readings imply very different plans.
