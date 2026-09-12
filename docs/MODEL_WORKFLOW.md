@@ -27,6 +27,14 @@ the script and a re-run, not a hand edit of an exported file.
 Compiled `.mdl` files that ship go in the repo under `models/` and are copied to `topmod/models/` by
 hand, the same arrangement as `sprites/`. Sources stay in `E:\CustomAssets`; they run to megabytes.
 
+## The one rule
+
+**Decompiling is done by hand, with Crowbar, by the person running the loop.** If a task needs a model
+whose sources are not under `models/decompiled/<name>/` (reference SMD, anims folder, QC), the task stops
+and asks for that decompile by name. No decompiler gets written, no mesh gets pulled out of a `.mdl`
+another way, no work proceeds on a partial set. The only exception is textures, which Crowbar sometimes
+leaves out and `mdlinfo.py --extract-bmp` can supply.
+
 ## Facts that bind the work
 
 - **studiomdl rotates every SMD +90° about Z when it compiles.** Decompiled SMDs therefore face +Y while

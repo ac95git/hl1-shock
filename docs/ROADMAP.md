@@ -349,18 +349,31 @@ problem gets solved once instead of twice.
 
 #### The Gauss Katana
 
-A gauss weapon shaped as a katana. Slow, bulky, and frightening. Explicitly planned in two passes:
+**Shape: Shaped, model first.** A gauss weapon shaped as a katana. Slow, bulky, and frightening.
 
-- **v1** — model plus decent animations. Playable, unpolished.
-- **v2** — sprites and polish.
+**Settled 2026-09-12:**
 
-Marked as a candidate for [Evolutions](#weapon-evolutions).
+- **Slower attack speed, big damage.** A melee weapon, on the crowbar's shape: `dlls/crowbar.cpp` with
+  different numbers, a different model, and one new thing below.
+- **Swings create gauss arcs that leave "burning" decals on walls, the way the gauss gun does.** What the
+  gauss gun actually does on a wall hit is worth copying exactly rather than approximating: the beam is
+  `R_BeamPoints`, the mark is the ordinary gunshot decal (`EV_HLDM_DecalGunshot` with
+  `BULLET_MONSTER_12MM`, `cl_dll/ev_hldm.cpp:993`), and the *burning* is a glow temp sprite
+  (`R_TempSprite` with the gauss glow, six-second fade, `:995`) sitting on the decal. Client-side, from
+  an event, so the katana wants an event of its own on the swing, not server-side temp entities.
+- **Viewmodel v1 exists.** The Dystopia katana blade on Half-Life's crowbar hands and the crowbar's
+  eleven animations in their original order, so the crowbar's `CROWBAR_*` sequence indices drive it
+  unchanged. Sources in `E:\CustomAssets\models\src\v_katana`, made by the loop in
+  [MODEL_WORKFLOW.md](MODEL_WORKFLOW.md). Nothing loads it yet.
+- **A world model is needed** before the weapon can be placed in a map. The Dystopia world model
+  (`E:\CustomAssets\models\decompiled\w_katana`) is a single-bone Source prop and is the obvious source.
 
-Open, and all of it: does it consume uranium, like the Gauss and Egon? Does it charge, the way
-`GAUSS_PRIMARY_CHARGE_VOLUME` implies for the gun? Is it melee that deals energy damage, or does it
-project? `DMG_ENERGYBEAM` is the natural damage type and PILLARS records why (the alien slave is the only
-thing immune to `DMG_SHOCK`, and `DMG_ENERGYBEAM` has no immunity anywhere) — that reasoning applies here
-unchanged.
+Still open: does it consume uranium, like the Gauss and Egon? Does it charge, the way
+`GAUSS_PRIMARY_CHARGE_VOLUME` implies for the gun? `DMG_ENERGYBEAM` is the natural damage type and PILLARS
+records why (the alien slave is the only thing immune to `DMG_SHOCK`, and `DMG_ENERGYBEAM` has no immunity
+anywhere) — that reasoning applies here unchanged. Whether the crowbar's own swing animations are enough
+for a heavy weapon, or the Dystopia swings get retargeted onto the stock rig, is the first thing v1 in
+game will answer. Still a candidate for [Evolutions](#weapon-evolutions).
 
 ### Weapon evolutions
 
@@ -410,9 +423,9 @@ The user's note suggests folding these into [Evolutions](#weapon-evolutions) rat
 Skills. Worth deciding early — they are the same feature from two directions, and building both would
 mean two systems making the same gun faster.
 
-### Viewmodel hands
+### Viewmodel hands and the custom HEV suit
 
-**Shape: Idea. The largest art task in this document, and the least visible.**
+**Shape: Shaped. Started on 2026-09-12 with the glove textures.**
 
 Every `v_*.mdl` in Half-Life bakes its own hands into the model. There is no shared hand mesh, so
 consistency means touching every viewmodel the mod ships — the vanilla set, the Carbon Pickaxe, the Gauss
@@ -422,6 +435,31 @@ Worth being honest about the trade: a player who does not go looking will never 
 consistent hands, and will absolutely notice inconsistent ones. It is a floor, not a feature. It is also
 the sort of thing that gets cheaper the earlier it is decided and much more expensive once there are ten
 custom viewmodels to redo.
+
+**The philosophy:** the mod has its own HEV suit, and the viewmodels reflect it. The goals, in the order
+they build on each other:
+
+1. **Three glove colour variants: cyan, red, purple.** Cyan exists — the *gunmetal* set from
+   `E:\CustomAssets\scripts\hev_gloves.py`, grey plates with cyan light channels in the seams and a cyan
+   readout on the back of the hand, applied to the katana and the crowbar. Red and purple are two more
+   palettes in the same generator.
+2. **Every vanilla viewmodel gets the new glove textures.** The survey in
+   [MODEL_WORKFLOW.md](MODEL_WORKFLOW.md) found twelve of the sixteen stock viewmodels share the same four
+   glove texture names; the backplate, knuckle and chrome are the same size everywhere and drop in, and
+   each model's sleeve is a different size and gets the generator run on its own sleeve. The MP5, shotgun,
+   crossbow and hivehand use other hand textures and are each their own job.
+3. **A custom HEV suit 3D model, in the same three variants.** The suit the player sees — on a pickup, a
+   charger, a mirror, the player model — matching the gloves. Not designed yet.
+4. **Picking a suit variant sets the glove colour of every viewmodel.** The mechanism is already in the
+   engine: a model can carry several skin families (`$texturegroup` in the QC) and the viewmodel's
+   `pev->skin` selects one. So every viewmodel compiles with the three glove sets as three skins, and one
+   player-side value — the chosen suit variant, saved with the player — is written to the viewmodel's
+   skin on deploy. No model is duplicated. Where the choice is *made* (a pickup, a Station, the start of
+   the game) is open, and it decides whether this is a pillar 1 find or a pillar 3 item.
+
+Known limit from the first pass: the seam lights dim with map lighting like the rest of the glove, because
+the SDK's studiomdl cannot mark part of a texture fullbright. Emissive seams would mean a separate accent
+texture with the fullbright flag patched into the compiled model.
 
 ---
 
