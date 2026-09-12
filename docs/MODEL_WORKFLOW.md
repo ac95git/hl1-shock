@@ -75,7 +75,8 @@ Working directory, `E:\CustomAssets\scripts\`:
 | Script | Does |
 | --- | --- |
 | `render_smd.py IN.smd OUT_PREFIX TEXDIR...` | Blender headless: imports an SMD, applies the +90° compile rotation, loads its BMPs, renders from the viewmodel camera plus orbit, side and top views. |
-| `katana_graft.py --out DIR [--roll --pitch --yaw --slide --shift]` | The worked example: vanilla crowbar hands + Dystopia katana blade → one reference SMD. Measures the crowbar's grip axis and the blade's axis by principal component, aligns them, and exposes the residual corrections as numbers. |
+| `katana_graft.py --out DIR [--roll --pitch --yaw --slide --shift] [--blade-tex NAME]` | The worked example: vanilla crowbar hands + Dystopia katana blade → one reference SMD. Measures the crowbar's grip axis and the blade's axis by principal component, aligns them, and exposes the residual corrections as numbers. |
+| `hev_gloves.py VARIANT OUT_DIR` / `--sheet OUT.png` | The mod's own HEV glove textures, generated from the stock four (kept in `E:\CustomAssets\textures\stock_gloves`): luminance kept, orange plates recoloured, thin grooves and the hand-back screen turned into an accent light, chrome map tinted. Named palette variants; the same four files drop into any model that uses the stock glove texture names, which is 12 of the 16 stock viewmodels. |
 
 Blender is always run as `blender.exe --background --python SCRIPT -- ARGS`. Renders use Workbench, so no
 GPU is needed and a run takes seconds.
@@ -124,7 +125,13 @@ where the numbers say it is.
 
 - **Animations of its own.** Everything so far borrows a stock sequence set. Retargeting the Dystopia
   animations onto the 11-bone rig, or authoring new ones, is unexplored.
-- **Uniform hands across the vanilla set.** The survey says texture-level is a same-size swap for the
-  hand backplate, knuckle and chrome across 12 models and a per-model sleeve; nothing is built.
+- **Uniform hands across the vanilla set.** `hev_gloves.py` makes the four glove textures; they are
+  applied to the katana and the crowbar. The backplate, knuckle and chrome are the same size in the
+  other stock models and drop in; each model's sleeve is a different size and needs the generator run on
+  that model's own sleeve. The MP5, shotgun, crossbow and hivehand use other textures entirely.
+- **Accent lights do not glow in the dark.** Studiomdl from the SDK cannot flag part of a texture
+  fullbright; the seams dim with the map lighting like the rest of the glove. Making them emissive means
+  a separate accent texture with `STUDIO_NF_FULLBRIGHT` set in the compiled `.mdl`, which is a mesh change
+  plus a flag patch, not a texture change.
 - **World and player models**, and a Python decompiler to drop the Crowbar step; `mdlinfo.py` has the
   header parsing that one would start from.
