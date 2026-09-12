@@ -90,6 +90,13 @@ bool CCrowbar::Deploy()
 	return DefaultDeploy("models/v_crowbar.mdl", "models/p_crowbar.mdl", CROWBAR_DRAW, "crowbar");
 }
 
+#ifndef CLIENT_DLL
+float CCrowbar::BaseDamage()
+{
+	return gSkillData.plrDmgCrowbar;
+}
+#endif
+
 void CCrowbar::Holster()
 {
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
@@ -214,7 +221,7 @@ bool CCrowbar::Swing(bool fFirst)
 		if (fFirst)
 		{
 			// miss
-			m_flNextPrimaryAttack = GetNextAttackDelay(0.5);
+			m_flNextPrimaryAttack = GetNextAttackDelay(0.5 * SwingDelayScale());
 
 			// player "shoot" animation
 			m_pPlayer->SetAnimation(PLAYER_ATTACK1);
@@ -253,12 +260,12 @@ bool CCrowbar::Swing(bool fFirst)
 		if (bFirstSwing)
 		{
 			// first swing does full damage
-			flDamage = gSkillData.plrDmgCrowbar;
+			flDamage = BaseDamage();
 		}
 		else
 		{
 			// subsequent swings do half
-			flDamage = gSkillData.plrDmgCrowbar / 2;
+			flDamage = BaseDamage() / 2;
 		}
 
 		const float flBaseDamage = flDamage;
@@ -319,7 +326,7 @@ bool CCrowbar::Swing(bool fFirst)
 
 #endif
 
-		m_flNextPrimaryAttack = GetNextAttackDelay(0.25);
+		m_flNextPrimaryAttack = GetNextAttackDelay(0.25 * SwingDelayScale());
 
 #ifndef CLIENT_DLL
 		// play thwack, smack, or dong sound

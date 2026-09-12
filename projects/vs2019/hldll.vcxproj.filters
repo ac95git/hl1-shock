@@ -105,6 +105,9 @@
     <ClCompile Include="..\..\dlls\crowbar.cpp">
       <Filter>Source Files\dlls</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\dlls\katana.cpp">
+      <Filter>Source Files\dlls</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\dlls\defaultai.cpp">
       <Filter>Source Files\dlls</Filter>
     </ClCompile>

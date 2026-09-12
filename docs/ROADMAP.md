@@ -361,12 +361,16 @@ problem gets solved once instead of twice.
   `BULLET_MONSTER_12MM`, `cl_dll/ev_hldm.cpp:993`), and the *burning* is a glow temp sprite
   (`R_TempSprite` with the gauss glow, six-second fade, `:995`) sitting on the decal. Client-side, from
   an event, so the katana wants an event of its own on the swing, not server-side temp entities.
-- **Viewmodel v1 exists.** The Dystopia katana blade on Half-Life's crowbar hands and the crowbar's
-  eleven animations in their original order, so the crowbar's `CROWBAR_*` sequence indices drive it
-  unchanged. Sources in `E:\CustomAssets\models\src\v_katana`, made by the loop in
-  [MODEL_WORKFLOW.md](MODEL_WORKFLOW.md). Nothing loads it yet.
-- **A world model is needed** before the weapon can be placed in a map. The Dystopia world model
-  (`E:\CustomAssets\models\decompiled\w_katana`) is a single-bone Source prop and is the obvious source.
+- **The weapon exists, v1.** `weapon_katana`, `dlls/katana.cpp`: `CCrowbar` with two hooks overridden,
+  base damage (`sk_plr_katana1-3`, 40) and swing time (`katana_swing_time_scale`, 2× the crowbar's, read
+  from both DLLs because it is predicted), and its own models. Backstab, Crowbar Force and Reach, and
+  the Follow-Up come along unchanged, which is the point of subclassing rather than copying. In the
+  melee bucket beside the crowbar; `impulse 101` gives it; the FGD places it. See PILLARS.md.
+- **Viewmodel and world model are the mod's own.** The Dystopia blade on Half-Life's crowbar hands
+  and the crowbar's eleven animations in their original order, so the crowbar's `CROWBAR_*` sequence
+  indices drive it unchanged, and the Dystopia prop lying flat for the floor. Sources in
+  `E:\CustomAssets\models\src\{v,w}_katana`, made by the loop in [MODEL_WORKFLOW.md](MODEL_WORKFLOW.md).
+  The `p_` model, the sounds and the HUD icon are the crowbar's; [ART_DEBT.md](ART_DEBT.md) has them.
 
 Still open: does it consume uranium, like the Gauss and Egon? Does it charge, the way
 `GAUSS_PRIMARY_CHARGE_VOLUME` implies for the gun? `DMG_ENERGYBEAM` is the natural damage type and PILLARS
@@ -919,7 +923,7 @@ is designed, and may well change name first.
 | **Transmission** | A recorded log found in a level and played back. | Avoid *log*, *tape*, *audio diary*, *datapad*. |
 | **Station** | A world entity that takes items in and gives items out. | Avoid *bench*, *workbench*, *terminal*, *fabricator*. *Terminal* especially — it will be wanted for Transmissions. |
 | **Decapitation** | A lethal head hit that removes the head: headless submodel, thrown skull, blood from the stump. | Distinct from *gibbing*, which is the whole body and already means something in this codebase. **Headless** names the resulting state. |
-| **Carbon Pickaxe**, **Gauss Katana** | The two custom weapons. | Named already; recorded here so they are used consistently. |
+| **Carbon Pickaxe** | The other custom weapon. | Named already; recorded here so it is used consistently. **Gauss Katana** graduated to CONTEXT.md on 2026-09-12 when the weapon was built. |
 
 **Graduated 2026-08-31**, when the stealth design was settled: **Concealment** and **Backstab** are now in
 [CONTEXT.md](../CONTEXT.md), joined there by **Suspicion**, **Search**, **Post**, **Perception Profile**,

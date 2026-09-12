@@ -62,6 +62,7 @@ extern cvar_t skill_battery_regen_rate;
 extern cvar_t skill_battery_bonus;
 extern cvar_t skill_crowbar_range_scale;
 extern cvar_t skill_crowbar_damage_scale;
+extern cvar_t katana_swing_time_scale;
 extern cvar_t skill_weapon_damage_scale;
 extern cvar_t skill_reload_time_scale;
 

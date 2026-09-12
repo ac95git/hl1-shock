@@ -151,6 +151,22 @@ the fill off its own clock from the duration it was given. A whole Pulse costs t
 instead of one per frame. `CPlayerPulse::ForgetSentState()`, called where `m_fInitHUD` is handled in
 `UpdateClientData`, forces a resend after the client's HUD is reset so the bar cannot go stale.
 
+**The Gauss Katana, v1** — `weapon_katana`, `dlls/katana.cpp`. The mod's first custom weapon, built as
+`CCrowbar` with two hooks overridden rather than as a copy: `BaseDamage()` reads `sk_plr_katana1-3` (40,
+against the crowbar's 10) and `SwingDelayScale()` reads `katana_swing_time_scale` (2.0) through
+`skill_tuning.h`, because the delay it scales is predicted and the client must see the same number. The
+Backstab, Crowbar Reach and Force, and the Follow-Up therefore apply to it with no code of their own,
+which is what subclassing buys. It sits in the melee bucket beside the crowbar, `impulse 101` gives it,
+and `weapon_katana` is in the FGD. Its viewmodel and world model are the mod's own (`models/v_katana.mdl`
+on the crowbar's hands and animations, `models/w_katana.mdl` lying flat); the third-person model, the
+sounds and the HUD icon are the crowbar's and are in [ART_DEBT.md](ART_DEBT.md). The gauss arcs the name
+promises are [not built](ROADMAP.md#the-gauss-katana).
+
+**Custom HEV gloves on every viewmodel.** Fourteen stock viewmodels plus the katana compile with three
+glove skin families — grey plates with cyan, red or purple light channels — and the game shows cyan
+(skin 0) with no code involved. Selecting a skin per player waits on the suit choice; see
+[ROADMAP.md](ROADMAP.md#viewmodel-hands-and-the-custom-hev-suit).
+
 **Four melee and damage Skills.** The first three follow the `PulseWindowFor` pattern — the modifier is
 read from `m_skills` where the value is computed, rather than through a hook of its own:
 

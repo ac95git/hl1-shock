@@ -251,6 +251,32 @@ marker it is defensible, but it should then be a choice rather than a leftover.
 A player who has never read a manual can tell all three apart on sight, none is mistaken for equipment,
 and the Reset Token does not sound like ammo.
 
+## The Gauss Katana — third-person model, sounds, HUD icon
+
+### Scope
+`dlls/katana.cpp`, and `sprites/weapon_katana.txt`.
+
+### Current stand-ins
+
+| Use | Asset | Borrowed from |
+| --- | --- | --- |
+| Third-person (`p_`) model | `models/p_crowbar.mdl` | the crowbar |
+| Swing, hit, body-hit sounds | `weapons/cbar_*.wav` | the crowbar |
+| HUD selection icon | `weapon_crowbar`'s sprites, via a copied `.txt` | the crowbar |
+
+The viewmodel and world model are the mod's own (`models/v_katana.mdl`, `models/w_katana.mdl`).
+
+### What's wrong with them
+- Other players and the player's shadow hold a crowbar. Single-player barely shows the `p_` model, so
+  this is the least urgent of the three.
+- The sounds are a crowbar's. A heavy blade wants a longer, lower swing and a cut rather than a clang;
+  the crowbar's clang on a wall hit is exactly wrong for an edge.
+- The HUD icon **is the crowbar's**, in the same slot, one position over. Two identical icons in the
+  melee bucket is the one of these a player will hit immediately.
+
+### Done when
+The selection bucket shows a katana, and a swing sounds like a blade.
+
 ## The crossbow viewmodel — hand clips through the stock
 
 ### Scope

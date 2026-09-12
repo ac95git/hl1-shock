@@ -288,6 +288,13 @@ cvar_t sk_plr_crowbar1 = {"sk_plr_crowbar1", "0"};
 cvar_t sk_plr_crowbar2 = {"sk_plr_crowbar2", "0"};
 cvar_t sk_plr_crowbar3 = {"sk_plr_crowbar3", "0"};
 
+// Gauss Katana.  Real defaults rather than "0": the mod ships no skill.cfg of
+// its own and falls back to Half-Life's, which has never heard of these, and
+// GetSkillCvar treats zero as an error.
+cvar_t sk_plr_katana1 = {"sk_plr_katana1", "40"};
+cvar_t sk_plr_katana2 = {"sk_plr_katana2", "40"};
+cvar_t sk_plr_katana3 = {"sk_plr_katana3", "40"};
+
 // Glock Round
 cvar_t sk_plr_9mm_bullet1 = {"sk_plr_9mm_bullet1", "0"};
 cvar_t sk_plr_9mm_bullet2 = {"sk_plr_9mm_bullet2", "0"};
@@ -490,6 +497,12 @@ cvar_t skill_battery_regen_rate = {"skill_battery_regen_rate", "0.5"};
 cvar_t skill_battery_bonus = {"skill_battery_bonus", "50"};
 cvar_t skill_crowbar_range_scale = {"skill_crowbar_range_scale", "1.25"};
 cvar_t skill_crowbar_damage_scale = {"skill_crowbar_damage_scale", "1.5"};
+
+// The Gauss Katana.  Slower and heavier than the crowbar; both numbers are
+// first guesses.  Damage goes through the sk_plr_katana skill cvars below so
+// it scales with difficulty like every other weapon; the swing time is read
+// from both DLLs through skill_tuning.h because it is predicted.
+cvar_t katana_swing_time_scale = {"katana_swing_time_scale", "2.0"};
 cvar_t skill_weapon_damage_scale = {"skill_weapon_damage_scale", "1.1"};
 // Scales the reload delay. Read from both DLLs through skill_tuning.h, because
 // the delay it sets is m_flNextAttack, which the client predicts.
@@ -689,6 +702,7 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_battery_bonus);
 	CVAR_REGISTER(&skill_crowbar_range_scale);
 	CVAR_REGISTER(&skill_crowbar_damage_scale);
+	CVAR_REGISTER(&katana_swing_time_scale);
 	CVAR_REGISTER(&skill_reload_time_scale);
 	CVAR_REGISTER(&skill_weapon_damage_scale);
 
@@ -968,6 +982,10 @@ void GameDLLInit()
 	// PLAYER WEAPONS
 
 	// Crowbar whack
+	CVAR_REGISTER(&sk_plr_katana1);
+	CVAR_REGISTER(&sk_plr_katana2);
+	CVAR_REGISTER(&sk_plr_katana3);
+
 	CVAR_REGISTER(&sk_plr_crowbar1); // {"sk_plr_crowbar1","0"};
 	CVAR_REGISTER(&sk_plr_crowbar2); // {"sk_plr_crowbar2","0"};
 	CVAR_REGISTER(&sk_plr_crowbar3); // {"sk_plr_crowbar3","0"};

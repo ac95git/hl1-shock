@@ -46,3 +46,8 @@ inline CSkillTuning g_tuneCrowbarRange = {"skill_crowbar_range_scale", 1.0f, nul
 // m_flNextAttack is predicted frame to frame, so the two sides disagreeing
 // here is visible as a hitch at the end of every reload.
 inline CSkillTuning g_tuneReloadTime = {"skill_reload_time_scale", 1.0f, nullptr};
+
+// The Gauss Katana's swing time, as a multiple of the crowbar's.  Not a Skill,
+// but the same rule applies: m_flNextPrimaryAttack is predicted, so the client
+// has to see the same number.  Neutral means "as fast as the crowbar".
+inline CSkillTuning g_tuneKatanaSwing = {"katana_swing_time_scale", 1.0f, nullptr};

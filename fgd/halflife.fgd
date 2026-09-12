@@ -2682,6 +2682,7 @@
 //
 
 @PointClass base(Weapon, Targetx) studio("models/w_crowbar.mdl") = weapon_crowbar : "Crowbar" []
+@PointClass base(Weapon, Targetx) studio("models/w_katana.mdl") = weapon_katana : "Gauss Katana" []
 @PointClass base(Weapon, Targetx) studio("models/w_9mmhandgun.mdl") = weapon_9mmhandgun : "9mm Handgun" []
 @PointClass base(Weapon, Targetx) studio("models/w_357.mdl") = weapon_357 : "357 Handgun" []
 @PointClass base(Weapon, Targetx) studio("models/w_9mmar.mdl") = weapon_9mmAR : "9mm Assault Rifle" []

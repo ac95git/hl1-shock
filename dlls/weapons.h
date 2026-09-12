@@ -72,6 +72,7 @@ public:
 
 // weapon weight factors (for auto-switching)   (-1 = noswitch)
 #define CROWBAR_WEIGHT 0
+#define KATANA_WEIGHT 1 // preferred over the crowbar on pickup, below every gun
 #define GLOCK_WEIGHT 10
 #define PYTHON_WEIGHT 15
 #define MP5_WEIGHT 15
@@ -561,8 +562,35 @@ public:
 #endif
 	}
 
-private:
+protected:
+	// The two numbers a heavier weapon on the same swing changes.  The Gauss
+	// Katana is CCrowbar with these overridden and different models; the
+	// Backstab, Crowbar Force, Reach and the Follow-Up come along unchanged.
+#ifndef CLIENT_DLL
+	virtual float BaseDamage(); // gSkillData is server-side only
+#endif
+	// Multiplies the miss and hit delays.  Predicted, so an override must read
+	// a value both DLLs can see -- see skill_tuning.h.
+	virtual float SwingDelayScale() { return 1.0f; }
+
 	unsigned short m_usCrowbar;
+};
+
+// The Gauss Katana.  v1: the crowbar's swing, slower and heavier, with its own
+// models.  The gauss arcs it is named for are not here yet -- see ROADMAP.md.
+class CKatana : public CCrowbar
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+	bool GetItemInfo(ItemInfo* p) override;
+	bool Deploy() override;
+
+protected:
+#ifndef CLIENT_DLL
+	float BaseDamage() override;
+#endif
+	float SwingDelayScale() override;
 };
 
 enum python_e

@@ -187,6 +187,14 @@ A melee hit landed in a monster's rear arc. Purely a matter of where the attacke
 monster has noticed them does not enter into it. Some monsters cannot be backstabbed at all.
 _Avoid_: sneak attack, assassination, critical hit, ambush
 
+### Weapons
+
+**Gauss Katana**:
+The mod's heavy melee weapon: a blade on the crowbar's swing, slower and far harder-hitting, that will
+throw gauss arcs. Everything that applies to a melee hit — the Backstab, Crowbar Reach and Force, the
+Follow-Up — applies to it. `weapon_katana` in code and maps.
+_Avoid_: sword, blade, energy sword, gauss blade; and *katana* alone where the gauss half matters
+
 **Disturbance**:
 What a death leaves behind at the place it happened. Monsters that care about such things can be drawn to
 one, for as long as it lasts.
