@@ -159,8 +159,13 @@ Backstab, Crowbar Reach and Force, and the Follow-Up therefore apply to it with 
 which is what subclassing buys. It sits in the melee bucket beside the crowbar, `impulse 101` gives it,
 and `weapon_katana` is in the FGD. Its viewmodel and world model are the mod's own (`models/v_katana.mdl`
 on the crowbar's hands and animations, `models/w_katana.mdl` lying flat); the third-person model, the
-sounds and the HUD icon are the crowbar's and are in [ART_DEBT.md](ART_DEBT.md). The gauss arcs the name
-promises are [not built](ROADMAP.md#the-gauss-katana).
+sounds and the HUD icon are the crowbar's and are in [ART_DEBT.md](ART_DEBT.md). Every swing throws a
+crescent off the blade, a `)` tilted to the cut that flies forward (`EV_KatanaArc`, client-side from
+`events/katana_arc.sc`), and where it meets a wall it burns a line of glows across it; the blade itself goes hot for the swing,
+lighting the room and shining in the dark. The wave also hurts: energy damage to
+the first thing on the aim line beyond the blade's reach, at half strength and falling off with
+distance, which makes the katana a ranged melee weapon. Floors are scraped, not hit, so a low cut at a
+headcrab keeps its wave. Details and the open questions are in [ROADMAP.md](ROADMAP.md#the-gauss-katana).
 
 **Custom HEV gloves on every viewmodel.** Fourteen stock viewmodels plus the katana compile with three
 glove skin families — grey plates with cyan, red or purple light channels — and the game shows cyan

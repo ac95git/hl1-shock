@@ -585,12 +585,22 @@ public:
 	void Precache() override;
 	bool GetItemInfo(ItemInfo* p) override;
 	bool Deploy() override;
+	// The crowbar's swing, then the arc event.  Once per swing, not once per
+	// attempt: SwingAgain retries a miss a tenth later and must not arc twice.
+	void PrimaryAttack() override;
 
 protected:
 #ifndef CLIENT_DLL
 	float BaseDamage() override;
+	// The wave hurts: energy damage to the first thing on its path beyond
+	// the blade's own reach, falling off with distance the way the visual
+	// fades.  Server-side only; the client draws, the server decides.
+	void WaveAttack();
 #endif
 	float SwingDelayScale() override;
+
+private:
+	unsigned short m_usKatanaArc;
 };
 
 enum python_e

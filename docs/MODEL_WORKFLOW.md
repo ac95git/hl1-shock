@@ -63,6 +63,15 @@ leaves out and `mdlinfo.py --extract-bmp` can supply.
   first (Pillow: `convert("RGB").quantize(256).save(..., "BMP")`). Names containing `CHROME` get the chrome
   flag from studiomdl; the SMD material name is the BMP file name, exactly, including a double `.bmp.bmp`
   where valve has one.
+- **Texture render flags: the engine ignores FULLBRIGHT and honours ADDITIVE.** Tested on the katana's
+  hot blade, 2026-09-12. A texture that must shine in the dark is patched additive after the compile
+  with `mdlflags.py` (studiomdl cannot set it; this repo's studiomdl knows `$texrendermode additive`
+  but the SDK's does not). Additive draws the texture as light: dark pixels vanish and the surface is a
+  little transparent, so give such a surface a material of its own and keep the rest solid.
+- **Skin families are the switch for texture states.** The viewmodel's skin is never sent by the
+  server; `cl_dll/view.cpp` sets it every frame from the model's family count: three families are the
+  suit colours, six are suit × cold/hot in glove-major order. `qc_skins.py --state COLD=HOT` lays the
+  six out.
 - Crowbar may decompile a model without writing its textures. `mdlinfo.py --extract-bmp=DIR` pulls them
   straight out of the `.mdl` under their stored names.
 - The `'Scene' object has no attribute 'vs'` traceback Source Tools prints under factory settings is
@@ -76,6 +85,7 @@ Repo, under `utils/mdltool/` (Python 3 with Pillow):
 | --- | --- |
 | `mdlinfo.py MODEL.mdl [...] [--bones-only] [--extract=DIR] [--extract-bmp=DIR]` | Reads a `.mdl` header: bones with parents, textures with sizes and flags, bodyparts and submodels with vertex counts, sequence names. Extracts textures as PNG (to look at) or 8-bit BMP (to compile with). No decompile needed; this is how the stock viewmodels were surveyed. |
 | `smd_goldsrc.py IN.smd OUT.smd [--wrap-uv]` | Source-style vertex lines → GoldSrc single-bone lines. Run on every Blender export. `--wrap-uv` shifts each triangle's UVs by whole tiles into 0..1, for Source-derived meshes (see the UV trap below). |
+| `mdlflags.py MODEL.mdl [TEXTURE +flag -flag ...]` | Lists or patches per-texture render flags in a compiled `.mdl`: flatshade, chrome, fullbright, nomips, alpha, additive, masked. The only way to set fullbright or additive on a model this pipeline compiles. |
 | `smd_pose.py REF.smd ANIM.smd FRAME OUT.smd` | Applies one animation frame to a reference SMD, bone for bone as the engine does, and writes a static SMD. The way to preview a model in a pose without trusting an addon's animation import. |
 
 Working directory, `E:\CustomAssets\scripts\`:
@@ -85,7 +95,8 @@ Working directory, `E:\CustomAssets\scripts\`:
 | `render_smd.py IN.smd OUT_PREFIX TEXDIR...` | Blender headless: imports an SMD, applies the +90° compile rotation, loads its BMPs, renders from the viewmodel camera plus orbit, side and top views. |
 | `katana_graft.py --out DIR [--roll --pitch --yaw --slide --shift] [--blade-tex NAME]` | The worked example: vanilla crowbar hands + Dystopia katana blade → one reference SMD. Measures the crowbar's grip axis and the blade's axis by principal component, aligns them, and exposes the residual corrections as numbers. |
 | `hev_gloves.py model DECOMPILED_DIR SRC_DIR` / `sheet DECOMPILED_DIR OUT.png` | The mod's own HEV glove textures, generated per model from that model's own glove BMPs (the shared `GLOVE*`/`rubbergloveCHROME` set, the crossbow family's `xbow_sleeve`, the MP5's `PLAYER_ForeArm`/`Cuff`, the shotgun's `HAND_ForeArm`): luminance kept, orange plates recoloured, thin grooves and the hand-back screen turned into an accent light, chrome map tinted. Three variants, cyan/red/purple. Writes cyan under the stock names, red and purple with suffixes, a `skins.qc` fragment, and `preview_<variant>/` folders for `render_smd.py`. |
-| `qc_skins.py MODEL.qc SKINS.qc` | Inserts (or replaces) the generated `$texturegroup` into a QC, before the first `$sequence`. Three skin families, cyan first, so skin 0 is what a model shows with no code at all. |
+| `qc_skins.py MODEL.qc SKINS.qc [--state COLD.bmp=HOT.bmp]` | Inserts (or replaces) the generated `$texturegroup` into a QC, before the first `$sequence`. Three skin families, cyan first, so skin 0 is what a model shows with no code at all; with `--state`, six, each glove family cold then hot. |
+| `katana_hot.py` | The katana's hot blade texture: the gold metal of `katana_02.bmp` turned gauss orange grading to white-hot along the metal's own shading; everything else untouched. |
 | `katana_world.py [--scale] [--tex]` | `w_katana.mdl` from the Dystopia world prop without Blender: one bone at the origin, the katana rotated to lie on its flat, centred, floor at z 0, scaled 0.82 to match the viewmodel blade, UVs wrapped, one-frame idle, QC, studiomdl, render. The pattern for any single-bone world model from a Source prop. |
 | `gloves_rollout.py [model ...]` | The whole thing for every stock viewmodel: copy the decompile to `models/src/`, gloves, QC, studiomdl, verify three skin families in the `.mdl`, orbit render, contact sheet. Stops and names the model if a decompile is missing. |
 

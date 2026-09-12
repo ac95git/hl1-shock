@@ -365,6 +365,37 @@ void CHud::Init()
 	m_iFOV = 0;
 
 	CVAR_CREATE("zoom_sensitivity_ratio", "1.2", FCVAR_ARCHIVE);
+
+	// The Gauss Katana's crescent (EV_KatanaArc, ev_hldm.cpp).  Client-side
+	// because the effect is; every one of these is a first guess to be dialled
+	// in by eye, which is why they are cvars.  katana_arc 0 turns it off.
+	// Range: how far it flies, in units.  Radius: of the circle the ")" is cut
+	// from.  Sweep: how much of that circle, in degrees (180 is a half moon).
+	// Speed: units per second.  Roll: the tilt of the cut, in degrees, sign
+	// alternating swing to swing.  Lean: degrees the belly turns from facing
+	// the player (0, a ")" seen face-on) toward pointing forward (90, a
+	// thrown blade seen edge-on).
+	CVAR_CREATE("katana_arc", "1", 0);
+	// Range doubles as the fade: the crescent shrinks and dims to nothing over
+	// it, so it is long, and a wall almost always comes first.
+	CVAR_CREATE("katana_arc_range", "1200", 0);
+	CVAR_CREATE("katana_arc_radius", "70", 0);
+	CVAR_CREATE("katana_arc_sweep", "150", 0);
+	CVAR_CREATE("katana_arc_speed", "1200", 0);
+	CVAR_CREATE("katana_arc_roll", "30", 0);
+	CVAR_CREATE("katana_arc_lean", "90", 0);
+	// The blade lights up on the swing: a dynamic light at the hand, and the
+	// blade itself going HOT -- the viewmodel's hot skin family, whose blade
+	// texture is drawn additive.  Life in seconds; 0 turns each off.  The hot
+	// skin is on or off; the light decays over its life, and with the two
+	// equal that decay reads as the blade cooling.
+	CVAR_CREATE("katana_glow_light", "0.9", 0);
+	CVAR_CREATE("katana_glow_hot", "0.9", 0);
+	// Which suit the player wears, 0 cyan / 1 red / 2 purple: selects the
+	// glove skin family on every viewmodel.  A stand-in for the saved player
+	// value the roadmap's suit choice will provide; the selection code in
+	// view.cpp is what that value will feed.
+	CVAR_CREATE("cl_suit_variant", "0", FCVAR_ARCHIVE);
 	CVAR_CREATE("cl_autowepswitch", "1", FCVAR_ARCHIVE | FCVAR_USERINFO);
 	default_fov = CVAR_CREATE("default_fov", "90", FCVAR_ARCHIVE);
 	m_pCvarStealMouse = CVAR_CREATE("hud_capturemouse", "1", FCVAR_ARCHIVE);

@@ -25,6 +25,12 @@
 #include "skill_tuning.h"
 #include <algorithm>
 
+// The wave's cvars are server-only, like Crowbar Force's: nothing the client
+// predicts depends on them.
+#ifndef CLIENT_DLL
+#include "game.h"
+#endif
+
 LINK_ENTITY_TO_CLASS(weapon_katana, CKatana);
 
 void CKatana::Spawn()
@@ -57,7 +63,75 @@ void CKatana::Precache()
 	// sequence index.  v_katana.mdl keeps the crowbar's sequence order for
 	// exactly this reason, so the event is shared as-is.
 	m_usCrowbar = PRECACHE_EVENT(1, "events/crowbar.sc");
+
+	// The arcs.  Client-side, from an event, the way the gauss gun does its
+	// wall hits (cl_dll/ev_hldm.cpp, EV_KatanaArc); the server only says
+	// "a swing happened here, facing this way".  Sprites and sounds the
+	// event uses are precached here because the client cannot.
+	m_usKatanaArc = PRECACHE_EVENT(1, "events/katana_arc.sc");
+	PRECACHE_MODEL("sprites/laserbeam.spr");
+	PRECACHE_MODEL("sprites/hotglow.spr");
+	PRECACHE_SOUND("weapons/electro4.wav");
+	PRECACHE_SOUND("weapons/electro5.wav");
 }
+
+void CKatana::PrimaryAttack()
+{
+	CCrowbar::PrimaryAttack();
+
+	// Origin and angles as the gauss passes them; the client turns them into
+	// the gun position and the aim vector.  FEV_NOTHOST because this file is
+	// predicted: the local client reaches this line itself.
+	PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usKatanaArc,
+		0.0, m_pPlayer->pev->origin, m_pPlayer->pev->angles, 0.0, 0.0, 0, 0, 0, 0);
+
+#ifndef CLIENT_DLL
+	WaveAttack();
+#endif
+}
+
+#ifndef CLIENT_DLL
+void CKatana::WaveAttack()
+{
+	const float flRange = std::max(0.0f, katana_wave_range.value);
+	const float flScale = std::max(0.0f, katana_wave_damage_scale.value);
+	if (flRange <= 0.0f || flScale <= 0.0f)
+		return;
+
+	// Start beyond the blade: what the blade reaches is the blade's, at the
+	// blade's damage, and must not be hit twice in one swing.
+	UTIL_MakeVectors(m_pPlayer->pev->v_angle);
+	const Vector vecSrc = m_pPlayer->GetGunPosition() + gpGlobals->v_forward * 32.0f;
+	const Vector vecEnd = vecSrc + gpGlobals->v_forward * flRange;
+
+	// A line first; a wave is tall but thin, and a line is what the player
+	// aimed.  Then the small hull, so a headcrab just under the line is not
+	// missed by a hair.  Never the large hull: aimed down, it finds the floor
+	// before the target, which is exactly the shot this exists to make land.
+	TraceResult tr;
+	UTIL_TraceLine(vecSrc, vecEnd, dont_ignore_monsters, ENT(m_pPlayer->pev), &tr);
+	CBaseEntity* pEntity = tr.flFraction < 1.0f ? CBaseEntity::Instance(tr.pHit) : nullptr;
+	if (pEntity == nullptr || pEntity->pev->takedamage == DAMAGE_NO)
+	{
+		UTIL_TraceHull(vecSrc, vecEnd, dont_ignore_monsters, head_hull, ENT(m_pPlayer->pev), &tr);
+		pEntity = tr.flFraction < 1.0f ? CBaseEntity::Instance(tr.pHit) : nullptr;
+	}
+	if (pEntity == nullptr || pEntity->pev->takedamage == DAMAGE_NO)
+		return; // a wall: the client is already burning it
+
+	// Falls off with distance the way the drawn wave fades, so the two agree
+	// about how much wave arrived.
+	const float flDist = (tr.vecEndPos - vecSrc).Length();
+	const float flFalloff = std::max(0.0f, 1.0f - flDist / flRange);
+	const float flDamage = BaseDamage() * flScale * flFalloff;
+	if (flDamage <= 0.0f)
+		return;
+
+	ClearMultiDamage();
+	pEntity->TraceAttack(m_pPlayer->pev, flDamage, gpGlobals->v_forward, &tr, DMG_ENERGYBEAM);
+	ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
+}
+#endif
 
 bool CKatana::GetItemInfo(ItemInfo* p)
 {

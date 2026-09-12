@@ -1133,6 +1133,264 @@ void EV_Crowbar(event_args_t* args)
 		}
 	}
 }
+
+//======================
+//	  KATANA ARC START
+//======================
+// The Gauss Katana's swing throws a crescent -- a ")" standing in front of
+// the player, bulging in the direction of the cut -- that flies forward and
+// burns the first wall it meets.  Where it lands it does what the gauss gun
+// does on a wall hit (EV_FireGauss above): the ordinary gunshot decal with
+// the gauss glow fading over six seconds on top.  Visual only.  Nothing here
+// deals damage; the swing's own trace does that, server-side.
+//
+// The crescent is a temp entity with no model and a per-frame callback.  Each
+// frame it moves, redraws itself as a chain of short beams, and traces its
+// centre and its two tips forward; the first of those to reach a wall ends
+// it.  Every knob is a client cvar registered in hud.cpp, because every one
+// of them is a first guess to be dialled in by eye.
+//
+// Storage in the tempent, since it has no fields of its own:
+//   entity.baseline.vuser1  forward (unit)
+//   entity.baseline.vuser2  angles, roll included, for right/up
+//   entity.baseline.fuser1  speed      entity.baseline.fuser2  radius
+//   entity.baseline.fuser3  sweep, degrees of circle the crescent spans
+//   entity.baseline.fuser4  lean, degrees the belly turns from +right toward +forward
+//   entity.baseline.vuser3  birthplace     entity.baseline.scale  range, for the fade
+// Until when the katana's blade is HOT.  Set here on the swing; read every
+// frame in view.cpp, which picks the viewmodel's hot skin family while it
+// holds.  The hot blade is a texture with the fullbright flag, not a drawn
+// effect: two earlier attempts, a beam entity between attachments and quads
+// drawn by the studio renderer, were both rejected in play.
+float g_flKatanaHotEnd = 0.0f;
+
+static bool EV_KatanaArcIsWall(pmtrace_t* tr)
+{
+	if (tr == nullptr || tr->fraction >= 1.0f || tr->allsolid)
+		return false;
+	physent_t* pe = gEngfuncs.pEventAPI->EV_GetPhysent(tr->ent);
+	return pe != nullptr && EV_HLDM_IsBSPModel(pe);
+}
+
+// The burn: a line of glows, one per point of the crescent, each traced onto
+// the wall along the flight and left to fade over six seconds.  Neighbouring
+// glows overlap, so the wall shows the crescent's silhouette along its
+// flight -- a vertical line at lean 90 or 270, the ")" itself at lean 0.
+// No gunshot decals: they read as bullet holes, and this is not gunfire.
+//
+// Every trace starts PULLED BACK from its point, because by the frame the
+// leading point registers a wall it has already moved a few units into it,
+// and a trace that starts inside a solid finds nothing.  The first build
+// traced from the points themselves and only the trailing tips ever burned.
+static void EV_KatanaArcBurnLine(Vector* pts, int count, const Vector& forward, float back, float reach, int iGlow, float fade)
+{
+	for (int i = 0; i < count; i++)
+	{
+		Vector from, to;
+		VectorMA(pts[i], -back, forward, from);
+		VectorMA(pts[i], reach, forward, to);
+		pmtrace_t* tr = gEngfuncs.PM_TraceLine(from, to, PM_TRACELINE_PHYSENTSONLY, 2, -1);
+		if (!EV_KatanaArcIsWall(tr))
+			continue;
+		Vector hit;
+		VectorMA(tr->endpos, 1.0f, tr->plane.normal, hit); // a hair off the surface so the glow is not half inside it
+		const bool anchor = (i == 0 || i == count - 1 || i == count / 2);
+		const float size = (anchor ? 0.6f : 0.4f) * fade;
+		gEngfuncs.pEfxAPI->R_TempSprite(hit, vec3_origin, size, iGlow, kRenderGlow, kRenderFxNoDissipation, 0.8f * fade, 6.0f * fade, FTENT_FADEOUT);
+		if (anchor)
+		{
+			Vector fwd;
+			VectorAdd(hit, tr->plane.normal, fwd);
+			gEngfuncs.pEfxAPI->R_Sprite_Trail(TE_SPRITETRAIL, hit, fwd, iGlow, 3, 0.1f,
+				gEngfuncs.pfnRandomFloat(10.0f, 20.0f) / 100.0f, 60.0f, 255, 100.0f);
+		}
+	}
+}
+
+static void EV_KatanaArcThink(struct tempent_s* ent, float frametime, float currenttime)
+{
+	const Vector forward = ent->entity.baseline.vuser1;
+	const float speed = ent->entity.baseline.fuser1;
+	const float sweep = ent->entity.baseline.fuser3;
+
+	Vector right, up, f;
+	AngleVectors(ent->entity.baseline.vuser2, f, right, up);
+
+	const Vector prev = ent->entity.origin;
+	Vector origin;
+	VectorMA(prev, speed * frametime, forward, origin);
+	ent->entity.origin = origin;
+
+	// It is a wave, and waves die out: over the flight it shrinks and dims
+	// to nothing, so running out of range never looks like a cut.  The range
+	// is long enough that a wall usually comes first.
+	const Vector start = ent->entity.baseline.vuser3;
+	const float range = ent->entity.baseline.scale;
+	const float progress = range > 0.0f ? (origin - start).Length() / range : 1.0f;
+	const float fade = 1.0f - (progress < 1.0f ? progress : 1.0f);
+	if (fade <= 0.02f)
+	{
+		ent->die = currenttime;
+		return;
+	}
+	const float radius = ent->entity.baseline.fuser2 * fade;
+
+	const int iBeam = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/laserbeam.spr");
+	const int iGlow = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/hotglow.spr");
+
+	// The ")" : a circular arc, tips at the ends, centred on the line of
+	// flight so the belly bulges as far one way as the tips reach the other.
+	// The bulge points along `bulge`: +right for a crescent facing the player,
+	// leaned toward +forward (katana_arc_lean) for one that leads with its
+	// belly like a thrown blade.  The first build put the tips ON the line of
+	// flight and the belly a whole radius off to the side; the crescent was
+	// seen sitting beside where the player looked, not in front.
+	const int segments = 10;
+	const float half = sweep * 0.5f * (M_PI / 180.0f);
+	const float lean = ent->entity.baseline.fuser4 * (M_PI / 180.0f);
+	Vector bulge;
+	VectorScale(right, cosf(lean), bulge);
+	VectorMA(bulge, sinf(lean), forward, bulge);
+	const float centre = radius * (1.0f + cosf(half)) * 0.5f; // midway between belly and tips
+	Vector pts[segments + 1];
+	for (int i = 0; i <= segments; i++)
+	{
+		const float theta = -half + (2.0f * half) * (float)i / (float)segments;
+		Vector p;
+		VectorMA(origin, radius * cosf(theta) - centre, bulge, p);
+		VectorMA(p, radius * sinf(theta), up, p);
+		pts[i] = p;
+	}
+	for (int i = 0; i < segments; i++)
+	{
+		// Bright at the belly, thinner toward the tips.  The gauss gun's
+		// primary-fire orange, 255/128/0.
+		const float t = fabsf((float)i / (float)segments - 0.5f) * 2.0f; // 0 belly .. 1 tip
+		gEngfuncs.pEfxAPI->R_BeamPoints(pts[i], pts[i + 1], iBeam,
+			0.06f, (4.0f - 2.5f * t) * fade, 0.15f, (1.0f - 0.4f * t) * fade, 0.0f, 0, 0.0f,
+			1.0f, 0.5f, 0.0f);
+	}
+
+	// Did the belly or either tip cross a WALL this frame?  Anything else --
+	// a monster, the player -- is flown through: the crescent is light.
+	// A floor or ceiling is not a wall either: a tip that meets one is
+	// scraped along it, leaving a glow where it touched, and the wave flies
+	// on.  Aiming down at a headcrab used to end the wave on the first floor
+	// tile its lower tip touched.
+	Vector probes[3] = {pts[segments / 2], pts[0], pts[segments]};
+	for (Vector& to : probes)
+	{
+		Vector from;
+		VectorMA(to, -speed * frametime, forward, from);
+		pmtrace_t* tr = gEngfuncs.PM_TraceLine(from, to, PM_TRACELINE_PHYSENTSONLY, 2, -1);
+		if (EV_KatanaArcIsWall(tr) && fabsf(tr->plane.normal[2]) > 0.7f)
+		{
+			Vector scrape;
+			VectorMA(tr->endpos, 1.0f, tr->plane.normal, scrape);
+			gEngfuncs.pEfxAPI->R_TempSprite(scrape, vec3_origin, 0.3f * fade, iGlow, kRenderGlow, kRenderFxNoDissipation, 0.6f * fade, 3.0f * fade, FTENT_FADEOUT);
+			continue;
+		}
+		if (EV_KatanaArcIsWall(tr))
+		{
+			// Points are spread along the flight by up to the crescent's whole
+			// depth: the leading ones are a step into the wall, the trailing
+			// ones that far short of it.  Pull every trace back by the depth
+			// plus this frame's step, and reach the same distance forward.
+			const float depth = 2.0f * centre * fabsf(sinf(lean)) + speed * frametime + 8.0f;
+			EV_KatanaArcBurnLine(pts, segments + 1, forward, depth, depth, iGlow, fade);
+			ent->die = currenttime; // spent
+			return;
+		}
+	}
+}
+
+void EV_KatanaArc(event_args_t* args)
+{
+	const int idx = args->entindex;
+	Vector origin, angles, vecSrc, forward, right, up;
+	VectorCopy(args->origin, origin);
+	VectorCopy(args->angles, angles);
+
+	if (gEngfuncs.pfnGetCvarFloat("katana_arc") <= 0.0f)
+		return;
+	const float range = gEngfuncs.pfnGetCvarFloat("katana_arc_range");
+	const float radius = gEngfuncs.pfnGetCvarFloat("katana_arc_radius");
+	const float speed = gEngfuncs.pfnGetCvarFloat("katana_arc_speed");
+	const float sweep = gEngfuncs.pfnGetCvarFloat("katana_arc_sweep");
+	const float roll = gEngfuncs.pfnGetCvarFloat("katana_arc_roll");
+	const float lean = gEngfuncs.pfnGetCvarFloat("katana_arc_lean");
+	if (range <= 0.0f || radius <= 0.0f || speed <= 0.0f)
+		return;
+
+	EV_GetGunPosition(args, vecSrc, origin);
+	AngleVectors(angles, forward, right, up);
+
+	gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON,
+		gEngfuncs.pfnRandomLong(0, 1) != 0 ? "weapons/electro4.wav" : "weapons/electro5.wav",
+		0.35, ATTN_NORM, 0, 90 + gEngfuncs.pfnRandomLong(0, 20));
+
+	// The blade lights up.  Two parts: a dynamic light at the hand, which the
+	// studio renderer folds into the viewmodel's lighting so the hands and the
+	// blade themselves go orange, and a beam along the edge between the
+	// viewmodel's two attachments, grip and tip -- for the local player the
+	// engine maps a player attachment onto the viewmodel, which is how the
+	// egon's beam starts at its gun.  Other players have no attachments on the
+	// crowbar's p_ model, so the edge is local only.
+	const float lightLife = gEngfuncs.pfnGetCvarFloat("katana_glow_light");
+	if (lightLife > 0.0f)
+	{
+		Vector at;
+		VectorMA(vecSrc, 14.0f, forward, at);
+		VectorMA(at, 6.0f, right, at);
+		dlight_t* dl = gEngfuncs.pEfxAPI->CL_AllocDlight(0);
+		if (dl != nullptr)
+		{
+			VectorCopy(at, dl->origin);
+			dl->radius = 200.0f;
+			dl->color.r = 255;
+			dl->color.g = 128;
+			dl->color.b = 0;
+			dl->die = gEngfuncs.GetClientTime() + lightLife;
+			dl->decay = dl->radius / lightLife;
+		}
+	}
+	// The blade goes hot: view.cpp switches the viewmodel to its hot skin
+	// family while this clock holds.  All the event does is start it.
+	const float hotLife = gEngfuncs.pfnGetCvarFloat("katana_glow_hot");
+	if (hotLife > 0.0f && EV_IsLocal(idx))
+		g_flKatanaHotEnd = gEngfuncs.GetClientTime() + hotLife;
+
+	// Born past the blade, every part of it ahead of the player: a leaned
+	// crescent trails its tips behind its centre by up to its whole depth, so
+	// the centre starts that much further out.  Tilted to the cut, the tilt
+	// alternating so two swings in a row read as two different cuts.
+	const float half = sweep * 0.5f * (M_PI / 180.0f);
+	const float depth = radius * (1.0f + cosf(half)) * 0.5f * fabsf(sinf(lean * (M_PI / 180.0f)));
+	Vector start;
+	VectorMA(vecSrc, 20.0f + depth, forward, start);
+	VectorMA(start, -4.0f, up, start);
+	Vector tilted = angles;
+	tilted.z += (gEngfuncs.pfnRandomLong(0, 1) != 0 ? roll : -roll);
+
+	TEMPENTITY* arc = gEngfuncs.pEfxAPI->CL_TempEntAllocNoModel(start);
+	if (arc == nullptr)
+		return;
+	arc->flags = FTENT_NOMODEL | FTENT_CLIENTCUSTOM | FTENT_PERSIST;
+	arc->callback = EV_KatanaArcThink;
+	arc->die = gEngfuncs.GetClientTime() + range / speed;
+	arc->entity.baseline.vuser1 = forward;
+	arc->entity.baseline.vuser2 = tilted;
+	arc->entity.baseline.fuser1 = speed;
+	arc->entity.baseline.fuser2 = radius;
+	arc->entity.baseline.fuser3 = sweep;
+	arc->entity.baseline.fuser4 = lean;
+	arc->entity.baseline.vuser3 = start; // where it was born, for the fade
+	arc->entity.baseline.scale = range;
+	arc->entity.baseline.origin = Vector(0, 0, 0); // it moves itself
+}
+//======================
+//	   KATANA ARC END
+//======================
 //======================
 //	   CROWBAR END
 //======================

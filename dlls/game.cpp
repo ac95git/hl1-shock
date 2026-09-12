@@ -502,7 +502,15 @@ cvar_t skill_crowbar_damage_scale = {"skill_crowbar_damage_scale", "1.5"};
 // first guesses.  Damage goes through the sk_plr_katana skill cvars below so
 // it scales with difficulty like every other weapon; the swing time is read
 // from both DLLs through skill_tuning.h because it is predicted.
-cvar_t katana_swing_time_scale = {"katana_swing_time_scale", "2.0"};
+// 1.0 is the crowbar's own rate.  Started at 2.0; halved after play, the wave
+// having made the slow swing feel like waiting rather than weight.
+cvar_t katana_swing_time_scale = {"katana_swing_time_scale", "1.0"};
+// The wave the swing throws.  Energy damage to the first thing on its path
+// beyond the blade's reach, as a fraction of the katana's base damage, falling
+// off to nothing at katana_wave_range -- the same distance the drawn wave
+// fades over on the client (katana_arc_range there), so keep the two equal.
+cvar_t katana_wave_damage_scale = {"katana_wave_damage_scale", "0.5"};
+cvar_t katana_wave_range = {"katana_wave_range", "1200"};
 cvar_t skill_weapon_damage_scale = {"skill_weapon_damage_scale", "1.1"};
 // Scales the reload delay. Read from both DLLs through skill_tuning.h, because
 // the delay it sets is m_flNextAttack, which the client predicts.
@@ -703,6 +711,8 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_crowbar_range_scale);
 	CVAR_REGISTER(&skill_crowbar_damage_scale);
 	CVAR_REGISTER(&katana_swing_time_scale);
+	CVAR_REGISTER(&katana_wave_damage_scale);
+	CVAR_REGISTER(&katana_wave_range);
 	CVAR_REGISTER(&skill_reload_time_scale);
 	CVAR_REGISTER(&skill_weapon_damage_scale);
 

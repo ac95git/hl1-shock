@@ -355,15 +355,48 @@ problem gets solved once instead of twice.
 
 - **Slower attack speed, big damage.** A melee weapon, on the crowbar's shape: `dlls/crowbar.cpp` with
   different numbers, a different model, and one new thing below.
-- **Swings create gauss arcs that leave "burning" decals on walls, the way the gauss gun does.** What the
-  gauss gun actually does on a wall hit is worth copying exactly rather than approximating: the beam is
-  `R_BeamPoints`, the mark is the ordinary gunshot decal (`EV_HLDM_DecalGunshot` with
-  `BULLET_MONSTER_12MM`, `cl_dll/ev_hldm.cpp:993`), and the *burning* is a glow temp sprite
-  (`R_TempSprite` with the gauss glow, six-second fade, `:995`) sitting on the decal. Client-side, from
-  an event, so the katana wants an event of its own on the swing, not server-side temp entities.
+- **Swings create gauss arcs that leave "burning" decals on walls, the way the gauss gun does. Built,
+  v1, visual only.** `EV_KatanaArc` in `cl_dll/ev_hldm.cpp`, fired by `events/katana_arc.sc` from
+  `CKatana::PrimaryAttack` once per swing. It copies the gauss gun's wall hit exactly rather than
+  approximating it: the mark is the ordinary gunshot decal (`EV_HLDM_DecalGunshot` with
+  `BULLET_MONSTER_12MM`) and the *burning* is the gauss glow sprite fading over six seconds on top of it.
+  The arc itself is a crescent, a `)` standing in front of the player and tilted to the cut, that flies
+  forward and burns the first wall its belly or either tip meets. It is a temp entity with no model and a
+  per-frame callback (`EV_KatanaArcThink`) that moves it, redraws it as ten short beam segments bright at
+  the belly and thin at the tips, and traces three points forward. The first version was a fan of
+  lightning rays from the blade to the walls; the crescent replaced it at the user's request the same
+  day. Seven client cvars, all first guesses: `katana_arc` (on/off), `_range` (1200, which is also how far
+  it shrinks and dims to nothing, so running out never looks like a cut), `_radius` (70), `_sweep` (150°
+  of the circle), `_speed` (1200), `_roll` (30°, sign alternating swing to swing), `_lean` (90: how far
+  the belly turns from facing the player toward the line of flight, so it leads with its belly). The burn is glow only, one per
+  point of the crescent, so the wall shows the crescent's silhouette along its flight; the gunshot
+  decals were dropped because they read as bullet holes. A floor or ceiling does not end the flight; a
+  tip that meets one scrapes a glow along it and the wave flies on, because aiming down at a headcrab
+  used to kill the wave on the first floor tile.
+- **The wave hurts. Decided 2026-09-12, when aiming down at headcrabs made a wave that only looked
+  like an attack feel like a miss.** `CKatana::WaveAttack`, server-side: energy damage
+  (`DMG_ENERGYBEAM`) to the first damageable thing on the aim line beyond the blade's own 32 units, at
+  `katana_wave_damage_scale` (0.5) of base damage, falling off to nothing at `katana_wave_range` (1200),
+  the same distance the drawn wave fades over, so what the player sees arrive and what arrives agree. A
+  line trace first, then the small hull; never the large one, which finds the floor before a headcrab.
+  The katana is therefore a **ranged melee weapon**: the blade for what is in reach, the wave for what is
+  not, at half strength and less with distance. One target per wave for now; the drawn wave flies
+  through monsters, and whether it should hit everything on its path is the next question.
+- **The blade goes hot on the swing.** Two parts: a dynamic light at the hand (`katana_glow_light`, 0.9 s,
+  decaying over its life, which is the fade the eye reads) and the blade's own texture swapping to a hot
+  one (`katana_glow_hot`, 0.9 s). The hot blade is a second state in the skin families — six now, glove
+  colour × cold/hot, glove-major — with the blade metal split onto a material of its own so only it
+  swaps, and the hot texture flagged **additive** by `utils/mdltool/mdlflags.py` after the compile. It
+  is drawn as light over what is behind it, so it shines in the dark and is a little transparent. Two
+  approaches were built and rejected first: a beam entity between two viewmodel attachments (the engine
+  draws beams before the viewmodel with last frame's attachments, so it trailed the swing) and quads drawn
+  by the studio renderer in the viewmodel's pass (right place, wrong look). The attachments stay in the
+  model for whatever wants them next. `cl_suit_variant` (0/1/2) picks the glove family on every viewmodel
+  and stands in for the saved suit choice; `cl_dll/view.cpp` is where that value will land.
 - **The weapon exists, v1.** `weapon_katana`, `dlls/katana.cpp`: `CCrowbar` with two hooks overridden,
-  base damage (`sk_plr_katana1-3`, 40) and swing time (`katana_swing_time_scale`, 2× the crowbar's, read
-  from both DLLs because it is predicted), and its own models. Backstab, Crowbar Force and Reach, and
+  base damage (`sk_plr_katana1-3`, 40) and swing time (`katana_swing_time_scale`, now 1.0, the crowbar's
+  own rate — it started at 2× and the wave made the slow swing feel like waiting; read from both DLLs
+  because it is predicted), and its own models. Backstab, Crowbar Force and Reach, and
   the Follow-Up come along unchanged, which is the point of subclassing rather than copying. In the
   melee bucket beside the crowbar; `impulse 101` gives it; the FGD places it. See PILLARS.md.
 - **Viewmodel and world model are the mod's own.** The Dystopia blade on Half-Life's crowbar hands
@@ -463,14 +496,16 @@ they build on each other:
    Concealment readout already follows: the state colours (red for damage, amber for Noticed) stay as
    they are, because they carry meaning the suit colour must not override.
 
-6. **The gloves emit light.** Later. Today the seam lights dim with map lighting like the rest of the
-   glove, because the SDK's studiomdl cannot mark part of a texture fullbright and the flag
-   (`STUDIO_NF_FULLBRIGHT`, `engine/studio.h`) is per texture. The route: split the light channels onto a
-   texture of their own in the generator, give those faces their own material in the reference SMD (a
-   mesh edit, since the seams are painted on the sleeve's faces today), compile, then patch the flag into
-   the compiled `.mdl`'s texture record with a small tool, `mdlinfo.py` already knowing the offsets. A
-   model that glows in the dark is also a stealth question: PERCEPTION.md's light term reads the lightmap,
-   not the viewmodel, so it costs nothing in Concealment, and that is worth stating when it lands.
+6. **The gloves emit light.** Later, and the route is now proven on the katana's hot blade. The engine
+   **ignores `STUDIO_NF_FULLBRIGHT`** on studio textures — the katana tested it — and **honours
+   `STUDIO_NF_ADDITIVE`**, drawing the texture as light over what is behind it, which shines in the dark
+   at the cost of some transparency. `utils/mdltool/mdlflags.py` patches either flag into a compiled
+   `.mdl`. For the gloves: split the light channels onto a texture of their own in the generator, give
+   those faces their own material in the reference SMD (a mesh edit, since the seams are painted on the
+   sleeve's faces today), compile, patch additive. The transparency is the open question for a seam that
+   is always on, where it was fine for a blade lit for under a second. A model that glows in the dark is
+   also a stealth question: PERCEPTION.md's light term reads the lightmap, not the viewmodel, so it costs
+   nothing in Concealment, and that is worth stating when it lands.
 
 Known issue from the first pass: on the crossbow the hand clips slightly through the stock. Not from the
 textures; recorded in [ART_DEBT.md](ART_DEBT.md) for later.

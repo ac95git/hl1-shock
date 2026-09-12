@@ -42,6 +42,7 @@ void VectorAngles(const float* forward, float* angles);
 
 #include "r_studioint.h"
 #include "com_model.h"
+#include "studio.h" // studiohdr_t, for the viewmodel's skin family count
 #include "kbutton.h"
 
 extern engine_studio_api_t IEngineStudio;
@@ -483,6 +484,8 @@ V_CalcRefdef
 
 ==================
 */
+void V_SetViewModelSkin(cl_entity_t* view, float time);
+
 void V_CalcNormalRefdef(struct ref_params_s* pparams)
 {
 	cl_entity_t *ent, *view;
@@ -840,9 +843,50 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 	VectorCopy(view->angles, view->curstate.angles);
 	VectorCopy(view->angles, view->latched.prevangles);
 
+	V_SetViewModelSkin(view, pparams->time);
+
 	lasttime = pparams->time;
 
 	v_origin = pparams->vieworg;
+}
+
+// =====================================================================
+// V_SetViewModelSkin
+//
+// The server never sends the viewmodel a skin; the client owns it.  Two
+// things pick it: which suit the player wears, which is the glove family
+// every viewmodel carries (cyan, red, purple), and on the katana whether
+// the blade is hot.  The model's own family count says which layout it has:
+// three families take the suit alone, six take suit * 2 + hot (glove-major,
+// each cold then hot, as qc_skins.py lays them out).  Anything else is
+// skin 0.  cl_suit_variant stands in for the saved player value the suit
+// choice will provide; this is the code that value will feed.
+// =====================================================================
+extern float g_flKatanaHotEnd;
+
+void V_SetViewModelSkin(cl_entity_t* view, float time)
+{
+	if (view == nullptr || view->model == nullptr)
+		return;
+	studiohdr_t* hdr = (studiohdr_t*)IEngineStudio.Mod_Extradata(view->model);
+	if (hdr == nullptr)
+		return;
+
+	int variant = (int)CVAR_GET_FLOAT("cl_suit_variant");
+	if (variant < 0)
+		variant = 0;
+	if (variant > 2)
+		variant = 2;
+	const int hot = (g_flKatanaHotEnd > time) ? 1 : 0;
+
+	int skin = 0;
+	if (hdr->numskinfamilies >= 6)
+		skin = variant * 2 + hot;
+	else if (hdr->numskinfamilies >= 3)
+		skin = variant;
+	if (skin >= hdr->numskinfamilies)
+		skin = 0;
+	view->curstate.skin = skin;
 }
 
 void V_SmoothInterpolateAngles(float* startAngle, float* endAngle, float* finalAngle, float degreesPerSec)
