@@ -44,9 +44,20 @@ public:
 	int  DraggedIndex() const { return m_draggedIndex; }
 	void CancelDrag();
 
+	// Forget every loaded Inventory icon. Called whenever the Entries are
+	// replaced wholesale, and on open, because the engine frees client
+	// sprites on a map change and a cached handle must not outlive them.
+	void ResetIconCache();
+
 private:
 	// Pixel rect of an Entry sitting at (col,row) and 'cellWidth' wide.
 	IRect CellRect(int col, int row, int cellWidth) const;
+
+	// sprites/inv/<classname>.spr, or 0 if there is no such file.
+	HSPRITE IconFor(const char* classname);
+
+	struct IconCacheEntry { char classname[64]; HSPRITE hSprite; };
+	std::vector<IconCacheEntry> m_iconCache;
 
 	std::vector<IRect> m_itemRects;
 

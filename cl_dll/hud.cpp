@@ -403,12 +403,20 @@ void CHud::Init()
 	// watched rather than assumed: that it reaches the client in single player
 	// at all, and that it survives a changelevel.
 	m_pCvarSuitDebug = CVAR_CREATE("cl_suit_debug", "0", 0);
-	// Inventory Grid tile art. Fit: 1 scales each sprite to its tile through
-	// SPR_DrawGeneric, so a tile looks the same at every resolution; 0 is the
-	// old native-size draw, kept for comparison. Blend: 0 additive (the HUD's
-	// own look), 1 alpha-blended, which is what full-colour art would need.
+	// Inventory Grid Icons. Fit: 1 scales each sprite to the Entry's Footprint
+	// through SPR_DrawGeneric, so it looks the same at every resolution; 0 is
+	// the old native-size draw, kept for comparison. Blend applies only to an
+	// Entry still on its HUD sprite: 0 additive (the HUD's own look), 1
+	// alpha-blended. A real Icon is always alpha-blended.
 	CVAR_CREATE("inv_icon_fit", "1", 0);
 	CVAR_CREATE("inv_icon_blend", "0", 0);
+	// Gap between a fitted Icon and its Footprint's edge, as a share of the
+	// Footprint's height. Tuned by eye against the first Icon (the katana).
+	CVAR_CREATE("inv_icon_pad", "0.05", 0);
+	// Prints each Inventory icon load and, once a second, the scaled draw's
+	// parameters, so a blank tile can be told apart: not loaded, or loaded
+	// and drawn invisibly.
+	CVAR_CREATE("inv_icon_debug", "0", 0);
 	CVAR_CREATE("cl_autowepswitch", "1", FCVAR_ARCHIVE | FCVAR_USERINFO);
 	default_fov = CVAR_CREATE("default_fov", "90", FCVAR_ARCHIVE);
 	m_pCvarStealMouse = CVAR_CREATE("hud_capturemouse", "1", FCVAR_ARCHIVE);

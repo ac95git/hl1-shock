@@ -344,6 +344,8 @@ void CInventoryPanel::Open()
     // the panel may have been closed across a level change.
     gEngfuncs.pfnClientCmd("inv_sync\n");
 
+    m_gridView.ResetIconCache();
+
     m_HitTestPanel.setVisible(true);
     setVisible(true);
     g_iVisibleMouse = true;
@@ -385,6 +387,7 @@ void CInventoryPanel::UpdateInventory(bool reset, int gridWidth, int rows, int r
         // A drag in flight refers to an index that is about to change
         // meaning, so abandon it rather than move the wrong thing.
         m_gridView.CancelDrag();
+        m_gridView.ResetIconCache();
         CloseContextMenu();
     }
 

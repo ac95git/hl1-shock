@@ -121,6 +121,12 @@ in the mod's own `sprites/hud.txt` (built from valve's by `utils/sprtool/make_hu
 the Grid and the Infusion status icon, as the old `cross` was. The repo's `sprites/` is the source of truth
 and is copied to `topmod/sprites/` by hand, the same arrangement as the FGD.
 
+**Reopened for the Grid, 2026-09-12.** The Grid's Icons are now full-colour renders of world models
+(`docs/SPRITE_WORKFLOW.md`, *Inventory Icons*), and the Syringe has no world model of its own, so it is
+one of two Entries still drawn as a tinted HUD glyph in a box among untinted renders (the other is the
+Antidote, which has no model in Half-Life at all). Its Icon now waits on its world model: once that
+exists, one render makes the Icon. The HUD icon stays right for the Infusion status readout.
+
 ### Current stand-ins
 
 | Use | Asset | Borrowed from |

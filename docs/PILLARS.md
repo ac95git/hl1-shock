@@ -781,13 +781,21 @@ each delegating to a plain helper view. Opened via the `+inventory` command boun
   Ammo is not in the Grid (ADR-0001); it is listed in the left column.
 - Drag and drop that asks the server to move an Entry and draws whatever the next sync says. Nothing is
   placed, clamped or re-packed client-side (ADR-0004).
-- **The Grid is a lattice, and tiles are fitted to it.** Lines sit on a fixed pitch; a tile is inset from
-  its lines by the same amount on every side; the integer remainder of the pitch goes to the left, so the
-  Grid's right edge meets the header's. Tile art is scaled to the tile through `SPR_DrawGeneric`
-  (`DrawTileSprite`), so a tile looks the same at every resolution even though HUD sprites are bucketed.
-  `inv_icon_fit 0` restores the native draw for comparison; `inv_icon_blend 1` draws alpha-blended
-  instead of additive, which is what full-colour art would need — see [ROADMAP.md](ROADMAP.md) for the
-  art decision that hangs on it.
+- **The Grid is a lattice.** Lines sit on a fixed pitch; an Entry's Footprint is inset from its lines by
+  the same amount on every side; the integer remainder of the pitch goes to the left, so the Grid's right
+  edge meets the header's.
+- **Icons are full-colour renders of the world models, laid straight on the lattice.** Decided
+  2026-09-12, after System Shock 2: the suit colour stays on the chrome and the thing in the Grid keeps
+  its own colour. One alphatest `.spr` per classname at `sprites/inv/`, found by classname with no table
+  change, drawn untinted, alpha-blended and fitted to the Footprint through `SPR_DrawGeneric`
+  (`DrawFootprintSprite`), so it looks the same at every resolution. No box under it at rest; the Footprint
+  shows as a suit-coloured outline on hover and while dragging, and as a red one, at rest, for a weapon
+  with no ammo — the one thing the untinted art can no longer say. An Entry with no Icon file (today only
+  the Antidote, and the Syringe, which has no world model) keeps its HUD sprite, tinted and additive, in
+  its dark box. Eighteen Icons exist: every stock weapon, the katana, medkit, battery and keycard. The
+  pipeline is in [SPRITE_WORKFLOW.md](SPRITE_WORKFLOW.md).
+- `inv_icon_pad` is the fitted margin; `inv_icon_fit 0` and `inv_icon_blend` are comparison switches for
+  the HUD-sprite fallback; `inv_icon_debug 1` prints each Icon load and draw.
 - Hit rectangles rebuilt every paint.
 
 **Context menu** — right-click gives Use and Drop. Weapons issue `use <classname>` and close the panel;

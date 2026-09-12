@@ -62,16 +62,57 @@ look without launching the game. The agent's own reviewing is done by reading th
 sprites/
   hud_additions.txt    our hud.txt lines, all four buckets per name  (hand-edited)
   hud.txt              generated: valve's entries + ours              (never hand-edited)
-  top/*.spr            our icons, one file per icon per bucket        (generated)
+  top/*.spr            our HUD icons, one file per icon per bucket    (generated)
+  inv/*.spr            Inventory Icons, one file per classname        (generated, see below)
 utils/sprtool/
   sprtool.py           decode / encode / sheet
   make_hud_txt.py      hud.txt generator
-  icons/*.py           the icons' sources
+  icons/*.py           the HUD icons' sources
 ```
 
 `sprites/` in the repo is the source of truth. The install copy is `topmod/sprites/` in the Half-Life
-directory, and **nothing in the build copies it** — copy `hud.txt` and `top/*.spr` by hand after every
-change, in the same sitting, the same discipline as the FGD (`docs/MAP_BRIEF.md`).
+directory, and **nothing in the build copies it** — copy `hud.txt`, `top/*.spr` and `inv/*.spr` by hand
+after every change, in the same sitting, the same discipline as the FGD (`docs/MAP_BRIEF.md`).
+
+## Inventory Icons
+
+The Grid's Icons are a different kind of sprite from everything above, and the facts that bind HUD icons
+mostly do not bind them:
+
+- **Full colour, untinted, alpha-blended.** `SPR_Set(255,255,255)` and `SPR_DrawGeneric` with
+  `GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA`. The source is a colour render; dark pixels stay.
+- **`alphatest` format**, so index 255 is the mask and the other 255 colours are the item's own. One
+  palette per file is plenty for a single object.
+- **One size, no buckets, no `hud.txt`.** The Grid fits the sprite to the Footprint, so the size only
+  sets detail: weapons 384×128 (3:1, three Cells), items 128×128. Not power-of-two, and the engine does
+  not mind.
+- **Found by classname.** `sprites/inv/<classname>.spr` — `weapon_357`, `item_healthkit` — loaded by
+  `CInventoryGridView::IconFor` with no table entry anywhere. Weapons use `WEAPON::szName`, items the
+  `classname` column of `k_ItemTypes`. A missing file is not an error; the Entry keeps its HUD sprite.
+
+The source of every Icon is the thing's **world model**, rendered by `E:\CustomAssets\scripts\render_icon.py`
+(Blender headless; see [MODEL_WORKFLOW.md](MODEL_WORKFLOW.md) for the working directory and the decompile
+rule — the SMD has to have been decompiled by hand first):
+
+```
+blender.exe --background --python E:\CustomAssets\scripts\render_icon.py -- IN.smd OUT.png TEXDIR
+    [--size 384x128] [--view top|side|front] [--roll DEG] [--margin 0.015] [--light flat|studio]
+python utils\sprtool\sprtool.py encode OUT.png sprites\inv\<classname>.spr --format alphatest
+```
+
+Orthographic, on transparent, the long axis laid horizontal, fitted with the margin. `flat` lighting is
+the set's choice: these textures carry their shading baked in, and `studio` on top of it went dark.
+`top` suits a model that lies on the floor (most guns show their profile from above); `side` and `front`
+are for the ones that do not (the RPG, the egon face-on, the battery, the grenade, the snark, the gauss,
+the satchel). `--roll` turns the image; a label reading upside down is the usual reason. The tripmine has
+no world model — its pickup is the viewmodel's `tripmine_boned_world` submodel, and that SMD is the input.
+
+Review by contact sheet (`E:\CustomAssets\render\icons\sheet.png`, a few lines of Pillow) and then in
+the Grid. The only judgement that matters is whether the thing is recognisable at Footprint size over the
+bare lattice, since there is no box behind it.
+
+Adding one: decompile its world model, render, encode, copy `sprites/inv/*.spr` to `topmod/sprites/inv/`,
+open the Inventory. Nothing to rebuild.
 
 ## Style
 
@@ -115,6 +156,4 @@ it is not done.
 
 ## Not yet covered
 
-World models, weapon models and sounds have no equivalent pipeline yet. The plan for models is Crowbar
-to decompile, text surgery on SMD/QC in the repo, and Blender driven headless for new geometry, with the
-compile done by hand; nothing of that is built or proven. Sounds have nothing.
+Models have their own pipeline now — [MODEL_WORKFLOW.md](MODEL_WORKFLOW.md). Sounds have nothing.

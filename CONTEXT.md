@@ -44,6 +44,17 @@ One occupant of an Inventory — the thing that sits in Cells, is moved, used, a
 the same Item Type are distinct and may sit in different places.
 _Avoid_: slot, item instance, object
 
+**Footprint**:
+The Cells an Entry occupies, and the rectangle drawn for them — where a hover outline goes, what a drag
+carries, what a click hits. Distinct from the Icon drawn inside it.
+_Avoid_: tile, box, item rect
+
+**Icon**:
+The picture of an Entry in the Grid: a full-colour render of the thing as it is seen in the world,
+untinted, one file per classname at `sprites/inv/<classname>.spr`. An Entry without one falls back to its
+HUD sprite, tinted and additive.
+_Avoid_: sprite (that is the file format), thumbnail, tile art
+
 **Stack**:
 An Entry holding more than one of the same Item Type. Bounded by that Item Type's maximum; picking up past
 it creates a second Entry.
