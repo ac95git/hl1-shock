@@ -31,6 +31,7 @@ Referenced by `00-PROJECT-OVERVIEW.md` but **not yet written**: `10-COMMON-TASKS
 | [docs/adr/](docs/adr/) | Before changing something that looks arbitrary — the decisions recorded there were deliberate and the reasoning is not visible in the code |
 | [docs/TECH_DEBT.md](docs/TECH_DEBT.md) | Touching the skill tree tooltip or the inventory grid — both have known-issue entries with acceptance criteria |
 | [docs/ART_DEBT.md](docs/ART_DEBT.md) | Replacing a placeholder sprite or sound. Records what each stand-in is, why it's wrong, and what the replacement has to achieve |
+| [docs/SPRITE_WORKFLOW.md](docs/SPRITE_WORKFLOW.md) | Making or changing a HUD sprite — the script-to-`.spr`-to-`hud.txt` loop, the engine constraints that shape the art, and the tools under `utils/sprtool/` |
 | [BUILDING.md](BUILDING.md) | Setting up a build or packaging the mod |
 | [INSTALL.md](INSTALL.md) | Installing the built mod into a Half-Life instance |
 | [README.md](README.md) | Upstream context, contributors, licensing |
@@ -48,7 +49,8 @@ Out of scope: engine-level changes — graphics upgrades, physics, and anything 
 - `cl_dll/` — client: HUD, view, input, prediction, `vgui_*` interfaces. Presentation only.
 - `common/`, `engine/`, `public/` — SDK and engine headers. Treat as read-only.
 - `game_shared/`, `pm_shared/` — code compiled into both DLLs; a change here hits client and server.
-- `utils/` — map/model compilers. `projects/vs2019/projects.sln` — main solution.
+- `utils/` — map/model compilers. `utils/sprtool/` — .spr tooling and the scripts that generate the mod's icons. `projects/vs2019/projects.sln` — main solution.
+- `sprites/` — the mod's HUD sprites and its `hud.txt`, source of truth for `topmod/sprites/`. `hud.txt` is generated from `hud_additions.txt` by `utils/sprtool/make_hud_txt.py`; copy both to the install after every change, like the FGD.
 
 ## Custom systems
 

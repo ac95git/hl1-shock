@@ -1,0 +1,9 @@
+// HUD sprite entries the mod adds on top of Half-Life's hud.txt.
+// Every name needs all four resolution lines.  Regenerate sprites/hud.txt with:
+//   python utils/sprtool/make_hud_txt.py <valve>/sprites/hud.txt sprites/hud_additions.txt sprites/hud.txt
+//
+// name           res   file                x  y  w    h
+item_syringe      320   top/syringe_320     0  0  20   20
+item_syringe      640   top/syringe_640     0  0  44   44
+item_syringe      1280  top/syringe_1280    0  0  88   88
+item_syringe      2560  top/syringe_2560    0  0  132  132

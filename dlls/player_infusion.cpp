@@ -44,8 +44,9 @@ static const char* const k_InfusionSoundDenied = "items/medshotno1.wav";
 static const char* const k_InfusionSuitSentence = "!HEV_HEAL7";
 
 // The same sprite the Health Syringe uses in the Grid, on purpose: the player
-// sees a cross in the Grid, uses it, and a cross appears at the screen edge.
-static const char* const k_InfusionIconSprite = "cross";
+// sees a syringe in the Grid, uses it, and a syringe appears at the screen
+// edge.  Defined in the mod's sprites/hud.txt.
+static const char* const k_InfusionIconSprite = "item_syringe";
 
 // Green, to sit apart from the yellowish damage tiles beside the health
 // readout -- those mean something is being done TO you.

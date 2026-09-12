@@ -118,10 +118,10 @@ inline constexpr ItemTypeDef k_ItemTypes[k_MaxItemTypes] =
 	{ EItemTypeId::Antidote,    "item_antidote",  "Antidote", nullptr,          1,     5,     false },
 	{ EItemTypeId::Keycard,     "item_security",  "Keycard",  nullptr,          1,     1,     false },
 	{ EItemTypeId::Battery,     "item_battery",   "Battery",  "item_battery",   1,     5,     true  },
-	// "cross" is deliberately the same sprite the Infusion's status icon uses:
-	// the player sees a cross in the Grid, uses it, and a cross appears at the
-	// screen edge.  Placeholder art -- see docs/ART_DEBT.md.
-	{ EItemTypeId::Syringe,     "item_syringe",   "Health Syringe", "cross",    1,     3,     true  },
+	// Deliberately the same sprite the Infusion's status icon uses: the player
+	// sees a syringe in the Grid, uses it, and a syringe appears at the screen
+	// edge.  Ours, from sprites/hud.txt (utils/sprtool/icons/syringe.py).
+	{ EItemTypeId::Syringe,     "item_syringe",   "Health Syringe", "item_syringe", 1, 3,   true  },
 };
 
 // Returns nullptr for None or any out-of-range id.
