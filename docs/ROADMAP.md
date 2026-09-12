@@ -931,7 +931,29 @@ respect: **one fixed size, not a resolution-bucketed set**; small enough that se
 `panelW - 264` (roughly ≤64px); greyscale for anything drawn additively and tinted. The genuinely hard
 requirement is that each icon be **distinguishable from every other at 20×20**, which is where generated
 icon sets usually fail — they come back stylistically consistent and mutually indistinct, which is exactly
-today's problem with `suit_full` on five Skills.
+today's problem with `suit_full` on five Skills. The size constraints hold only while the tree draws its
+icons at native size; the Inventory Grid no longer does (below), and the tree could follow.
+
+**The Inventory's tile art is an open decision, and it is an aesthetic one before it is a format one.**
+Since 2026-09-12 the Grid fits whatever sprite it is given to the tile (PILLARS pillar 5), so the stock
+weapon-selection art and the HUD item icons now fill their tiles at every resolution. They are still the
+wrong art: a selection-menu silhouette of a gun, a HUD glyph for a medkit, and a blank tinted square for
+anything with no icon (the Antidote today). The intent is icons that resemble the item as seen in the
+world. Two ways to get there, and the choice between them decides the panel's whole look:
+
+- **Keep the suit-screen language** — monochrome, additive, tinted by code — and draw *silhouettes or line
+  renders of the world models* in it. Recognisable without a second visual system. Stays `.spr`, stays in
+  the `utils/sprtool/` pipeline, and the 256-colour palette costs nothing for greyscale.
+- **Full-colour renders of the world models.** Reads as a bag rather than a screen, and needs alpha
+  blending rather than additive, which `inv_icon_blend 1` already previews. The chrome around it would
+  have to change with it or the two clash. Either `.spr` with alpha-test, or a `.tga` through VGUI's own
+  `drawSetTextureRGBA` / `drawTexturedRect`, which scales too but is unexercised in this codebase and has
+  one open question — how VGUI texture ids are allocated, so a hand-picked id cannot collide with `Bitmap`'s.
+
+Either way the source is the same: an orthographic render of each `w_*.mdl` from Blender, weapons at 3:1
+and items square, at one size. The decompiled model sources are in `E:\CustomAssets`
+(`docs/MODEL_WORKFLOW.md`). Decide the look by putting one item of each kind side by side in the panel
+under both blend modes, not by argument.
 
 **On sounds.** The user's note reads: *"sounds: here I have little experience and I can help"* — which is
 ambiguous between offering help and asking for it. See [Open questions](#open-questions).

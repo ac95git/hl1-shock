@@ -58,9 +58,11 @@ private:
 	int m_dragGrabX = 0, m_dragGrabY = 0;
 	int m_mouseX = 0, m_mouseY = 0;
 
-	// Geometry, cached at the start of each Paint.
+	// Geometry, cached at the start of each Paint. m_x0/m_y0 is where the
+	// Grid was actually drawn, which is not the area origin handed to Paint:
+	// the Grid is right-aligned inside the area. m_cellStep is the pitch,
+	// line to line.
 	int m_x0 = 0, m_y0 = 0;
-	int m_cellSize  = 1;
 	int m_cellStep  = 1;
 	int m_gridWidth = INV_GRID_WIDTH;
 	int m_rows = 0;

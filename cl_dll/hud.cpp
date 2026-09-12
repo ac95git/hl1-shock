@@ -403,6 +403,12 @@ void CHud::Init()
 	// watched rather than assumed: that it reaches the client in single player
 	// at all, and that it survives a changelevel.
 	m_pCvarSuitDebug = CVAR_CREATE("cl_suit_debug", "0", 0);
+	// Inventory Grid tile art. Fit: 1 scales each sprite to its tile through
+	// SPR_DrawGeneric, so a tile looks the same at every resolution; 0 is the
+	// old native-size draw, kept for comparison. Blend: 0 additive (the HUD's
+	// own look), 1 alpha-blended, which is what full-colour art would need.
+	CVAR_CREATE("inv_icon_fit", "1", 0);
+	CVAR_CREATE("inv_icon_blend", "0", 0);
 	CVAR_CREATE("cl_autowepswitch", "1", FCVAR_ARCHIVE | FCVAR_USERINFO);
 	default_fov = CVAR_CREATE("default_fov", "90", FCVAR_ARCHIVE);
 	m_pCvarStealMouse = CVAR_CREATE("hud_capturemouse", "1", FCVAR_ARCHIVE);

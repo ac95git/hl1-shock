@@ -54,6 +54,13 @@ inline struct cvar_s* CVAR_CREATE(const char* cv, const char* val, const int fla
 #define SPR_DrawHoles (*gEngfuncs.pfnSPR_DrawHoles)
 // SPR_DrawAdditive  adds the sprites RGB values to the background  (additive transulency)
 #define SPR_DrawAdditive (*gEngfuncs.pfnSPR_DrawAdditive)
+// SPR_DrawGeneric  draws the current sprite SCALED to (w, h) with an explicit
+// GL blend pair (src, dest) -- the only HUD sprite draw that is not native size.
+// GL constants because the engine passes them straight to glBlendFunc.
+#define SPR_DrawGeneric (*gEngfuncs.pfnSPR_DrawGeneric)
+#define SPR_BLEND_ONE                 1
+#define SPR_BLEND_SRC_ALPHA           0x0302
+#define SPR_BLEND_ONE_MINUS_SRC_ALPHA 0x0303
 
 // SPR_EnableScissor  sets a clipping rect for HUD sprites.  (0,0) is the top-left hand corner of the screen.
 #define SPR_EnableScissor (*gEngfuncs.pfnSPR_EnableScissor)

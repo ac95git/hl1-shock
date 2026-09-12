@@ -17,8 +17,13 @@ These are engine and SDK constraints, not preferences. Every one of them bit at 
   The sprite supplies brightness; the code supplies colour. A coloured source comes out wrong, and
   **dark pixels vanish** — over a lit background (the Grid's tinted cell, a bright wall) black is
   invisible. Edges must be carried by highlights, not outlines.
-- **There is no scaled draw.** `SPR_DrawAdditive` draws at native size. A sprite is made at the size it
-  will be seen, per resolution bucket.
+- **`SPR_DrawAdditive` draws at native size; `SPR_DrawGeneric` is the one scaled draw.** It takes a
+  width, height and a GL blend pair, and the Inventory Grid fits its tile art through it (`DrawTileSprite`,
+  `cl_dll/vgui_inventory_grid.cpp`). Two traps: the width and height are the size for the **whole sprite
+  frame**, and the rect is cut out at that scale — a 340×90 icon on a 512×128 sheet asked for at 340×90
+  comes out at two thirds, so scale the request by frame-over-rect. And the blend factors are raw GL enums
+  (`SPR_BLEND_*` in `cl_util.h`). Everything else on the HUD still draws native, so a sprite is still made
+  at the size it will be seen, per resolution bucket, unless its caller fits it.
 - **`hud.txt` is resolution-bucketed.** Every name is defined at 320, 640, 1280 and 2560, and the engine
   picks the bucket for the current screen width. A name missing at one bucket makes `GetSpriteIndex`
   return -1, and the callers do not check. **Every icon ships at all four buckets.**

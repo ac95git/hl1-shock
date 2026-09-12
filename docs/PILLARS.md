@@ -575,11 +575,14 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
   That replaces a hardcoded 100px step which needed a ~1600px-wide screen and was silently clipped below
   it, because `RebuildRects` clamps the centering offset at zero.
 
-  Sizing from the sprites is not decoration. `SPR_DrawAdditive` draws at **native size** — there is no
-  scaled sprite draw in the HUD API — and HUD sprites are **resolution-bucketed**, so the same icon is
-  44px at 640 and 88px at 1280. Any fixed node size therefore clips its icon at one resolution or wastes
-  space at another. Icons are dropped rather than spilled when they cannot fit, which happens only at
-  640×480. See [ART_DEBT.md](ART_DEBT.md) for what this demands of the replacement art.
+  Sizing from the sprites is not decoration. The tree draws its icons with `SPR_DrawAdditive`, which is
+  **native size**, and HUD sprites are **resolution-bucketed**, so the same icon is 44px at 640 and 88px
+  at 1280. Any fixed node size therefore clips its icon at one resolution or wastes space at another.
+  Icons are dropped rather than spilled when they cannot fit, which happens only at 640×480. This was
+  believed to be the only option; it is not — `SPR_DrawGeneric` scales, and the Inventory Grid now fits
+  its tiles through it (pillar 5). Moving the tree onto the same fitted draw would let nodes be sized
+  from the layout instead of from the art. See [ART_DEBT.md](ART_DEBT.md) for what that changes for the
+  replacement icons.
 - **No text labels on nodes, by design** — an icon and a cost, nothing else. Reading the tree means
   hovering, which is the same instinct behind the anonymization feature below. This makes icon
   distinctness *blocking* rather than cosmetic; see [ART_DEBT.md](ART_DEBT.md).
@@ -774,11 +777,17 @@ each delegating to a plain helper view. Opened via the `+inventory` command boun
 
 **`CInventoryGridView`** (`cl_dll/vgui_inventory_grid.cpp`)
 
-- Renders weapons, inventory items, and ammo in one grid with mixed cell widths (weapons occupy three cells).
-- Drag and drop with live clamping during the drag and normalization after the drop, so slots cannot overlap
-  or overflow the grid.
-- Per-slot pixel offsets persist across opens, owned by `CInventoryPanel` so context-menu actions can read
-  them.
+- Renders weapons and inventory items in one grid with mixed cell widths (weapons occupy three cells).
+  Ammo is not in the Grid (ADR-0001); it is listed in the left column.
+- Drag and drop that asks the server to move an Entry and draws whatever the next sync says. Nothing is
+  placed, clamped or re-packed client-side (ADR-0004).
+- **The Grid is a lattice, and tiles are fitted to it.** Lines sit on a fixed pitch; a tile is inset from
+  its lines by the same amount on every side; the integer remainder of the pitch goes to the left, so the
+  Grid's right edge meets the header's. Tile art is scaled to the tile through `SPR_DrawGeneric`
+  (`DrawTileSprite`), so a tile looks the same at every resolution even though HUD sprites are bucketed.
+  `inv_icon_fit 0` restores the native draw for comparison; `inv_icon_blend 1` draws alpha-blended
+  instead of additive, which is what full-colour art would need — see [ROADMAP.md](ROADMAP.md) for the
+  art decision that hangs on it.
 - Hit rectangles rebuilt every paint.
 
 **Context menu** — right-click gives Use and Drop. Weapons issue `use <classname>` and close the panel;

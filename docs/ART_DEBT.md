@@ -386,9 +386,12 @@ One distinct icon per Skill, grouped so a branch reads as a branch — a shared 
 with the individual Skill distinguishable inside it.
 
 ### The size constraint, which is not obvious
-**`SPR_DrawAdditive` draws at native size. There is no scaled sprite draw in the HUD API** — the Inventory
-Grid hit the same wall. So a node cannot shrink an icon to fit; the node is sized *from* the icon
-(`RebuildNodeMetrics`), and the whole tree is then scaled to the panel.
+**`SPR_DrawAdditive` draws at native size, and that is what the tree uses.** So today a node cannot shrink
+an icon to fit; the node is sized *from* the icon (`RebuildNodeMetrics`), and the whole tree is then scaled
+to the panel. *(This entry used to say there was no scaled sprite draw in the HUD API at all. There is —
+`SPR_DrawGeneric`, and the Inventory Grid fits its tiles through it since 2026-09-12; see
+`docs/SPRITE_WORKFLOW.md` for its two traps. The tree has not been moved onto it. Until it is, everything
+below still holds; once it is, the size points below become preferences rather than limits.)*
 
 HUD sprites make this worse by being **resolution-bucketed**: `hud.txt` defines each sprite at 320/640/
 1280/2560, and the engine picks the bucket for the current screen. `item_healthkit` is 44px at 640 and

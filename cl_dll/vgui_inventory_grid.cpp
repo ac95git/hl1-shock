@@ -11,9 +11,16 @@
 using namespace vgui;
 
 // =====================================================================
-// Layout constants (must match the ones in vgui_inventory.cpp)
+// Layout constants
+//
+// The Grid is a lattice of 1px lines on a fixed pitch. A Cell is the
+// space between two lines; a tile sits inside its Cell(s) inset by the
+// same amount on every side, so the gap to the line is equal left and
+// right, top and bottom. The lines are the geometry -- tiles are
+// derived from them, never the other way round.
 // =====================================================================
-static constexpr int INV_GRID_PADDING = 4;
+static constexpr int INV_GRID_LINE  = 1; // thickness of a grid line
+static constexpr int INV_CELL_INSET = 2; // gap between a tile and the line on each side
 
 // =====================================================================
 // Sprite lookup for an Item Type.
@@ -53,15 +60,77 @@ static void GetItemTint(int itemTypeId, int& r, int& g, int& b)
 }
 
 // =====================================================================
+// Tile art
+//
+// A tile's sprite is fitted to the tile, not drawn at its native size:
+// HUD sprites come in resolution buckets (170x45 at 640, 340x90 at 1280,
+// 510x135 at 2560) and the tile's size follows the screen, so a native
+// draw only fits at the one resolution the art was picked against. The
+// fit keeps the sprite's aspect and leaves a margin proportional to the
+// tile, so the art is resolution-independent even though the sprite is not.
+// =====================================================================
+static void DrawTileSprite(HSPRITE hspr, const Rect& rc, int r, int g, int b,
+	const CInventoryGridView::IRect& tile)
+{
+	const int sprW = rc.right - rc.left;
+	const int sprH = rc.bottom - rc.top;
+	if (!hspr || sprW <= 0 || sprH <= 0 || tile.w <= 0 || tile.h <= 0)
+		return;
+
+	SPR_Set(hspr, r, g, b);
+
+	if (CVAR_GET_FLOAT("inv_icon_fit") == 0.0f)
+	{
+		SPR_DrawAdditive(0,
+			tile.x + (tile.w - sprW) / 2,
+			tile.y + (tile.h - sprH) / 2, &rc);
+		return;
+	}
+
+	// Margin as a share of the tile's height, so it scales with the tile.
+	const int pad  = std::max(1, tile.h / 10);
+	const int boxW = std::max(1, tile.w - 2 * pad);
+	const int boxH = std::max(1, tile.h - 2 * pad);
+
+	const float scale = std::min((float)boxW / sprW, (float)boxH / sprH);
+	const int w = std::max(1, (int)(sprW * scale + 0.5f));
+	const int h = std::max(1, (int)(sprH * scale + 0.5f));
+
+	int src = SPR_BLEND_ONE, dst = SPR_BLEND_ONE;
+	if (CVAR_GET_FLOAT("inv_icon_blend") != 0.0f)
+	{
+		src = SPR_BLEND_SRC_ALPHA;
+		dst = SPR_BLEND_ONE_MINUS_SRC_ALPHA;
+	}
+
+	// The width and height SPR_DrawGeneric takes are the size to draw the
+	// WHOLE sprite frame at; the rect is then cut out of that at the same
+	// scale. A weapon icon is a 340x90 rect on a 512x128 sheet, so asking
+	// for the rect's own size draws it at two thirds. Scale the request up
+	// by frame-over-rect so the rect itself lands at (w, h).
+	const int frameW = std::max(sprW, SPR_Width(hspr, 0));
+	const int frameH = std::max(sprH, SPR_Height(hspr, 0));
+	const int reqW = std::max(1, (int)((float)w * frameW / sprW + 0.5f));
+	const int reqH = std::max(1, (int)((float)h * frameH / sprH + 0.5f));
+
+	SPR_DrawGeneric(0,
+		tile.x + (tile.w - w) / 2,
+		tile.y + (tile.h - h) / 2, &rc, src, dst, reqW, reqH);
+}
+
+// =====================================================================
 // Geometry
 // =====================================================================
 CInventoryGridView::IRect CInventoryGridView::CellRect(int col, int row, int cellWidth) const
 {
+	// The line at the Cell's near edge occupies the boundary pixel; the tile
+	// starts past it and the inset, and stops the same inset short of the
+	// far line. A tile spanning several Cells covers the interior lines.
 	IRect r;
-	r.x = m_x0 + col * m_cellStep;
-	r.y = m_y0 + row * m_cellStep;
-	r.w = cellWidth * m_cellSize + (cellWidth - 1) * INV_GRID_PADDING;
-	r.h = m_cellSize;
+	r.x = m_x0 + col * m_cellStep + INV_GRID_LINE + INV_CELL_INSET;
+	r.y = m_y0 + row * m_cellStep + INV_GRID_LINE + INV_CELL_INSET;
+	r.w = cellWidth * m_cellStep - INV_GRID_LINE - 2 * INV_CELL_INSET;
+	r.h = m_cellStep - INV_GRID_LINE - 2 * INV_CELL_INSET;
 	return r;
 }
 
@@ -101,24 +170,33 @@ void CInventoryGridView::Paint(
 	if (rowsToDraw < 1) rowsToDraw = 1;
 	if (rows < 0)       rows = 0;
 
-	// Cell size is driven by the FULL drawn Grid, including Rows the player
-	// has not earned yet, so unlocking a Row never re-flows the layout.
-	int cellSize = std::min(
-		(areaW - (gridWidth - 1) * INV_GRID_PADDING) / gridWidth,
-		(areaH - (rowsToDraw - 1) * INV_GRID_PADDING) / rowsToDraw);
-	if (cellSize < 1)
-		cellSize = 1;
+	// The pitch is driven by the FULL drawn Grid, including Rows the player
+	// has not earned yet, so unlocking a Row never re-flows the layout. The
+	// closing line on the far side is the one extra pixel beyond the pitches.
+	int cellStep = std::min(
+		(areaW - INV_GRID_LINE) / gridWidth,
+		(areaH - INV_GRID_LINE) / rowsToDraw);
+	// A pitch has to hold a line, two insets and at least one tile pixel.
+	const int minStep = 2 * INV_GRID_LINE + 2 * INV_CELL_INSET + 1;
+	if (cellStep < minStep)
+		cellStep = minStep;
+
+	const int gridW = gridWidth * cellStep + INV_GRID_LINE;
+	const int gridH = rowsToDraw * cellStep + INV_GRID_LINE;
+
+	// An integer pitch never fills the area exactly. The remainder goes on
+	// the left, so the Grid's right edge sits on the same line as the header
+	// above it, and the top stays level with the nav column beside it. The
+	// gap between the column and the Grid absorbs the difference, where it
+	// reads as a gutter rather than as a misalignment.
+	x0 += std::max(0, areaW - gridW);
 
 	m_x0 = x0;
 	m_y0 = y0;
-	m_cellSize = cellSize;
-	m_cellStep = cellSize + INV_GRID_PADDING;
+	m_cellStep = cellStep;
 	m_gridWidth = gridWidth;
 	m_rows = rows;
 	m_rowsToDraw = rowsToDraw;
-
-	const int gridW = gridWidth * cellSize + (gridWidth - 1) * INV_GRID_PADDING;
-	const int gridH = rowsToDraw * cellSize + (rowsToDraw - 1) * INV_GRID_PADDING;
 
 	// The Grid is suit equipment, so its frame is the suit's colour -- what
 	// used to be the HUD's amber throughout. The reds below are not: an empty
@@ -141,21 +219,22 @@ void CInventoryGridView::Paint(
 	}
 
 	// ---- Grid lines ----
+	// One line per pitch boundary, the last one closing the far edge.
 	for (int c = 0; c <= gridWidth; ++c)
 	{
-		int vx = (c < gridWidth) ? x0 + c * m_cellStep : x0 + gridW;
+		const int vx = x0 + c * m_cellStep;
 		ctx->drawSetColor(200, 200, 200, 160);
-		ctx->drawFilledRect(vx, y0, vx + 1, y0 + gridH);
+		ctx->drawFilledRect(vx, y0, vx + INV_GRID_LINE, y0 + gridH);
 	}
 	for (int r = 0; r <= rowsToDraw; ++r)
 	{
-		int hy = (r < rowsToDraw) ? y0 + r * m_cellStep : y0 + gridH;
+		const int hy = y0 + r * m_cellStep;
 		// The boundary between earned and locked Rows is drawn brighter.
 		if (r == rows && rowsToDraw > rows)
 			ctx->drawSetColor(sr, sg, sb, 140);
 		else
 			ctx->drawSetColor(200, 200, 200, 160);
-		ctx->drawFilledRect(x0, hy, x0 + gridW, hy + 1);
+		ctx->drawFilledRect(x0, hy, x0 + gridW, hy + INV_GRID_LINE);
 	}
 
 	// ---- Outer border ----
@@ -220,20 +299,13 @@ void CInventoryGridView::Paint(
 			ctx->drawSetColor(sr, sg, sb, 80);
 			ctx->drawOutlinedRect(rect.x, rect.y, rect.x + rect.w, rect.y + rect.h);
 
-			const int sprW = rc.right - rc.left;
-			const int sprH = rc.bottom - rc.top;
-			if (hspr && sprW > 0 && sprH > 0)
-			{
-				SPR_Set(hspr, rr, gg, bb);
-				SPR_DrawAdditive(0,
-					rect.x + (rect.w - sprW) / 2,
-					rect.y + (rect.h - sprH) / 2, &rc);
-			}
+			DrawTileSprite(hspr, rc, rr, gg, bb, rect);
 		}
 		else if (e.IsItem())
 		{
-			const int ix = rect.x + 2, iy = rect.y + 2;
-			const int iw = rect.w - 4, ih = rect.h - 4;
+			// Same tile rect as a weapon: the inset is the Cell's, not the kind's.
+			const int ix = rect.x, iy = rect.y;
+			const int iw = rect.w, ih = rect.h;
 
 			int ir, ig, ib;
 			GetItemTint(e.id, ir, ig, ib);
@@ -243,13 +315,7 @@ void CInventoryGridView::Paint(
 			ctx->drawOutlinedRect(ix, iy, ix + iw, iy + ih);
 
 			ItemSprite spr = GetItemSprite(e.id);
-			const int sprW = spr.rc.right - spr.rc.left;
-			const int sprH = spr.rc.bottom - spr.rc.top;
-			if (spr.hSprite && sprW > 0 && sprH > 0)
-			{
-				SPR_Set(spr.hSprite, ir, ig, ib);
-				SPR_DrawAdditive(0, ix + (iw - sprW) / 2, iy + (ih - sprH) / 2, &spr.rc);
-			}
+			DrawTileSprite(spr.hSprite, spr.rc, ir, ig, ib, rect);
 
 			// Only Stacks are worth labelling; a lone item needs no "x1".
 			if (e.count > 1 && ctx->m_pSmallFont)
@@ -258,10 +324,12 @@ void CInventoryGridView::Paint(
 				snprintf(label.text, sizeof(label.text), "x%d", e.count);
 				label.textLen = (int)strlen(label.text);
 
-				const int charW = 6, charH = 10;
-				const int textW = label.textLen * charW;
+				// Measured, not guessed: a guessed height put the label
+				// below the tile on any font taller than it.
+				int textW = 0, textH = 0;
+				ctx->m_pSmallFont->getTextSize(label.text, textW, textH);
 				label.textX = ix + iw - textW - 2;
-				label.textY = iy + ih - charH - 1;
+				label.textY = iy + ih - textH - 1;
 				deferredCountLabels.push_back(label);
 			}
 		}
@@ -332,9 +400,11 @@ bool CInventoryGridView::HandleMouseRelease(CInventoryPanel* ctx, int localX, in
 		return false;
 
 	// Snap by the Entry's top-left corner, offset by where it was grabbed,
-	// so it lands where it looks like it will land.
-	const int cornerX = localX - m_dragGrabX;
-	const int cornerY = localY - m_dragGrabY;
+	// so it lands where it looks like it will land. The corner is the tile's,
+	// which sits a line and an inset past the Cell boundary; take that off so
+	// the rounding below is measured from the boundary itself.
+	const int cornerX = localX - m_dragGrabX - INV_GRID_LINE - INV_CELL_INSET;
+	const int cornerY = localY - m_dragGrabY - INV_GRID_LINE - INV_CELL_INSET;
 
 	// Round to the nearest Cell rather than truncating, so a half-Cell
 	// overhang snaps forwards instead of always backwards.
