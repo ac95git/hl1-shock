@@ -84,7 +84,9 @@ Working directory, `E:\CustomAssets\scripts\`:
 | --- | --- |
 | `render_smd.py IN.smd OUT_PREFIX TEXDIR...` | Blender headless: imports an SMD, applies the +90° compile rotation, loads its BMPs, renders from the viewmodel camera plus orbit, side and top views. |
 | `katana_graft.py --out DIR [--roll --pitch --yaw --slide --shift] [--blade-tex NAME]` | The worked example: vanilla crowbar hands + Dystopia katana blade → one reference SMD. Measures the crowbar's grip axis and the blade's axis by principal component, aligns them, and exposes the residual corrections as numbers. |
-| `hev_gloves.py VARIANT OUT_DIR` / `--sheet OUT.png` | The mod's own HEV glove textures, generated from the stock four (kept in `E:\CustomAssets\textures\stock_gloves`): luminance kept, orange plates recoloured, thin grooves and the hand-back screen turned into an accent light, chrome map tinted. Named palette variants; the same four files drop into any model that uses the stock glove texture names, which is 12 of the 16 stock viewmodels. |
+| `hev_gloves.py model DECOMPILED_DIR SRC_DIR` / `sheet DECOMPILED_DIR OUT.png` | The mod's own HEV glove textures, generated per model from that model's own glove BMPs (the shared `GLOVE*`/`rubbergloveCHROME` set, the crossbow family's `xbow_sleeve`, the MP5's `PLAYER_ForeArm`/`Cuff`, the shotgun's `HAND_ForeArm`): luminance kept, orange plates recoloured, thin grooves and the hand-back screen turned into an accent light, chrome map tinted. Three variants, cyan/red/purple. Writes cyan under the stock names, red and purple with suffixes, a `skins.qc` fragment, and `preview_<variant>/` folders for `render_smd.py`. |
+| `qc_skins.py MODEL.qc SKINS.qc` | Inserts (or replaces) the generated `$texturegroup` into a QC, before the first `$sequence`. Three skin families, cyan first, so skin 0 is what a model shows with no code at all. |
+| `gloves_rollout.py [model ...]` | The whole thing for every stock viewmodel: copy the decompile to `models/src/`, gloves, QC, studiomdl, verify three skin families in the `.mdl`, orbit render, contact sheet. Stops and names the model if a decompile is missing. |
 
 Blender is always run as `blender.exe --background --python SCRIPT -- ARGS`. Renders use Workbench, so no
 GPU is needed and a run takes seconds.
@@ -133,10 +135,11 @@ where the numbers say it is.
 
 - **Animations of its own.** Everything so far borrows a stock sequence set. Retargeting the Dystopia
   animations onto the 11-bone rig, or authoring new ones, is unexplored.
-- **Uniform hands across the vanilla set.** `hev_gloves.py` makes the four glove textures; they are
-  applied to the katana and the crowbar. The backplate, knuckle and chrome are the same size in the
-  other stock models and drop in; each model's sleeve is a different size and needs the generator run on
-  that model's own sleeve. The MP5, shotgun, crossbow and hivehand use other textures entirely.
+- **Uniform hands across the vanilla set: done at texture level.** Fourteen stock viewmodels (all but
+  the hivehand, which has no glove, and the chumtoad, which the game never uses) plus the katana compile
+  with three glove skins from `gloves_rollout.py`; the compiled files are in the repo's `models/` and
+  the install's `topmod/models/`. Skin 0 (cyan) shows with no code. Selecting red or purple per player is
+  code work: the viewmodel's `pev->skin` on deploy. The suit model itself is untouched.
 - **Accent lights do not glow in the dark.** Studiomdl from the SDK cannot flag part of a texture
   fullbright; the seams dim with the map lighting like the rest of the glove. Making them emissive means
   a separate accent texture with `STUDIO_NF_FULLBRIGHT` set in the compiled `.mdl`, which is a mesh change

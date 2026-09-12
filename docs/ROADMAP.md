@@ -439,27 +439,37 @@ custom viewmodels to redo.
 **The philosophy:** the mod has its own HEV suit, and the viewmodels reflect it. The goals, in the order
 they build on each other:
 
-1. **Three glove colour variants: cyan, red, purple.** Cyan exists — the *gunmetal* set from
-   `E:\CustomAssets\scripts\hev_gloves.py`, grey plates with cyan light channels in the seams and a cyan
-   readout on the back of the hand, applied to the katana and the crowbar. Red and purple are two more
-   palettes in the same generator.
-2. **Every vanilla viewmodel gets the new glove textures.** The survey in
-   [MODEL_WORKFLOW.md](MODEL_WORKFLOW.md) found twelve of the sixteen stock viewmodels share the same four
-   glove texture names; the backplate, knuckle and chrome are the same size everywhere and drop in, and
-   each model's sleeve is a different size and gets the generator run on its own sleeve. The MP5, shotgun,
-   crossbow and hivehand use other hand textures and are each their own job.
+1. **Three glove colour variants: cyan, red, purple. Built.** Grey plates with light channels in the
+   seams and a readout on the back of the hand, in the variant's colour, from
+   `E:\CustomAssets\scripts\hev_gloves.py`, generated per model from that model's own stock textures.
+2. **Every vanilla viewmodel gets the new glove textures. Built, as skins.** Fourteen stock viewmodels
+   (every one that has a glove: the hivehand has none, the chumtoad is unused) plus the katana compile
+   with all three sets as skin families, cyan as skin 0. Compiled files live in the repo's `models/`
+   and the install's `topmod/models/`; nothing in code changes, and the game shows cyan.
 3. **A custom HEV suit 3D model, in the same three variants.** The suit the player sees — on a pickup, a
    charger, a mirror, the player model — matching the gloves. Not designed yet.
-4. **Picking a suit variant sets the glove colour of every viewmodel.** The mechanism is already in the
-   engine: a model can carry several skin families (`$texturegroup` in the QC) and the viewmodel's
-   `pev->skin` selects one. So every viewmodel compiles with the three glove sets as three skins, and one
-   player-side value — the chosen suit variant, saved with the player — is written to the viewmodel's
-   skin on deploy. No model is duplicated. Where the choice is *made* (a pickup, a Station, the start of
+4. **Picking a suit variant sets the glove colour of every viewmodel.** The model half is done: every
+   viewmodel carries the three glove sets as skin families (`$texturegroup` in the QC), and the
+   viewmodel's `pev->skin` selects one. What remains is one player-side value — the chosen suit variant,
+   saved with the player — written to the viewmodel's skin on deploy. No model is duplicated. Where the choice is *made* (a pickup, a Station, the start of
    the game) is open, and it decides whether this is a pillar 1 find or a pillar 3 item.
+5. **The HUD tint follows the equipped suit too** — health, armour, ammo, items, all of it. The HUD
+   already draws everything through one colour (`RGB_YELLOWISH`, unpacked at every draw), so this is
+   the same one player-side value read on the client and mapped to a colour, with the same rule the
+   Concealment readout already follows: the state colours (red for damage, amber for Noticed) stay as
+   they are, because they carry meaning the suit colour must not override.
 
-Known limit from the first pass: the seam lights dim with map lighting like the rest of the glove, because
-the SDK's studiomdl cannot mark part of a texture fullbright. Emissive seams would mean a separate accent
-texture with the fullbright flag patched into the compiled model.
+6. **The gloves emit light.** Later. Today the seam lights dim with map lighting like the rest of the
+   glove, because the SDK's studiomdl cannot mark part of a texture fullbright and the flag
+   (`STUDIO_NF_FULLBRIGHT`, `engine/studio.h`) is per texture. The route: split the light channels onto a
+   texture of their own in the generator, give those faces their own material in the reference SMD (a
+   mesh edit, since the seams are painted on the sleeve's faces today), compile, then patch the flag into
+   the compiled `.mdl`'s texture record with a small tool, `mdlinfo.py` already knowing the offsets. A
+   model that glows in the dark is also a stealth question: PERCEPTION.md's light term reads the lightmap,
+   not the viewmodel, so it costs nothing in Concealment, and that is worth stating when it lands.
+
+Known issue from the first pass: on the crossbow the hand clips slightly through the stock. Not from the
+textures; recorded in [ART_DEBT.md](ART_DEBT.md) for later.
 
 ---
 

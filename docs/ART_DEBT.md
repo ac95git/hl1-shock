@@ -251,6 +251,20 @@ marker it is defensible, but it should then be a choice rather than a leftover.
 A player who has never read a manual can tell all three apart on sight, none is mistaken for equipment,
 and the Reset Token does not sound like ammo.
 
+## The crossbow viewmodel — hand clips through the stock
+
+### Scope
+`models/v_crossbow.mdl`, compiled from `E:\CustomAssets\models\src\v_crossbow` by `gloves_rollout.py`.
+
+### What's wrong
+Seen in game on 2026-09-12 after the glove skins went in: the right hand intersects the crossbow's stock
+slightly. Not a texture problem. Either the stock model always did this and the darker gloves make it
+visible, or the decompile/recompile round trip moved something; check by compiling the untouched
+decompile and comparing before touching the mesh.
+
+### Done when
+The hand sits on the stock through the whole draw and fire cycle.
+
 ## The Skill Tree — node icons are load-bearing
 
 ### Scope
