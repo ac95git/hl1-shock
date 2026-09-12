@@ -148,6 +148,16 @@ A crowbar swing empowered by having just deflected. Primed by a deflect for a sh
 next swing that connects, so missing costs nothing.
 _Avoid_: riposte, counter, punish, parry attack
 
+### The Suit
+
+**Suit Variant**:
+Which of the mod's three HEV suits the player wears. Set by the suit pickup the player last used, saved
+with the player, and reflected in the gloves on every viewmodel and in the HUD's colour. Three values,
+each a codename for a specialization the suit does not yet have: **Agility** (cyan, id 0, the default),
+**Strength** (red, id 1), **Intelligence** (purple, id 2). Cosmetic today; the codenames are there so the
+names survive the day it is not.
+_Avoid_: suit colour, suit type, suit class, skin (for the concept — skin is the engine mechanism it rides on)
+
 ### Stealth
 
 **Concealment**:
