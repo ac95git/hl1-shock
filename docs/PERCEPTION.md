@@ -385,6 +385,13 @@ crouch-walk comfortably under the line and a run comfortably over it.
 The muzzle-flash term arrives free, because `CBasePlayer::Illumination()` already includes it — firing in
 the dark lights the player for about a second and nobody has to write that rule.
 
+**The flashlight does not register.** `GETENTITYILLUM` reads the baked lightmap; the flashlight is a
+client-side dynamic light and never touches it. So walking a dark corridor with the flashlight on is exactly
+as concealing as walking it dark — the one obvious hole in the light term, and the reason
+[replacing the flashlight with night vision](ROADMAP.md#deliberately-deferred) is worth considering. Closing
+it without that change would mean giving the flashlight a synthetic value by the same route
+`m_iWeaponFlash` already uses.
+
 Angle, distance and stance carry the first version, so the model is tunable in vanilla Half-Life maps.
 Light is wired from the first commit and contributes, but is deliberately the mildest of the four, because
 **vanilla maps are lit for readability rather than for hiding** — it becomes the dominant lever only when
@@ -432,16 +439,24 @@ alone. The ADR has the four rejected placements and what each would have broken.
 ### The debug view — built 2026-09-01
 
 `debug_suspicion 1` centre-prints the four highest live meters, four times a second, with a bar, the raw
-value, the Concealment that produced it, and a `NOTICED` marker past `suspicion_notice`:
+value, the Concealment that produced it, and an `N` past `suspicion_notice`:
 
 ```
-hgrunt         [======....] 0.62  cnc 0.38  NOTICED
-zombie         [=.........] 0.08  cnc 0.71
+hgrunt    [======....]0.62 c0.38 N
+zombie    [=.........]0.08 c0.71
 ```
 
 Built alongside the meter rather than after it, because every number above is a first guess and a meter
 nobody can see is a meter nobody can tune. It shares the screen centre with `debug_damage`, so the two
 should not be run together.
+
+**Why it is abbreviated, which is not cosmetic.** `ClientPrint` sends a user message, and the engine caps a
+user message at **192 bytes** — overflow does not truncate, it drops the server with `SZ_GetSpace`. The
+first version of this readout spelled its rows out at ~52 bytes each and printed four, which would have
+killed the server the moment four monsters could perceive the player at once. Both this and
+`debug_monster_aim` are now bounded by a `static_assert` on the buffer size rather than by arithmetic in a
+comment, so adding a field can only ever truncate. Anything else that reaches for `ClientPrint` inherits
+this limit.
 
 ### Noise steers the cone; it does not fill the meter
 

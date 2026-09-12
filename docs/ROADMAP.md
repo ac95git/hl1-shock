@@ -223,6 +223,34 @@ evidence and a one-line fix in
 monster that may be frozen for 99 seconds, and the aim seam above may look less urgent once a monster that
 loses the player actually turns around.
 
+**How this step is sliced** — agreed 2026-09-12, small commits with aim first, each independently playable:
+
+| | |
+| --- | --- |
+| 5a | Monsters only shoot where they face |
+| 5b | Give up the chase (contact-keyed, not meter-keyed) |
+| 5c | The Search |
+| 5d | Posts |
+| 5e | The squad channel — the captain's *"call for search"* from the original brief |
+| 5f | Death witnesses and the Disturbance marker |
+| 5g | The level-change reset |
+
+Aim went first because it is the smallest piece, and because while monsters can still shoot behind them a
+give-up test is confounded — you cannot tell which fault you are watching.
+
+**5a's design is still open.** The question was put on 2026-09-12 and set aside in favour of diagnosis:
+*should being behind a monster that is already hunting you be safer than being in front of it?* Three seams
+were identified, and the choice depends on the answer:
+
+1. **Clamp the shot to the firing arc** (`ShootAtEnemy`) — being behind it becomes genuinely safe.
+2. **Withhold the free last-known-position** (`CanSenseUnseenEnemy`, built and reverted 2026-09-02) — it
+   misses rather than stops, and still fires through its own back.
+3. **Leave aim alone; make monsters turn much faster** so facing catches up with aim. Fixes the *look*,
+   keeps vanilla tracking, and gives repositioning almost no value.
+
+Answer it **after** the move-wait fix, not before: a monster that actually turns around may make the
+question look different.
+
 The give-up that fixes it must key on **contact** (last sight, or last damage) rather than on the meter, or
 a monster under fire from an unseen attacker will quietly time out mid-firefight.
 
@@ -258,13 +286,24 @@ including the muzzle-flash asymmetry that makes a naive generalisation exactly b
 [Deliberately not generalised](PERCEPTION.md#deliberately-not-generalised). Marked for review, not for
 building.
 
+**The flashlight, and night vision.** Proposed 2026-09-12 and not decided: remove the flashlight entirely
+and replace it with a night-vision device. Recorded because it is a stealth-motivated *item* change that
+would otherwise live only in conversation. Two verified facts bear on it. `GETENTITYILLUM` reads the baked
+lightmap only, so **the flashlight does not register in Concealment at all** — walking a dark corridor with
+it on is currently exactly as concealing as walking the same corridor dark, which is the one obvious hole in
+the light term and the cheapest thing night vision would close. And whatever icon night vision takes, it
+must not be `flash_full`, which the Concealment readout is already borrowing as a placeholder
+([ART_DEBT.md](ART_DEBT.md#the-concealment-readout--icon)).
+
 ### Open questions
 
 - Is stealth **optional** everywhere, or are there encounters designed to be unwinnable head-on? The
   answer changes level design more than it changes code, and nothing settled above touches it.
 - **How dark is dark?** Vanilla Half-Life maps are lit for readability rather than for hiding, so the light
   term may do almost nothing until there are custom maps with dark places in them. What light level counts
-  as concealing is a question only [Maps](#maps) can answer.
+  as concealing is a question only [Maps](#maps) can answer. **Tuning the light term was explicitly deferred
+on 2026-09-12** until there are maps worth tuning against; `conceal_light_dark` stays at its first guess of
+0.5 and remains the mildest of the four terms on purpose.
 - **Which encounters should stealth not be able to skip?** The mapper spawnflag exists to say so; nothing
   has decided when it ought to be used.
 

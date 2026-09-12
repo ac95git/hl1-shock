@@ -91,6 +91,11 @@ behaviour after acquisition is measured against a monster that may be frozen for
    the fallible node-cover task. Narrower, but leaves the general leak in place for the next schedule that
    uses the idiom.
 4. Verify with `debug_monster_aim 1`: the diagnostic exists for this and should be kept until closure.
+5. **Unverified lead, noted only so it is not re-investigated from scratch:** `m_flLastYawTime`
+   (`dlls/basemonster.h:112`) is used by `ChangeYaw` to scale turn speed by elapsed time, and it is **not in
+   the save table** (`dlls/monsters.cpp:47-104`). It was investigated as a candidate cause here and ruled
+   out — the freeze explains everything without it — but a stale stamp across a load could in principle make
+   a turn go the wrong way or not at all. Worth a look only if yaw misbehaves specifically after a save/load.
 
 ### Acceptance Criteria For Closure
 
