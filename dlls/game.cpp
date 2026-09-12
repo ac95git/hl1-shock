@@ -606,6 +606,9 @@ cvar_t debug_damage = {"debug_damage", "0"};
 // Live Suspicion readout -- see perception.h.  Shares the screen centre with
 // debug_damage, so do not run both at once.
 cvar_t debug_suspicion = {"debug_suspicion", "0"};
+// Monster aim readout -- see game.h.  Also throwaway, and it also shares the
+// screen centre, so run only one debug_* readout at a time.
+cvar_t debug_monster_aim = {"debug_monster_aim", "0"};
 
 static bool SV_InitServer()
 {
@@ -727,6 +730,7 @@ void GameDLLInit()
 
 	CVAR_REGISTER(&debug_damage);
 	CVAR_REGISTER(&debug_suspicion);
+	CVAR_REGISTER(&debug_monster_aim);
 
 	// REGISTER CVARS FOR SKILL LEVEL STUFF
 	// Agrunt

@@ -306,6 +306,12 @@ void CBasePlayer::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vec
 	{
 		m_LastHitGroup = ptr->iHitgroup;
 
+		// Throwaway diagnostic -- see game.h.  Deliberately here rather than in
+		// TakeDamage: god mode and a standing Shield both stop the damage
+		// further down, and the question this answers is who SHOT the player,
+		// not who hurt them.  Testing this with god mode on is the point.
+		DebugMonsterAimNoteHit(pevAttacker);
+
 		switch (ptr->iHitgroup)
 		{
 		case HITGROUP_GENERIC:

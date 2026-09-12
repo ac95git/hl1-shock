@@ -32,8 +32,146 @@
 #include "player_skills.h" // SkillScaleWeaponDamage
 #include "game.h"		   // debug_damage and the readout below
 
+#include "schedule.h" // Schedule_t::pName, for the monster aim readout
+
 #include <cstdarg>
+#include <cstring>
 #include <cstdio>
+
+//=========================================================
+// Monster aim readout -- see game.h.  THROWAWAY DIAGNOSTIC.
+//
+// Answers one question that cannot be answered by watching: when a monster
+// facing away from the player fires, is it shooting where it FACES (correct,
+// and the player is being hit by someone else) or where the player actually
+// IS (shooting through its own back)?
+//=========================================================
+
+// Set when a shot lands on the player, consumed by the next shot readout. A
+// monster you can see facing away and a squadmate you cannot see look
+// identical from behind the crosshair.
+static char g_szAimHit[32];
+static float g_flNextAimPrint;
+
+// THE BYTE BUDGET, which is the whole reason everything here is abbreviated:
+// ClientPrint sends a user message, and the engine caps a user message at 192
+// bytes. Overflow does not truncate -- it drops the server with SZ_GetSpace.
+// That is why the debug_damage readout beside this one uses a 190-byte line.
+#define DEBUG_PRINT_MAX 176
+
+// The guarantee, rather than arithmetic in a comment: snprintf always
+// terminates inside the buffer, so the BUFFER SIZE is the bound on the message
+// regardless of what the fields contain. ClientPrint sends 1 destination byte
+// plus the string plus its terminator, so any buffer at or under 190 is safe
+// forever, and adding fields can only ever truncate -- never overflow.
+static_assert(DEBUG_PRINT_MAX <= 190, "debug readout can overflow a 192-byte user message");
+
+// Strip the "monster_" that every one of these classnames carries.
+static const char* DebugShortName(const char* pszClassname)
+{
+	if (0 == strncmp(pszClassname, "monster_", 8))
+		return pszClassname + 8;
+
+	return pszClassname;
+}
+
+void DebugMonsterAimNoteHit(entvars_t* pevAttacker)
+{
+	if (debug_monster_aim.value == 0 || !pevAttacker)
+		return;
+
+	snprintf(g_szAimHit, sizeof(g_szAimHit), "hit %.12s#%d",
+		DebugShortName(STRING(pevAttacker->classname)), ENTINDEX(ENT(pevAttacker)));
+}
+
+void DebugMonsterAimShot(CBaseMonster* pMonster, const Vector& vecShootDir)
+{
+	if (debug_monster_aim.value == 0 || !pMonster)
+		return;
+
+	CBaseEntity* pPlayer = UTIL_PlayerByIndex(1);
+
+	if (!pPlayer)
+		return;
+
+	// Rate limited: the centre print is the only surface that shows up in a
+	// video capture, and a grunt fires far faster than anyone can read.
+	if (gpGlobals->time < g_flNextAimPrint)
+		return;
+
+	g_flNextAimPrint = gpGlobals->time + 0.25f;
+
+	// The same 2D convention FInViewCone and CheckAttacks use, so the numbers
+	// below are directly comparable to the 0.5 those tests require.
+	const float flYaw = pMonster->pev->angles.y * (M_PI / 180.0f);
+	const Vector2D vec2Forward(cos(flYaw), sin(flYaw));
+
+	Vector2D vec2ToPlayer = (pPlayer->pev->origin - pMonster->pev->origin).Make2D();
+	vec2ToPlayer = vec2ToPlayer.Normalize();
+
+	Vector2D vec2Shot = vecShootDir.Make2D();
+	vec2Shot = vec2Shot.Normalize();
+
+	// Is the PLAYER inside the arc the monster's own attack check demands?
+	const float flPlayerDot = DotProduct(vec2ToPlayer, vec2Forward);
+
+	// Is the SHOT inside it?  High here while the line above is negative is
+	// the smoking gun: firing through its own back.
+	const float flShotDot = DotProduct(vec2Shot, vec2Forward);
+
+	// And is the shot actually travelling at the player?
+	const float flShotAtPlayer = DotProduct(vec2Shot, vec2ToPlayer);
+
+	// Commanded yaw versus actual yaw. A large, persistent gap means the turn
+	// is being ordered and not executed -- a different fault entirely.
+	const float flYawNow = UTIL_AngleMod(pMonster->pev->angles.y);
+	const float flYawIdeal = UTIL_AngleMod(pMonster->pev->ideal_yaw);
+	float flYawErr = flYawIdeal - flYawNow;
+
+	if (flYawErr > 180.0f)
+		flYawErr -= 360.0f;
+	else if (flYawErr < -180.0f)
+		flYawErr += 360.0f;
+
+	// pName is not guaranteed non-null, and a null through %s crashes too.
+	const char* pszSched = (pMonster->m_pSchedule && pMonster->m_pSchedule->pName)
+							   ? pMonster->m_pSchedule->pName
+							   : "?";
+
+	// Abbreviated to fit DEBUG_PRINT_MAX -- see the note above. Roughly 110
+	// bytes at worst, which leaves headroom for a long classname.
+	// Why he is not moving, which is why he is not turning. Move() returns at
+	// dlls/monsters.cpp:1856 while this is in the future, skipping both the
+	// yaw update and MoveExecute -- the only place the movement activity is
+	// applied, which is why the firing animation survives the schedule change.
+	float flMoveWait = pMonster->m_flMoveWaitFinished - gpGlobals->time;
+
+	if (flMoveWait < 0.0f)
+		flMoveWait = 0.0f;
+	else if (flMoveWait > 999.0f)
+		flMoveWait = 999.0f;
+
+	char szLine[DEBUG_PRINT_MAX];
+	snprintf(szLine, sizeof(szLine),
+		"%.12s#%d %.14s[%d]\n"
+		"yaw %.0f>%.0f off%+.0f lkp%.0fu\n"
+		"plr%.2f%s shot%.2f ->plr%.2f%s\n"
+		"mw%.2f st%d mg%d ri%d\n"
+		"%s",
+		DebugShortName(STRING(pMonster->pev->classname)), ENTINDEX(pMonster->edict()),
+		pszSched, pMonster->m_iScheduleIndex,
+		flYawNow, flYawIdeal, flYawErr,
+		(pMonster->m_vecEnemyLKP - pPlayer->pev->origin).Length(),
+		flPlayerDot, flPlayerDot < 0.5f ? "!" : " ",
+		flShotDot,
+		flShotAtPlayer, flShotAtPlayer > 0.95f ? " AT-PLR" : "",
+		flMoveWait, pMonster->m_iTaskStatus, pMonster->m_movementGoal, pMonster->m_iRouteIndex,
+		g_szAimHit);
+
+	ClientPrint(pPlayer->pev, HUD_PRINTCENTER, szLine);
+
+	g_szAimHit[0] = '\0';
+}
 
 extern Vector VecBModelOrigin(entvars_t* pevBModel);
 

@@ -1,5 +1,107 @@
 # Technical Debt Register
 
+## A Leaked Move-Wait Freezes A Monster For Up To 99 Seconds
+
+**Base-game bug, present in unmodified Half-Life.** Diagnosed 2026-09-12 from in-game capture; deliberately
+not fixed yet, because it is a movement/schedule fault and does not belong inside stealth work.
+
+### Scope
+`dlls/schedule.cpp` (`ChangeSchedule`, the `TASK_FIND_COVER_*` family, `TASK_CLEAR_MOVE_WAIT`),
+`dlls/monsters.cpp` (`CBaseMonster::Move`), `dlls/hgrunt.cpp` (`tlGruntGrenadeCover1`).
+
+### The bug
+
+`m_flMoveWaitFinished` is a monster-wide "do not move until this time" stamp. Nothing scopes it to the
+schedule that set it, and `ChangeSchedule` (`dlls/schedule.cpp:75-83`) resets the schedule, task index, task
+status, conditions and fail-schedule — but **not this field**. So one schedule can strand another.
+
+The grunt is where that becomes visible, via `tlGruntGrenadeCover1` (`dlls/hgrunt.cpp:1505-1515`):
+
+| # | Task | Effect |
+| --- | --- | --- |
+| 1 | `TASK_FIND_COVER_FROM_ENEMY, 99` | sets `m_flMoveWaitFinished = time + 99` (`schedule.cpp:753`) |
+| 2 | `TASK_FIND_FAR_NODE_COVER_FROM_ENEMY, 384` | **`TaskFail()` when no node cover exists** (`schedule.cpp:712`) |
+| 3 | `TASK_PLAY_SEQUENCE, ACT_SPECIAL_ATTACK1` | the grenade drop |
+| 4 | `TASK_CLEAR_MOVE_WAIT` | releases the freeze (`schedule.cpp:917-919`) |
+
+That `99` is not a wait — it is a **freeze-in-place idiom**: hold him still through the animation, then
+release. It is the only non-zero data value on any cover task anywhere in the codebase (every other one is
+`(float)0`), and `TASK_CLEAR_MOVE_WAIT` is used exactly once in the codebase — at task 4 of this schedule.
+
+A task failure ends a schedule just as an interrupt does. When task 2 fails — routine on maps with sparse
+or missing node graphs — the schedule dies **two tasks before its release**, and the 99 seconds leaks into
+whatever schedule comes next.
+
+What the frozen monster then does, all of it following from `Move` returning early at `monsters.cpp:1856`:
+
+- **It never turns.** The early return skips `MakeIdealYaw`/`ChangeYaw` at `monsters.cpp:1883-1884`. If it is
+  parked in `TASK_WAIT_FOR_MOVEMENT` (`schedule.cpp:439`), that task has no facing logic either, so nothing
+  in the frame commands a turn at all.
+- **It keeps its old animation.** `MoveExecute` (`monsters.cpp:2020`) is the only place `m_IdealActivity`
+  becomes the movement activity, and it is never reached. `MaintainSchedule` re-applies `m_IdealActivity`
+  every think (`schedule.cpp:274-277`), so a monster frozen out of a firing burst keeps playing
+  `ACT_RANGE_ATTACK1` — **and keeps emitting its shot animation events**.
+- **It still shoots accurately.** Aim comes from `m_vecEnemyLKP` via `ShootAtEnemy` (`monsters.cpp:3234`) and
+  never from `pev->angles`, and `CheckEnemy`'s "behind or beside" clause (`monsters.cpp:1165`) refreshes that
+  position to the player's exact origin whenever the player is within 256 units, in the clear and out of the
+  cone. Net effect: **it fires through its own back, dead on target, for up to 99 seconds.**
+- **It fails schedules and throws debug sparks.** Movement never completes, so cover and pathing tasks cycle
+  and fail; `dlls/schedule.cpp:189` draws sparks on each one (`#ifdef DEBUG` only, so Release never shows it).
+
+A lone grunt picks this schedule on a coin flip (`dlls/hgrunt.cpp:2207`), which is why the symptom appears
+only sometimes. `m_flMoveWaitFinished` is also in the save table as `FIELD_TIME` (`monsters.cpp:56`), so a
+leaked freeze survives a save/load.
+
+### Evidence
+
+`debug_monster_aim` (throwaway diagnostic, `dlls/combat.cpp`), six consecutive seconds of capture:
+
+```
+human_grunt#111 GruntEstablish[4]
+yaw 80>80 off+0 lkp0u
+plr-0.50! shot-0.50 ->plr1.00 AT-PLR
+mw75.10 → 73.90 → 72.70 → 72.10 → 70.90 → 69.70   st1 mg2 ri0
+```
+
+`mw` is the leaked freeze counting down in real time, sampled ~24 seconds in. `off+0` proves no turn is ever
+commanded — the yaw controller is healthy and simply never asked. `lkp0u` is the free position, and
+`->plr1.00` is the shot landing on a player standing behind him.
+
+### Why This Is Debt
+
+It is reachable in unmodified Half-Life by aggroing a grunt and hiding, but nothing in the base game gives a
+player a reason to do that, so it was never noticed. This mod's stealth work makes breaking line of sight
+and repositioning **the point**, so it went from a freak state to a routine one — and it reads as three
+separate bugs (a monster shooting backwards, a monster frozen, a monster throwing sparks) that are in fact
+one.
+
+It also blocks judgement of [pillar 6's post-aggro step](ROADMAP.md#the-post-aggro-step): any stealth
+behaviour after acquisition is measured against a monster that may be frozen for a minute and a half.
+
+### Recommended Next Steps
+
+1. **Clear `m_flMoveWaitFinished` in `ChangeSchedule`.** The freeze means "held until *this schedule*
+   releases me", so it is scoped to that schedule by definition, and a schedule change is exactly when it
+   must end. One line, fixes every monster and any future schedule with the same shape.
+2. **Known risk of (1):** the same field carries the door wait set in `AdvanceRoute`
+   (`monsters.cpp:1528`, via `OpenDoorAndWait`). Clearing on a schedule change means a monster could step
+   toward a door that has not finished opening. Minor and self-correcting — blocked movement already has
+   handling — but it is a real behaviour change and should be watched for.
+3. **Consider also** making the grunt's schedule tolerate the failure directly, by ordering the freeze after
+   the fallible node-cover task. Narrower, but leaves the general leak in place for the next schedule that
+   uses the idiom.
+4. Verify with `debug_monster_aim 1`: the diagnostic exists for this and should be kept until closure.
+
+### Acceptance Criteria For Closure
+
+1. A grunt whose grenade-cover schedule fails at the node-cover task resumes moving on the next think —
+   `debug_monster_aim` shows `mw0.00` rather than a large countdown.
+2. A grunt that loses the player turns to face where it is shooting; `off` does not sit at `+0` while `plr`
+   is negative.
+3. No monster stays frozen in place for more than its intended wait, on a map with no node graph.
+4. The debug sparks stop accompanying a lost player in Debug builds.
+5. `OpenDoorAndWait`'s behaviour is unchanged for a door that is genuinely opening.
+
 ## Skill State Never Reaches Client-Side Weapon Code — RESOLVED 2026-08-31
 
 Fixed. `HUD_SetPredictedSkills` (`cl_dll/hl/hl_weapons.cpp`) fills the client player's `m_skills` from the

@@ -184,7 +184,22 @@ while its model faces elsewhere. **The turn is cosmetic — only the LKP is real
 
 **So the seam is `ShootAtEnemy`, not the writers.** Clamp the shot to the monster's own cone — fire along
 facing when the LKP falls outside it — and "get behind it" means something for every monster at once, with
-no LKP bookkeeping and no per-monster schedule surgery. One function. That is the change to try first.
+no LKP bookkeeping and no per-monster schedule surgery. That is the change to try first.
+
+**But not "every monster at once" — that claim was wrong and is corrected here.** `ShootAtEnemy` carries the
+grunt's rifle and shotgun, the assassin, the alien slave's zap, Barney, the ichthyosaur and the Gargantua's
+flame. It does **not** carry the alien grunt, which aims its hornets straight at `m_vecEnemyLKP` itself
+(`dlls/agrunt.cpp:437`) and whose hornets then home in regardless; nor grenades, which are thrown at the LKP
+directly (`dlls/hgrunt.cpp:495-527`). Those need their own answers.
+
+**Diagnose before designing.** `debug_monster_aim` (throwaway, `dlls/combat.cpp`) prints per shot: which
+monster fired, its schedule and task index, the yaw it is *at* versus the yaw it is *turning toward*, how
+far its LKP is from the player, whether the player is inside the 0.5 arc, and whether the shot is actually
+travelling at the player — plus a line naming whoever last hit the player, so an unseen squadmate cannot be
+mistaken for the monster on screen. It exists because a monster facing away while the player takes hits has
+three different possible causes (a squadmate shooting, the monster correctly shooting a stale position while
+something else hits, or the turn genuinely failing) that look identical on screen and cannot be told apart
+by reading the code.
 
 **And nothing de-escalates.** `GetIdealState`'s only exit from `MONSTERSTATE_COMBAT` is a null enemy. A
 monster that loses the player therefore cycles
@@ -194,6 +209,19 @@ search (`dlls/schedule.cpp:189`, `#ifdef DEBUG` only), and walking to cover node
 This is **vanilla**, reachable in the base game by aggroing a grunt and hiding; the mod only makes it a
 normal thing to do rather than a freak one. Leaving PVS parks the monster silently in `TASK_WAIT_PVS`
 instead — still stuck, just quiet.
+
+**The cause of that stuck state is now known, and it is not pathing.** Diagnosed 2026-09-12 from in-game
+capture: a grunt's grenade-cover schedule sets a 99-second "freeze in place" and dies two tasks before the
+task that releases it, and nothing scopes that freeze to the schedule that set it. The monster is then held
+motionless — not turning, still playing and firing its previous animation, still aiming at the player's exact
+position — for up to a minute and a half. It is a **base-game movement bug**, it accounts for the shooting
+backwards *and* the freezing *and* the sparks as one fault rather than three, and it is written up with
+evidence and a one-line fix in
+[TECH_DEBT.md](TECH_DEBT.md#a-leaked-move-wait-freezes-a-monster-for-up-to-99-seconds).
+
+**Fix it before judging anything else here.** Post-aggro stealth behaviour cannot be evaluated against a
+monster that may be frozen for 99 seconds, and the aim seam above may look less urgent once a monster that
+loses the player actually turns around.
 
 The give-up that fixes it must key on **contact** (last sight, or last damage) rather than on the meter, or
 a monster under fire from an unseen attacker will quietly time out mid-firefight.

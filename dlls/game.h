@@ -130,6 +130,31 @@ extern cvar_t debug_damage;
 // shares the screen centre with debug_damage.
 extern cvar_t debug_suspicion;
 
+// ---------------------------------------------------------
+// Monster aim debug.  THROWAWAY DIAGNOSTIC -- delete it with the post-aggro
+// step (docs/ROADMAP.md).
+//
+// Monster aim comes from m_vecEnemyLKP and never from pev->angles, so a
+// monster can shoot through its own back.  Whether that is what is happening
+// in a given fight cannot be judged by eye: a monster facing away might be
+// shooting exactly where it faces -- correct -- while an unseen squadmate is
+// the one hitting the player.  This prints, per shot, what is needed to tell
+// those apart.
+//
+// Defined in combat.cpp, beside the other damage diagnostics.
+// ---------------------------------------------------------
+class CBaseMonster;
+
+extern cvar_t debug_monster_aim;
+
+// Called from CBaseMonster::ShootAtEnemy with the direction it is about to
+// return.  Rate limited internally -- a grunt fires faster than anyone reads.
+void DebugMonsterAimShot(CBaseMonster* pMonster, const Vector& vecShootDir);
+
+// Called where a shot lands on the PLAYER, so the readout can name who
+// actually hit them rather than whoever happened to be on screen.
+void DebugMonsterAimNoteHit(entvars_t* pevAttacker);
+
 // Stash a breakdown for the next report, printf-style.  Called by a weapon
 // that still holds its individual multipliers as separate numbers -- by the
 // time damage reaches TakeDamage they have all been folded into one float.

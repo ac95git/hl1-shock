@@ -33,6 +33,7 @@
 #include "decals.h"
 #include "soundent.h"
 #include "gamerules.h"
+#include "game.h" // DebugMonsterAimShot -- throwaway diagnostic
 
 #define MONSTER_CUT_CORNER_DIST 8 // 8 means the monster's bounding box is contained without the box of the node in WC
 
@@ -3237,7 +3238,13 @@ Vector CBaseMonster::ShootAtEnemy(const Vector& shootOrigin)
 
 	if (pEnemy)
 	{
-		return ((pEnemy->BodyTarget(shootOrigin) - pEnemy->pev->origin) + m_vecEnemyLKP - shootOrigin).Normalize();
+		const Vector vecDir = ((pEnemy->BodyTarget(shootOrigin) - pEnemy->pev->origin) + m_vecEnemyLKP - shootOrigin).Normalize();
+
+		// Throwaway diagnostic -- see game.h.  Hooked here because every
+		// gun-using monster takes its shot direction from this one function.
+		DebugMonsterAimShot(this, vecDir);
+
+		return vecDir;
 	}
 	else
 		return gpGlobals->v_forward;

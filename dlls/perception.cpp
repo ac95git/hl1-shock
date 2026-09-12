@@ -405,7 +405,11 @@ static void SuspicionDebugPrint()
 	if (cShown > 4)
 		cShown = 4;
 
-	char szReport[320];
+	// ClientPrint sends a user message and the engine caps one at 192 bytes.
+	// Overflow does not truncate -- it drops the server with SZ_GetSpace. Four
+	// abbreviated rows fit; four spelled-out ones did not, which is a crash
+	// that only appeared once four monsters could see the player at once.
+	char szReport[176];
 	szReport[0] = '\0';
 
 	for (int i = 0; i < cShown; i++)
@@ -418,13 +422,13 @@ static void SuspicionDebugPrint()
 			szBar[c] = c < cFilled ? '=' : '.';
 		szBar[10] = '\0';
 
-		char szLine[80];
-		snprintf(szLine, sizeof(szLine), "%-14s [%s] %.2f  cnc %.2f%s\n",
+		char szLine[56];
+		snprintf(szLine, sizeof(szLine), "%-10.10s[%s]%.2f c%.2f%s\n",
 			ShortMonsterName(entry.szName),
 			szBar,
 			entry.flSuspicion,
 			entry.flConcealment,
-			entry.flSuspicion >= suspicion_notice.value ? "  NOTICED" : "");
+			entry.flSuspicion >= suspicion_notice.value ? " N" : "");
 
 		strncat(szReport, szLine, sizeof(szReport) - strlen(szReport) - 1);
 	}

@@ -234,6 +234,13 @@ wander out of the room.
 In the base game this is rare because nothing makes losing the player a normal event. Under this mod it is
 the *point*, which is why [de-escalation](#losing-the-player--de-escalation-search-post) is not optional.
 
+**The specific cause was found on 2026-09-12, and it is not the pathing.** A grunt's grenade-cover schedule
+sets a 99-second freeze and can die before the task that releases it; the freeze then leaks into the next
+schedule, holding the monster motionless — not turning, still firing its previous animation, still aiming at
+the player's exact position. That one fault produces the sparks, the frozen grunt, and the
+[shooting through its own back](#aim-does-not-come-from-facing). Base-game bug, written up in
+[TECH_DEBT.md](TECH_DEBT.md#a-leaked-move-wait-freezes-a-monster-for-up-to-99-seconds).
+
 ### Light — `Illumination()`
 
 `CBaseEntity::Illumination()` is `GETENTITYILLUM(ENT(pev))`, the engine's light level at the entity
