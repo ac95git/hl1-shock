@@ -859,8 +859,8 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 // the blade is hot.  The model's own family count says which layout it has:
 // three families take the suit alone, six take suit * 2 + hot (glove-major,
 // each cold then hot, as qc_skins.py lays them out).  Anything else is
-// skin 0.  cl_suit_variant stands in for the saved player value the suit
-// choice will provide; this is the code that value will feed.
+// skin 0.  The suit half comes from the player's own Suit Variant, which
+// gHUD refreshes once a frame from the local player's entity state.
 // =====================================================================
 extern float g_flKatanaHotEnd;
 
@@ -872,11 +872,7 @@ void V_SetViewModelSkin(cl_entity_t* view, float time)
 	if (hdr == nullptr)
 		return;
 
-	int variant = (int)CVAR_GET_FLOAT("cl_suit_variant");
-	if (variant < 0)
-		variant = 0;
-	if (variant > 2)
-		variant = 2;
+	const int variant = gHUD.SuitVariant();
 	const int hot = (g_flKatanaHotEnd > time) ? 1 : 0;
 
 	int skin = 0;

@@ -120,6 +120,13 @@ void CInventoryGridView::Paint(
 	const int gridW = gridWidth * cellSize + (gridWidth - 1) * INV_GRID_PADDING;
 	const int gridH = rowsToDraw * cellSize + (rowsToDraw - 1) * INV_GRID_PADDING;
 
+	// The Grid is suit equipment, so its frame is the suit's colour -- what
+	// used to be the HUD's amber throughout. The reds below are not: an empty
+	// weapon reads red whatever the player is wearing.
+	int sr, sg, sb, lr, lg, lb;
+	UnpackRGB(sr, sg, sb, RGB_SUIT);
+	UnpackRGB(lr, lg, lb, RGB_SUIT_LIT);
+
 	// ---- Grid background ----
 	ctx->drawSetColor(10, 10, 10, 60);
 	ctx->drawFilledRect(x0, y0, x0 + gridW, y0 + gridH);
@@ -145,14 +152,14 @@ void CInventoryGridView::Paint(
 		int hy = (r < rowsToDraw) ? y0 + r * m_cellStep : y0 + gridH;
 		// The boundary between earned and locked Rows is drawn brighter.
 		if (r == rows && rowsToDraw > rows)
-			ctx->drawSetColor(255, 170, 0, 140);
+			ctx->drawSetColor(sr, sg, sb, 140);
 		else
 			ctx->drawSetColor(200, 200, 200, 160);
 		ctx->drawFilledRect(x0, hy, x0 + gridW, hy + 1);
 	}
 
 	// ---- Outer border ----
-	ctx->drawSetColor(255, 170, 0, 60);
+	ctx->drawSetColor(sr, sg, sb, 60);
 	ctx->drawOutlinedRect(x0, y0, x0 + gridW, y0 + gridH);
 
 	// ---- Entries ----
@@ -206,11 +213,11 @@ void CInventoryGridView::Paint(
 
 			int rr, gg, bb;
 			if (!gWR.HasAmmo(p)) { UnpackRGB(rr, gg, bb, RGB_REDISH);    ScaleColors(rr, gg, bb, 128); }
-			else                 { UnpackRGB(rr, gg, bb, RGB_YELLOWISH); ScaleColors(rr, gg, bb, 192); }
+			else                 { UnpackRGB(rr, gg, bb, RGB_SUIT);      ScaleColors(rr, gg, bb, 192); }
 
 			ctx->drawSetColor(30, 30, 30, 80);
 			ctx->drawFilledRect(rect.x, rect.y, rect.x + rect.w, rect.y + rect.h);
-			ctx->drawSetColor(255, 170, 0, 80);
+			ctx->drawSetColor(sr, sg, sb, 80);
 			ctx->drawOutlinedRect(rect.x, rect.y, rect.x + rect.w, rect.y + rect.h);
 
 			const int sprW = rc.right - rc.left;
@@ -264,7 +271,7 @@ void CInventoryGridView::Paint(
 	if (ctx->m_pSmallFont)
 	{
 		ctx->drawSetTextFont(ctx->m_pSmallFont);
-		ctx->drawSetTextColor(255, 220, 50, 0);
+		ctx->drawSetTextColor(lr, lg, lb, 0);
 
 		for (const DeferredCountLabel& label : deferredCountLabels)
 		{

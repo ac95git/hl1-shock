@@ -76,8 +76,9 @@ A player can tell a Backstab landed with their eyes shut, and does not think som
 
 ### Current stand-in
 `flash_full` from `sprites/hud.txt` — **the flashlight readout's own icon**. Drawn additively in the
-bottom-left suit cluster after the Pulse, tinted by state: the HUD's own `RGB_YELLOWISH` at `MIN_ALPHA` when
-Unseen, amber when Noticed, red when Spotted.
+bottom-left suit cluster after the Pulse, tinted by state: the cluster's own `RGB_SUIT` at `MIN_ALPHA`
+when Unseen, amber when Noticed, red when Spotted. The two warnings are fixed colours on purpose — they
+are the one thing on the HUD the Suit Variant must not recolour.
 
 Chosen because it is the one stock HUD icon that is about light and being seen, and because it exists in
 all four resolution blocks of `hud.txt`. That second property is not optional: `autoaim_c`, the other
@@ -276,6 +277,77 @@ The viewmodel and world model are the mod's own (`models/v_katana.mdl`, `models/
 
 ### Done when
 The selection bucket shows a katana, and a swing sounds like a blade.
+
+## The HEV suit pickup — three recoloured stock suits
+
+### Scope
+`models/w_suit.mdl` and `models/w_suitT.mdl`, compiled from
+`E:\CustomAssets\models\src\w_suit` by `E:\CustomAssets\scripts\suit_world.py`. Placed by `item_suit`
+(`dlls/items.cpp`), whose `variant` keyvalue sets the entity's skin on spawn.
+
+### Current stand-in
+The stock `w_suit` recompiled with three skin families, one per Suit Variant. The recolour is a colour
+wash: every pixel of the orange shell keeps its luminance and takes the variant's hue, and the grey and
+white armour panels take 22% of it. Cyan is skin 0, under the original texture names, so the model shows
+Agility with no code at all.
+
+Deliberately **not** the glove treatment. The gloves keep their plates grey and put the colour only in the
+seams, which is right on something held a foot from the eye and useless on something lying on a floor
+twenty feet away. Being tellable apart on a floor is this model's entire job — a suit is a pillar 1 find,
+and a find the player cannot identify before walking to it is not one.
+
+### What's wrong with it
+- **It is Gordon's suit in a different colour.** Nothing about the silhouette says this mod. Goal 4 of
+  [the roadmap entry](ROADMAP.md#viewmodel-hands-and-the-custom-hev-suit) is a suit of the mod's own, and
+  this exists to be replaced by it — and, meanwhile, to give that design three references to be judged
+  against.
+- **It covers the pickup and nothing else.** The **wall chargers** still show the stock orange suit, and
+  so does the **player model** in a mirror or in third person. A player who sees themselves wearing the
+  red suit will see an orange one. The player model is the sharper of the two, because `pev->skin` on the
+  player is already the variant — a three-family player model would need no code at all.
+- The wash is uniform. The stock texture's coloured details — the blue boot lights, the chest readout —
+  go through it with everything else, so they stop reading as separate parts.
+
+### What to look for
+A suit that reads as three variants of one design rather than one design in three paints: something that
+differs in shape or panel layout, not only hue, so the three are still tellable apart in silhouette and in
+the dark. It has to survive being seen at pickup distance on a floor **and** on a standing player.
+
+Whatever replaces it ships as `w_suit.mdl` **and** `w_suitT.mdl` — the QC keeps the stock model's
+`$externaltextures`, so the skin families live in the T file, and shipping only one of the two makes the
+engine fall back to valve's textures and the suit comes out orange again.
+
+### Done when
+Three suits nobody mistakes for Half-Life's, tellable apart across a room, and the same suit on the floor,
+on the charger and on the player.
+
+## The Pulse — readout icon
+
+### Scope
+`cl_dll/hud_pulse.cpp`, the `suit_full` sprite in `Draw`.
+
+### Current stand-in
+`suit_full` from `sprites/hud.txt` — **the armour readout's own icon**, drawn immediately to its right in
+the same shape and, since the HUD started following the Suit Variant, in the same colour.
+
+### What's wrong with it
+It used to be fine, and the thing that made it fine is gone. The Pulse had a private cyan for exactly one
+reason: two identical icons side by side, told apart by colour. A cyan-suited player would have had a cyan
+HUD and erased that difference anyway, so the readout gave the colour up rather than keep a cyan the suit
+could collide with. What tells them apart now is the Pulse's vertical charge bar, which the armour has no
+equivalent of — real, but it is a *neighbouring* element doing the identifying rather than the icon.
+
+### What to look for
+An icon that says **energy field, ready** rather than armour: something with an edge or a boundary in it,
+readable at the suit icon's size in every resolution block of `hud.txt` (20/40/80/120), greyscale because
+the tint is applied additively and a coloured source comes out wrong.
+
+The same `hud.txt` constraint as the Concealment readout applies: the mod ships its own four-block
+`hud.txt` built by `utils/sprtool/make_hud_txt.py`, and a new icon must exist in **all four** blocks.
+
+### Done when
+The Pulse readout is not the armour icon, and a glance at the cluster tells which is which without reading
+the bar.
 
 ## The crossbow viewmodel — hand clips through the stock
 

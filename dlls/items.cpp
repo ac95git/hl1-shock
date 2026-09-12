@@ -29,6 +29,7 @@
 #include "items.h"
 #include "gamerules.h"
 #include "UserMessages.h"
+#include "suit_defs.h"
 
 class CWorldItem : public CBaseEntity
 {
@@ -161,9 +162,13 @@ void CItem::ItemTouch(CBaseEntity* pOther)
 		return;
 	}
 
-	// Otherwise Inventory items wait for a deliberate use press; walking over
+	// Otherwise use-only items wait for a deliberate use press; walking over
 	// them does nothing. The Pickup Prompt tells the player they can take it.
-	if (!AutoPickupOnTouch())
+	//
+	// impulse 101 is the exception: it hands its list straight to the player
+	// through this touch, so honouring the use-only rule there would leave
+	// everything it names lying at the player's feet instead.
+	if (!AutoPickupOnTouch() && !gEvilImpulse101)
 	{
 		return;
 	}
@@ -198,8 +203,31 @@ void CItem::Materialize()
 
 #define SF_SUIT_SHORTLOGON 0x0001
 
+//=========================================================
+// The HEV suit, in three Suit Variants.
+//
+// One class and one keyvalue rather than a second classname: a vanilla
+// item_suit with no "variant" is Agility, so stock maps are unchanged.
+// pev->skin carries the variant at both ends -- the pickup's own skin
+// family while it lies on the floor, and the player's skin once worn,
+// which is what the client reads back for the gloves and the HUD.
+//
+// Use-only.  The suit joins the Pickup Prompt's look-and-press path
+// (dlls/player_inventory.cpp) so a red suit is never taken by walking
+// past it, but it never enters the Grid: it is worn, not carried.
+//=========================================================
 class CItemSuit : public CItem
 {
+	bool KeyValue(KeyValueData* pkvd) override
+	{
+		if (FStrEq(pkvd->szKeyName, "variant"))
+		{
+			pev->skin = SuitVariantClamp(atoi(pkvd->szValue));
+			return true;
+		}
+
+		return CItem::KeyValue(pkvd);
+	}
 	void Spawn() override
 	{
 		Precache();
@@ -210,16 +238,27 @@ class CItemSuit : public CItem
 	{
 		PRECACHE_MODEL("models/w_suit.mdl");
 	}
+	bool AutoPickupOnTouch() override { return false; }
 	bool MyTouch(CBasePlayer* pPlayer) override
 	{
-		if (pPlayer->HasSuit())
+		const bool bSwitching = pPlayer->HasSuit();
+
+		// A suit of the variant already worn is refused, exactly as the stock
+		// item refuses a second suit.  Nothing is dropped and nothing is lost:
+		// the pickup stays where it is.
+		if (bSwitching && pPlayer->pev->skin == pev->skin)
 			return false;
 
-		if ((pev->spawnflags & SF_SUIT_SHORTLOGON) != 0)
+		// Changing suit is announced with the short line -- the long logon
+		// belongs to putting a suit on for the first time.
+		if (bSwitching || (pev->spawnflags & SF_SUIT_SHORTLOGON) != 0)
 			EMIT_SOUND_SUIT(pPlayer->edict(), "!HEV_A0"); // short version of suit logon,
 		else
 			EMIT_SOUND_SUIT(pPlayer->edict(), "!HEV_AAx"); // long version of suit logon
 
+		// Armour is deliberately untouched: a different suit is a different
+		// colour, not a fresh charge.
+		pPlayer->pev->skin = pev->skin;
 		pPlayer->SetHasSuit(true);
 		return true;
 	}

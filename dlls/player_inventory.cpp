@@ -10,6 +10,7 @@
 #include "game.h"
 #include "player_inventory.h"
 #include "UserMessages.h"
+#include "suit_defs.h"
 #include <algorithm>
 
 //=========================================================
@@ -726,9 +727,20 @@ static bool ClassifyPickup(CBaseEntity* pEnt, EEntryKind& outKind, int& outId)
 
 	if (dynamic_cast<CItem*>(pEnt))
 	{
-		// Only Item Types are Inventory pickups. The HEV suit and the longjump
-		// module are CItems too, but they are not carried, so they keep
-		// Half-Life's walk-over behaviour and get no prompt.
+		// The suit is prompted for and taken by a use press like everything
+		// else, but it is worn rather than carried: it never reaches the Grid,
+		// and its id is the Suit Variant on offer so the prompt can name which
+		// of the three is lying there.
+		if (FClassnameIs(pEnt->pev, "item_suit"))
+		{
+			outKind = EEntryKind::Suit;
+			outId = SuitVariantClamp(pEnt->pev->skin);
+			return true;
+		}
+
+		// Otherwise only Item Types are pickups. The longjump module is a CItem
+		// too, and is not carried, so it keeps Half-Life's walk-over behaviour
+		// and gets no prompt.
 		const EItemTypeId type = ItemTypeFromClassname(STRING(pEnt->pev->classname));
 		if (type == EItemTypeId::None)
 			return false;
@@ -832,7 +844,10 @@ bool TryTakeLookedAtPickup(CBasePlayer* pPlayer)
 
 	if (!pItem->AcquireBy(pPlayer))
 	{
-		ClientPrint(pPlayer->pev, HUD_PRINTCENTER, "No room in inventory.\n");
+		// Only the Grid can be full. A refused suit is a suit of the variant
+		// already worn, which needs no explaining.
+		if (look.kind == EEntryKind::Item)
+			ClientPrint(pPlayer->pev, HUD_PRINTCENTER, "No room in inventory.\n");
 		return false;
 	}
 

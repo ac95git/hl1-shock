@@ -99,7 +99,7 @@ bool CHudBattery::Draw(float flTime)
 	const int iMax = (m_iBatMax > 0) ? m_iBatMax : k_DefaultMaxBattery;
 	rc.top += m_iHeight * ((float)(iMax - V_min(iMax, m_iBat)) / (float)iMax);
 
-	UnpackRGB(r, g, b, RGB_YELLOWISH);
+	UnpackRGB(r, g, b, RGB_SUIT);
 
 	if (!gHUD.HasSuit())
 		return true;

@@ -3,8 +3,9 @@
 //
 // The Concealment readout: an icon in the bottom-left suit cluster, after
 // health, armour and the Pulse, tinted by how noticed the player is -- the
-// cluster's own dim yellow when hidden, amber when something has noticed them,
-// red when something has acquired them.
+// cluster's own dim suit colour when hidden, amber when something has noticed
+// them, red when something has acquired them.  The two warning colours are
+// fixed on purpose: they carry meaning the Suit Variant must not recolour.
 //
 // It sits with the suit readouts rather than on the crosshair so it is read
 // the way health and armour are read: a glance at the corner, rather than a
@@ -153,7 +154,7 @@ bool CHudConceal::Draw(float flTime)
 	{
 		// Unseen rests in the cluster's own colour and brightness, so it reads
 		// as one of the suit readouts until something changes.
-		UnpackRGB(r, g, b, RGB_YELLOWISH);
+		UnpackRGB(r, g, b, RGB_SUIT);
 		a = MIN_ALPHA;
 	}
 

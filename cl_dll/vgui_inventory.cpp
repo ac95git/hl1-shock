@@ -207,9 +207,12 @@ bool CInventoryContextMenu::HandleClick(int panelLocalX, int panelLocalY)
 void CInventoryContextMenu::paintBackground()
 {
     int w, h; getSize(w, h);
+    int sr, sg, sb;
+    UnpackRGB(sr, sg, sb, RGB_SUIT);
+
     drawSetColor(0, 0, 0, 56);
     drawFilledRect(0, 0, w, h);
-    drawSetColor(255, 170, 0, 80);
+    drawSetColor(sr, sg, sb, 80);
     drawOutlinedRect(0, 0, w, h);
 }
 
@@ -446,6 +449,23 @@ void CInventoryPanel::paintBackground()
     int panelW = 0, panelH = 0;
     getSize(panelW, panelH);
 
+    // The Inventory is the suit's own screen and tints with the rest of it.
+    // The four shades are where the amber palette's four were -- frame, active
+    // fill, label, switched-off label.  The reds (the close button) and the
+    // cyan of the ammo reserves are deliberately NOT suit colours: one is a
+    // destructive affordance, the other is what tells that section apart from
+    // the two above it.
+    int sr, sg, sb, dr, dg, db, lr, lg, lb, or_, og, ob;
+    UnpackRGB(sr, sg, sb, RGB_SUIT);
+    UnpackRGB(dr, dg, db, RGB_SUIT_DIM);
+    UnpackRGB(lr, lg, lb, RGB_SUIT_LIT);
+    UnpackRGB(or_, og, ob, RGB_SUIT_OFF);
+
+    // The header label is a VGUI Label, so its colour is set rather than
+    // drawn; refreshed here because the suit can change while the panel is up.
+    if (m_pLabel)
+        m_pLabel->setFgColor(lr, lg, lb, 0);
+
     // ----------------------------------------------------------------
     // HEADER BAR
     // ----------------------------------------------------------------
@@ -455,10 +475,10 @@ void CInventoryPanel::paintBackground()
 
         drawSetColor(20, 20, 20, 30);
         drawFilledRect(hx1, hy1, hx2, hy2);
-        drawSetColor(255, 170, 0, 80);
+        drawSetColor(sr, sg, sb, 80);
         drawOutlinedRect(hx1, hy1, hx2, hy2);
         drawFilledRect(hx1, hy2 - 2, hx2, hy2);
-        drawSetColor(255, 170, 0, 0);
+        drawSetColor(sr, sg, sb, 0);
         drawFilledRect(hx1, hy1, hx1 + 3, hy2);
 
         if (m_pCloseButton)
@@ -504,9 +524,9 @@ void CInventoryPanel::paintBackground()
 
         drawSetColor(15, 15, 15, 60);
         drawFilledRect(colX, p1Y, colX + colW, p1Y + panelH1);
-        drawSetColor(255, 170, 0, 80);
+        drawSetColor(sr, sg, sb, 80);
         drawOutlinedRect(colX, p1Y, colX + colW, p1Y + panelH1);
-        drawSetColor(255, 170, 0, 0);
+        drawSetColor(sr, sg, sb, 0);
         drawFilledRect(colX, p1Y, colX + colW, p1Y + 2);
 
         struct NavEntry { const char* label; EInventoryTab tab; };
@@ -527,18 +547,18 @@ void CInventoryPanel::paintBackground()
 
             if (active)
             {
-                drawSetColor(200, 130, 0, 30);
+                drawSetColor(dr, dg, db, 30);
                 drawFilledRect(btnX, btnY, btnX + btnW2, btnY + btnH);
-                drawSetColor(255, 170, 0, 40);
+                drawSetColor(sr, sg, sb, 40);
                 drawOutlinedRect(btnX, btnY, btnX + btnW2, btnY + btnH);
-                drawSetColor(255, 170, 0, 0);
+                drawSetColor(sr, sg, sb, 0);
                 drawFilledRect(btnX, btnY, btnX + 3, btnY + btnH);
             }
             else
             {
                 drawSetColor(30, 30, 30, 120);
                 drawFilledRect(btnX, btnY, btnX + btnW2, btnY + btnH);
-                drawSetColor(120, 100, 60, 140);
+                drawSetColor(or_, og, ob, 140);
                 drawOutlinedRect(btnX, btnY, btnX + btnW2, btnY + btnH);
             }
 
@@ -653,8 +673,8 @@ void CInventoryPanel::paintBackground()
 
             vgui::Font* navFont = m_pTitleFont ? m_pTitleFont : m_pSmallFont;
             drawSetTextFont(navFont);
-            if (active) drawSetTextColor(255, 200, 60, 0);
-            else        drawSetTextColor(160, 140, 100, 0);
+            if (active) drawSetTextColor(lr, lg, lb, 0);
+            else        drawSetTextColor(or_, og, ob, 0);
 
             int textH = m_pTitleFont ? 18 : 10;
             drawSetTextPos(r.x + NAV_BTN_PAD + 4, r.y + (r.h - textH) / 2);

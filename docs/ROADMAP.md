@@ -391,8 +391,8 @@ problem gets solved once instead of twice.
   approaches were built and rejected first: a beam entity between two viewmodel attachments (the engine
   draws beams before the viewmodel with last frame's attachments, so it trailed the swing) and quads drawn
   by the studio renderer in the viewmodel's pass (right place, wrong look). The attachments stay in the
-  model for whatever wants them next. `cl_suit_variant` (0/1/2) picks the glove family on every viewmodel
-  and stands in for the saved suit choice; `cl_dll/view.cpp` is where that value will land.
+  model for whatever wants them next. The glove half of the six families is picked by the player's Suit
+  Variant in `cl_dll/view.cpp`; see PILLARS.md.
 - **The weapon exists, v1.** `weapon_katana`, `dlls/katana.cpp`: `CCrowbar` with two hooks overridden,
   base damage (`sk_plr_katana1-3`, 40) and swing time (`katana_swing_time_scale`, now 1.0, the crowbar's
   own rate — it started at 2× and the wave made the slow swing feel like waiting; read from both DLLs
@@ -462,7 +462,9 @@ mean two systems making the same gun faster.
 
 ### Viewmodel hands and the custom HEV suit
 
-**Shape: Shaped. Started on 2026-09-12 with the glove textures.**
+**Shape: Shaped. Three of its five goals are built** — the glove textures, their rollout across every
+viewmodel, and the Suit Variant that picks between them. What is built is in [PILLARS.md](PILLARS.md);
+what is left is goals 4 and 5 below.
 
 Every `v_*.mdl` in Half-Life bakes its own hands into the model. There is no shared hand mesh, so
 consistency means touching every viewmodel the mod ships — the vanilla set, the Carbon Pickaxe, the Gauss
@@ -482,71 +484,18 @@ they build on each other:
 2. **Every vanilla viewmodel gets the new glove textures. Built, as skins.** Fourteen stock viewmodels
    (every one that has a glove: the hivehand has none, the chumtoad is unused) plus the katana compile
    with all three sets as skin families, cyan as skin 0. Compiled files live in the repo's `models/`
-   and the install's `topmod/models/`; nothing in code changes, and the game shows cyan.
-3. **A custom HEV suit 3D model, in the same three variants.** The suit the player sees — on a pickup, a
-   charger, a mirror, the player model — matching the gloves. Not designed yet. Until it is, the pickup
-   is the stock `w_suit` recompiled with three recoloured skins (see goal 4), which also gives the real
-   suit three references to be designed against.
-4. **Picking a suit variant sets the glove colour of every viewmodel.** The model half is done: every
-   viewmodel carries the three glove sets as skin families (`$texturegroup` in the QC), and the
-   viewmodel's `pev->skin` selects one. **The rest was settled on 2026-09-12** and is recorded below;
-   the Suit Variant term is in [CONTEXT.md](../CONTEXT.md#the-suit).
-5. **The HUD tint follows the equipped suit too** — health, armour, ammo, items, all of it. The HUD
-   already draws everything through one colour (`RGB_YELLOWISH`, unpacked at every draw), so this is
-   the same one player-side value read on the client and mapped to a colour, with the same rule the
-   Concealment readout already follows: the state colours (red for damage, amber for Noticed) stay as
-   they are, because they carry meaning the suit colour must not override. Settled with goal 4, below.
-
-**Settled 2026-09-12 — the Suit Variant, goals 4 and 5.** Ten decisions, in the order they depend on
-each other:
-
-1. **Cosmetic today, not forever.** The three suits are the same suit in three colours. They are
-   codenamed for specializations they do not yet have — Agility (cyan, 0), Strength (red, 1),
-   Intelligence (purple, 2) — so that the names survive the day they gain mechanics. When that day
-   comes, what happens to the suit being *taken off* is the first question; it is deliberately not
-   answered now.
-2. **The choice is a world pickup.** A pillar 1 find, not a menu, not a Station, not a pre-game screen.
-   Level design decides where a red or purple suit is found.
-3. **Any suit pickup switches.** Using a suit of another variant changes the player's variant, plays the
-   short logon line, leaves armour untouched, and consumes the pickup. A suit of the variant already
-   worn is refused, exactly as the stock item refuses a second suit today. Nothing drops.
-4. **Suit pickups are use-only.** They go through the existing look-and-press path with the Pickup
-   Prompt (`FindLookedAtPickup`, `dlls/player_inventory.cpp`), which today explicitly excludes the suit
-   as "not carried, keeps walk-over". The suit joins that path for the prompt and the take without ever
-   entering the Grid. This includes the first suit at Anomalous Materials: the vanilla locker is open,
-   so the player presses use at it instead of walking into it. The prompt reads "HEV Suit (Strength)"
-   and so on.
-5. **One class, one keyvalue.** `item_suit` gains a `variant` keyvalue (0/1/2) with FGD choices; a
-   vanilla `item_suit` with no keyvalue is Agility, so stock maps are unchanged. No second classname.
-6. **The value is the player's skin field.** `pev->skin` on the player is the variant. The engine saves
-   it with the entity and networks it in entity state, so there is no new save field and no new user
-   message; the client reads the local player's skin each frame for the viewmodel skin (replacing the
-   `cl_suit_variant` read in `cl_dll/view.cpp`) and for the HUD colour. It is also literally the skin a
-   future three-variant player model would use. `cl_suit_variant` is removed. When the suit gains
-   mechanics, that is the moment to add a named field and derive the skin from it. Two things to
-   measure in game before building on them, not assume: that the local player's skin reaches the
-   client in single player, and that it survives a `changelevel` transition.
-7. **The HUD tint follows now.** The variant maps to the glove generator's accent colours
-   (`E:\CustomAssets\scripts\hev_gloves.py`: cyan 60/220/255, red 255/70/50, purple 200/90/255) so
-   gloves and HUD agree by construction. State colours stay. The Concealment readout's dim resting
-   colour becomes dim suit colour. **The Pulse readout loses its private cyan** — it was cyan only to be
-   told apart from the armour icon beside it, which shares its sprite, and a cyan HUD would erase that.
-   It joins the suit colour, is read by its charge bar meanwhile, and gets a custom sprite of its own
-   later; recorded in [ART_DEBT.md](ART_DEBT.md) when the tint lands.
-8. **The pickup model is a stand-in.** The stock `w_suit` (decompiled with its textures under
-   `E:\CustomAssets\models\decompiled\crowbar_vanilla\w_suit`) recompiled with three skin families from
-   a colour wash over its front and back textures, the entity's skin set from the keyvalue on spawn. So
-   the three suits are tellable apart on the floor, which a find has to be. Filed in ART_DEBT.md as a
-   stand-in for goal 3.
-9. **No console command.** Variants are tested by placing `item_suit` entities of each variant in the
-   test map (`topmap`, see [MAP_BRIEF.md](MAP_BRIEF.md)) once the FGD carries the keyvalue.
-10. **Untouched:** the katana's six-family hot/cold skin layout (only the *source* of the variant
-    changes), the custom suit model, the player model, and emissive gloves.
-
-Docs that move with the build: these two goals to [PILLARS.md](PILLARS.md), ART_DEBT.md entries for the
-recoloured suit and the Pulse icon, and this block deleted.
-
-6. **The gloves emit light.** Later, and the route is now proven on the katana's hot blade. The engine
+   and the install's `topmod/models/`.
+3. **Picking a suit variant sets the glove colour of every viewmodel, and the HUD's. Built** — the Suit
+   Variant, a world pickup carried in the player's `pev->skin`. See [PILLARS.md](PILLARS.md) for what it
+   does and [CONTEXT.md](../CONTEXT.md#the-suit) for the term.
+4. **A custom HEV suit 3D model, in the same three variants.** The suit the player sees — on a pickup, a
+   charger, a mirror, the player model — matching the gloves. **The one goal here still unbuilt, and it
+   is design work before it is model work: it is not designed yet.** Until it is, the pickup is the stock
+   `w_suit` recompiled with three colour-washed skins (`E:\CustomAssets\scripts\suit_world.py`), which is
+   in [ART_DEBT.md](ART_DEBT.md) and which also gives the real suit three references to be designed
+   against. Note what the stand-in does *not* cover: the wall chargers, and the player model, which still
+   shows the stock orange suit in a mirror or in third person.
+5. **The gloves emit light.** Later, and the route is now proven on the katana's hot blade. The engine
    **ignores `STUDIO_NF_FULLBRIGHT`** on studio textures — the katana tested it — and **honours
    `STUDIO_NF_ADDITIVE`**, drawing the texture as light over what is behind it, which shines in the dark
    at the cost of some transparency. `utils/mdltool/mdlflags.py` patches either flag into a compiled

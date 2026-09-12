@@ -29,7 +29,12 @@
 #include "demo.h"
 #include "demo_api.h"
 #include "vgui_ScorePanel.h"
+#include "suit_defs.h"
 #include <keydefs.h>
+
+#include "const.h"
+#include "entity_state.h"
+#include "cl_entity.h"
 
 hud_player_info_t g_PlayerInfoList[MAX_PLAYERS_HUD + 1];	// player info from the engine
 extra_player_info_t g_PlayerExtraInfo[MAX_PLAYERS_HUD + 1]; // additional player info sent directly to the client dll
@@ -391,11 +396,13 @@ void CHud::Init()
 	// equal that decay reads as the blade cooling.
 	CVAR_CREATE("katana_glow_light", "0.9", 0);
 	CVAR_CREATE("katana_glow_hot", "0.9", 0);
-	// Which suit the player wears, 0 cyan / 1 red / 2 purple: selects the
-	// glove skin family on every viewmodel.  A stand-in for the saved player
-	// value the roadmap's suit choice will provide; the selection code in
-	// view.cpp is what that value will feed.
-	CVAR_CREATE("cl_suit_variant", "0", FCVAR_ARCHIVE);
+	// Prints what the Suit Variant actually is, frame by frame: the raw skin
+	// off the local player's entity state, and what the HUD made of it.  Here
+	// because the value travels a route nothing else in this mod uses -- the
+	// player's own entity state -- and two things about that route have to be
+	// watched rather than assumed: that it reaches the client in single player
+	// at all, and that it survives a changelevel.
+	m_pCvarSuitDebug = CVAR_CREATE("cl_suit_debug", "0", 0);
 	CVAR_CREATE("cl_autowepswitch", "1", FCVAR_ARCHIVE | FCVAR_USERINFO);
 	default_fov = CVAR_CREATE("default_fov", "90", FCVAR_ARCHIVE);
 	m_pCvarStealMouse = CVAR_CREATE("hud_capturemouse", "1", FCVAR_ARCHIVE);
@@ -485,6 +492,67 @@ CHud::~CHud()
 // searches through the sprite list loaded from hud.txt for a name matching SpriteName
 // returns an index into the gHUD.m_rghSprites[] array
 // returns 0 if sprite not found
+//=========================================================
+// The Suit Variant, client side
+//
+// The server keeps the variant in the player's pev->skin.  That is not a
+// field of ours: the engine saves it with the entity and networks it in
+// entity state (entity_state_player_t carries skin, network/delta.lst), so
+// the suit costs no new save field and no new user message.  Here it comes
+// back off the local player once a frame.
+//
+// It is read rather than remembered so that a changelevel, a load, or a
+// second suit taken anywhere needs no notification of its own -- the next
+// frame simply reads the new value.
+//=========================================================
+void CHud::UpdateSuitVariant()
+{
+	cl_entity_t* player = gEngfuncs.GetLocalPlayer();
+
+	// Null between levels and in the menu. Keeping the last value beats
+	// flashing back to cyan for a frame on the way through a transition.
+	if (player == nullptr)
+		return;
+
+	m_iSuitVariant = SuitVariantClamp(player->curstate.skin);
+}
+
+unsigned long CHud::SuitColour() const
+{
+	const SuitVariantDef& v = GetSuitVariant(m_iSuitVariant);
+	return ((unsigned long)v.r << 16) | ((unsigned long)v.g << 8) | (unsigned long)v.b;
+}
+
+unsigned long CHud::SuitColourDim() const
+{
+	const SuitVariantDef& v = GetSuitVariant(m_iSuitVariant);
+	auto dim = [](unsigned char c) -> unsigned long { return (unsigned long)(c * 78 / 100); };
+	return (dim(v.r) << 16) | (dim(v.g) << 8) | dim(v.b);
+}
+
+unsigned long CHud::SuitColourLit() const
+{
+	const SuitVariantDef& v = GetSuitVariant(m_iSuitVariant);
+	// Toward white rather than simply brighter: the accents are already at or
+	// near full in one channel, so a multiply would change nothing.
+	auto lit = [](unsigned char c) -> unsigned long { return (unsigned long)(c + (255 - c) * 40 / 100); };
+	return (lit(v.r) << 16) | (lit(v.g) << 8) | lit(v.b);
+}
+
+unsigned long CHud::SuitColourOff() const
+{
+	const SuitVariantDef& v = GetSuitVariant(m_iSuitVariant);
+
+	// Halfway to its own grey, then darkened -- so a switched-off control reads
+	// as the same colour with the life taken out of it, rather than as a
+	// different colour.  This is what 120,100,60 was to the old amber.
+	const int lum = (v.r * 30 + v.g * 59 + v.b * 11) / 100;
+	auto off = [lum](unsigned char c) -> unsigned long {
+		return (unsigned long)(((c + lum) / 2) * 45 / 100);
+	};
+	return (off(v.r) << 16) | (off(v.g) << 8) | off(v.b);
+}
+
 int CHud::GetSpriteIndex(const char* SpriteName)
 {
 	// look through the loaded sprite name list for SpriteName

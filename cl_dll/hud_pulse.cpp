@@ -24,11 +24,14 @@ DECLARE_MESSAGE(m_Pulse, Pulse)
 #define PULSE_SHIELD 1
 #define PULSE_RECHARGING 2
 
-// Cyan, so the Pulse icon is not mistaken for the armour icon sitting
-// immediately to its left in the same shape.
-#define PULSE_COLOR_R 64
-#define PULSE_COLOR_G 200
-#define PULSE_COLOR_B 255
+// The Pulse draws in the suit's colour like everything else.
+//
+// It used to have a private cyan, for one reason: it shares the armour's
+// sprite and sat right beside it, so colour was the only thing telling two
+// identical icons apart.  A cyan HUD would have erased that difference
+// anyway, so the readout gives the colour up and leans on its charge bar,
+// which the armour has no equivalent of.  The real fix is a sprite of its
+// own -- docs/ART_DEBT.md, "The Pulse -- readout icon".
 
 bool CHudPulse::Init()
 {
@@ -136,8 +139,10 @@ bool CHudPulse::Draw(float flTime)
 		if (a > 255)
 			a = 255;
 
-		FillRGBA(0, 0, ScreenWidth, ScreenHeight,
-			PULSE_COLOR_R, PULSE_COLOR_G, PULSE_COLOR_B, a);
+		int tr, tg, tb;
+		UnpackRGB(tr, tg, tb, RGB_SUIT);
+
+		FillRGBA(0, 0, ScreenWidth, ScreenHeight, tr, tg, tb, a);
 	}
 
 	// ---- Icon and charge bar --------------------------------------------
@@ -156,9 +161,8 @@ bool CHudPulse::Draw(float flTime)
 
 	const int x = IconX();
 
-	int r = PULSE_COLOR_R;
-	int g = PULSE_COLOR_G;
-	int b = PULSE_COLOR_B;
+	int r, g, b;
+	UnpackRGB(r, g, b, RGB_SUIT);
 
 	// How full the bar is, and how loud the whole readout is.
 	float flFill = 1.0f;

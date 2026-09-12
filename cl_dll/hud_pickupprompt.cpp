@@ -15,6 +15,7 @@
 #include "parsemsg.h"
 #include "ammohistory.h"
 #include "inventory_defs.h"
+#include "suit_defs.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -109,6 +110,12 @@ bool CHudPickupPrompt::Draw(float flTime)
 	{
 		if (PrettyWeaponName(m_iId, nameBuf, sizeof(nameBuf)))
 			name = nameBuf;
+	}
+	else if (static_cast<EEntryKind>(m_iKind) == EEntryKind::Suit)
+	{
+		// Which of the three is on the floor -- the whole point of prompting
+		// for a suit rather than letting the player walk into it.
+		name = GetSuitVariant(m_iId).displayName;
 	}
 	else
 	{

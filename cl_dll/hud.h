@@ -26,6 +26,18 @@
 #define RGB_REDISH 0x00FF1010	 // 255,160,0
 #define RGB_GREENISH 0x0000A000	 // 0,160,0
 
+// The colour the suit draws its own readouts in -- what RGB_YELLOWISH was
+// before the suit had a colour to follow.  A function rather than a constant
+// because it changes with the Suit Variant; it is read at every draw, which
+// is what the HUD already did with RGB_YELLOWISH.
+//
+// The STATE colours above stay constants on purpose: red for low health and
+// for a Spotted player carries meaning the suit colour must not override.
+#define RGB_SUIT (gHUD.SuitColour())
+#define RGB_SUIT_DIM (gHUD.SuitColourDim())
+#define RGB_SUIT_LIT (gHUD.SuitColourLit())
+#define RGB_SUIT_OFF (gHUD.SuitColourOff())
+
 #include "common_types.h"
 #include "cl_dll.h"
 #include "ammo.h"
@@ -633,6 +645,29 @@ public:
 		return (m_iWeaponBits & ~(1ULL << WEAPON_SUIT)) != 0;
 	}
 
+	// ---- The Suit ------------------------------------------------------
+	//
+	// Which of the three HEV suits the player wears.  The server keeps it in
+	// the player's pev->skin and the engine networks it in entity state, so
+	// there is no message of our own: UpdateSuitVariant reads it back off the
+	// local player once a frame, at the top of Redraw, and everything drawn
+	// after that -- the readouts, the Inventory, the viewmodel's gloves --
+	// asks here rather than reading the entity itself.
+	//
+	// Never out of range: an unknown value is Agility (suit_defs.h).
+	void UpdateSuitVariant();
+	int SuitVariant() const { return m_iSuitVariant; }
+
+	// The suit's accent colour, and the three shades the amber palette it
+	// replaces used beside it: a dimmer fill, a lighter text, and a muted one
+	// for anything switched off.  Derived from the accent rather than
+	// tabulated, so the relationships survive the hue changing.
+	// Packed 0x00RRGGBB, for UnpackRGB.
+	unsigned long SuitColour() const;
+	unsigned long SuitColourDim() const;
+	unsigned long SuitColourLit() const;
+	unsigned long SuitColourOff() const;
+
 private:
 	// the memory for these arrays are allocated in the first call to CHud::VidInit(), when the hud.txt and associated sprites are loaded.
 	// freed in ~CHud()
@@ -701,6 +736,12 @@ public:
 	std::uint64_t m_iWeaponBits;
 	bool m_fPlayerDead;
 	bool m_iIntermission;
+
+	// The local player's Suit Variant, refreshed once a frame. Read it
+	// through SuitVariant(); this is public only because the debug readout
+	// and the viewmodel skin both live outside this class.
+	int m_iSuitVariant = 0;
+	cvar_t* m_pCvarSuitDebug = nullptr;
 
 	// sprite indexes
 	int m_HUD_number_0;

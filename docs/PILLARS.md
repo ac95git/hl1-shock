@@ -9,7 +9,7 @@ same commit as the code change.
 This file records **what exists today**. Intended work that has not been built lives in
 [ROADMAP.md](ROADMAP.md), and each pillar below links to its entries there.
 
-**Last updated:** 2026-08-31 (branch `hl-shock`, after `3c34028` — the Backstab)
+**Last updated:** 2026-09-12 (branch `hl-shock`, after the Suit Variant)
 
 ## Status legend
 
@@ -138,11 +138,15 @@ reads as a bubble), and `pulse_ring_scale` sizes it. Nothing else in the SDK use
 no existing call site to take a correct scale from; these exist to be dialled in by eye.
 
 **The readiness readout** — `CHudPulse` (`cl_dll/hud_pulse.cpp`), sitting immediately right of the armour
-readout on the same baseline. The `suit_full` sprite in cyan — the armour's is yellow, which is what tells
-two identical icons apart — with a vertical charge bar beside it filling bottom-up. Geometry mirrors
-`CHudBattery` so the two stay aligned at any resolution.
+readout on the same baseline. The `suit_full` sprite with a vertical charge bar beside it filling
+bottom-up. Geometry mirrors `CHudBattery` so the two stay aligned at any resolution. It used to have a
+private cyan, because it shares the armour's sprite and colour was the only thing telling two identical
+icons apart; it gave that up when the HUD started following the Suit Variant, since a cyan suit would
+have erased the difference anyway. The charge bar carries it meanwhile, and a sprite of its own is in
+[ART_DEBT.md](ART_DEBT.md).
 
-While a Shield stands the screen is tinted cyan, alpha via `hud_pulse_tint` (0 disables).
+While a Shield stands the screen is tinted in the suit's colour, alpha via `hud_pulse_tint` (0 disables),
+and the Shield's own rings and light are that colour too.
 **`m_Pulse.Init()` is registered first in `CHud::Init` on purpose:** `AddHudElem` appends, so Init order is
 draw order, and the tint has to go under every other readout rather than over it.
 
@@ -168,9 +172,58 @@ distance, which makes the katana a ranged melee weapon. Floors are scraped, not 
 headcrab keeps its wave. Details and the open questions are in [ROADMAP.md](ROADMAP.md#the-gauss-katana).
 
 **Custom HEV gloves on every viewmodel.** Fourteen stock viewmodels plus the katana compile with three
-glove skin families — grey plates with cyan, red or purple light channels — and the game shows cyan
-(skin 0) with no code involved. Selecting a skin per player waits on the suit choice; see
-[ROADMAP.md](ROADMAP.md#viewmodel-hands-and-the-custom-hev-suit).
+glove skin families — grey plates with cyan, red or purple light channels. Which one the player sees is
+the Suit Variant they wear, below.
+
+**The Suit Variant** — which of the mod's three HEV suits the player wears, defined once for both DLLs in
+`game_shared/suit_defs.h`. Three values, each a codename for a specialization the suit does not yet have:
+**Agility** (cyan, 0), **Strength** (red, 1), **Intelligence** (purple, 2). Cosmetic today; the codenames
+are there so the names survive the day it is not, and what happens to a suit being *taken off* is
+deliberately unanswered until then. Vocabulary in [CONTEXT.md](../CONTEXT.md#the-suit).
+
+- **The choice is a world pickup, and it is use-only.** `item_suit` gains a `variant` keyvalue (0/1/2,
+  with FGD choices); a vanilla `item_suit` with no keyvalue is Agility, so stock maps are unchanged and
+  there is no second classname. The suit joined the Pickup Prompt's look-and-press path
+  (`FindLookedAtPickup`, `dlls/player_inventory.cpp`) instead of keeping its walk-over behaviour, so the
+  prompt reads "HEV Suit (Strength)" before the player commits. It never enters the Grid — it is worn,
+  not carried. That includes the first suit at Anomalous Materials: the vanilla locker is open, so the
+  player presses use at it rather than walking into it.
+- **Any suit pickup switches.** Using a suit of another variant changes the player's variant, plays the
+  short logon line, leaves armour untouched, and consumes the pickup. A suit of the variant already worn
+  is refused, exactly as the stock item refuses a second suit. Nothing drops.
+- **The value is the player's `pev->skin`.** The engine saves it with the entity and networks it in
+  entity state (`entity_state_player_t` carries `skin`, `network/delta.lst`), so the whole feature costs
+  **no new save field and no new user message**. `CHud::UpdateSuitVariant` reads it back off the local
+  player once a frame at the top of `Redraw`; everything drawn after that asks `gHUD`. It is also
+  literally the skin a future three-variant player model would use. When the suit gains mechanics, that
+  is the moment to add a named field and derive the skin from it.
+- **The gloves follow it.** `V_SetViewModelSkin` (`cl_dll/view.cpp`) picks the viewmodel's skin family
+  from the variant — three families are the suit alone, six are suit × the katana's cold/hot. The
+  `cl_suit_variant` stand-in cvar is gone.
+- **The HUD follows it too.** `RGB_SUIT` in `cl_dll/hud.h` replaced `RGB_YELLOWISH` at every readout that
+  was drawing in the HUD's amber: health, armour, ammo, the ammo history, the flashlight, the train
+  controls, the damage icons, the Concealment readout's resting colour, the Pulse, and the Inventory
+  panel and Grid. It resolves through `gHUD.SuitColour()` at every draw, which is exactly what the HUD
+  already did with `RGB_YELLOWISH`. Three derived shades — `RGB_SUIT_DIM`, `_LIT`, `_OFF` — cover where
+  the amber palette had a darker fill, a lighter label and a switched-off one; they are computed from the
+  accent so the relationships survive the hue changing.
+- **State colours deliberately stay fixed**: red for low health and for a Spotted player, amber for
+  Noticed, the Inventory's red close button and its red for a weapon with no ammo. They carry meaning the
+  suit colour must not override. The ammo reserves panel keeps its cyan for the same reason — it is what
+  tells that section apart from the two above it.
+- **The accent colours are the glove generator's**, copied into `suit_defs.h` from `VARIANTS` in
+  `E:\CustomAssets\scripts\hev_gloves.py` (cyan 60/220/255, red 255/70/50, purple 200/90/255), so gloves
+  and HUD agree by construction rather than by two tables being kept in step by hand.
+- **The pickup model is a stand-in** — the stock `w_suit` recompiled with three skin families from a
+  colour wash, by `E:\CustomAssets\scripts\suit_world.py`; the entity's skin is set from the keyvalue on
+  spawn, so the three are tellable apart on a floor. Filed in [ART_DEBT.md](ART_DEBT.md).
+- **`cl_suit_debug 1`** prints the raw skin off the local player's entity state next to what the HUD made
+  of it. It exists because the value travels a route nothing else in this mod uses, and two things about
+  that route are worth watching rather than assuming: that it reaches the client in single player, and
+  that it survives a `changelevel`.
+
+There is **no console command** to set the variant. Variants are tested by placing `item_suit` entities
+of each variant in the test map — see [MAP_BRIEF.md](MAP_BRIEF.md).
 
 **Four melee and damage Skills.** The first three follow the `PulseWindowFor` pattern — the modifier is
 read from `m_skills` where the value is computed, rather than through a hook of its own:

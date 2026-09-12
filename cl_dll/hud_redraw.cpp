@@ -17,6 +17,11 @@
 //
 #include "hud.h"
 #include "cl_util.h"
+#include "suit_defs.h"
+
+#include "const.h"
+#include "entity_state.h"
+#include "cl_entity.h"
 
 #include "vgui_TeamFortressViewport.h"
 
@@ -97,6 +102,9 @@ bool CHud::Redraw(float flTime, bool intermission)
 	m_flTimeDelta = (double)m_flTime - m_fOldTime;
 	static float m_flShotTime = 0;
 
+	// Before anything draws: every readout below is tinted by this.
+	UpdateSuitVariant();
+
 	// Clock was reset, reset delta
 	if (m_flTimeDelta < 0)
 		m_flTimeDelta = 0;
@@ -157,6 +165,30 @@ bool CHud::Redraw(float flTime, bool intermission)
 
 			pList = pList->pNext;
 		}
+	}
+
+	// cl_suit_debug 1: the Suit Variant as it actually arrives, top-left.
+	// Deliberately the RAW skin next to what was made of it, so a value that
+	// never leaves the server and a value that arrives out of range look
+	// different from each other rather than both reading as cyan.
+	if (m_pCvarSuitDebug && m_pCvarSuitDebug->value != 0)
+	{
+		cl_entity_t* player = gEngfuncs.GetLocalPlayer();
+
+		char sz[128];
+		if (player == nullptr)
+		{
+			sprintf(sz, "suit: no local player  (hud %d %s)",
+				m_iSuitVariant, GetSuitVariant(m_iSuitVariant).name);
+		}
+		else
+		{
+			sprintf(sz, "suit: skin %d  ->  %d %s  suit=%d",
+				player->curstate.skin, m_iSuitVariant,
+				GetSuitVariant(m_iSuitVariant).name, HasSuit() ? 1 : 0);
+		}
+
+		DrawConsoleString(20, 20, sz);
 	}
 
 	// are we in demo mode? do we need to draw the logo in the top corner?

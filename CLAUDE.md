@@ -59,5 +59,8 @@ Out of scope: engine-level changes — graphics upgrades, physics, and anything 
 
 - Skill tree — definitions `game_shared/skill_defs.h` (both DLLs), server state `dlls/player_skills.cpp` / `.h`, client `cl_dll/vgui_skilltree.cpp` / `.h`
 - Inventory — `cl_dll/vgui_inventory.cpp`, `cl_dll/vgui_inventory_grid.cpp` and headers
+- Suit Variant — definitions `game_shared/suit_defs.h` (both DLLs), server `CItemSuit` in `dlls/items.cpp`,
+  client `CHud::UpdateSuitVariant` / `SuitColour*` in `cl_dll/hud.cpp`. The value is the player's
+  `pev->skin`; there is no save field and no user message for it
 
 Skill ids are saved and are bit positions in the sync message: keep them stable once added, and never reuse a removed one. All static Skill data is one shared table — see [instructions/04-CUSTOM-FEATURES.md](instructions/04-CUSTOM-FEATURES.md).

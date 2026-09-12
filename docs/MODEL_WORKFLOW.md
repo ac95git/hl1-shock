@@ -71,7 +71,14 @@ leaves out and `mdlinfo.py --extract-bmp` can supply.
 - **Skin families are the switch for texture states.** The viewmodel's skin is never sent by the
   server; `cl_dll/view.cpp` sets it every frame from the model's family count: three families are the
   suit colours, six are suit × cold/hot in glove-major order. `qc_skins.py --state COLD=HOT` lays the
-  six out.
+  six out. A **world** model's skin is different — it is the entity's own `pev->skin`, which the server
+  sets and the engine networks, as `item_suit` does from its `variant` keyvalue.
+- **`$externaltextures` puts the skin families in the T file.** A model that keeps it (the stock
+  `w_suit` does) compiles to `NAME.mdl` plus `NAMET.mdl`, and the texture header — textures, flags and
+  `numskinfamilies` — is entirely in the T file. `mdlinfo.py` on the `.mdl` alone correctly reports
+  **zero** textures and zero families, which reads like a failed compile and is not; read the T file.
+  Both files have to reach `models/` and `topmod/models/`: ship only the first and the engine falls back
+  to valve's textures with no error.
 - Crowbar may decompile a model without writing its textures. `mdlinfo.py --extract-bmp=DIR` pulls them
   straight out of the `.mdl` under their stored names.
 - The `'Scene' object has no attribute 'vs'` traceback Source Tools prints under factory settings is
@@ -99,6 +106,7 @@ Working directory, `E:\CustomAssets\scripts\`:
 | `katana_hot.py` | The katana's hot blade texture: the gold metal of `katana_02.bmp` turned gauss orange grading to white-hot along the metal's own shading; everything else untouched. |
 | `katana_world.py [--scale] [--tex]` | `w_katana.mdl` from the Dystopia world prop without Blender: one bone at the origin, the katana rotated to lie on its flat, centred, floor at z 0, scaled 0.82 to match the viewmodel blade, UVs wrapped, one-frame idle, QC, studiomdl, render. The pattern for any single-bone world model from a Source prop. |
 | `gloves_rollout.py [model ...]` | The whole thing for every stock viewmodel: copy the decompile to `models/src/`, gloves, QC, studiomdl, verify three skin families in the `.mdl`, orbit render, contact sheet. Stops and names the model if a decompile is missing. |
+| `suit_world.py [--no-compile]` | The `w_suit` pickup in three Suit Variants: a colour wash over the stock front/back textures (hue from the variant, luminance from the suit, a 22% wash on the grey panels), skins.qc, QC, studiomdl, a three-up preview sheet. Looser thresholds than the gloves on purpose — see below. Produces `w_suit.mdl` **and** `w_suitT.mdl`; both ship. |
 
 Blender is always run as `blender.exe --background --python SCRIPT -- ARGS`. Renders use Workbench, so no
 GPU is needed and a run takes seconds.
@@ -147,11 +155,12 @@ where the numbers say it is.
 
 - **Animations of its own.** Everything so far borrows a stock sequence set. Retargeting the Dystopia
   animations onto the 11-bone rig, or authoring new ones, is unexplored.
-- **Uniform hands across the vanilla set: done at texture level.** Fourteen stock viewmodels (all but
-  the hivehand, which has no glove, and the chumtoad, which the game never uses) plus the katana compile
-  with three glove skins from `gloves_rollout.py`; the compiled files are in the repo's `models/` and
-  the install's `topmod/models/`. Skin 0 (cyan) shows with no code. Selecting red or purple per player is
-  code work: the viewmodel's `pev->skin` on deploy. The suit model itself is untouched.
+- **Uniform hands across the vanilla set: done, and selected per player.** Fourteen stock viewmodels (all
+  but the hivehand, which has no glove, and the chumtoad, which the game never uses) plus the katana
+  compile with three glove skins from `gloves_rollout.py`; the compiled files are in the repo's `models/`
+  and the install's `topmod/models/`. Which one shows is the player's Suit Variant — see PILLARS.md. The
+  **suit model itself** is still the stock one, colour-washed into three variants by `suit_world.py` as a
+  stand-in, and only for the pickup: the chargers and the player model are untouched.
 - **Accent lights do not glow in the dark.** Studiomdl from the SDK cannot flag part of a texture
   fullbright; the seams dim with the map lighting like the rest of the glove. Making them emissive means
   a separate accent texture with `STUDIO_NF_FULLBRIGHT` set in the compiled `.mdl`, which is a mesh change

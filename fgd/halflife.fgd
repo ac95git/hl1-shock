@@ -1694,8 +1694,18 @@
 @PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/crystal.mdl") = item_skillpoint : "Skill Point" []
 @PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/sphere.mdl") = item_resettoken : "Reset Token" []
 @PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_isotopebox.mdl") = item_rowgrant : "Row Grant (+1 Inventory Row)" []
-@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_suit.mdl") = item_suit : "HEV Suit" 
+// The Suit Variant a pickup grants. Leaving it at 0 is exactly what a vanilla
+// item_suit does, so stock maps need no edit. Taking a suit of a variant the
+// player is not wearing switches them to it, armour untouched; a suit of the
+// variant already worn is refused. Use-only: the player presses use at it.
+@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_suit.mdl") = item_suit : "HEV Suit"
 [
+	variant(choices) : "Suit Variant" : 0 =
+	[
+		0 : "Agility (cyan)"
+		1 : "Strength (red)"
+		2 : "Intelligence (purple)"
+	]
 	spawnflags(Flags) =
 	[
 		1 : "Short Logon" : 0

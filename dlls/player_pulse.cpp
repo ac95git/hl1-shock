@@ -14,6 +14,7 @@
 #include "player_pulse.h"
 #include "UserMessages.h"
 #include "game.h"
+#include "suit_defs.h"
 #include <algorithm>
 
 //=========================================================
@@ -478,7 +479,9 @@ bool CPlayerPulse::TryPulse(CBasePlayer* pPlayer)
 	m_flShieldEndTime = gpGlobals->time + PulseWindowFor(pPlayer);
 	m_bAbsorbed = false;
 
-	DrawShieldEffect(pPlayer, 64, 200, 255);
+	// The Shield is the suit's own field, so it is the suit's own colour.
+	const SuitVariantDef& suit = GetSuitVariant(pPlayer->pev->skin);
+	DrawShieldEffect(pPlayer, suit.r, suit.g, suit.b);
 
 	EMIT_SOUND(ENT(pPlayer->pev), CHAN_ITEM, k_PulseSoundFire, 1.0, ATTN_NORM);
 
