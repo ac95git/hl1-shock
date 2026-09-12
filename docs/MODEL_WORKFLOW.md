@@ -46,7 +46,13 @@ hand, the same arrangement as `sprites/`. Sources stay in `E:\CustomAssets`; the
 - **Sequence order is a contract with the code.** Weapons address sequences by index (`CROWBAR_DRAW` is
   the second sequence, and so on). A model that replaces or reuses a weapon's animations keeps its QC's
   sequence list in the same order, with nothing inserted.
-- **Textures are 8-bit BMP**, one palette each, up to 512×512. Names containing `CHROME` get the chrome
+- **UVs must lie in 0..1.** Source models routinely carry UVs whole tiles outside it (the Dystopia
+  katana's v ran -2.4..-2.1). Blender repeats the texture so the preview looks right; studiomdl multiplies
+  u,v by the texture size as they are, the game samples off the texture, and the surface comes out black.
+  Shift each face by whole tiles before export; `katana_graft.py` does. A whole-number shift changes
+  nothing on a repeating texture.
+- **Textures are 8-bit BMP**, one palette each, up to 512×512. A 24- or 32-bit BMP has to be quantised
+  first (Pillow: `convert("RGB").quantize(256).save(..., "BMP")`). Names containing `CHROME` get the chrome
   flag from studiomdl; the SMD material name is the BMP file name, exactly, including a double `.bmp.bmp`
   where valve has one.
 - Crowbar may decompile a model without writing its textures. `mdlinfo.py --extract-bmp=DIR` pulls them
