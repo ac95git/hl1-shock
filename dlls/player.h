@@ -20,7 +20,6 @@
 #include "player_inventory.h"
 #include "player_pulse.h"
 #include "player_infusion.h"
-#include "player_regen.h"
 
 
 #define PLAYER_FATAL_FALL_SPEED 1024															  // approx 60 feet
@@ -377,9 +376,6 @@ public:
 
 	// ---- The Infusion ----
 	CPlayerInfusion m_infusion;
-
-	// ---- Passive regeneration (Skill-driven) ----
-	CPlayerRegen m_regen;
 
 	// Last Pickup Prompt sent, so it is only resent when it changes.
 	// Transient display state -- deliberately not saved; it is re-derived on

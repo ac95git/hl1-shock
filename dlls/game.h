@@ -57,8 +57,6 @@ extern cvar_t skill_reset_tokens_start;
 extern cvar_t skill_health_bonus;
 extern cvar_t skill_armor_ratio_scale;
 extern cvar_t skill_fall_damage_scale;
-extern cvar_t skill_health_regen_rate;
-extern cvar_t skill_battery_regen_rate;
 extern cvar_t skill_battery_bonus;
 extern cvar_t skill_crowbar_range_scale;
 extern cvar_t skill_crowbar_damage_scale;

@@ -45,7 +45,9 @@ and tier are one table row. The drift hazard is deleted rather than managed.
 would a third, or per-Skill icons, or anything else static. The message went from 116 bytes to 4.
 
 **Client and server cannot disagree about the Skill set.** Both derive `k_MaxSkills` and
-`k_SkillMaskBytes` from the same constant.
+`k_SkillMaskBytes` from the same header. *(Amended 2026-09-13: the mask and the saved unlocked array are
+sized by a fixed `k_SkillIdCeiling` of 96 rather than by `k_MaxSkills`, so the message length and the save
+format stop changing as Skills are added. The decision above is unchanged.)*
 
 **The gating rule has one implementation.** `SkillPrereqMet` in the shared header is called by the
 server against its own unlocked array and by the client against the mask it was sent.

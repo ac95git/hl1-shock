@@ -27,7 +27,7 @@ This file records **what exists today**. Intended work that has not been built l
 | 1 | [Exploration](#1-exploration) | **Not started** | Its rewards exist — Row Grants, Skill Points, Reset Tokens are all findable entities — but no map places one, so nothing is explored *for* yet. |
 | 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar. Melee Skills land, and the Backstab gives melee its first positional decision. Numbers untuned. |
 | 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. |
-| 4 | [Skill trees](#4-skill-trees) | **Playable** | 15 curated Skills, **all with effects**. Points and Reset Tokens are earned and spent, the tree fits any screen, and nothing in it lies about what it does. Numbers untuned; no map places a Skill Point yet. |
+| 4 | [Skill trees](#4-skill-trees) | **Playable** | 14 curated Skills, **all with effects**. Points and Reset Tokens are earned and spent, the tree fits any screen, and nothing in it lies about what it does. Numbers untuned; no map places a Skill Point yet. |
 | 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work over a server-owned model. Row Grants are now placeable; Boxes are the remaining gap. |
 | 6 | [Stealth](#6-stealth) | **Partial** | Concealment and Suspicion are live: monsters no longer acquire the player on sight, they fill a meter at a rate set by angle, distance, stance and light, and the player is warned by `CHudConceal`. Quiet movement is deliberate. Nothing after acquisition has changed — once acquired, a monster stays acquired. |
 
@@ -459,9 +459,9 @@ one, and it draws up the left edge from mid-screen instead.
 `ResetHUD` wipes the client's icon list, so `ForgetSentIcon()` is called at the `m_fInitHUD` site in
 `UpdateClientData` — without it a save loaded mid-Infusion heals invisibly.
 
-**Med Expert** (Skill id 19) — `+infusion_duration_bonus` seconds, additive. A root node, deliberately:
-every skill in the survivability column is still inert, so gating it behind one would charge points for
-nothing to reach something.
+**Med Expert** (Skill id 19) — `+infusion_duration_bonus` seconds, additive. A root node: it was briefly
+gated on Regeneration, which was cut on 2026-09-13, and it is the root of the Medical Route in
+[SKILL_TREE.md](SKILL_TREE.md#medical).
 
 **Three tuning cvars** in `dlls/game.cpp`: `infusion_rate` (4), `infusion_duration` (10),
 `infusion_duration_bonus` (5). Named for the mechanic rather than the Syringe, so a later source of an
@@ -510,9 +510,10 @@ table row, one `EItemTypeId`, one `CItem` subclass, one FGD line, one `case`.
 
 **Status: Playable**
 
-**Planned:** the five reserved ids, each now waiting on its own thing rather than on one shared blocker.
-`SprintSpeed` and `HighJump` need `pm_shared/`; `CrowbarSpeed` needs the crowbar's first-swing damage rule
-untangled from its cadence; `HiveCapacity` and `HiveRegrowth` are held for the alien column below.
+**Planned:** the seven Routes in [SKILL_TREE.md](SKILL_TREE.md), built one at a time from
+[ROADMAP.md](ROADMAP.md#pillar-4-routes). Of the seven reserved ids, `CrowbarSpeed` returns as Melee Speed
+with the Melee Route and `HiveCapacity` / `HiveRegrowth` with the Alien Route; the other four are cut for
+good.
 
 Every Skill in the tree changes how the game plays. The pillar's own acceptance criterion — "every unlocked
 skill has an observable effect" — is met, which is what moved this off Scaffolded.
@@ -521,13 +522,22 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
 
 **Definitions** — `game_shared/skill_defs.h`, compiled into both DLLs
 
-- **16 Skills in the tree**, across seven columns: Melee (0), the Pulse (1–2), the suit (3), Armaments (4),
-  Survivability (5–6). Total cost **35 points**, which is the target for how many Skill Points a campaign
-  places.
-- **Five reserved ids** with no row: `HighJump` and `SprintSpeed` need movement prediction (`pm_shared/`);
-  `CrowbarSpeed` is entangled with the crowbar's first-swing damage rule; `HiveCapacity` and
-  `HiveRegrowth` are held for the alien column below. A reserved row is `SKILL_RESERVED(id)` — the id
-  stays frozen and the Skill returns unchanged later, which is exactly what `FastReload` (id 3) just did.
+- **14 Skills in the tree**, across seven columns: Melee (0), the Pulse (1–2), the suit (3), Armaments (4),
+  Survivability (5–6). Total cost **29 points**. This is the pre-Routes tree minus four cuts; the Routes
+  replace it node by node, and the campaign's point target is the pricing pass's open question.
+- **Seven reserved ids** with no row. Four are **cut for good** (2026-09-13): `HealthRegen` (10) and
+  `BatteryRegen` (14) rewarded standing still, `HighJump` (5) and `SprintSpeed` (6) altered the normal
+  movement rules. `CrowbarSpeed` (11) waits on the crowbar's first-swing damage rule being dropped;
+  `HiveCapacity` (20) and `HiveRegrowth` (21) are held for the alien column below. A reserved row is
+  `SKILL_RESERVED(id)` — the id stays frozen and, for the ones that return, the Skill comes back unchanged,
+  which is exactly what `FastReload` (id 3) did.
+- **The id space has a ceiling.** `k_SkillIdCeiling` (96) sizes the saved unlocked array and the sync
+  mask; `ESkillId::_Count` bounds only the definition table, and a `static_assert` fires if it ever passes
+  the ceiling. Before this, both were sized by `_Count`, and `CRestore::ReadField` reads as many array
+  entries as the code declares rather than as many as the save holds, so every Skill added over-read an
+  older save's unlocked bits into the bytes of the field after them. The array is saved under its own field
+  name (`m_bUnlockedCeiling`) so a save from before the ceiling is skipped rather than over-read: it loads
+  with its tree reset and every point refunded, which is the same self-correction a cut Skill relies on.
 - A `static_assert` enforces that the table is ordered by id. It is indexed positionally, so a row out of
   place would silently make a save's unlocked bits refer to different abilities — the grouping that reads
   most naturally to a human is exactly the mistake, so it is a compile error.
@@ -556,9 +566,10 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
 
 **Networking**
 
-- `gmsgSkillTree`, **fixed** length: a bitmask of unlocked Skills, one bit per id, then the player's unspent
-  Skill Points, then their banked Reset Tokens. 5 bytes at nineteen Skills, down from 116. Static Skill data
-  is shared rather than sent — see [ADR-0008](adr/0008-skill-definitions-are-shared-not-networked.md).
+- `gmsgSkillTree`, **fixed** length: a bitmask of unlocked Skills, one bit per id up to the ceiling, then
+  the player's unspent Skill Points, then their banked Reset Tokens. 14 bytes (12 of mask), and the length
+  no longer changes when a Skill is added. Static Skill data is shared rather than sent — see
+  [ADR-0008](adr/0008-skill-definitions-are-shared-not-networked.md).
 - Client → server is the `skill_unlock <id>` console command (`dlls/client.cpp:647`); on success the server
   re-sends the state.
 - Client handler: `CHudAmmo::MsgFunc_SkillTree` in `cl_dll/ammo.cpp`. It drops any message whose size
@@ -599,7 +610,7 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
 
 ### What's missing
 
-- **Nothing, for the effects.** All fifteen Skills in the tree now do something. What is left is tuning:
+- **Nothing, for the effects.** All fourteen Skills in the tree do something. What is left is tuning:
   every number is a first guess, and none has been judged against a full playthrough.
 
   `MoreHealth` is the one that does not follow the read-it-where-it-is-computed pattern, and could not:
@@ -701,20 +712,19 @@ Two decisions inside that are worth knowing rather than rediscovering:
   engine's cvar functions and a listen server shares one registry. Only knobs a predicted value depends on
   belong there; a server-only effect keeps reading its `cvar_t` from `game.h`.
 
-`SprintSpeed` and `HighJump` are *not* unblocked by this. They change movement, which `pm_shared/` owns,
-and nothing in that path reaches `m_skills`.
+`SprintSpeed` and `HighJump` were never unblocked by this, since `pm_shared/` reaches nothing in
+`m_skills`, and on 2026-09-13 they were cut outright: the normal movement rules stay, and reaching is a
+Module's job.
 
-**`CPlayerRegen`** (`dlls/player_regen.cpp`) holds `HealthRegen` and `BatteryRegen`. It is deliberately
-**not** an Infusion — CONTEXT.md draws that line, and it has no duration, no icon and no start; it is
-simply true while the Skill is held. It borrows the Infusion's fractional accumulator and nothing else,
-because at 0.5/s a whole-number tick would round the entire effect away. One clock, two accumulators, so
-health and armour land on the same beat instead of drifting into two unrelated-looking effects. Carried
-fractions are dropped at full health, on death, and while neither Skill is held, so nothing pays out a
-point it never earned.
+**`CPlayerRegen` is gone.** It held `HealthRegen` and `BatteryRegen`, both cut on 2026-09-13 for rewarding
+standing still; the file, its `REGEN` save block and its two rate cvars went with them. A save written
+before that carries a `REGEN` block, which `CBasePlayer::Restore` consumes with no fields so the `PLAYER`
+block after it still reads. Its one reusable idea, the fractional accumulator, lives on in the Infusion
+where it came from.
 
 **`PlayerMaxArmor`** is now the only correct answer to "how much armour can this player hold". Every place
-that caps or fills armour must ask it rather than `MAX_NORMAL_BATTERY` — the battery item, the wall
-charger, and the regenerator — or `BatteryCapacity` silently does nothing through that route. It is also
+that caps or fills armour must ask it rather than `MAX_NORMAL_BATTERY` — the battery item and the wall
+charger — or `BatteryCapacity` silently does nothing through that route. It is also
 the first Skill whose effect the **client** has to know: `gmsgBattery` grew a second short carrying the
 player's maximum, because a HUD bar scaled against a fixed 100 shows full at 100 while the suit still has
 50 to take. `m_iClientBatteryMax` is tracked separately from `m_iClientBattery` so unlocking the Skill
@@ -753,7 +763,7 @@ grant Rows later without rework.
 
 ### Acceptance criteria (draft)
 
-- ~~Every unlocked skill has an observable effect.~~ **Met** — all 16 Skills in the tree do something.
+- ~~Every unlocked skill has an observable effect.~~ **Met** — all 14 Skills in the tree do something.
 - ~~Skill points are earned through play, not seeded.~~ **Met structurally** — `skill_points_start` is 0
   and points come only from `item_skillpoint`. Not yet met *in practice*: no map places one, so the only
   source today is the `skill_addpoints` cheat.

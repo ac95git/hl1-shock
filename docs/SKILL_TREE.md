@@ -351,4 +351,5 @@ tree's total, or the tree is deliberately not completable. Not decided; to be an
 
 Not decided. Melee and Weapon Specialist need the least new machinery; the Juggernaut needs a
 press-and-release Pulse command pair; the Dash and Alien Routes each need their Module. Before any of
-them: the id-space ceiling and the fitted icon draw, both in the ROADMAP infrastructure notes.
+them: the fitted icon draw, in the ROADMAP infrastructure notes. The id-space ceiling and the four cuts
+were built 2026-09-13.

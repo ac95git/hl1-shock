@@ -36,7 +36,10 @@ struct CPlayerSkills
     // gets to test m_iRowsBase <= 0 only because a Grid always has a Row.
     bool m_bInitialised  = false;
 
-    bool m_bUnlocked[k_MaxSkills] = {};
+    // Sized to the id ceiling rather than to _Count, so the saved array keeps
+    // one shape as Skills are added.  Only entries below k_MaxSkills mean
+    // anything; the rest are room.
+    bool m_bUnlocked[k_SkillIdCeiling] = {};
 
     // ---- Setup ----
 

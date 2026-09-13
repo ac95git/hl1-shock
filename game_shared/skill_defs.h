@@ -57,23 +57,21 @@ enum class ESkillId : int
 	FallResistance      = 7,  // fall damage -50%
 	MoreHealth          = 8,  // max health +25
 	ArmorEfficiency     = 9,  // armor absorbs 10% more damage
-	HealthRegen         = 10, // slowly regenerate health out of combat
 
-	// ---- Reserved: cut from the tree pending movement prediction ----
-	// Both change how the player MOVES, which pm_shared/ owns and neither
-	// m_skills nor the weapon prediction path reaches. They keep their ids
-	// and return unchanged when that work happens; they simply have no row
-	// in k_SkillDefs meanwhile.
-	//
-	// FastReload used to sit here for a different reason -- weapon-side
-	// prediction -- which is fixed, so it is in the tree above.
-	HighJump            = 5,  // jump height +30%
-	SprintSpeed         = 6,  // movement speed +15%
+	// ---- Cut, 2026-09-13.  Ids reserved forever; see docs/SKILL_TREE.md ----
+	// Four Skills were cut when the tree became Routes, for two reasons.
+	// Regeneration and Battery Regen rewarded standing still.  High Jump and
+	// Sprint Speed altered the normal movement rules, which is a Module's job
+	// (Dash, Hook) rather than a stat's.  Their ids are never reused.
+	HighJump            = 5,
+	SprintSpeed         = 6,
+	HealthRegen         = 10,
+	BatteryRegen        = 14,
 
-	// Reserved for a different reason: swing speed is predicted and reachable
-	// now, but the crowbar's attack cadence is entangled with the first-swing
-	// /follow-up damage rule at crowbar.cpp, which reads m_flNextPrimaryAttack
-	// to decide which it was. Retuning one retunes the other.
+	// Reserved: swing speed is predicted and reachable, but the crowbar's
+	// attack cadence is entangled with the first-swing/follow-up damage rule
+	// in crowbar.cpp, which reads m_flNextPrimaryAttack to decide which it
+	// was.  Returns as Melee Speed with the Melee Route, which drops that rule.
 	CrowbarSpeed        = 11, // crowbar swing speed +30%
 
 	// ---- The Pulse ----
@@ -88,7 +86,6 @@ enum class ESkillId : int
 	PulseRebound        = 17, // a deflect skips the Recharge, once per charge
 
 	BatteryCapacity     = 13, // +50 max battery
-	BatteryRegen        = 14, // passive armor regeneration
 
 	// ---- The Infusion ----
 	MedExpert           = 19, // longer Infusion from a Health Syringe
@@ -105,12 +102,34 @@ enum class ESkillId : int
 	_Count              = 22, // keep last
 };
 
+// How many ids have a row in k_SkillDefs.  Bounds every walk over the
+// definition table.  Grows by one with each Skill added.
 inline constexpr int k_MaxSkills = static_cast<int>(ESkillId::_Count);
 
-// Bytes needed to carry one bit per Skill in the sync message.
-// Both DLLs derive this from the same constant, so they cannot
-// disagree about the message length.
-inline constexpr int k_SkillMaskBytes = (k_MaxSkills + 7) / 8;
+// ---------------------------------------------------------
+// The id ceiling
+//
+// The unlocked array in a save and the mask on the wire are sized
+// to THIS, not to _Count.  CRestore::ReadField reads as many array
+// entries as the code declares, not as many as the save holds, so
+// an array sized by _Count changed shape with every Skill added and
+// an older save's unlocked bits were followed by the bytes of the
+// next field.  Sized once, to a ceiling, saves and the sync message
+// stop changing shape.  Ids at or past the ceiling do not exist;
+// the static_assert below is where that is enforced.
+//
+// Do not lower this: the save format is written against it.
+// ---------------------------------------------------------
+inline constexpr int k_SkillIdCeiling = 96;
+
+static_assert(k_MaxSkills <= k_SkillIdCeiling,
+	"ESkillId has grown past k_SkillIdCeiling; raise the ceiling (a save-format change) rather than "
+	"working around it");
+
+// Bytes needed to carry one bit per id up to the ceiling in the sync
+// message.  Both DLLs derive this from the same constant, so they
+// cannot disagree about the message length.
+inline constexpr int k_SkillMaskBytes = (k_SkillIdCeiling + 7) / 8;
 
 // ---------------------------------------------------------
 // SkillDef
@@ -153,11 +172,13 @@ struct SkillDef
 //   col0       col1     col2     col3     col4     col5     col6
 //
 // r0 Reach     Window            Capacity Mastery Fortitude
-// r1 Force     Recharge          BattRegen Reload ArmorExp  FallResist
-// r2 Follow-Up Discharge Rebound                  Regen     MedExpert
+// r1 Force     Recharge                   Reload  ArmorExp  FallResist
+// r2 Follow-Up Discharge Rebound                            MedExpert
 //
-// Total cost is 35 points, which is the target for how many Skill Points get
-// placed across a campaign -- see docs/PILLARS.md pillar 4.
+// Total cost is 29 points.  This layout is the pre-Routes tree with the four
+// cut Skills removed; the Routes in docs/SKILL_TREE.md replace it node by
+// node, and the gaps (col 3 below Capacity, col 5 below Armor Expert) are
+// theirs to fill.
 inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 {
 	//  id                        name                description                                                    sprite           col row cost prereq                     prereq2                  tier
@@ -173,24 +194,28 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	{ ESkillId::FastReload,      "Fast Reload",      "Every magazine you feed goes in 20% quicker.",                "d_9mmhandgun",   4,  1,  2,  ESkillId::ExtraDamage,     ESkillId::None,          ENodeTier::Medium },
 	{ ESkillId::ExtraDamage,     "Weapon Mastery",   "Every weapon you carry deals 10% more damage.",               "d_9mmAR",        4,  0,  3,  ESkillId::None,            ESkillId::None,          ENodeTier::Major  },
 
+	// 5-6: cut (movement rules)
 	SKILL_RESERVED(HighJump),
-	// Also carried a self-prerequisite bug, which goes away with the row.
 	SKILL_RESERVED(SprintSpeed),
 
-	// 7-10: survivability, cols 5-6
+	// 7-9: survivability, cols 5-6
 	{ ESkillId::FallResistance,  "Sure Footing",     "Falls deal half as much damage.",                             "item_longjump",  6,  1,  1,  ESkillId::MoreHealth,      ESkillId::None,          ENodeTier::Minor  },
 	{ ESkillId::MoreHealth,      "Fortitude",        "+25 maximum health.",                                         "item_healthkit", 5,  0,  2,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor  },
 	{ ESkillId::ArmorEfficiency, "Armor Expert",     "A tenth less damage gets past your armor.",                   "suit_full",      5,  1,  2,  ESkillId::MoreHealth,      ESkillId::None,          ENodeTier::Medium },
-	{ ESkillId::HealthRegen,     "Regeneration",     "Wounds slowly close on their own.",                           "cross",          5,  2,  3,  ESkillId::ArmorEfficiency, ESkillId::None,          ENodeTier::Major  },
+
+	// 10: cut (rewarded idling)
+	SKILL_RESERVED(HealthRegen),
 
 	SKILL_RESERVED(CrowbarSpeed),
 
 	// 12: the Pulse, col 1
 	{ ESkillId::PulseWindow,     "Pulse Window",     "The Shield stands 0.15s longer.",                             "autoaim_c",      1,  0,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor  },
 
-	// 13-14: the suit, col 3
+	// 13: the suit, col 3.  One node until the Juggernaut Route fills the column.
 	{ ESkillId::BatteryCapacity, "Battery Capacity", "The suit holds 50 more armor.",                               "item_battery",   3,  0,  2,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor  },
-	{ ESkillId::BatteryRegen,    "Battery Regen",    "The suit slowly rebuilds its own armor.",                     "suit_empty",     3,  1,  3,  ESkillId::BatteryCapacity, ESkillId::None,          ENodeTier::Major  },
+
+	// 14: cut (rewarded idling)
+	SKILL_RESERVED(BatteryRegen),
 
 	// 15-17: the Pulse continued, cols 1-2
 	{ ESkillId::PulseRecharge,   "Pulse Recharge",   "The wait between Pulses is a third shorter.",                 "flash_empty",    1,  1,  2,  ESkillId::PulseWindow,     ESkillId::None,          ENodeTier::Medium },
@@ -201,9 +226,9 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// for a Pulse deflect, and does nothing for a player who never deflects.
 	{ ESkillId::CrowbarFollowUp, "Follow-Up",        "After a deflect, your next crowbar hit lands far harder.",     "d_gauss",        0,  2,  3,  ESkillId::CrowbarDamage,   ESkillId::PulseRecharge, ENodeTier::Major  },
 
-	// 19: medical, col 6. Re-parented off root now that the whole survival
-	// line is shipping -- Regeneration is the node it belongs behind.
-	{ ESkillId::MedExpert,       "Med Expert",       "An Infusion runs 5 seconds longer.",                          "flash_full",     6,  2,  2,  ESkillId::HealthRegen,     ESkillId::None,          ENodeTier::Medium },
+	// 19: medical, col 6. A root again: it was gated on Regeneration, which is
+	// cut, and it is the root of the Medical Route in docs/SKILL_TREE.md.
+	{ ESkillId::MedExpert,       "Med Expert",       "An Infusion runs 5 seconds longer.",                          "flash_full",     6,  2,  2,  ESkillId::None,            ESkillId::None,          ENodeTier::Medium },
 
 	// 20-21: the alien column, held until it opens
 	SKILL_RESERVED(HiveCapacity),
@@ -243,21 +268,23 @@ inline const SkillDef* GetSkillDef(ESkillId id)
 }
 
 // ---------------------------------------------------------
-// The unlocked mask -- one bit per Skill, indexed by id.
+// The unlocked mask -- one bit per id up to the ceiling.
 //
 // This is the whole of what the server tells the client about
-// which Skills a player has.
+// which Skills a player has.  Bounded by the ceiling, not by
+// _Count: the mask is storage, and what it holds is decided by
+// whoever walks the definition table.
 // ---------------------------------------------------------
 inline bool SkillMaskGet(const unsigned char* mask, int id)
 {
-	if (!mask || id <= 0 || id >= k_MaxSkills)
+	if (!mask || id <= 0 || id >= k_SkillIdCeiling)
 		return false;
 	return (mask[id >> 3] & (1 << (id & 7))) != 0;
 }
 
 inline void SkillMaskSet(unsigned char* mask, int id, bool value)
 {
-	if (!mask || id <= 0 || id >= k_MaxSkills)
+	if (!mask || id <= 0 || id >= k_SkillIdCeiling)
 		return;
 	const unsigned char bit = static_cast<unsigned char>(1 << (id & 7));
 	if (value)

@@ -153,7 +153,9 @@ of this. `CrowbarSpeed` (11) also stays reserved, but for a new and smaller reas
 cadence silently makes every swing a follow-up. That is a damage-rule problem, not a prediction one.
 
 The ceiling the entry noted is unchanged in kind and further away in practice: ids ≥ 40 would need a longer
-message. Ids are frozen and only ever grow, so the day that matters is real but distant.
+message. Ids are frozen and only ever grow, so the day that matters is real but distant. *(Superseded
+2026-09-13: the mask is now sized to a fixed `k_SkillIdCeiling` of 96 ids, so the message length no longer
+moves with the Skill count at all. `SprintSpeed` and `HighJump` were cut outright the same day.)*
 
 Everything below is the original diagnosis, as written before the fix. Kept because it is what made the
 work small, and because the two places it was wrong are worth more than the entry would be if trimmed.

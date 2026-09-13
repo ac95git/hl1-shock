@@ -141,8 +141,6 @@ Raising `skill_points_start` is the way to work on the tree UI without hunting f
 | `skill_health_bonus` | 25 | Extra max health from Fortitude |
 | `skill_armor_ratio_scale` | 0.9 | Armor Expert multiplies `ARMOR_RATIO` — the share of a blow that gets **past** armor — so lower is better armor |
 | `skill_fall_damage_scale` | 0.5 | Sure Footing multiplies fall damage |
-| `skill_health_regen_rate` | 0.5 | Regeneration, HP per second |
-| `skill_battery_regen_rate` | 0.5 | Battery Regen, armor per second |
 | `skill_battery_bonus` | 50 | Extra max armor from Battery Capacity |
 | `skill_crowbar_range_scale` | 1.25 | Crowbar Reach multiplies the 32-unit swing trace |
 | `skill_crowbar_damage_scale` | 1.5 | Crowbar Force multiplies crowbar damage |
@@ -153,10 +151,10 @@ Two rules that are easy to break:
 
 - **Never cap or fill armor against `MAX_NORMAL_BATTERY`.** Call `PlayerMaxArmor(pPlayer)` — Battery
   Capacity raises the ceiling, and any route that assumes 100 makes the Skill silently do nothing through
-  that route. The battery item, the wall charger and the regenerator all ask.
-- **Regeneration is not an Infusion.** `CPlayerRegen` has no duration, icon or start; see
-  [CONTEXT.md](../CONTEXT.md). It shares only the fractional accumulator, which is load-bearing at these
-  rates — 0.5 HP/s rounded to whole points per tick would round the whole effect away.
+  that route. The battery item and the wall charger both ask.
+- **Nothing passive.** Regeneration and Battery Regen were cut on 2026-09-13 because they rewarded
+  standing still, and `CPlayerRegen` went with them. Do not add a Skill whose effect accrues while the
+  player does nothing; see the principles in [docs/SKILL_TREE.md](../docs/SKILL_TREE.md).
 - **Scale player damage at the chokepoints, not per weapon.** `SkillScaleWeaponDamage` is called from
   `ApplyMultiDamage` and from the direct-`TakeDamage` branch of `RadiusDamage` — every player weapon
   reaches one or the other. Do not scale before the branch in `RadiusDamage`: the other side already goes
@@ -191,8 +189,9 @@ Two traps:
   deliberate — it keeps a second copy of every default out of the header.
 
 `pm_shared/` is still out of reach. It runs from `playermove_t`, not `CBasePlayer`, so a Skill that changes
-movement speed or jump height cannot use any of this; `SprintSpeed` and `HighJump` stay `SKILL_RESERVED`
-for that reason.
+movement speed or jump height cannot use any of this. No Skill should: `SprintSpeed` and `HighJump` were
+cut for good on 2026-09-13 because the normal movement rules stay, and a Module (the long jump's
+physics-key route) is how movement changes reach `pm_shared/`.
 
 ## Adding a Skill
 
@@ -201,7 +200,10 @@ compiled into both DLLs. Adding a Skill is one enum entry and one table row — 
 keep in step, and no networking change. See
 [ADR-0008](../docs/adr/0008-skill-definitions-are-shared-not-networked.md).
 
-1. Add a new entry to `ESkillId`, before `_Count`, which sizes everything else.
+1. Add a new entry to `ESkillId`, before `_Count`, which bounds the definition table. The saved unlocked
+   array and the sync mask are sized by `k_SkillIdCeiling` (96), not by `_Count`, so adding a Skill changes
+   neither the save format nor the message length; a `static_assert` fires if `_Count` ever passes the
+   ceiling. Do not lower the ceiling, and treat raising it as a save-format change.
 2. Add a matching row to `k_SkillDefs[]`. **The table is indexed positionally by id**, so the row must sit
    at its id's index or every Skill after it shifts onto the wrong node.
 3. Set the fields:
@@ -242,7 +244,8 @@ grouping.
 ## Notes
 
 - Keep skill ids stable once they are saved or sent over the network.
-- Client and server derive `k_MaxSkills` and `k_SkillMaskBytes` from the same constant, so they cannot
-  disagree about the Skill set. `MsgFunc_SkillTree` drops a message whose size does not match.
+- Client and server derive `k_MaxSkills` and `k_SkillMaskBytes` from the same header, so they cannot
+  disagree about the Skill set or the message length. `MsgFunc_SkillTree` drops a message whose size does
+  not match.
 - "Available" is computed client-side for display. The server re-validates every unlock in `TryUnlock()`,
   so a client that lies about availability still cannot unlock anything.

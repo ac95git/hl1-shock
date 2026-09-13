@@ -24,7 +24,15 @@ static TYPEDESCRIPTION g_SkillsSaveData[] =
     DEFINE_FIELD(CPlayerSkills, m_iPointsGranted, FIELD_INTEGER),
     DEFINE_FIELD(CPlayerSkills, m_iResetTokens,   FIELD_INTEGER),
     DEFINE_FIELD(CPlayerSkills, m_bInitialised,   FIELD_BOOLEAN),
-    DEFINE_ARRAY(CPlayerSkills, m_bUnlocked,      FIELD_BOOLEAN, k_MaxSkills),
+
+    // The unlocked array is saved under its own name, not the member's.
+    // CRestore::ReadField copies as many entries as the code declares, so a
+    // save written when this array was sized by _Count (22 entries, under
+    // the name "m_bUnlocked") would be over-read into the bytes that follow
+    // it.  A field the save does not contain is simply left cleared, which
+    // for this array means an old save loads with its tree reset and every
+    // point refunded -- the same self-correction a cut Skill relies on.
+    { FIELD_BOOLEAN, "m_bUnlockedCeiling", static_cast<int>(offsetof(CPlayerSkills, m_bUnlocked)), k_SkillIdCeiling, 0 },
 };
 
 // =====================================================================

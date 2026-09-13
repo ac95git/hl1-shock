@@ -8,7 +8,7 @@ build on, and list the questions that have to be answered before the first line 
 is built, its content moves into PILLARS.md and the entry here is deleted — this file only ever shrinks
 from the top.
 
-**Last updated:** 2026-09-13 (branch `hl-shock` — all seven Skill Tree Routes shaped; the Dash and the alien Module shaped with them, the katana reworked on paper, a melee roster; both Regens, High Jump and Sprint cut)
+**Last updated:** 2026-09-13 (branch `hl-shock` — all seven Skill Tree Routes shaped; the Dash and the alien Module shaped with them, the katana reworked on paper, a melee roster; both Regens, High Jump and Sprint cut, and the cuts and the id ceiling built the same day)
 
 ## Shape legend
 
@@ -74,8 +74,8 @@ What that leaves:
 | --- | --- | --- |
 | Dash | [Modules](#pillar-3-modules) | `pm_shared/` — but the long jump's physics-key route reaches it |
 | Hook | [Modules](#pillar-3-modules) | `pm_shared/` — same route |
-| Sprint speed (`SprintSpeed`, id 6) | reserved, cut from the tree | `pm_shared/` |
-| High jump (`HighJump`, id 5) | reserved, cut from the tree | `pm_shared/` |
+| Sprint speed (`SprintSpeed`, id 6) | cut from the tree for good, 2026-09-13 | nothing — cut by design, see the [Routes](#pillar-4-routes) |
+| High jump (`HighJump`, id 5) | cut from the tree for good, 2026-09-13 | nothing — cut by design, see the [Routes](#pillar-4-routes) |
 | Crowbar swing speed (`CrowbarSpeed`, id 11) | reserved, cut from the tree | nothing, as of 2026-09-13: the damage rule below is being dropped, see the [Melee Route](#melee) |
 | Draw speed | [Weapon handling](#weapon-handling) | nothing — unblocked |
 
@@ -1512,17 +1512,11 @@ and wants an ADR when the first Route lands.
 
 ### Settled 2026-09-13
 
-- **Battery Regen (id 14) is cut.** It is incredibly overpowered, and it rewards idling, which the mod does
-  not want. It becomes `SKILL_RESERVED` and the id is never reused. Battery Capacity (13) keeps its place;
-  the suit column is one node until the Juggernaut Route gives it more.
-- **High Jump (id 5) is cut.** Higher places should be reachable, but **without altering the normal movement
-  rules**. Reaching is a Module's job (Dash, Hook, see [Modules](#pillar-3-modules)), not a stat's. The id
-  stays reserved; the physics-key route noticed for Modules is still the right route for the Modules
-  themselves.
-- **Regeneration (id 10) and Sprint Speed (id 6) are cut too**, confirmed later the same day, for the same
-  two reasons respectively: passive out-of-combat healing rewards idling, and sprint alters the normal
-  movement rules. Regeneration was the parent of Med Expert (19), which goes back to being a root, where it
-  started. `CPlayerRegen` loses both its Skills and can go with them.
+- **Four Skills are cut, and the cuts are built.** Battery Regen (14) and Regeneration (10) rewarded
+  idling; High Jump (5) and Sprint Speed (6) altered the normal movement rules, and reaching is a Module's
+  job (Dash, Hook, see [Modules](#pillar-3-modules)). All four are `SKILL_RESERVED` with their ids frozen,
+  `CPlayerRegen` is gone with its two Skills, and Med Expert (19) is a root again. The record is
+  [SKILL_TREE.md](SKILL_TREE.md#cut-and-reserved) and [PILLARS pillar 4](PILLARS.md#4-skill-trees).
 - **Stacking is the goal, not a hazard.** Every multiplier a Route adds is meant to multiply the others.
   The Backstab's current tuning (49.5 against a grunt's 50, so that a one-shot is *not* reliable at full
   melee investment) still describes the early tree. It does not describe the endgame, which is meant to
@@ -2025,10 +2019,8 @@ Route:
 
 Facts found while sizing a bigger tree, so they are not found twice.
 
-- **Grow the id space once, to a ceiling.** `CRestore::ReadField` reads as many array entries as the code
-  declares, not as many as the save holds (`dlls/util.cpp:2262`). Every time `m_bUnlocked` grows, a save
-  that has unlocks in it reads the next field's bytes into the new slots. Size the saved array and the sync
-  mask to a fixed ceiling (96 is plenty) decoupled from `ESkillId::_Count`, so saves stop changing shape.
+- ~~**Grow the id space once, to a ceiling.**~~ **Built 2026-09-13**: `k_SkillIdCeiling` (96) sizes the
+  saved array and the sync mask, and adding a Skill no longer changes either. See PILLARS pillar 4.
 - **The stealth ids are not actually reserved.** The stealth entry says ids 22 and 23 are `SKILL_RESERVED`;
   `_Count` is 22 and neither is in the enum. Add them when the Route that wants them is curated.
 - **Layout.** Around 30 nodes wants 7×5 or 9×4. Rows are cheap above 1280 wide (five rows scale to about

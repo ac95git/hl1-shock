@@ -118,8 +118,8 @@ _Avoid_: stim, stimpack, adrenaline, needle, shot
 
 **Infusion**:
 The healing a Health Syringe starts. It runs for its own duration, heals in small regular ticks while it
-does, and is gone when it ends. Nothing interrupts one, and only one runs at a time. A passive
-regeneration Skill is not an Infusion.
+does, and is gone when it ends. Nothing interrupts one, and only one runs at a time. Passive
+regeneration is not an Infusion, and the mod has none: its two regeneration Skills were cut on 2026-09-13.
 _Avoid_: regen, heal-over-time, HoT, buff, dose
 
 ### The Pulse

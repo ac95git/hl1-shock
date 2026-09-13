@@ -489,11 +489,6 @@ cvar_t skill_health_bonus = {"skill_health_bonus", "25"};
 // is better armor: 0.9 lets a tenth less through.
 cvar_t skill_armor_ratio_scale = {"skill_armor_ratio_scale", "0.9"};
 cvar_t skill_fall_damage_scale = {"skill_fall_damage_scale", "0.5"};
-// Passive regeneration, in points per second. Deliberately far slower than an
-// Infusion (4/s): this one never stops, so it is meant to erode chip damage
-// between fights rather than answer a fight.
-cvar_t skill_health_regen_rate = {"skill_health_regen_rate", "0.5"};
-cvar_t skill_battery_regen_rate = {"skill_battery_regen_rate", "0.5"};
 cvar_t skill_battery_bonus = {"skill_battery_bonus", "50"};
 cvar_t skill_crowbar_range_scale = {"skill_crowbar_range_scale", "1.25"};
 cvar_t skill_crowbar_damage_scale = {"skill_crowbar_damage_scale", "1.5"};
@@ -705,8 +700,6 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_health_bonus);
 	CVAR_REGISTER(&skill_armor_ratio_scale);
 	CVAR_REGISTER(&skill_fall_damage_scale);
-	CVAR_REGISTER(&skill_health_regen_rate);
-	CVAR_REGISTER(&skill_battery_regen_rate);
 	CVAR_REGISTER(&skill_battery_bonus);
 	CVAR_REGISTER(&skill_crowbar_range_scale);
 	CVAR_REGISTER(&skill_crowbar_damage_scale);

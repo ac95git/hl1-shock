@@ -186,7 +186,6 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClCompile Include="..\..\dlls\player_infusion.cpp" />
     <ClCompile Include="..\..\dlls\player_inventory.cpp" />
     <ClCompile Include="..\..\dlls\player_pulse.cpp" />
-    <ClCompile Include="..\..\dlls\player_regen.cpp" />
     <ClCompile Include="..\..\dlls\player_skills.cpp" />
     <ClCompile Include="..\..\dlls\python.cpp" />
     <ClCompile Include="..\..\dlls\rat.cpp" />
@@ -287,7 +286,6 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClInclude Include="..\..\dlls\player_infusion.h" />
     <ClInclude Include="..\..\dlls\player_inventory.h" />
     <ClInclude Include="..\..\dlls\player_pulse.h" />
-    <ClInclude Include="..\..\dlls\player_regen.h" />
     <ClInclude Include="..\..\dlls\player_skills.h" />
     <ClInclude Include="..\..\dlls\saverestore.h" />
     <ClInclude Include="..\..\dlls\schedule.h" />
