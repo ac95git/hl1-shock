@@ -1683,7 +1683,7 @@
 @PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_medkit.mdl") = item_healthkit : "Small Health Kit" []
 @PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_longjump.mdl") = item_longjump : "Longjump Module" []
 @PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_security.mdl") = item_security : "Security card" []
-@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_adrenaline.mdl") = item_syringe : "Health Syringe" []
+@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_syringe.mdl") = item_syringe : "Health Syringe" []
 // Progression pickups. All three are banked counters rather than Item Types:
 // they occupy no Cells and a full Grid cannot refuse them.
 //

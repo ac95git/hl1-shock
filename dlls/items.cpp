@@ -426,20 +426,21 @@ LINK_ENTITY_TO_CLASS(item_security, CItemSecurity);
 // than Half-Life's.  Everything genuinely new about it is the
 // Infusion it starts; as a pickup it is an ordinary CItem.
 //
-// w_adrenaline.mdl is a placeholder and lives in valve/models,
-// which the mod gets by game-directory fallback.
+// w_syringe.mdl is the mod's own: a one-bone model made by
+// E:\CustomAssets\scripts\syringe_world.py (docs/MODEL_WORKFLOW.md),
+// lying on the floor with the needle along the entity's forward axis.
 //=========================================================
 class CItemSyringe : public CItem
 {
 	void Spawn() override
 	{
 		Precache();
-		SET_MODEL(ENT(pev), "models/w_adrenaline.mdl");
+		SET_MODEL(ENT(pev), "models/w_syringe.mdl");
 		CItem::Spawn();
 	}
 	void Precache() override
 	{
-		PRECACHE_MODEL("models/w_adrenaline.mdl");
+		PRECACHE_MODEL("models/w_syringe.mdl");
 		PRECACHE_SOUND("items/smallmedkit1.wav");
 	}
 	// Always carried, never Auto-Consumed: waste is not computable for an

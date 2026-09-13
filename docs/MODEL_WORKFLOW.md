@@ -37,9 +37,12 @@ leaves out and `mdlinfo.py --extract-bmp` can supply.
 
 ## Facts that bind the work
 
-- **studiomdl rotates every SMD +90° about Z when it compiles.** Decompiled SMDs therefore face +Y while
-  the game's viewmodel space faces +X (Z up, Y left). Anything that measures "forward" on an SMD, or renders
-  one from the player's eye, has to apply that rotation first. `render_smd.py` does.
+- **studiomdl rotates every SMD +90° about Z when it compiles.** SMD **-Y** is the game's **+X**, forward
+  (Z up, Y left): the stock crowbar viewmodel's decompile runs y -0.9..-15.3 away from the hands, and a
+  world model built with its business end along -Y points the way the entity faces (`syringe_world.py`,
+  measured 2026-09-13; an earlier version of this line said +Y, which is backwards). Anything that
+  measures "forward" on an SMD, or renders one from the player's eye, has to apply that rotation first.
+  `render_smd.py` does.
 - **A viewmodel's origin is the player's eye.** Camera at the origin looking down +X. Half-Life's `fov 90`
   is the horizontal angle at 4:3; at widescreen the engine keeps the vertical angle (73.74°) and widens.
 - **A vertex belongs to exactly one bone.** GoldSrc has no weights. Blender Source Tools exports
@@ -106,6 +109,7 @@ Working directory, `E:\CustomAssets\scripts\`:
 | `qc_skins.py MODEL.qc SKINS.qc [--state COLD.bmp=HOT.bmp]` | Inserts (or replaces) the generated `$texturegroup` into a QC, before the first `$sequence`. Three skin families, cyan first, so skin 0 is what a model shows with no code at all; with `--state`, six, each glove family cold then hot. |
 | `katana_hot.py` | The katana's hot blade texture: the gold metal of `katana_02.bmp` turned gauss orange grading to white-hot along the metal's own shading; everything else untouched. |
 | `katana_world.py [--scale] [--tex]` | `w_katana.mdl` from the Dystopia world prop without Blender: one bone at the origin, the katana rotated to lie on its flat, centred, floor at z 0, scaled 0.82 to match the viewmodel blade, UVs wrapped, one-frame idle, QC, studiomdl, render. The pattern for any single-bone world model from a Source prop. |
+| `syringe_world.py [--scale] [--no-icon]` | `w_syringe.mdl` with **no source mesh at all**: the geometry is tubes, cones and discs emitted straight into the SMD (284 triangles, winding checked per triangle against its normals), the one 128×128 texture is painted by Pillow with the liquid, stopper and graduations on the barrel, then QC, studiomdl, the orbit render, and the Inventory Icon rendered and encoded to `sprites/inv/item_syringe.spr`. The pattern for a small prop authored from numbers — the progression pickups are the same job. |
 | `gloves_rollout.py [model ...]` | The whole thing for every stock viewmodel: copy the decompile to `models/src/`, gloves, QC, studiomdl, verify three skin families in the `.mdl`, orbit render, contact sheet. Stops and names the model if a decompile is missing. |
 | `suit_world.py [--no-compile]` | The `w_suit` pickup in three Suit Variants: a colour wash over the stock front/back textures (hue from the variant, luminance from the suit, a 22% wash on the grey panels), skins.qc, QC, studiomdl, a three-up preview sheet. Looser thresholds than the gloves on purpose — see below. Produces `w_suit.mdl` **and** `w_suitT.mdl`; both ship. |
 
@@ -166,5 +170,8 @@ where the numbers say it is.
   fullbright; the seams dim with the map lighting like the rest of the glove. Making them emissive means
   a separate accent texture with `STUDIO_NF_FULLBRIGHT` set in the compiled `.mdl`, which is a mesh change
   plus a flag patch, not a texture change.
-- **World and player models**, and a Python decompiler to drop the Crowbar step; `mdlinfo.py` has the
-  header parsing that one would start from.
+- **Rigged world and player models**, and a Python decompiler to drop the Crowbar step; `mdlinfo.py` has
+  the header parsing that one would start from. Static one-bone world models are covered twice over:
+  from a Source prop (`katana_world.py`) and from nothing (`syringe_world.py`).
+- **Meshes authored in Blender by hand or script.** Both authored models so far were emitted as SMD text
+  directly, which suits primitives and nothing with an organic surface.

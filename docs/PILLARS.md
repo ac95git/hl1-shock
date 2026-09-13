@@ -423,9 +423,10 @@ The `usable` flag replaced a hardcoded `id == Medkit || id == Battery` test in t
 which was found the only way it could be: the Syringe shipped with no **Use** button. The client now asks
 the shared table, so a new item cannot repeat it.
 
-**The Health Syringe** — Item Type id 5, `item_syringe`, three per Stack, one Cell. Uses
-`models/w_adrenaline.mdl`, which ships unreferenced in `valve/models` and reaches the mod by
-game-directory fallback. Placeable in a level editor via a `@PointClass` line in `fgd/halflife.fgd`.
+**The Health Syringe** — Item Type id 5, `item_syringe`, three per Stack, one Cell. Its world model is
+the mod's own `models/w_syringe.mdl` (since 2026-09-13; `w_adrenaline.mdl` from `valve/models` stood in
+before it), and its Grid Icon is a render of that model. Placeable in a level editor via a `@PointClass`
+line in `fgd/halflife.fgd`.
 
 It is the first Item Type with **no legacy `m_rgItems[]` twin** — `MAX_ITEMS` is 5, so
 `SyncLegacyItemCount` skips it and the Inventory is its only record. That path was already guarded, so
