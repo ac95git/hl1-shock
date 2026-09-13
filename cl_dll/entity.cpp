@@ -23,6 +23,56 @@ extern Vector v_origin;
 
 bool g_iAlive = true;
 
+// The progression pickups glow in the dark.  Their models carry additive
+// textures, but the studio renderer still multiplies those by the room's
+// lighting, so in a dark room they fade with everything else (seen in game,
+// 2026-09-14).  What actually lights a dark room is a dynamic light, and the
+// engine tells the client about every visible entity each frame right here, so
+// each pickup gets one: keyed by entity index, so it is refreshed rather than
+// stacked (MAX_DLIGHTS is 32), and it dies with the frame that stops seeing the
+// pickup.  Nothing crosses the network.  The colours are the family's own --
+// cyan is common, gold is scarce -- and the light sits at each model's heart
+// rather than on the floor.  progression_light is the radius; 0 turns it off.
+static void ProgressionLight(cl_entity_t* ent, const char* modelname)
+{
+	static const struct
+	{
+		const char* model;
+		byte r, g, b;
+		float lift, scale;
+	} k_Lights[] = {
+		{"models/w_skillpoint.mdl", 0, 200, 255, 9.0f, 1.0f},
+		{"models/w_resettoken.mdl", 255, 190, 40, 3.0f, 1.25f},
+		{"models/w_rowgrant.mdl", 80, 255, 80, 5.0f, 1.0f},
+	};
+	static cvar_t* s_radius = nullptr;
+
+	if (modelname == nullptr || ent == nullptr)
+		return;
+	if (s_radius == nullptr)
+		s_radius = gEngfuncs.pfnGetCvarPointer("progression_light");
+	if (s_radius == nullptr || s_radius->value <= 0.0f)
+		return;
+
+	for (const auto& k : k_Lights)
+	{
+		if (strcmp(modelname, k.model) != 0)
+			continue;
+		dlight_t* dl = gEngfuncs.pEfxAPI->CL_AllocDlight(ent->index);
+		if (dl == nullptr)
+			return;
+		VectorCopy(ent->origin, dl->origin);
+		dl->origin[2] += k.lift;
+		dl->radius = s_radius->value * k.scale;
+		dl->color.r = k.r;
+		dl->color.g = k.g;
+		dl->color.b = k.b;
+		dl->die = gEngfuncs.GetClientTime() + 0.1f;
+		dl->decay = 0.0f;
+		return;
+	}
+}
+
 /*
 ========================
 HUD_AddEntity
@@ -36,6 +86,7 @@ int DLLEXPORT HUD_AddEntity(int type, struct cl_entity_s* ent, const char* model
 	switch (type)
 	{
 	case ET_NORMAL:
+		ProgressionLight(ent, modelname);
 		break;
 	case ET_PLAYER:
 	case ET_BEAM:

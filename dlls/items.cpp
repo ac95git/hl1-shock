@@ -475,43 +475,39 @@ LINK_ENTITY_TO_CLASS(item_syringe, CItemSyringe);
 // at the moment of the pickup: a Skill Point is spent from the tree, a
 // Reset Token from the Upgrades tab, and a Row Grant spends itself.
 //
-// Every model below is a placeholder -- see docs/ART_DEBT.md.
+// The three models are the mod's own, one-bone props authored by
+// E:\CustomAssets\scripts\progression_world.py (docs/MODEL_WORKFLOW.md).
+// The pickup sound is still borrowed -- see docs/ART_DEBT.md.
 //=========================================================
 
-// The three are dressed alike so they read as one family, and apart from
-// equipment.  The glow shell is doing work the models cannot: every stand-in
-// is a borrowed prop that already means something else in Half-Life, and the
-// shell is what says "progression" before the player is near enough to make
-// out the shape.  Rank rides on colour -- cyan is common, gold is scarce.
+// The three read as one family, and apart from equipment, by each glowing in
+// the dark.  Two halves: a texture flagged additive in the compiled model is
+// the LOOK (it is still multiplied by the room's light, so alone it goes dark
+// with the room), and the client puts a dynamic light on every visible pickup
+// in the family's colour (cl_dll/entity.cpp, ProgressionLight), which is the
+// GLOW.  Nothing here on the server.  Rank rides on colour -- cyan is common,
+// gold is scarce.  Until 2026-09-13 they wore a kRenderFxGlowShell instead, as
+// cover for borrowed props that meant something else in Half-Life; the models
+// now carry their own shape and light, and the shell went with the stand-ins.
 //
-// Two things that are not obvious.  renderamt is shell THICKNESS here rather
-// than opacity (the precedent is dlls/player.cpp:749), and pev->scale is
-// networked (dlls/client.cpp:1490), so a prop built at the wrong size can be
-// brought down to pickup scale without an art pass.
-static void SetProgressionLook(entvars_t* pev, const Vector& colour, float scale)
-{
-	pev->renderfx = kRenderFxGlowShell;
-	pev->rendercolor = colour;
-	pev->renderamt = 25;
-	pev->scale = scale;
-}
+// If a prop ever needs resizing without an art pass: pev->scale is networked
+// (dlls/client.cpp:1490).
 
-// crystal.mdl is a Xen crystal formation, 54x54x94 units -- taller than the
-// player, hence the quarter scale.  It replaces w_longjump.mdl, which was
-// actively misleading rather than merely unevocative: the longjump module is
-// a real pickup the player can also find, and Modules will add more of them.
+// w_skillpoint.mdl: a machined hex shard, 18 units tall, standing point-down
+// in a dark ring base.  Faceted like the Xen crystal that stood in before it,
+// but cut rather than grown, so it is not scenery in a Black Mesa office.  The
+// shard itself is the light.
 class CItemSkillPoint : public CItem
 {
 	void Spawn() override
 	{
 		Precache();
-		SET_MODEL(ENT(pev), "models/crystal.mdl");
-		SetProgressionLook(pev, Vector(0, 200, 255), 0.25f);
+		SET_MODEL(ENT(pev), "models/w_skillpoint.mdl");
 		CItem::Spawn();
 	}
 	void Precache() override
 	{
-		PRECACHE_MODEL("models/crystal.mdl");
+		PRECACHE_MODEL("models/w_skillpoint.mdl");
 		PRECACHE_SOUND("items/gunpickup2.wav");
 	}
 	bool MyTouch(CBasePlayer* pPlayer) override
@@ -529,22 +525,22 @@ class CItemSkillPoint : public CItem
 LINK_ENTITY_TO_CLASS(item_skillpoint, CItemSkillPoint);
 
 
-// sphere.mdl is a small unused orb (8x8x6), scaled up slightly.  A smooth
-// ball is deliberately a different shape class from the Skill Point's
-// faceted shard, so the two are told apart at a glance -- which the old
-// w_security.mdl could not manage, being a literal door key.
+// w_resettoken.mdl: a thick gold medallion, 14 across and 5 high, with a
+// raised rim, a recessed ring of ticks and a centre boss.  The word is Token
+// and a coin is what it means; a flat gold disc is a different shape class
+// from the Skill Point's upright shard, so the two are told apart at a glance.
+// The ring of ticks and the stamp are the light.
 class CItemResetToken : public CItem
 {
 	void Spawn() override
 	{
 		Precache();
-		SET_MODEL(ENT(pev), "models/sphere.mdl");
-		SetProgressionLook(pev, Vector(255, 190, 40), 1.5f);
+		SET_MODEL(ENT(pev), "models/w_resettoken.mdl");
 		CItem::Spawn();
 	}
 	void Precache() override
 	{
-		PRECACHE_MODEL("models/sphere.mdl");
+		PRECACHE_MODEL("models/w_resettoken.mdl");
 		PRECACHE_SOUND("items/gunpickup2.wav");
 	}
 	bool MyTouch(CBasePlayer* pPlayer) override
@@ -569,24 +565,24 @@ LINK_ENTITY_TO_CLASS(item_resettoken, CItemResetToken);
 // proposed: CONTEXT.md settles the term as "Row Grant" and lists
 // "upgrade" among the words to avoid for it.
 //
-// w_isotopebox.mdl is a shipping case with a handle, which is as close as
-// Half-Life's model set gets to "you can carry more".  Deliberately NOT
-// w_weaponbox.mdl, which is the better metaphor and is already spoken for:
-// lootable Boxes will use it, and the two things that grow what a player
-// carries must not look identical.
+// w_rowgrant.mdl: a rack of four open compartments with a carry handle --
+// the Grid row it grants, made into a thing.  Open compartments say storage
+// without being a box, and deliberately NOT a case like w_weaponbox.mdl,
+// which is spoken for: lootable Boxes will use it, and the two things that
+// grow what a player carries must not look alike.  The cell grid on the
+// divider and a strip along the top bar are the light.
 //=========================================================
 class CItemRowGrant : public CItem
 {
 	void Spawn() override
 	{
 		Precache();
-		SET_MODEL(ENT(pev), "models/w_isotopebox.mdl");
-		SetProgressionLook(pev, Vector(80, 255, 80), 1.0f);
+		SET_MODEL(ENT(pev), "models/w_rowgrant.mdl");
 		CItem::Spawn();
 	}
 	void Precache() override
 	{
-		PRECACHE_MODEL("models/w_isotopebox.mdl");
+		PRECACHE_MODEL("models/w_rowgrant.mdl");
 		PRECACHE_SOUND("items/gunpickup2.wav");
 	}
 	bool MyTouch(CBasePlayer* pPlayer) override

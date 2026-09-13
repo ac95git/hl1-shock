@@ -102,9 +102,10 @@ does not have to divide evenly into the tick.
 
 All three are banked counters rather than Item Types — they occupy no Cells and a full Grid cannot refuse
 them. All three are found in the world and taken on contact: `item_skillpoint`, `item_resettoken` and
-`item_rowgrant` are plain `CItem`s in `dlls/items.cpp`, sharing a `SetProgressionLook` helper that gives
-them a common glow-shell family look (see [ART_DEBT.md](../docs/ART_DEBT.md) — every model is a
-placeholder).
+`item_rowgrant` are plain `CItem`s in `dlls/items.cpp`. The three models are the mod's own since
+2026-09-13 (`docs/MODEL_WORKFLOW.md`), each with a part that emits light through an additive texture,
+which is what makes them read as one family; the shared pickup sound is still borrowed (see
+[ART_DEBT.md](../docs/ART_DEBT.md)).
 
 Skill Points and Reset Tokens bank on `CPlayerSkills`; a Row Grant calls `CPlayerInventory::GrantRows(1)`
 and is spent immediately. **The Row Grant is the only one with a real ceiling** (`inv_rows_max`), so it is

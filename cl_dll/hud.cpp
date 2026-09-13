@@ -396,6 +396,10 @@ void CHud::Init()
 	// equal that decay reads as the blade cooling.
 	CVAR_CREATE("katana_glow_light", "0.9", 0);
 	CVAR_CREATE("katana_glow_hot", "0.9", 0);
+	// The radius of the dynamic light each progression pickup carries so it
+	// glows in the dark (cl_dll/entity.cpp, ProgressionLight).  A first guess;
+	// 0 turns the lights off.
+	CVAR_CREATE("progression_light", "100", 0);
 	// Prints what the Suit Variant actually is, frame by frame: the raw skin
 	// off the local player's entity state, and what the HUD made of it.  Here
 	// because the value travels a route nothing else in this mod uses -- the

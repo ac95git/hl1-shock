@@ -66,11 +66,17 @@ leaves out and `mdlinfo.py --extract-bmp` can supply.
   first (Pillow: `convert("RGB").quantize(256).save(..., "BMP")`). Names containing `CHROME` get the chrome
   flag from studiomdl; the SMD material name is the BMP file name, exactly, including a double `.bmp.bmp`
   where valve has one.
-- **Texture render flags: the engine ignores FULLBRIGHT and honours ADDITIVE.** Tested on the katana's
-  hot blade, 2026-09-12. A texture that must shine in the dark is patched additive after the compile
-  with `mdlflags.py` (studiomdl cannot set it; this repo's studiomdl knows `$texrendermode additive`
-  but the SDK's does not). Additive draws the texture as light: dark pixels vanish and the surface is a
-  little transparent, so give such a surface a material of its own and keep the rest solid.
+- **Texture render flags: the engine ignores FULLBRIGHT and honours ADDITIVE — but additive does not
+  glow in the dark.** Tested on the katana's hot blade, 2026-09-12, and corrected on the progression
+  pickups, 2026-09-14: the studio renderer still multiplies an additive texture by the room's lighting,
+  so in a dark room it fades with the rest of the model. The katana's blade looked lit in the dark
+  because its own dynamic light was lighting it. Additive is a *look* — drawn as light over what is
+  behind it, dark pixels vanish, the surface a little transparent — not a light source. A model that
+  must be seen in the dark needs a dynamic light; the pickups get one per visible entity on the client
+  (`cl_dll/entity.cpp`, `ProgressionLight`), keyed by entity index, no network cost. The flag is
+  patched after the compile with `mdlflags.py` or `smdprims.set_flags` (studiomdl cannot set it; this
+  repo's studiomdl knows `$texrendermode additive` but the SDK's does not). Give an additive surface a
+  material of its own and keep the rest solid.
 - **Skin families are the switch for texture states.** The viewmodel's skin is never sent by the
   server; `cl_dll/view.cpp` sets it every frame from the model's family count: three families are the
   suit colours, six are suit × cold/hot in glove-major order. `qc_skins.py --state COLD=HOT` lays the
@@ -109,7 +115,9 @@ Working directory, `E:\CustomAssets\scripts\`:
 | `qc_skins.py MODEL.qc SKINS.qc [--state COLD.bmp=HOT.bmp]` | Inserts (or replaces) the generated `$texturegroup` into a QC, before the first `$sequence`. Three skin families, cyan first, so skin 0 is what a model shows with no code at all; with `--state`, six, each glove family cold then hot. |
 | `katana_hot.py` | The katana's hot blade texture: the gold metal of `katana_02.bmp` turned gauss orange grading to white-hot along the metal's own shading; everything else untouched. |
 | `katana_world.py [--scale] [--tex]` | `w_katana.mdl` from the Dystopia world prop without Blender: one bone at the origin, the katana rotated to lie on its flat, centred, floor at z 0, scaled 0.82 to match the viewmodel blade, UVs wrapped, one-frame idle, QC, studiomdl, render. The pattern for any single-bone world model from a Source prop. |
-| `syringe_world.py [--scale] [--no-icon]` | `w_syringe.mdl` with **no source mesh at all**: the geometry is tubes, cones and discs emitted straight into the SMD (284 triangles, winding checked per triangle against its normals), the one 128×128 texture is painted by Pillow with the liquid, stopper and graduations on the barrel, then QC, studiomdl, the orbit render, and the Inventory Icon rendered and encoded to `sprites/inv/item_syringe.spr`. The pattern for a small prop authored from numbers — the progression pickups are the same job. |
+| `syringe_world.py [--scale] [--no-icon]` | `w_syringe.mdl` with **no source mesh at all**: the geometry is tubes, cones and discs emitted straight into the SMD (284 triangles, winding checked per triangle against its normals), the one 128×128 texture is painted by Pillow with the liquid, stopper and graduations on the barrel, then QC, studiomdl, the orbit render, and the Inventory Icon rendered and encoded to `sprites/inv/item_syringe.spr`. The first prop authored from numbers; its primitives were then factored into `smdprims.py`. |
+| `smdprims.py` | The shared kit for models authored from numbers: a `Mesh` that winds every triangle counter-clockwise about its own normals, `tube` / `cap` / `annulus` / `box` primitives (tapered, elliptical, inward-facing, cone tips, planar or per-facet UVs), the `Y_TO_Z` and `TURN_180` transforms, region-based texture painting with cylinder shading, and `build()` — reference SMD from one Mesh or several (one material each), idle, QC, studiomdl, an `additive=` list of textures patched through `set_flags()`, `mdlinfo` check — plus `render()`. Import it; do not copy it. |
+| `progression_world.py [--only NAME] [--scale]` | The three progression pickups on `smdprims.py`: `w_skillpoint.mdl` (a hex bipyramid stood up with `Y_TO_Z`, per-facet UVs so the edges are painted bright), `w_resettoken.mdl` (a puck with a rim, an inward-facing recess wall and two planar-mapped painted faces at 128px, since 64px made the tick ring a zigzag) and `w_rowgrant.mdl` (boxes only: bars, a divider panel, a handle). Each has a second `<name>_glow.bmp` material patched additive — the shard whole, the Token's marks and the Row Grant's grid as thin overlays 0.15 above solid faces — which is how they emit light in place of the old glow shell. About 100–330 triangles each. |
 | `gloves_rollout.py [model ...]` | The whole thing for every stock viewmodel: copy the decompile to `models/src/`, gloves, QC, studiomdl, verify three skin families in the `.mdl`, orbit render, contact sheet. Stops and names the model if a decompile is missing. |
 | `suit_world.py [--no-compile]` | The `w_suit` pickup in three Suit Variants: a colour wash over the stock front/back textures (hue from the variant, luminance from the suit, a 22% wash on the grey panels), skins.qc, QC, studiomdl, a three-up preview sheet. Looser thresholds than the gloves on purpose — see below. Produces `w_suit.mdl` **and** `w_suitT.mdl`; both ship. |
 
@@ -172,6 +180,6 @@ where the numbers say it is.
   plus a flag patch, not a texture change.
 - **Rigged world and player models**, and a Python decompiler to drop the Crowbar step; `mdlinfo.py` has
   the header parsing that one would start from. Static one-bone world models are covered twice over:
-  from a Source prop (`katana_world.py`) and from nothing (`syringe_world.py`).
-- **Meshes authored in Blender by hand or script.** Both authored models so far were emitted as SMD text
-  directly, which suits primitives and nothing with an organic surface.
+  from a Source prop (`katana_world.py`) and from nothing (`syringe_world.py`, `progression_world.py`).
+- **Meshes authored in Blender by hand or script.** Every authored model so far was emitted as SMD text
+  through `smdprims.py`, which suits primitives and nothing with an organic surface.

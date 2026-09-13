@@ -213,67 +213,49 @@ correctly. If a candidate set fails this, it does not matter how good it sounds 
 Nothing in the Pulse's audio comes from another weapon, and a deflect is unmistakable over the Pulse that
 preceded it.
 
-## Progression pickups — world models and pickup sound
+## Progression pickups — pickup sound
 
 ### Scope
 `dlls/items.cpp`, `CItemSkillPoint`, `CItemResetToken` and `CItemRowGrant`, plus the shared
 `SetProgressionLook` helper above them.
 
-### Current stand-ins
+**World models resolved 2026-09-13.** All three are the mod's own, one-bone props authored from numbers
+by `E:\CustomAssets\scripts\progression_world.py` on `smdprims.py` ([MODEL_WORKFLOW.md](MODEL_WORKFLOW.md)),
+each in its own shape class so the three are told apart in silhouette:
 
-| Pickup | Model | Scale | Glow shell |
+| Pickup | Model | What it is | Size |
 | --- | --- | --- | --- |
-| Skill Point | `models/crystal.mdl` — a Xen crystal formation | 0.25 | cyan |
-| Reset Token | `models/sphere.mdl` — a small unused orb | 1.5 | gold |
-| Row Grant | `models/w_isotopebox.mdl` — a shipping case with a handle | 1.0 | green |
+| Skill Point | `models/w_skillpoint.mdl` | An upright machined hex shard, point-down in a dark ring base. Faceted like the Xen crystal it replaces, but cut rather than grown. **The shard is the light** | 9 across, 18 tall |
+| Reset Token | `models/w_resettoken.mdl` | A thick gold medallion: raised rim, a recessed ring of twelve ticks, a centre boss with a stamp. The word is Token; a coin is what it means. **The ticks and the stamp are the light** | 14 across, 5.5 tall |
+| Row Grant | `models/w_rowgrant.mdl` | A rack of four open compartments with a carry handle — the Grid row it grants, made into a thing. Storage without being a Box. **The cell grid on the divider and a strip along the top bar are the light** | 23 long, 4 deep, 9.4 tall |
 
-All three also use `items/gunpickup2.wav` and a centre-print line.
+**They emit light, and the glow shell is gone — settled 2026-09-13, finished 2026-09-14.** Two parts.
+Each model carries a second material, `<name>_glow.bmp`, patched `STUDIO_NF_ADDITIVE` in the compiled
+`.mdl` by `smdprims.set_flags`: the shard whole, the Token's marks and the Row Grant's grid on thin
+overlays a fraction above solid faces, so only the painted marks read as lit. That is the *look*; it
+turned out not to glow in the dark on its own, because the renderer still multiplies it by the room's
+light. The glow itself is a **dynamic light per visible pickup on the client**
+(`cl_dll/entity.cpp`, `ProgressionLight`; radius `progression_light`, 100, the Token a quarter larger),
+in the family's colour, which lights the model and the floor around it and costs nothing on the
+network. The `kRenderFxGlowShell` and its brief `progression_glow` cvar were removed. (The stock
+battery, the reference asked for, emits nothing: its panel is a bright painted texture with no flags,
+and it dims with the room.) Colour is baked into each texture (cyan, gold, green), so the models rank on
+their own. Sizes and the light radius are first guesses to be judged on a floor. None needs a Grid Icon:
+they are banked counters, never Entries.
 
-All three models live in `valve/models` and reach the mod by game-directory fallback, the same route
-`w_adrenaline.mdl` takes for the Syringe. None is referenced anywhere else in this codebase, which is
-why they were free to take.
+The stand-ins they replace, for the record: `crystal.mdl` (Xen scenery at quarter scale), `sphere.mdl`
+(a featureless ball) and `w_isotopebox.mdl` (a radioactive-materials case), all borrowed from
+`valve/models`. Before those, `w_longjump.mdl` and `w_security.mdl`, which were actively misleading.
 
-**Revised 2026-08-31.** The previous stand-ins — `w_longjump.mdl` for the Skill Point and
-`w_security.mdl` for the Reset Token — were *actively misleading* rather than merely unevocative, and
-that is now fixed: the longjump module is a real pickup the player can also find (and Modules will add
-more), and the keycard is a door key. Neither collision remains.
+### What remains
 
-### What's wrong with them
-
-- **The glow shell is carrying the identification, not the models.** `kRenderFxGlowShell` is what says
-  "progression, not equipment" and what ranks the three against each other by colour. That was a
-  deliberate stopgap: it works at a distance and in the dark, and it makes the family legible before the
-  art exists. It is not a substitute for three distinct silhouettes.
-- **`crystal.mdl` is Xen's.** A Skill Point found in a Black Mesa office is not a Xen crystal, and the
-  model will read as scenery once there are actual Xen levels using it as scenery.
-- **`sphere.mdl` is a featureless ball.** It says "special" and nothing further. It ranks correctly
-  against the crystal and communicates nothing on its own.
-- **`w_isotopebox.mdl` suggests hazard, not capacity.** It is a radioactive-materials case. The handle
-  and the box shape are the right idea; the contents label is wrong.
-- **The pickup sound is unchanged and is now the weakest part of this entry.** One generic
-  weapon-pickup click for all three. This is the moment exploration pays out, and it sounds like picking
-  up ammo. The three should not share a sound at all — a Reset Token is rare and should announce itself.
-
-### What to look for
-
-Three clearly *different* small pickups that read as progression rather than equipment, and that rank
-against each other at a glance — the Token should look rarer than the Point, and the Row Grant should
-read as *storage*. None should resemble anything in the HEV/keycard vocabulary.
-
-Two constraints the current set established and a replacement should respect:
-
-- **Distinct shape classes, not just distinct colours.** Faceted shard / smooth orb / handled box is the
-  right kind of separation, because it survives being seen in silhouette or in the dark.
-- **The Row Grant must not look like a Box.** Lootable Boxes are future work and will use
-  `w_weaponbox.mdl`; two things that grow what the player can carry must not look identical. This is why
-  the better metaphor was deliberately passed over.
-
-Whether the glow shell stays once the models are distinct is an open decision — as a permanent family
-marker it is defensible, but it should then be a choice rather than a leftover.
+- **The pickup sound is now the whole of the debt.** One generic weapon-pickup click,
+  `items/gunpickup2.wav`, for all three, plus a centre-print line. This is the moment exploration pays
+  out, and it sounds like picking up ammo. The three should not share a sound at all — a Reset Token is
+  rare and should announce itself.
 
 ### Done when
-A player who has never read a manual can tell all three apart on sight, none is mistaken for equipment,
-and the Reset Token does not sound like ammo.
+The Reset Token does not sound like ammo.
 
 ## The Gauss Katana — third-person model, sounds, HUD icon
 

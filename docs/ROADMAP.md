@@ -394,7 +394,9 @@ Skills happens once, for the roster; the vocabulary work above still applies.
   one (`katana_glow_hot`, 0.9 s). The hot blade is a second state in the skin families — six now, glove
   colour × cold/hot, glove-major — with the blade metal split onto a material of its own so only it
   swaps, and the hot texture flagged **additive** by `utils/mdltool/mdlflags.py` after the compile. It
-  is drawn as light over what is behind it, so it shines in the dark and is a little transparent. Two
+  is drawn as light over what is behind it and is a little transparent; it does **not** shine in the dark
+  by itself (learned on the progression pickups, 2026-09-14 — additive is still multiplied by the room's
+  light), which is why the hand light matters: the light is what lights the blade. Two
   approaches were built and rejected first: a beam entity between two viewmodel attachments (the engine
   draws beams before the viewmodel with last frame's attachments, so it trailed the swing) and quads drawn
   by the studio renderer in the viewmodel's pass (right place, wrong look). The attachments stay in the
@@ -517,16 +519,20 @@ they build on each other:
    in [ART_DEBT.md](ART_DEBT.md) and which also gives the real suit three references to be designed
    against. Note what the stand-in does *not* cover: the wall chargers, and the player model, which still
    shows the stock orange suit in a mirror or in third person.
-5. **The gloves emit light.** Later, and the route is now proven on the katana's hot blade. The engine
-   **ignores `STUDIO_NF_FULLBRIGHT`** on studio textures — the katana tested it — and **honours
-   `STUDIO_NF_ADDITIVE`**, drawing the texture as light over what is behind it, which shines in the dark
-   at the cost of some transparency. `utils/mdltool/mdlflags.py` patches either flag into a compiled
-   `.mdl`. For the gloves: split the light channels onto a texture of their own in the generator, give
-   those faces their own material in the reference SMD (a mesh edit, since the seams are painted on the
-   sleeve's faces today), compile, patch additive. The transparency is the open question for a seam that
-   is always on, where it was fine for a blade lit for under a second. A model that glows in the dark is
-   also a stealth question: PERCEPTION.md's light term reads the lightmap, not the viewmodel, so it costs
-   nothing in Concealment, and that is worth stating when it lands.
+5. **The gloves emit light.** Later, and harder than it looked. The engine **ignores
+   `STUDIO_NF_FULLBRIGHT`** on studio textures — the katana tested it — and **honours
+   `STUDIO_NF_ADDITIVE`**, drawing the texture as light over what is behind it at the cost of some
+   transparency — but **additive does not shine in the dark** (progression pickups, 2026-09-14: the
+   renderer still multiplies it by the room's light). So the seams can *look* lit by day and will go dark
+   with the room, and making them genuinely glow means a dynamic light at the hands, which is a light
+   the player carries everywhere and a real stealth cost. `utils/mdltool/mdlflags.py` patches either
+   flag into a compiled `.mdl`. For the gloves' look: split the light channels onto a texture of their
+   own in the generator, give those faces their own material in the reference SMD (a mesh edit, since
+   the seams are painted on the sleeve's faces today), compile, patch additive. The transparency is the
+   open question for a seam that is always on, where it was fine for a blade lit for under a second.
+   PERCEPTION.md's light term reads the lightmap, not the viewmodel, so an additive seam costs nothing in
+   Concealment; a dynamic light would not either as the code stands, and that would then be a lie worth
+   deciding about.
 
 Known issue from the first pass: on the crossbow the hand clips slightly through the stock. Not from the
 textures; recorded in [ART_DEBT.md](ART_DEBT.md) for later.
@@ -601,9 +607,12 @@ Other facts about the model:
 - **Its head is hitgroup 2, not 1.** Half-Life's head is 1, which is what doubles damage
   (`dlls/combat.cpp:1337`) and what [Decapitation](#pillar-2-decapitation) keys on. Every other hitbox is 0.
   As shipped, a headshot counts as a chest hit. `TraceAttack` can remap it in one line, with no recompile.
-- **Its eyes glow.** Each of the four face textures has a `_Light` twin flagged additive and fullbright
-  (`0x24`). The engine honours additive (see the katana's hot blade), so the eyes are drawn as light and
-  show in the dark. That is a stealth fact: the player can see a Panthereye in a room they cannot see into.
+- **Its eyes are meant to glow.** Each of the four face textures has a `_Light` twin flagged additive and
+  fullbright (`0x24`). The engine honours additive and ignores fullbright, and additive alone does
+  **not** show in the dark (progression pickups, 2026-09-14) — so as shipped the eyes are drawn as light
+  by day and go dark with the room. If a Panthereye is to be seen in a room the player cannot see into,
+  which is a strong stealth fact worth having, it needs a small dynamic light at the head, the way the
+  progression pickups get theirs (`cl_dll/entity.cpp`).
 - **Two body models, red and blue.** Body 0 is red (`Panther_Bodyfull`), body 1 is blue
   (`Panther_Bodyfull_Blue`). The FGD calls them Diablo and Nightkin. Both use the same red glowing eyes.
 - **The four skins are eyelid states, not variants.** Skin 0's eye is open, 1 half-shut, 2 narrowed,
