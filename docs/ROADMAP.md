@@ -8,7 +8,7 @@ build on, and list the questions that have to be answered before the first line 
 is built, its content moves into PILLARS.md and the entry here is deleted — this file only ever shrinks
 from the top.
 
-**Last updated:** 2026-09-13 (branch `hl-shock` — all seven Skill Tree Routes shaped; the Dash and the alien Module shaped with them, the katana reworked on paper, a melee roster; both Regens, High Jump and Sprint cut, and the cuts and the id ceiling built the same day)
+**Last updated:** 2026-09-14 (branch `hl-shock` — the Skill Tree becomes a matrix: Stat nodes as roads, every node one point, not completable, settled in SKILL_TREE.md; the fitted node icon draw and the layout preview cvars built the same day; the day before, all seven Routes shaped, the Dash and alien Modules with them, the katana reworked on paper, four Skills cut and the id ceiling built)
 
 ## Shape legend
 
@@ -1516,6 +1516,14 @@ stacked with several energy damage bonuses culminate in **backstabbing a Gargant
 [ADR-0010](adr/0010-the-backstab-is-positional.md) already says this is intended, so the tree's job is to
 make the path to it exist and cost most of a campaign.
 
+**And, since 2026-09-14, the path is literal.** The tree becomes a matrix of small **Stat nodes** — one
+flat bonus each, one point each, themed by Route — that are the roads between Skills and the whole of
+their price. Settled in [SKILL_TREE.md](SKILL_TREE.md#the-matrix--settled-2026-09-14), which is the
+reference; the short form is: every node costs one, nothing is printed on a node, reachability and the
+roots are unchanged, Routes connect through curated roads, and the tree is deliberately not completable.
+The anti-dilution rule above is amended rather than broken — flat numbers as roads, never as destinations —
+and the amendment is written beside the rule in SKILL_TREE.md.
+
 A **Route** is a build path, which is not the same as a column: a Route may cross columns, and the seven
 below are what the tree is curated toward. Note the tension with the decapitation entry above, which argued
 against adding to a tree "deliberately curated down to 15". That reasoning is superseded by this section,
@@ -2042,24 +2050,43 @@ Facts found while sizing a bigger tree, so they are not found twice.
   into layout-sized nodes, and `skilltree_preview_cols` / `_rows` draw ghost cells for a grid of any size
   so the footprint can be judged before the nodes exist. See PILLARS pillar 4. Which of 7×5 and 9×4 is
   still open, and is now something to look at rather than compute.
-- **Ranks cost no ids or wire.** Chained ids drawn as one node showing 2/3 keeps saves and the sync mask as
-  they are, and shares one icon, which halves what a Route adds to [ART_DEBT.md](ART_DEBT.md).
-- **The economy.** One pickup is one point, and the brief is one point per optional space. A 60-point
+- ~~**Ranks cost no ids or wire.** Chained ids drawn as one node showing 2/3.~~ **Withdrawn 2026-09-14**:
+  a rank is a Stat node on the road, drawn like any other. Ranks therefore *do* cost ids, which is part of
+  why the ceiling moves (below).
+- **The economy.** One pickup is one point, and the brief is one point per optional space. ~~A 60-point
   tree doubles the optional spaces a campaign must hold, or `item_skillpoint` grows a value keyvalue, or the
-  tree stops being completable. The third reverses a recorded stance in PILLARS pillar 4.
+  tree stops being completable.~~ **Resolved 2026-09-14: the tree stops being completable**, by design.
+  50–70 findable points against 120–180 one-point nodes. This reverses the stance PILLARS pillar 4
+  recorded, and PILLARS says so.
 - **The sum, once all seven were shaped.** Juggernaut 11, Alien 7, Weapon Specialist 7, Dash 7, Energy 6,
-  Melee 6, Medical 5: **49 nodes with ranks counted once**, against 16 today, and about sixteen of them
-  carry two or three ranks. At today's prices (1–3 per node) that is roughly 100 points before ranks and
-  well past it after, against a **50–70 target**. So the target and the shape disagree, and one of them
-  moves: prices come down (a rank at 1 point, a root at 1), the 50–70 becomes what the *critical path*
-  affords rather than the tree's total, or the tree is deliberately not completable, which is the
-  reversal above. **Not decided.** It is the first question of the pricing pass, and it should be answered
-  against a map rather than in the abstract.
+  Melee 6, Medical 5: **49 Skills with ranks counted once**, and about sixteen carry two or three ranks.
+  Under the matrix each rank is a Stat node and each Skill has Stat nodes on the road to it, so the tree
+  lands somewhere in 120–180 nodes. ~~At today's prices that is roughly 100 points against a 50–70 target,
+  and one of them moves.~~ Both moved: every node costs one and the tree is not completable. **What 50–70
+  points buys is the pricing pass now**, and it is a question of where the roads run. Against a map.
+- **The id ceiling moves once more, to 256.** `k_SkillIdCeiling` is 96, sized for a tree of about fifty,
+  and raising it is a save-format change. 180 nodes needs 256 (32 mask bytes on the wire; the message is
+  length-checked on both sides and derives from the same constant). Do it before the first Stat node
+  exists, while there is no save on this branch worth keeping.
+- **Square nodes, and the step follows the Stat node.** With nothing printed on a node the height no longer
+  carries a cost line, so nodes can be square. The grid step today follows the Major node (88 + gap); at
+  180 nodes that puts the scale under the 0.55 floor on a 1280 screen. The step follows the Stat node
+  instead and the larger tiers spill into their neighbours' margins on purpose. The row gap that existed
+  for elbow connectors shrinks with it. `k_MinScale` was for the cost text and can go with the cost.
+- **`ENodeTier` gains a fourth value**, below Minor, for the Stat node. Presentation only, like the rest.
+- **A layout check before the third Route.** A `static_assert` that no two rows share a cell, and a debug
+  overlay for an edge whose ends are not adjacent. 180 hand-placed rows in a header is where the mistakes
+  will live.
 
 ### Open questions
 
 - How is a Route drawn? A region of the tree, a column, or nothing visible, with the build discovered by
-  hovering? Anonymization matters more the larger the tree is.
+  hovering? Anonymization matters more the larger the tree is. **Partly answered 2026-09-14**: a Route is
+  a region, and the Stat nodes' shared per-stat icons are what make the region read without a label —
+  the road *looks* like melee, or energy. Whether anything beyond that marks a region is still open.
+- **The Stat node's bonuses.** About eight stats, themed by Route, at first-guess sizes (+5% was the
+  example given). Which eight, and whether a stat is one flat percentage or scales with the Route's own
+  ranks, is the first question of the first Route built under the matrix.
 - **Which Route is built first.** All seven are shaped. Melee and Weapon Specialist need the least new
   machinery; the Juggernaut needs the `+pulse`/`-pulse` pair; the Dash Route and the Alien Route each need
   their Module first.
@@ -2222,6 +2249,7 @@ is designed, and may well change name first.
 | **Decapitation** | A lethal head hit that removes the head: headless submodel, thrown skull, blood from the stump. | Distinct from *gibbing*, which is the whole body and already means something in this codebase. **Headless** names the resulting state. |
 | **Carbon Pickaxe** | The other custom weapon. | Named already; recorded here so it is used consistently. **Gauss Katana** graduated to CONTEXT.md on 2026-09-12 when the weapon was built. |
 | **Route** | A build path through the Skill Tree: the set of Skills whose bonuses multiply into one way of playing. Crosses columns. | Named 2026-09-13. Avoid *class*, *spec* and *tree* — the tree is the whole thing. |
+| **Stat node** | The smallest node in the Skill Tree: one flat bonus, one Skill Point, a shared icon per stat. The roads between Skills and the whole of their price. | Settled 2026-09-14. A Stat node is a node, not a Skill: "Skill" stays for the nodes that change how the game plays. Avoid *passive*, *filler*, *minor* (that is a tier name already) and *travel node*. |
 | **Defense Matrix** | The Juggernaut Route's stance: the Pulse key held for a second raises it, armour takes a far larger share of every hit while it is up, the player is slowed. Drops on release, at 6 s, or at zero armour. | Settled 2026-09-13. **Not a Shield** — that word is the Pulse's field in CONTEXT.md. |
 | **Core** | The alien Module's ammunition: an ammo type, found in the world, finite. Powers the summon weapon and whatever other alien weapons the Module serves. | Settled 2026-09-13, replacing *green battery*, which collided with the HEV **Battery** Item Type and the Battery Capacity Skill. *Cell* was also out: it is the Grid's unit. |
 | **Ghost slave** | A summoned, time-limited alien slave that fights for the player. Vanishes on its timer, on death, or with the ultimate's volley. | Settled 2026-09-13 with the Alien Route. |

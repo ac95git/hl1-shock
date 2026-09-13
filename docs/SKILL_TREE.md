@@ -18,7 +18,11 @@ are assigned when a node is built, never reused, and **22 and 23 are spoken for*
 ## Principles the tree is curated under
 
 - **More Skills, no dilution.** Nodes are multipliers that stack into builds, not flat numbers that each
-  add a little.
+  add a little. **Amended 2026-09-14:** flat numbers are allowed as *roads*, never as destinations — see
+  [the matrix](#the-matrix--settled-2026-09-14). A player who paths somewhere *for* a Stat node is the
+  dilution this principle warned about; the Stat nodes exist to be walked through on the way to a Skill.
+- **Every node costs one Skill Point.** Price is distance: a strong Skill is expensive because of the
+  Stat nodes on the road to it, not because of a number on it. Nothing is printed on a node.
 - **Nothing rewards standing still.** Both regenerations were cut; every node acts on an action.
 - **The normal movement rules stay.** No node changes ground speed or jump height. Reaching high places is
   a Module's job.
@@ -38,7 +42,53 @@ are assigned when a node is built, never reused, and **22 and 23 are spoken for*
 | [The Dash Route](#the-dash-route) | 7 | Sure Footing (7) | Air Dash | The Dash Module for its Dash nodes |
 | [Medical](#medical) | 5 | Med Expert (19) | Last Stand | — |
 
-49 nodes, ranks counted once. About sixteen carry ranks.
+49 Skills, ranks counted once. About sixteen carry ranks, and each rank becomes a Stat node on the road
+under [the matrix](#the-matrix--settled-2026-09-14); the tree that results is in the region of 120–180
+nodes.
+
+---
+
+## The matrix — settled 2026-09-14
+
+The tree gains a fourth and smallest kind of node, the **Stat node**, and with it becomes a dense grid
+that has to be pathed through efficiently. Decided in conversation on 2026-09-14, after the fitted node
+draw showed the panel could hold well over a hundred nodes.
+
+- **A Stat node grants one flat bonus and nothing else** — +5% melee damage, +5% max health, +5% energy
+  damage. It is the smallest tier, below Minor, and it shares its icon with every other Stat node of the
+  same stat, so a road reads as what it is made of.
+- **Stat nodes are the cost of Skills.** A Skill is reached by taking the Stat nodes on the road to it.
+  That is where the price lives, so **every node in the tree costs exactly one Skill Point** and the cost is
+  no longer drawn on the node or anywhere else. The open question about where the cost display goes is
+  closed: nowhere.
+- **Reachability does not change.** A node opens when its prerequisites are held — two at most, both
+  required — and the prerequisites are curated, edge by edge, as they are today. The matrix is not free
+  pathing between neighbours; it is a directed tree whose roads happen to be dense. The one AND gate today
+  (the Follow-Up) keeps working, and any Major that wants two roads to converge gets an AND for free.
+- **Roots stay where they are.** Each Route's root is always available and a player starts wherever they
+  like, as today.
+- **Stat types are themed by Route**, about eight in all, so the road through a Route's region is made of
+  that Route's stat. Crossing into another Route's region means taking nodes of *its* stat, which is the
+  trade that makes efficient pathing mean something.
+- **Routes connect through curated roads.** Melee's region reaches Energy's through Stat nodes placed for
+  the purpose, so the Gargantua build is a literal path on the tree. Which regions connect, and where, is
+  curation, not adjacency.
+- **The tree is deliberately not completable.** Fifty to seventy Skill Points against 120–180 nodes buys a
+  third to a half of the tree. That is the third of the three options the economy note below listed, and it
+  reverses the stance PILLARS pillar 4 recorded ("completable only by near-exhaustive exploration"). Reset
+  Tokens matter more for it, not less.
+- **Ranks are gone as a drawing case.** "Energy Damage 1→2→3" is three energy Stat nodes on the road to the
+  Energy major. The chained-ids-drawn-as-one idea in the ROADMAP infrastructure notes is withdrawn.
+
+What it costs to build, before the first Stat node exists:
+
+- **The id ceiling** (96) is a save-format constant and has to be raised once, to 256, while there are no
+  saves worth protecting. See the ROADMAP infrastructure notes.
+- **A fourth `ENodeTier`**, below Minor, and a grid step that follows the Stat node rather than the Major
+  one, or 180 nodes do not fit at the scale floor. Nodes can be square now that nothing is printed on them.
+- **A layout check.** 180 hand-placed rows in `skill_defs.h` is where mistakes will live: two nodes in one
+  cell, an edge to a node that is not adjacent. A `static_assert` for the first and a debug overlay for the
+  second, before the third Route.
 
 ---
 
@@ -339,13 +389,14 @@ A node is hidden until the player holds the thing it modifies. Settled per Route
 
 Cut ids stay reserved forever and are never reused.
 
-## The economy, unresolved
+## The economy — resolved 2026-09-14
 
-The seven Routes sum to 49 nodes with ranks counted once, against 16 today, and about sixteen carry two
-or three ranks. At today's prices that is roughly 100 points before ranks, against a **50–70 target**. One
-of three things moves: prices come down, the target becomes what the critical path affords rather than the
-tree's total, or the tree is deliberately not completable. Not decided; to be answered against a map. See
-[ROADMAP.md](ROADMAP.md#infrastructure-notes-from-the-same-session).
+The seven Routes sum to 49 Skills with ranks counted once, and about sixteen carry two or three ranks. At
+the old prices that was roughly 100 points against a **50–70 target**, and one of three things had to move:
+prices, the target, or completability. **All three moved at once** with [the matrix](#the-matrix--settled-2026-09-14):
+every node costs one, the target stays at 50–70 findable points, and the tree is deliberately not
+completable. What 50–70 points buys — which third of the tree — is the pricing pass now, and it is a
+question of where the roads run rather than what the nodes cost. Still to be judged against a map.
 
 ## What is built first
 

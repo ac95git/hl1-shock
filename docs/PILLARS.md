@@ -67,8 +67,11 @@ exploration rewards are now things a map can hold.
 
 **Skill Points and Reset Tokens.** Both are found in the world and nowhere else — `skill_points_start`
 defaults to 0, so a player who explores nothing unlocks nothing (see pillar 4). `item_skillpoint` and
-`item_resettoken` are placeable entities today. The tree is deliberately sized so it is completable only by
-near-exhaustive exploration, which makes reach — not just speed — the thing exploration buys.
+`item_resettoken` are placeable entities today. ~~The tree is deliberately sized so it is completable only
+by near-exhaustive exploration~~ — **reversed 2026-09-14**: under the matrix design in
+[SKILL_TREE.md](SKILL_TREE.md#the-matrix--settled-2026-09-14) the tree is deliberately *not* completable,
+and 50–70 findable points buy a third to a half of it. Reach is still what exploration buys; it now buys
+more of a build rather than the last of the tree.
 
 What is still missing is the same thing in every case: **maps**. Every mechanism now exists and nothing
 places one, because vanilla Half-Life maps cannot be edited to hold them. Until a map does, all three
@@ -526,7 +529,8 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
 
 - **14 Skills in the tree**, across seven columns: Melee (0), the Pulse (1–2), the suit (3), Armaments (4),
   Survivability (5–6). Total cost **29 points**. This is the pre-Routes tree minus four cuts; the Routes
-  replace it node by node, and the campaign's point target is the pricing pass's open question.
+  replace it node by node, under the matrix design settled 2026-09-14 (every node one point, Stat nodes as
+  the roads, the tree not completable — [SKILL_TREE.md](SKILL_TREE.md#the-matrix--settled-2026-09-14)).
 - **Seven reserved ids** with no row. Four are **cut for good** (2026-09-13): `HealthRegen` (10) and
   `BatteryRegen` (14) rewarded standing still, `HighJump` (5) and `SprintSpeed` (6) altered the normal
   movement rules. `CrowbarSpeed` (11) waits on the crowbar's first-swing damage rule being dropped;
@@ -598,13 +602,15 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
   scale. **The fit shrinks but never magnifies**: the engine clips a sprite drawn larger than its frame
   (found the same day on the gauss and egon icons), so a sprite smaller than its node sits centred at 1:1.
   What that asks of the replacement icons is in [ART_DEBT.md](ART_DEBT.md).
+- **`skilltree_show_cost 0`** (client, default 1) hides the cost on every node and gives the icon the
+  whole node. Added as a comparison switch on 2026-09-14, when the cost was seen to push the icon out of
+  the node's middle; judged better without, and the matrix design settled the same day makes every node
+  cost one, so the cost stops being drawn anywhere. The default flips, and the switch goes, with the first
+  Route built under the matrix; until then the old tree still has 2- and 3-point nodes to show.
 - **Two preview cvars, `skilltree_preview_cols` and `skilltree_preview_rows`** (client, default 0), force
   the grid to at least that many columns and rows and draw a Medium-sized ghost outline in every cell with
   no node. They exist to judge the footprint the Routes will need (7×5, 9×4) at a real resolution before
   the nodes are built. They can only widen the grid, never hide a column the table already uses.
-- **`skilltree_show_cost 0`** (client, default 1) hides the cost on every node and gives the icon the
-  whole node. Added as a comparison switch on 2026-09-14, when the cost was seen to push the icon out of
-  the node's middle; judged better without, and where the cost goes instead is not yet decided.
 - **No text labels on nodes, by design** — an icon and a cost, nothing else. Reading the tree means
   hovering, which is the same instinct behind the anonymization feature below. This makes icon
   distinctness *blocking* rather than cosmetic; see [ART_DEBT.md](ART_DEBT.md).
@@ -754,12 +760,17 @@ do nothing.
 
 Cheat-gated `skill_addpoints <n>` and `skill_addtokens <n>` mirror `inv_addrows`.
 
-The target is a tree **completable only by near-exhaustive exploration**: total findable points roughly
+~~The target is a tree **completable only by near-exhaustive exploration**: total findable points roughly
 equal to the tree's total cost, so a player who sweeps every optional space affords essentially everything
-by the end while a player on the critical path affords perhaps 60–70% and must genuinely choose. That is
-what makes Reset Tokens matter for the majority case without denying completionists the top of the tree.
-Roughly 5–10 Tokens across the campaign, with the first appearing around 20% in: enough that the tree is
-meant to be experimented with, not agonised over.
+by the end while a player on the critical path affords perhaps 60–70% and must genuinely choose.~~
+
+**Reversed 2026-09-14.** Under [the matrix](SKILL_TREE.md#the-matrix--settled-2026-09-14) every node costs
+one Skill Point, the roads of Stat nodes between Skills are the price, and the tree of 120–180 nodes is
+**deliberately not completable**: 50–70 findable points buy a third to a half of it, and which third is the
+build. A player who sweeps every optional space affords a deeper build, not the whole tree. Reset Tokens
+matter more for it, since a road taken is a road paid for. Roughly 5–10 Tokens across the campaign, with
+the first appearing around 20% in: enough that the tree is meant to be experimented with, not agonised
+over.
 
 None of this is placeable yet — see "What's missing".
 
