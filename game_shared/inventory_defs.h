@@ -62,10 +62,10 @@ enum class EEntryKind : uint8_t
 	Weapon = 1, // id is a WeaponId from cdll_dll.h
 	Item   = 2, // id is an EItemTypeId
 
-	// Never an Entry.  The HEV suit is taken by a use press like everything
-	// else, so the Pickup Prompt has to be able to name it, but it is worn
-	// rather than carried and no Entry of this kind is ever created or
-	// saved.  id is an ESuitVariant -- see game_shared/suit_defs.h.
+	// Never an Entry.  The HEV suit is named by the Pickup Prompt so a player
+	// switching variant can see which one is on offer, but it is worn rather
+	// than carried and no Entry of this kind is ever created or saved.
+	// id is an ESuitVariant -- see game_shared/suit_defs.h.
 	Suit   = 3,
 };
 

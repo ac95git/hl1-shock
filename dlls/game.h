@@ -48,6 +48,7 @@ extern cvar_t sv_busters;
 // Inventory Grid sizing
 extern cvar_t inv_rows_start;
 extern cvar_t inv_rows_max;
+extern cvar_t item_debug;
 
 // Skill Tree economy
 extern cvar_t skill_points_start;

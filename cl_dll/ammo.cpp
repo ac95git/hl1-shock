@@ -533,9 +533,11 @@ bool CHudAmmo::MsgFunc_ItemPickup(const char* pszName, int iSize, void* pbuf)
 {
 	BEGIN_READ(pbuf, iSize);
 	const char* szName = READ_STRING();
+	// 1 when the pickup went into the Inventory, 0 when it was used on the
+	// spot. Every sender is CItem::AnnouncePickup, so the byte is always there.
+	const bool bCarried = READ_BYTE() != 0;
 
-	// Add the weapon to the history
-	gHR.AddToHistory(HISTSLOT_ITEM, szName);
+	gHR.AddToHistory(HISTSLOT_ITEM, szName, 0, bCarried);
 
 	return true;
 }

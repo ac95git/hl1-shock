@@ -29,11 +29,12 @@ public:
 
 	// Whether walking over this is enough to take it.
 	//
-	// False for anything that goes into the Inventory: those are taken with a
-	// deliberate use press so the player is never surprised by what they are
-	// carrying. Things that are not Inventory items -- the HEV suit, the
-	// longjump module -- keep the original walk-over behaviour.
-	virtual bool AutoPickupOnTouch() { return true; }
+	// True for everything, as in Half-Life: a playtest showed that an item
+	// which stays on the floor when touched reads as broken, whatever the
+	// Pickup Prompt says (docs/adr/0011-pickups-are-walk-over.md). The one
+	// override is a suit offered to a player already wearing one, which is
+	// irreversible and so waits for a use press.
+	virtual bool AutoPickupOnTouch(CBasePlayer* pPlayer) { return true; }
 
 	// Used on the spot instead of being carried, when using it now wastes
 	// nothing. Returns true if it was consumed. See docs/PILLARS.md.
@@ -42,6 +43,21 @@ public:
 	// Runs MyTouch plus the acquire bookkeeping (targets, respawn, removal).
 	// This is what a use press calls; ItemTouch calls it for walk-over items.
 	bool AcquireBy(CBasePlayer* pPlayer);
+
+	// For an item a player has just dropped: switches touch off until the item
+	// has landed and nobody is standing in it, so a drop does not walk straight
+	// back into the Inventory. A dropped weapon gets the same for free from
+	// CBasePlayerItem::FallInit, which leaves it a point until it lands. A use
+	// press still takes it at once -- that path never goes through touch.
+	void DisarmUntilClear();
+	void EXPORT ArmWhenClear();
+
+protected:
+	// Flashes this pickup on the HUD's pickup history. `carried` marks it as
+	// having gone into the Inventory rather than been used on the spot, which
+	// the history draws as an arrow over the icon -- the player's one signal
+	// that a walk-over put something in the Grid.
+	void AnnouncePickup(CBasePlayer* pPlayer, bool carried);
 
 private:
 	// Shared tail of both acquiring and consuming: fire targets, then respawn

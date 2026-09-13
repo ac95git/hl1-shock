@@ -114,6 +114,10 @@ private:
 		float DisplayTime; // the time at which this item should be removed from the history
 		int iCount;
 		int iId;
+		// HISTSLOT_ITEM only: sprite drawn over the icon, or 0 for none. Set
+		// to the inv_carried arrow when the pickup went into the Inventory
+		// rather than being used on the spot.
+		int iOverlayId;
 	};
 
 	HIST_ITEM rgAmmoHistory[MAX_HISTORY];
@@ -134,7 +138,9 @@ public:
 	int iCurrentHistorySlot;
 
 	void AddToHistory(int iType, int iId, int iCount = 0);
-	void AddToHistory(int iType, const char* szName, int iCount = 0);
+	// bCarried: the item went into the Inventory, so it is flashed with the
+	// carried arrow over it. False means it was used on the spot, as vanilla.
+	void AddToHistory(int iType, const char* szName, int iCount = 0, bool bCarried = false);
 
 	void CheckClearHistory();
 	bool DrawAmmoHistory(float flTime);

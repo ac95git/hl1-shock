@@ -183,6 +183,14 @@ bool InventoryDropEntry(CBasePlayer* pPlayer, int index, EEntryKind expectedKind
 bool InventoryMoveEntry(CBasePlayer* pPlayer, int index, EEntryKind expectedKind, int expectedId,
 	int col, int row);
 
+// The battery's effect, shared by using one from the Grid and by the
+// pickup's Auto-Consume. ChargeRoom is how much armour the player can still
+// take, honouring Battery Capacity; ApplyBatteryCharge adds one battery's
+// worth, with the sound and the HEV line, and assumes the caller checked
+// there was room.
+float BatteryChargeRoom(CBasePlayer* pPlayer);
+void ApplyBatteryCharge(CBasePlayer* pPlayer);
+
 //=========================================================
 // Acquisition -- the Pickup Prompt and taking what it names.
 //=========================================================

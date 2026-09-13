@@ -1477,7 +1477,9 @@ since the reasoning it replaces is written down and the new reasoning should be 
   above is a verb, which argues for its own key — to be read against the reference code.
 - **Vanilla maps place `item_longjump`.** Keeping the classname means stock maps hand out Dash with no
   edits; renaming it means they hand out nothing.
-- **Acquisition** — walk-over like the long jump, or the Pickup Prompt the suit moved to?
+- ~~**Acquisition** — walk-over like the long jump, or the Pickup Prompt the suit moved to?~~
+  **Answered 2026-09-13: walk-over.** Every pickup is, since
+  [ADR-0011](adr/0011-pickups-are-walk-over.md); the suit itself moved back.
 - ~~**"Dash: upgradeable"**~~ **Answered 2026-09-13: by Skill Points**, the [Dash Route](#the-dash-route-name-pending).
 - **Where are they shown?** Not a loadout, so the tab is a record of what has been found. The Inventory
   Panel's second tab is already the Skill Tree ("Upgrades"), so this is a third tab or a section of one.
@@ -1891,7 +1893,8 @@ special), a Backstab kill (Melee-only), any melee kill.
 - **Walk's new default key.**
 - `item_longjump` in stock maps: keeping the classname hands out the Dash with no map edits, renaming it
   hands out nothing. Still the Modules entry's question.
-- Acquisition: walk-over like the long jump, or the Pickup Prompt.
+- ~~Acquisition: walk-over like the long jump, or the Pickup Prompt.~~ **Walk-over**, like every pickup
+  since [ADR-0011](adr/0011-pickups-are-walk-over.md).
 
 #### Weapon Specialist
 

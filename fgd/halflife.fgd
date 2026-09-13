@@ -1697,7 +1697,8 @@
 // The Suit Variant a pickup grants. Leaving it at 0 is exactly what a vanilla
 // item_suit does, so stock maps need no edit. Taking a suit of a variant the
 // player is not wearing switches them to it, armour untouched; a suit of the
-// variant already worn is refused. Use-only: the player presses use at it.
+// variant already worn is refused. A player with no suit walks into it; a
+// player wearing one has to press use at it to switch.
 @PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_suit.mdl") = item_suit : "HEV Suit"
 [
 	variant(choices) : "Suit Variant" : 0 =

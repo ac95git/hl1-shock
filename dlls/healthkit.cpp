@@ -29,11 +29,8 @@ class CHealthKit : public CItem
 	void Precache() override;
 	bool MyTouch(CBasePlayer* pPlayer) override;
 
-	// Carried, not grabbed: taking a kit into the Inventory needs a use press.
-	bool AutoPickupOnTouch() override { return false; }
-
-	// ...unless using it right now wastes none of its healing, in which case
-	// walking over it uses it. See docs/PILLARS.md.
+	// Walking over it uses it when that wastes none of its healing, and
+	// carries it otherwise. See docs/PILLARS.md.
 	bool ConsumeOnContact(CBasePlayer* pPlayer) override;
 
 	/*
@@ -85,10 +82,7 @@ bool CHealthKit::ConsumeOnContact(CBasePlayer* pPlayer)
 		return false;
 
 	EMIT_SOUND(ENT(pPlayer->pev), CHAN_ITEM, "items/smallmedkit1.wav", 1, ATTN_NORM);
-
-	MESSAGE_BEGIN(MSG_ONE, gmsgItemPickup, NULL, pPlayer->pev);
-	WRITE_STRING(STRING(pev->classname));
-	MESSAGE_END();
+	AnnouncePickup(pPlayer, false);
 
 	return true;
 }
@@ -98,18 +92,14 @@ bool CHealthKit::MyTouch(CBasePlayer* pPlayer)
 	if (pPlayer->pev->deadflag != DEAD_NO)
 		return false;
 
-	// Store the kit in the player's Inventory instead of healing immediately.
+	// Carried, because using it now would waste some of its healing.
 	// A full Grid refuses it, and returning false leaves the kit in the world.
 	if (InventoryGiveItem(pPlayer, EItemTypeId::Medkit) <= 0)
 		return false;
 
 	// Pickup sound for feedback.
 	EMIT_SOUND(ENT(pPlayer->pev), CHAN_ITEM, "items/smallmedkit1.wav", 1, ATTN_NORM);
-
-	// Standard ItemPickup so the pickup history HUD still works.
-	MESSAGE_BEGIN(MSG_ONE, gmsgItemPickup, NULL, pPlayer->pev);
-	WRITE_STRING(STRING(pev->classname));
-	MESSAGE_END();
+	AnnouncePickup(pPlayer, true);
 
 	// Respawn/removal is CItem::FinishAcquire's job; doing it here too used to
 	// remove the entity twice.

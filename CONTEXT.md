@@ -68,12 +68,15 @@ _Avoid_: item definition, template, item class, item kind
 ### Acquisition
 
 **Pickup Prompt**:
-The text shown under the crosshair naming a nearby thing that can be taken. The general way things enter
-an Inventory.
+The text shown under the crosshair naming a nearby thing that can be taken. A use press takes what it
+names; walking over the thing takes it too, so the prompt is for reaching what cannot be stepped on,
+for explaining a full Grid, and for the one use-only pickup, a suit switch.
 _Avoid_: use prompt, hint, tooltip
 
 **Auto-Consume**:
-Using a medkit on contact instead of taking it, when doing so would waste none of its healing.
+Using a medkit or battery on contact instead of carrying it, when doing so would waste none of it. A
+pickup that would waste some is carried instead; nothing walked over is left behind unless the Grid is
+full.
 _Avoid_: instant use, auto-heal, quick use
 
 **Box**:

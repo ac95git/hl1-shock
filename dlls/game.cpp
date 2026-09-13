@@ -474,6 +474,10 @@ cvar_t sv_busters = {"sv_busters", "0", FCVAR_SERVER};
 cvar_t inv_rows_start = {"inv_rows_start", "5"};
 cvar_t inv_rows_max = {"inv_rows_max", "9"};
 
+// item_debug 1 prints what every item touch decided (consumed, taken,
+// waiting for a use press, refused) and when a dropped item re-arms.
+cvar_t item_debug = {"item_debug", "0"};
+
 // Skill Tree economy.  Both default to zero: every Skill Point and every
 // Reset Token is found in the world.  Deliberately uncapped -- the ceiling on
 // each is how many pickups a map places, and a cap would let a found pickup
@@ -693,6 +697,7 @@ void GameDLLInit()
 
 	CVAR_REGISTER(&inv_rows_start);
 	CVAR_REGISTER(&inv_rows_max);
+	CVAR_REGISTER(&item_debug);
 
 	CVAR_REGISTER(&skill_points_start);
 	CVAR_REGISTER(&skill_reset_tokens_start);

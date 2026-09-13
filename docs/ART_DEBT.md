@@ -154,6 +154,27 @@ a mostly-full syringe, needle forward.
 ### Done when
 The Syringe on the floor is recognisably the thing in the Grid, and taking it does not sound like a medkit.
 
+## The Antidote — no HUD sprite, so no pickup flash
+
+### Scope
+`CItemAntidote` in `dlls/items.cpp`, and the `spriteName` column of `k_ItemTypes` in
+`game_shared/inventory_defs.h`, which is `nullptr` for it.
+
+### Current stand-in
+Nothing. Since every pickup became walk-over (2026-09-13, [ADR-0011](adr/0011-pickups-are-walk-over.md))
+a carried item is announced by the pickup history flashing its HUD sprite with the `inv_carried` arrow
+over it. The Antidote has no HUD sprite, so `AnnouncePickup` is sent and the history draws nothing: it is
+the one Item Type that goes into the Grid with no signal beyond the HEV line.
+
+Accepted knowingly: the Antidote is a placeholder Item Type that does nothing yet. The keycard was in
+the same position and got its sprite in the same change — `item_security`, drawn by
+`utils/sprtool/icons/security.py` in the `item_*` family's style and sizes — because a door key arriving
+silently would have been a real gap.
+
+### Done when
+The Antidote has a purpose, and with it a HUD sprite at all four buckets so its pickup flashes like the
+others. If it is cut instead, this entry goes with it.
+
 ## The Pulse — sounds
 
 ### Scope

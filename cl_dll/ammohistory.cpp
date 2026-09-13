@@ -63,7 +63,7 @@ void HistoryResource::AddToHistory(int iType, int iId, int iCount)
 	freeslot->DisplayTime = gHUD.m_flTime + HISTORY_DRAW_TIME;
 }
 
-void HistoryResource::AddToHistory(int iType, const char* szName, int iCount)
+void HistoryResource::AddToHistory(int iType, const char* szName, int iCount, bool bCarried)
 {
 	if (iType != HISTSLOT_ITEM)
 		return;
@@ -85,6 +85,16 @@ void HistoryResource::AddToHistory(int iType, const char* szName, int iCount)
 	freeslot->iId = i;
 	freeslot->type = iType;
 	freeslot->iCount = iCount;
+
+	// The arrow is the mod's own (sprites/hud_additions.txt); a -1 here means
+	// the mod's hud.txt is not installed, and the icon then flashes plain.
+	freeslot->iOverlayId = 0;
+	if (bCarried)
+	{
+		const int overlay = gHUD.GetSpriteIndex("inv_carried");
+		if (overlay != -1)
+			freeslot->iOverlayId = overlay;
+	}
 
 	HISTORY_DRAW_TIME = CVAR_GET_FLOAT("hud_drawhistory_time");
 	freeslot->DisplayTime = gHUD.m_flTime + HISTORY_DRAW_TIME;
@@ -179,6 +189,22 @@ bool HistoryResource::DrawAmmoHistory(float flTime)
 
 				SPR_Set(gHUD.GetSprite(rgAmmoHistory[i].iId), r, g, b);
 				SPR_DrawAdditive(0, xpos, ypos, &rect);
+
+				// Carried into the Inventory: the arrow badge sits just left of
+				// the icon, centred on it, fading on the same clock. Beside it
+				// rather than over it, because the item art fills its corners.
+				// The badge sprite is the icon's size with the glyph at its
+				// right, mid-height, so lining the squares up centres the glyph
+				// and the square's empty left is the gap.
+				const int overlay = rgAmmoHistory[i].iOverlayId;
+				if (overlay > 0)
+				{
+					Rect orect = gHUD.GetSpriteRect(overlay);
+					const int ox = xpos - (orect.right - orect.left) - 2;
+					const int oy = ypos + ((rect.bottom - rect.top) - (orect.bottom - orect.top)) / 2;
+					SPR_Set(gHUD.GetSprite(overlay), r, g, b);
+					SPR_DrawAdditive(0, ox, oy, &orect);
+				}
 			}
 		}
 	}

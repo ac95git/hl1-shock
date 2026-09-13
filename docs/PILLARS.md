@@ -181,13 +181,14 @@ the Suit Variant they wear, below.
 are there so the names survive the day it is not, and what happens to a suit being *taken off* is
 deliberately unanswered until then. Vocabulary in [CONTEXT.md](../CONTEXT.md#the-suit).
 
-- **The choice is a world pickup, and it is use-only.** `item_suit` gains a `variant` keyvalue (0/1/2,
-  with FGD choices); a vanilla `item_suit` with no keyvalue is Agility, so stock maps are unchanged and
-  there is no second classname. The suit joined the Pickup Prompt's look-and-press path
-  (`FindLookedAtPickup`, `dlls/player_inventory.cpp`) instead of keeping its walk-over behaviour, so the
-  prompt reads "HEV Suit (Strength)" before the player commits. It never enters the Grid — it is worn,
-  not carried. That includes the first suit at Anomalous Materials: the vanilla locker is open, so the
-  player presses use at it rather than walking into it.
+- **The choice is a world pickup. Switching is use-only; the first suit is walk-over.** `item_suit`
+  gains a `variant` keyvalue (0/1/2, with FGD choices); a vanilla `item_suit` with no keyvalue is
+  Agility, so stock maps are unchanged and there is no second classname. A suitless player walks into
+  the locker at Anomalous Materials exactly as in vanilla. A player already wearing a suit has to look
+  at the other one and press use — the Pickup Prompt (`FindLookedAtPickup`,
+  `dlls/player_inventory.cpp`) reads "HEV Suit (Strength)" before they commit — because the old variant
+  does not drop and a brush past a locker must never switch it
+  ([ADR-0011](adr/0011-pickups-are-walk-over.md)). It never enters the Grid — it is worn, not carried.
 - **Any suit pickup switches.** Using a suit of another variant changes the player's variant, plays the
   short logon line, leaves armour untouched, and consumes the pickup. A suit of the variant already worn
   is refused, exactly as the stock item refuses a second suit. Nothing drops.
@@ -908,10 +909,31 @@ weapon (ADR-0001), so you keep shells for a shotgun you no longer own. Vanilla d
 packs half your reserve into the box. Ours is the deliberate choice, on the grounds that reserve ammo costs
 no Cells and so is harmless to carry.
 
-**Acquisition.** A weapon walked over is taken automatically if there is room, and otherwise left where it
-is. A medkit walked over is consumed on the spot when doing so wastes none of its healing — the test is
-`health + heal <= maxHealth`, so a perfect fit is consumed rather than left. Everything else is taken by
-looking at it and pressing use.
+**Acquisition.** Everything is walk-over, as in Half-Life — settled 2026-09-13 after a playtest, see
+[ADR-0011](adr/0011-pickups-are-walk-over.md). A weapon walked over is taken if there is room. A medkit or
+battery walked over is consumed on the spot when doing so wastes none of it — the test is inclusive,
+`health + heal <= maxHealth`, so a perfect fit is consumed rather than carried — and is carried
+otherwise. Antidote, keycard and syringe are carried on contact. A full Grid leaves an item standing,
+silently, exactly as a full ammo pool leaves an ammo box; the Pickup Prompt still names it, and a use
+press on it prints "No room in inventory". Auto-Consume runs before the Grid is consulted, so a wounded
+player with a full Grid is still healed by a medkit on the floor.
+
+The Pickup Prompt stays for everything takeable, as it always did for weapons. Its two remaining jobs are
+lifting a thing off a shelf the player cannot step onto, and carrying the full-Grid explanation.
+
+**A dropped item cannot walk straight back in.** It spawns inside the dropper's own box, so
+`CItem::DisarmUntilClear` switches its touch off and `ArmWhenClear` turns it back on once the item has
+landed and no player is standing in it. A dropped weapon gets the same for free: `CBasePlayerItem::FallInit`
+leaves it a point until it lands. A use press on a dropped item takes it at once, since that path never
+goes through touch. `item_debug 1` prints what every touch decided and when a dropped item re-arms.
+
+A pickup that went into the Grid is announced on the **pickup history** — the column of icons at the
+bottom right — with the `inv_carried` arrow badge drawn just left of its icon, centred on its height
+(`HistoryResource::DrawAmmoHistory`, `cl_dll/ammohistory.cpp`). Beside rather than over: the first cut
+sat on the icon and the item art fills its corners, so it read as intrusive in play. A pickup used on the spot flashes the plain icon, as vanilla. The flag rides
+on `gmsgItemPickup` as one byte after the classname, sent only through `CItem::AnnouncePickup`. That
+arrow is what replaced the old rule's promise that "the player is never surprised by what they are
+carrying".
 
 **Persistence.** Save games and level transitions, via `CBasePlayer`'s save table. Death is a full reload
 from the last save, so there is no respawn-inventory case to design. Things left behind stay in the map
@@ -927,8 +949,11 @@ around rather than a problem to solve.
 2. ~~**The pickup interaction.**~~ **Done 2026-08-01.** `FindLookedAtPickup` answers "what would a use
    press take?" once, and both the Pickup Prompt and the take use that same answer, so they cannot
    disagree. It deliberately also weighs ordinary usable entities, so pressing use at a button never
-   grabs a medkit behind it. Items are use-only now; medkits Auto-Consume on contact when nothing is
-   wasted; weapons keep walk-over pickup. Ammo readout moved to the left column in iteration 1.
+   grabs a medkit behind it. Items were made use-only here, with the medkit Auto-Consuming on contact
+   when nothing is wasted and weapons keeping walk-over pickup. **Reversed 2026-09-13**: a playtest
+   found use-only unintuitive for Half-Life players, and every pickup is walk-over again — see
+   *Acquisition* under "Agreed design" and [ADR-0011](adr/0011-pickups-are-walk-over.md). Ammo readout
+   moved to the left column in iteration 1.
    *Done when a map plays start-to-finish without opening the panel and it feels normal.*
 3. ~~**Containers and the world.**~~ **Postponed 2026-08-01.** Dropping was completed without needing
    containers: weapons became droppable, and a Stack offers "Drop 1" and "Drop all", spawning one world

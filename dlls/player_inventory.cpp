@@ -504,22 +504,21 @@ static bool UseMedkit(CBasePlayer* pPlayer, int index)
 	return true;
 }
 
-static bool UseBattery(CBasePlayer* pPlayer, int index)
+float BatteryChargeRoom(CBasePlayer* pPlayer)
 {
-	if (!pPlayer->HasSuit())
-		return false;
 	// Battery Capacity raises the ceiling, so ask for it rather than assuming
 	// MAX_NORMAL_BATTERY -- otherwise the Skill silently does nothing here.
 	const float maxArmor = (float)PlayerMaxArmor(pPlayer);
+	return V_max(0.0f, maxArmor - pPlayer->pev->armorvalue);
+}
 
-	if (pPlayer->pev->armorvalue >= maxArmor)
-		return false;
+void ApplyBatteryCharge(CBasePlayer* pPlayer)
+{
+	const float maxArmor = (float)PlayerMaxArmor(pPlayer);
 
 	pPlayer->pev->armorvalue = V_min(
 		pPlayer->pev->armorvalue + gSkillData.batteryCapacity,
 		maxArmor);
-
-	pPlayer->m_inventory.RemoveCountAt(index, 1);
 
 	EMIT_SOUND(ENT(pPlayer->pev), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM);
 
@@ -532,7 +531,18 @@ static bool UseBattery(CBasePlayer* pPlayer, int index)
 	char szcharge[64];
 	sprintf(szcharge, "!HEV_%1dP", pct);
 	pPlayer->SetSuitUpdate(szcharge, false, SUIT_NEXT_IN_30SEC);
+}
 
+static bool UseBattery(CBasePlayer* pPlayer, int index)
+{
+	if (!pPlayer->HasSuit())
+		return false;
+
+	if (BatteryChargeRoom(pPlayer) <= 0.0f)
+		return false;
+
+	pPlayer->m_inventory.RemoveCountAt(index, 1);
+	ApplyBatteryCharge(pPlayer);
 	return true;
 }
 
@@ -654,6 +664,11 @@ bool InventoryDropEntry(CBasePlayer* pPlayer, int index, EEntryKind expectedKind
 		pDropped->pev->velocity = gpGlobals->v_forward * 200
 			+ Vector(RANDOM_FLOAT(-45, 45), RANDOM_FLOAT(-45, 45), RANDOM_FLOAT(0, 80));
 
+		// It spawns inside the player's own box, and every item is walk-over,
+		// so without this it is back in the Grid on the next frame.
+		if (auto item = dynamic_cast<CItem*>(pDropped); item)
+			item->DisarmUntilClear();
+
 		++dropped;
 	}
 
@@ -727,10 +742,9 @@ static bool ClassifyPickup(CBaseEntity* pEnt, EEntryKind& outKind, int& outId)
 
 	if (dynamic_cast<CItem*>(pEnt))
 	{
-		// The suit is prompted for and taken by a use press like everything
-		// else, but it is worn rather than carried: it never reaches the Grid,
-		// and its id is the Suit Variant on offer so the prompt can name which
-		// of the three is lying there.
+		// The suit is prompted for so a player switching variant, which is
+		// the one use-only pickup, sees which of the three is lying there.
+		// It is worn rather than carried, so it never reaches the Grid.
 		if (FClassnameIs(pEnt->pev, "item_suit"))
 		{
 			outKind = EEntryKind::Suit;
@@ -738,9 +752,10 @@ static bool ClassifyPickup(CBaseEntity* pEnt, EEntryKind& outKind, int& outId)
 			return true;
 		}
 
-		// Otherwise only Item Types are pickups. The longjump module is a CItem
-		// too, and is not carried, so it keeps Half-Life's walk-over behaviour
-		// and gets no prompt.
+		// Otherwise only Item Types are pickups. Everything is walk-over now,
+		// so the prompt's jobs are lifting a thing off a shelf the player
+		// cannot step onto and explaining a full Grid. The longjump module is
+		// a CItem too, and is not carried, so it gets no prompt.
 		const EItemTypeId type = ItemTypeFromClassname(STRING(pEnt->pev->classname));
 		if (type == EItemTypeId::None)
 			return false;

@@ -30,6 +30,7 @@
 #include "gamerules.h"
 #include "UserMessages.h"
 #include "suit_defs.h"
+#include "game.h"
 
 class CWorldItem : public CBaseEntity
 {
@@ -152,28 +153,73 @@ void CItem::ItemTouch(CBaseEntity* pOther)
 	if (!g_pGameRules->CanHaveItem(pPlayer, this))
 	{
 		// no? Ignore the touch.
+		if (item_debug.value != 0)
+			ALERT(at_console, "[item] %s touched: game rules refuse\n", STRING(pev->classname));
 		return;
 	}
 
 	// Using it on contact beats carrying it, when nothing would be wasted.
 	if (ConsumeOnContact(pPlayer))
 	{
+		if (item_debug.value != 0)
+			ALERT(at_console, "[item] %s touched: consumed on contact\n", STRING(pev->classname));
 		FinishAcquire(pPlayer);
 		return;
 	}
 
-	// Otherwise use-only items wait for a deliberate use press; walking over
-	// them does nothing. The Pickup Prompt tells the player they can take it.
+	// Otherwise walking over it takes it, as in Half-Life. What refuses here
+	// waits for a use press, and the Pickup Prompt names it meanwhile.
 	//
-	// impulse 101 is the exception: it hands its list straight to the player
-	// through this touch, so honouring the use-only rule there would leave
-	// everything it names lying at the player's feet instead.
-	if (!AutoPickupOnTouch() && !gEvilImpulse101)
+	// impulse 101 hands its list straight to the player through this touch,
+	// so it never waits, or its suit would be left at the player's feet.
+	if (!AutoPickupOnTouch(pPlayer) && !gEvilImpulse101)
 	{
+		if (item_debug.value != 0)
+			ALERT(at_console, "[item] %s touched: waits for a use press\n", STRING(pev->classname));
 		return;
 	}
 
-	AcquireBy(pPlayer);
+	const bool taken = AcquireBy(pPlayer);
+	if (item_debug.value != 0)
+		ALERT(at_console, "[item] %s touched: %s\n", STRING(pev->classname), taken ? "taken" : "refused by MyTouch");
+}
+
+void CItem::DisarmUntilClear()
+{
+	SetTouch(NULL);
+	SetThink(&CItem::ArmWhenClear);
+	pev->nextthink = gpGlobals->time + 0.1f;
+}
+
+void CItem::ArmWhenClear()
+{
+	pev->nextthink = gpGlobals->time + 0.1f;
+
+	if ((pev->flags & FL_ONGROUND) == 0)
+		return;
+
+	// Anyone still standing in it keeps it disarmed: the drop spawns inside
+	// the dropper's own box, and a slow toss can land there too.
+	for (int i = 1; i <= gpGlobals->maxClients; ++i)
+	{
+		CBaseEntity* pPlayer = UTIL_PlayerByIndex(i);
+		if (pPlayer && pPlayer->Intersects(this))
+			return;
+	}
+
+	if (item_debug.value != 0)
+		ALERT(at_console, "[item] %s dropped: armed\n", STRING(pev->classname));
+
+	SetTouch(&CItem::ItemTouch);
+	SetThink(NULL);
+}
+
+void CItem::AnnouncePickup(CBasePlayer* pPlayer, bool carried)
+{
+	MESSAGE_BEGIN(MSG_ONE, gmsgItemPickup, NULL, pPlayer->pev);
+	WRITE_STRING(STRING(pev->classname));
+	WRITE_BYTE(carried ? 1 : 0);
+	MESSAGE_END();
 }
 
 CBaseEntity* CItem::Respawn()
@@ -212,9 +258,12 @@ void CItem::Materialize()
 // family while it lies on the floor, and the player's skin once worn,
 // which is what the client reads back for the gloves and the HUD.
 //
-// Use-only.  The suit joins the Pickup Prompt's look-and-press path
-// (dlls/player_inventory.cpp) so a red suit is never taken by walking
-// past it, but it never enters the Grid: it is worn, not carried.
+// Walk-over for a player with no suit, exactly as in Half-Life, so the
+// locker at Anomalous Materials still works by walking into it.  Switching
+// is use-only: the old variant does not drop, so a red suit must never be
+// taken by brushing past it.  The Pickup Prompt names the variant on offer
+// (dlls/player_inventory.cpp) so the player knows what a press would do.
+// Either way it never enters the Grid: it is worn, not carried.
 //=========================================================
 class CItemSuit : public CItem
 {
@@ -238,7 +287,7 @@ class CItemSuit : public CItem
 	{
 		PRECACHE_MODEL("models/w_suit.mdl");
 	}
-	bool AutoPickupOnTouch() override { return false; }
+	bool AutoPickupOnTouch(CBasePlayer* pPlayer) override { return !pPlayer->HasSuit(); }
 	bool MyTouch(CBasePlayer* pPlayer) override
 	{
 		const bool bSwitching = pPlayer->HasSuit();
@@ -281,7 +330,21 @@ class CItemBattery : public CItem
 		PRECACHE_MODEL("models/w_battery.mdl");
 		PRECACHE_SOUND("items/gunpickup2.wav");
 	}
-	bool AutoPickupOnTouch() override { return false; }
+	// Charged on the spot when the whole charge fits, as the medkit heals on
+	// the spot -- at low armour this is exactly the vanilla battery.  The test
+	// is inclusive: a charge that lands exactly on the ceiling is a perfect fit.
+	bool ConsumeOnContact(CBasePlayer* pPlayer) override
+	{
+		if (pPlayer->pev->deadflag != DEAD_NO || !pPlayer->HasSuit())
+			return false;
+
+		if (BatteryChargeRoom(pPlayer) < gSkillData.batteryCapacity)
+			return false;
+
+		ApplyBatteryCharge(pPlayer);
+		AnnouncePickup(pPlayer, false);
+		return true;
+	}
 	bool MyTouch(CBasePlayer* pPlayer) override
 	{
 		if (pPlayer->pev->deadflag != DEAD_NO)
@@ -291,18 +354,13 @@ class CItemBattery : public CItem
 		if (!pPlayer->HasSuit())
 			return false;
 
-		// Add to the Inventory instead of charging armor immediately.
+		// Carried, because using it now would waste some of it.
 		// A full Grid refuses it and the battery stays in the world.
 		if (InventoryGiveItem(pPlayer, EItemTypeId::Battery) <= 0)
 			return false;
 
 		EMIT_SOUND(pPlayer->edict(), CHAN_ITEM, "items/gunpickup2.wav", 1, ATTN_NORM);
-
-		// Standard ItemPickup for pickup history HUD.
-		MESSAGE_BEGIN(MSG_ONE, gmsgItemPickup, NULL, pPlayer->pev);
-		WRITE_STRING(STRING(pev->classname));
-		MESSAGE_END();
-
+		AnnouncePickup(pPlayer, true);
 		return true;
 	}
 };
@@ -322,12 +380,14 @@ class CItemAntidote : public CItem
 	{
 		PRECACHE_MODEL("models/w_antidote.mdl");
 	}
-	bool AutoPickupOnTouch() override { return false; }
 	bool MyTouch(CBasePlayer* pPlayer) override
 	{
 		if (InventoryGiveItem(pPlayer, EItemTypeId::Antidote) <= 0)
 			return false;
 
+		// Announced, but the Antidote has no HUD sprite, so the history shows
+		// nothing for it yet -- see docs/ART_DEBT.md.
+		AnnouncePickup(pPlayer, true);
 		pPlayer->SetSuitUpdate("!HEV_DET4", false, SUIT_NEXT_IN_1MIN);
 		return true;
 	}
@@ -348,10 +408,13 @@ class CItemSecurity : public CItem
 	{
 		PRECACHE_MODEL("models/w_security.mdl");
 	}
-	bool AutoPickupOnTouch() override { return false; }
 	bool MyTouch(CBasePlayer* pPlayer) override
 	{
-		return InventoryGiveItem(pPlayer, EItemTypeId::Keycard) > 0;
+		if (InventoryGiveItem(pPlayer, EItemTypeId::Keycard) <= 0)
+			return false;
+
+		AnnouncePickup(pPlayer, true);
+		return true;
 	}
 };
 
@@ -379,9 +442,9 @@ class CItemSyringe : public CItem
 		PRECACHE_MODEL("models/w_adrenaline.mdl");
 		PRECACHE_SOUND("items/smallmedkit1.wav");
 	}
-	// Use-to-take, never Auto-Consume: waste is not computable for an effect
-	// that pays out over time, so the test Auto-Consume relies on cannot exist.
-	bool AutoPickupOnTouch() override { return false; }
+	// Always carried, never Auto-Consumed: waste is not computable for an
+	// effect that pays out over time, so the test Auto-Consume relies on
+	// cannot exist.
 	bool MyTouch(CBasePlayer* pPlayer) override
 	{
 		// A full Grid refuses it and the Syringe stays in the world.
@@ -392,6 +455,7 @@ class CItemSyringe : public CItem
 		// deliberately does not sound like a medkit when USED, so this one is
 		// the placeholder most likely to need replacing.
 		EMIT_SOUND(ENT(pPlayer->pev), CHAN_ITEM, "items/smallmedkit1.wav", 1, ATTN_NORM);
+		AnnouncePickup(pPlayer, true);
 
 		return true;
 	}
@@ -583,9 +647,7 @@ class CItemLongJump : public CItem
 
 			g_engfuncs.pfnSetPhysicsKeyValue(pPlayer->edict(), "slj", "1");
 
-			MESSAGE_BEGIN(MSG_ONE, gmsgItemPickup, NULL, pPlayer->pev);
-			WRITE_STRING(STRING(pev->classname));
-			MESSAGE_END();
+			AnnouncePickup(pPlayer, false);
 
 			EMIT_SOUND_SUIT(pPlayer->edict(), "!HEV_A1"); // Play the longjump sound UNDONE: Kelly? correct sound?
 			return true;

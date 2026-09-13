@@ -25,10 +25,13 @@ its behaviour.
 3. If it does something when used, add a case to `InventoryUseEntry` in
    [dlls/player_inventory.cpp](../dlls/player_inventory.cpp). Use behaviour is server-side only; the
    client never decides what using something does.
-4. If it is picked up in the world, give it a `CItem` subclass whose `MyTouch` calls `InventoryGiveItem`,
-   and override `AutoPickupOnTouch()` to return `false` so it is taken with a use press rather than by
-   walking over it. `MyTouch` must return `false` when `InventoryGiveItem` accepts nothing, or a pickup
-   vanishes into a full Grid.
+4. If it is picked up in the world, give it a `CItem` subclass whose `MyTouch` calls `InventoryGiveItem`
+   and then `AnnouncePickup(pPlayer, true)`, so the pickup history flashes it with the carried arrow.
+   Walking over it takes it — every pickup is walk-over
+   ([ADR-0011](../docs/adr/0011-pickups-are-walk-over.md)); do not override `AutoPickupOnTouch`. If
+   using it on the spot can be known to waste nothing, override `ConsumeOnContact` the way the medkit
+   and battery do, and announce with `false` there. `MyTouch` must return `false` when
+   `InventoryGiveItem` accepts nothing, or a pickup vanishes into a full Grid.
 5. Add a `@PointClass` line to [fgd/halflife.fgd](../fgd/halflife.fgd) beside the other `item_*` entries,
    or the entity cannot be placed in a level editor. Easy to forget — nothing fails without it until
    someone tries to build a map.
