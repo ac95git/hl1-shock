@@ -1079,11 +1079,11 @@ void TeamFortressViewport::ShowScoreBoard()
 }
 void TeamFortressViewport::ShowInventory()
 {
-	if (m_pInventoryPanel)
-	{	
-			m_pInventoryPanel->Open();
-			UpdateCursorState();
-		
+	// The Inventory is the suit's own screen: without the suit there is none.
+	if (m_pInventoryPanel && gHUD.HasSuit())
+	{
+		m_pInventoryPanel->Open();
+		UpdateCursorState();
 	}
 }
 

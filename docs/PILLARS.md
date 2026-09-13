@@ -783,7 +783,8 @@ grant Rows later without rework.
 ### What exists
 
 **`CInventoryPanel`** (`cl_dll/vgui_inventory.cpp`) — a VGUI panel with two tabs, Inventory and Upgrades,
-each delegating to a plain helper view. Opened via the `+inventory` command bound in `cl_dll/input.cpp:990`.
+each delegating to a plain helper view. Opened via the `+inventory` command bound in `cl_dll/input.cpp:990`, and only once the player has the suit
+(`TeamFortressViewport::ShowInventory` checks `gHUD.HasSuit()`).
 
 **`CInventoryGridView`** (`cl_dll/vgui_inventory_grid.cpp`)
 
