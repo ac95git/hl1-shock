@@ -582,20 +582,29 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
 - `CSkillTreeView`, a plain C++ helper owned by `CInventoryPanel` rather than a VGUI panel of its own.
 - Tier-sized nodes, lazily loaded HUD sprite icons, edge-anchored connector lines that prefer vertical
   routing, hover tooltips, a skill-point counter and the Reset button.
-- **The tree fits the panel, and nodes fit their icons.** Node size is derived from the largest loaded
-  sprite (`RebuildNodeMetrics`), the grid step from the largest node, and then one uniform scale fits the
-  whole thing to the area — never magnifying past the designed size, and stopping at `k_MinScale` (0.55).
-  That replaces a hardcoded 100px step which needed a ~1600px-wide screen and was silently clipped below
-  it, because `RebuildRects` clamps the centering offset at zero.
+- **The tree fits the panel, and icons fit their nodes.** Node size is the tier's designed size
+  (`k_TierNodeW/H`: 60×44, 74×54, 88×64), the grid step is the Major node plus a gap, and one uniform
+  scale fits the whole thing to the area — never magnifying past the designed size, and stopping at
+  `k_MinScale` (0.55), which is now only the floor under the cost text. That replaces a hardcoded 100px
+  step which needed a ~1600px-wide screen and was silently clipped below it, because `RebuildRects` clamps
+  the centering offset at zero.
 
-  Sizing from the sprites is not decoration. The tree draws its icons with `SPR_DrawAdditive`, which is
-  **native size**, and HUD sprites are **resolution-bucketed**, so the same icon is 44px at 640 and 88px
-  at 1280. Any fixed node size therefore clips its icon at one resolution or wastes space at another.
-  Icons are dropped rather than spilled when they cannot fit, which happens only at 640×480. This was
-  believed to be the only option; it is not — `SPR_DrawGeneric` scales, and the Inventory Grid now fits
-  its tiles through it (pillar 5). Moving the tree onto the same fitted draw would let nodes be sized
-  from the layout instead of from the art. See [ART_DEBT.md](ART_DEBT.md) for what that changes for the
-  replacement icons.
+  **Since 2026-09-14 the icon is fitted into the node**, through the same scaled draw the Inventory Grid
+  uses (`SPR_DrawFitted` in `cl_dll/spr_fit.h`, wrapping `SPR_DrawGeneric` with its frame-over-rect
+  correction; the Grid's `DrawFootprintSprite` calls the same function). HUD sprites are
+  **resolution-bucketed** — the same icon is 44px at 640 and 88px at 1280 — and until then the node was
+  sized *from* the largest loaded sprite, so a 1280 screen got 112×128 Major nodes and the tree scaled
+  down to fit them. Now the art has no say in the layout and seven columns fit a 1280 screen at full
+  scale. **The fit shrinks but never magnifies**: the engine clips a sprite drawn larger than its frame
+  (found the same day on the gauss and egon icons), so a sprite smaller than its node sits centred at 1:1.
+  What that asks of the replacement icons is in [ART_DEBT.md](ART_DEBT.md).
+- **Two preview cvars, `skilltree_preview_cols` and `skilltree_preview_rows`** (client, default 0), force
+  the grid to at least that many columns and rows and draw a Medium-sized ghost outline in every cell with
+  no node. They exist to judge the footprint the Routes will need (7×5, 9×4) at a real resolution before
+  the nodes are built. They can only widen the grid, never hide a column the table already uses.
+- **`skilltree_show_cost 0`** (client, default 1) hides the cost on every node and gives the icon the
+  whole node. Added as a comparison switch on 2026-09-14, when the cost was seen to push the icon out of
+  the node's middle; judged better without, and where the cost goes instead is not yet decided.
 - **No text labels on nodes, by design** — an icon and a cost, nothing else. Reading the tree means
   hovering, which is the same instinct behind the anonymization feature below. This makes icon
   distinctness *blocking* rather than cosmetic; see [ART_DEBT.md](ART_DEBT.md).

@@ -18,12 +18,19 @@ These are engine and SDK constraints, not preferences. Every one of them bit at 
   **dark pixels vanish** — over a lit background (the Grid's tinted cell, a bright wall) black is
   invisible. Edges must be carried by highlights, not outlines.
 - **`SPR_DrawAdditive` draws at native size; `SPR_DrawGeneric` is the one scaled draw.** It takes a
-  width, height and a GL blend pair, and the Inventory Grid fits its tile art through it (`DrawTileSprite`,
-  `cl_dll/vgui_inventory_grid.cpp`). Two traps: the width and height are the size for the **whole sprite
+  width, height and a GL blend pair. Two traps: the width and height are the size for the **whole sprite
   frame**, and the rect is cut out at that scale — a 340×90 icon on a 512×128 sheet asked for at 340×90
   comes out at two thirds, so scale the request by frame-over-rect. And the blend factors are raw GL enums
-  (`SPR_BLEND_*` in `cl_util.h`). Everything else on the HUD still draws native, so a sprite is still made
-  at the size it will be seen, per resolution bucket, unless its caller fits it.
+  (`SPR_BLEND_*` in `cl_util.h`). Both are wrapped once, in `SPR_DrawFitted` (`cl_dll/spr_fit.h`), which
+  fits a rect into a box keeping its aspect; the Inventory Grid's Footprints and the Skill Tree's nodes
+  both draw through it. Everything else on the HUD still draws native, so a sprite is still made at the
+  size it will be seen, per resolution bucket, unless its caller fits it.
+- **The scaled draw shrinks but does not magnify.** Asked for a size larger than the sprite's frame, the
+  engine draws the frame's worth and clips the rest — measured 2026-09-14 on the Skill Tree, where the
+  gauss and egon icons (64×32 at 1280, on an 80×56 box) were the only two magnified and lost their right
+  edge. `SPR_DrawFitted` caps the fit at 1:1 for that reason, so a sprite smaller than its box sits centred
+  at native size. **Art for a fitted box is made at least as large as the box will ever be**, at the
+  largest bucket it is expected to be seen at; shrinking is free, growing is impossible.
 - **`hud.txt` is resolution-bucketed.** Every name is defined at 320, 640, 1280 and 2560, and the engine
   picks the bucket for the current screen width. A name missing at one bucket makes `GetSpriteIndex`
   return -1, and the callers do not check. **Every icon ships at all four buckets.**

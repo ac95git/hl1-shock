@@ -2036,9 +2036,12 @@ Facts found while sizing a bigger tree, so they are not found twice.
 - **The stealth ids are not actually reserved.** The stealth entry says ids 22 and 23 are `SKILL_RESERVED`;
   `_Count` is 22 and neither is in the enum. Add them when the Route that wants them is curated.
 - **Layout.** Around 30 nodes wants 7×5 or 9×4. Rows are cheap above 1280 wide (five rows scale to about
-  0.8 on a 720-high screen); a ninth column risks the 0.55 floor. The fix PILLARS already names is to draw
-  node icons through the fitted `SPR_DrawGeneric` path the Grid uses, so node size follows the layout rather
-  than the art. That is the first UI commit of any Route.
+  0.8 on a 720-high screen); a ninth column risks the 0.55 floor. ~~The fix PILLARS already names is to
+  draw node icons through the fitted `SPR_DrawGeneric` path the Grid uses, so node size follows the layout
+  rather than the art. That is the first UI commit of any Route.~~ **Built 2026-09-14**: icons are fitted
+  into layout-sized nodes, and `skilltree_preview_cols` / `_rows` draw ghost cells for a grid of any size
+  so the footprint can be judged before the nodes exist. See PILLARS pillar 4. Which of 7×5 and 9×4 is
+  still open, and is now something to look at rather than compute.
 - **Ranks cost no ids or wire.** Chained ids drawn as one node showing 2/3 keeps saves and the sync mask as
   they are, and shares one icon, which halves what a Route adds to [ART_DEBT.md](ART_DEBT.md).
 - **The economy.** One pickup is one point, and the brief is one point per optional space. A 60-point

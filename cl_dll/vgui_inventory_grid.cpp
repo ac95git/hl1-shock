@@ -2,6 +2,7 @@
 #include "cl_util.h"
 #include "vgui_inventory.h"
 #include "vgui_inventory_grid.h"
+#include "spr_fit.h"
 #include "ammohistory.h"
 #include <VGUI_App.h>
 #include <VGUI_Cursor.h>
@@ -114,10 +115,6 @@ static void DrawFootprintSprite(HSPRITE hspr, const Rect& rc, int r, int g, int 
 	const int boxW = std::max(1, footprint.w - 2 * pad);
 	const int boxH = std::max(1, footprint.h - 2 * pad);
 
-	const float scale = std::min((float)boxW / sprW, (float)boxH / sprH);
-	const int w = std::max(1, (int)(sprW * scale + 0.5f));
-	const int h = std::max(1, (int)(sprH * scale + 0.5f));
-
 	int src = SPR_BLEND_ONE, dst = SPR_BLEND_ONE;
 	if (alphaBlend)
 	{
@@ -125,18 +122,9 @@ static void DrawFootprintSprite(HSPRITE hspr, const Rect& rc, int r, int g, int 
 		dst = SPR_BLEND_ONE_MINUS_SRC_ALPHA;
 	}
 
-	// The width and height SPR_DrawGeneric takes are the size to draw the
-	// WHOLE sprite frame at; the rect is then cut out of that at the same
-	// scale. A weapon icon is a 340x90 rect on a 512x128 sheet, so asking
-	// for the rect's own size draws it at two thirds. Scale the request up
-	// by frame-over-rect so the rect itself lands at (w, h).
-	const int frameW = std::max(sprW, SPR_Width(hspr, 0));
-	const int frameH = std::max(sprH, SPR_Height(hspr, 0));
-	const int reqW = std::max(1, (int)((float)w * frameW / sprW + 0.5f));
-	const int reqH = std::max(1, (int)((float)h * frameH / sprH + 0.5f));
-
-	const int dx = footprint.x + (footprint.w - w) / 2;
-	const int dy = footprint.y + (footprint.h - h) / 2;
+	// The frame-over-rect correction the scaled draw needs lives in
+	// SPR_DrawFitted, shared with the Skill Tree's nodes.
+	const SprFitDraw d = SPR_DrawFitted(hspr, rc, footprint.x + pad, footprint.y + pad, boxW, boxH, src, dst);
 
 	if (CVAR_GET_FLOAT("inv_icon_debug") != 0.0f)
 	{
@@ -156,11 +144,10 @@ static void DrawFootprintSprite(HSPRITE hspr, const Rect& rc, int r, int g, int 
 		{
 			s_seen[s_nSeen++] = (int)hspr;
 			gEngfuncs.Con_Printf("inv_icon draw: h%d rc %d,%d-%d,%d frame %dx%d at %d,%d size %dx%d req %dx%d blend %x/%x\n",
-				(int)hspr, rc.left, rc.top, rc.right, rc.bottom, frameW, frameH, dx, dy, w, h, reqW, reqH, src, dst);
+				(int)hspr, rc.left, rc.top, rc.right, rc.bottom, SPR_Width(hspr, 0), SPR_Height(hspr, 0),
+				d.x, d.y, d.w, d.h, d.reqW, d.reqH, src, dst);
 		}
 	}
-
-	SPR_DrawGeneric(0, dx, dy, &rc, src, dst, reqW, reqH);
 }
 
 // =====================================================================

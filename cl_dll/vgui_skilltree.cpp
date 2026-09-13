@@ -2,6 +2,7 @@
 #include "cl_util.h"
 #include "vgui_inventory.h"
 #include "vgui_skilltree.h"
+#include "spr_fit.h"
 #include <VGUI_App.h>
 #include <algorithm>
 #include <cstring>
@@ -187,7 +188,9 @@ void CSkillTreeView::EnsureSprites()
 {
     m_nodeSprites.resize(m_nodes.size());
 
-    bool bLoadedAny = false;
+    // Sprites have no say in the layout -- the icon is fitted into whatever
+    // node the layout gives it -- so one arriving late changes nothing but
+    // the next paint.
     for (int i = 0; i < (int)m_nodes.size(); ++i)
     {
         if (m_nodeSprites[i].hSprite != 0) continue;
@@ -197,15 +200,7 @@ void CSkillTreeView::EnsureSprites()
         if (idx < 0) continue;
         m_nodeSprites[i].hSprite = gHUD.GetSprite(idx);
         m_nodeSprites[i].rc      = gHUD.GetSpriteRect(idx);
-        bLoadedAny = true;
     }
-
-    // Node size is derived from the sprites, and these load lazily -- so a
-    // sprite arriving after the layout was computed has to invalidate it.
-    // Without this the first paint locks in the fallback sizes and the layout
-    // never recomputes, because the panel geometry never changed.
-    if (bLoadedAny)
-        m_lastW = 0;
 }
 
 // =====================================================================
@@ -214,43 +209,13 @@ void CSkillTreeView::EnsureSprites()
 int CSkillTreeView::NodeW(ENodeTier tier) const
 {
     int t = (int)tier < 3 ? (int)tier : 0;
-    return std::max(20, (int)(m_baseNodeW[t] * m_scale));
+    return std::max(20, (int)(k_TierNodeW[t] * m_scale));
 }
 
 int CSkillTreeView::NodeH(ENodeTier tier) const
 {
     int t = (int)tier < 3 ? (int)tier : 0;
-    return std::max(16, (int)(m_baseNodeH[t] * m_scale));
-}
-
-// =====================================================================
-// RebuildNodeMetrics - size a node so its icon fits inside it
-// =====================================================================
-void CSkillTreeView::RebuildNodeMetrics()
-{
-    int maxSprW = 0, maxSprH = 0;
-    for (const NodeSprite& ns : m_nodeSprites)
-    {
-        if (ns.hSprite == 0)
-            continue;
-        maxSprW = std::max(maxSprW, ns.rc.right  - ns.rc.left);
-        maxSprH = std::max(maxSprH, ns.rc.bottom - ns.rc.top);
-    }
-
-    // Nothing loaded yet -- keep the floors and try again next paint.
-    if (maxSprW <= 0 || maxSprH <= 0)
-        return;
-
-    const int iconW = maxSprW + 8;
-    const int iconH = maxSprH + 8 + k_CostRoom;
-
-    for (int t = 0; t < 3; ++t)
-    {
-        // The tier increment survives even when icons set the size, so the
-        // Minor/Medium/Major weighting still reads.
-        m_baseNodeW[t] = std::max(k_TierNodeW[t], iconW + t * 8);
-        m_baseNodeH[t] = std::max(k_TierNodeH[t], iconH + t * 6);
-    }
+    return std::max(16, (int)(k_TierNodeH[t] * m_scale));
 }
 
 // =====================================================================// RebuildRects � compute screen-space rect for each node
@@ -265,8 +230,6 @@ void CSkillTreeView::RebuildRects(int x0, int y0, int areaW, int areaH)
     }
 
     // ---- Fit the whole tree to the area ----
-    RebuildNodeMetrics();
-
     int cols = 1, rows = 1;
     for (int i = 0; i < (int)m_nodes.size(); ++i)
     {
@@ -275,9 +238,14 @@ void CSkillTreeView::RebuildRects(int x0, int y0, int areaW, int areaH)
         rows = std::max(rows, def.gridRow + 1);
     }
 
-    // The step follows the largest node, which follows the largest icon.
-    const int colStepBase = m_baseNodeW[2] + k_ColGap;
-    const int rowStepBase = m_baseNodeH[2] + k_RowGap;
+    // The preview can only widen the grid: a layout the table already needs
+    // is never hidden by asking for a smaller one.
+    cols = std::max(cols, m_previewCols);
+    rows = std::max(rows, m_previewRows);
+
+    // The step follows the largest node tier, at the designed size.
+    const int colStepBase = k_TierNodeW[2] + k_ColGap;
+    const int rowStepBase = k_TierNodeH[2] + k_RowGap;
 
     const float sx = (float)areaW / (float)(cols * colStepBase);
     const float sy = (float)areaH / (float)(rows * rowStepBase);
@@ -318,6 +286,14 @@ void CSkillTreeView::RebuildRects(int x0, int y0, int areaW, int areaH)
     int usedWidth  = maxRight - minLeft;
     int usedHeight = rows * m_rowStep;
 
+    // With a preview grid the empty columns count too, or the ghost cells
+    // would hang off one side of a tree centred on its nodes alone.
+    if (m_previewCols > 0 || m_previewRows > 0)
+    {
+        minLeft   = 0;
+        usedWidth = cols * m_colStep;
+    }
+
     int centeredX0 = x0 + std::max(0, (areaW - usedWidth) / 2) - minLeft;
     int centeredY0 = y0 + std::max(0, (areaH - usedHeight) / 2);
 
@@ -329,6 +305,9 @@ void CSkillTreeView::RebuildRects(int x0, int y0, int areaW, int areaH)
         int cy = centeredY0 + def.gridRow * m_rowStep + (m_rowStep - nh) / 2;
         m_nodeRects[i] = { cx, cy, nw, nh };
     }
+
+    m_gridCols = cols; m_gridRows = rows;
+    m_gridX0 = centeredX0; m_gridY0 = centeredY0;
     m_lastX0 = x0; m_lastY0 = y0; m_lastW = areaW; m_lastH = areaH;
 }
 
@@ -455,9 +434,49 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
     // Load sprites (no-op after first successful load)
     EnsureSprites();
 
+    // The preview grid is part of the layout, so a change to it is a
+    // geometry change like any other.
+    const int previewCols = std::max(0, std::min(16, (int)CVAR_GET_FLOAT("skilltree_preview_cols")));
+    const int previewRows = std::max(0, std::min(16, (int)CVAR_GET_FLOAT("skilltree_preview_rows")));
+    if (previewCols != m_previewCols || previewRows != m_previewRows)
+    {
+        m_previewCols = previewCols;
+        m_previewRows = previewRows;
+        m_lastW = 0;
+    }
+
     // Rebuild rects if geometry changed
     if (m_lastW != areaW || m_lastH != areaH || m_lastX0 != x0 || m_lastY0 != y0)
         RebuildRects(x0, y0 + nodeTopOffset, areaW, areaH - nodeTopOffset);
+
+    // ---- Preview: ghost cells where the grid has no node ----
+    //
+    // A Medium-sized outline in every empty cell, so the footprint of a
+    // layout the Routes will need can be judged at a real resolution
+    // before the nodes exist. Off unless a preview cvar is set.
+    if (m_previewCols > 0 || m_previewRows > 0)
+    {
+        const int gw = NodeW(ENodeTier::Medium), gh = NodeH(ENodeTier::Medium);
+        for (int col = 0; col < m_gridCols; ++col)
+        {
+            for (int row = 0; row < m_gridRows; ++row)
+            {
+                bool occupied = false;
+                for (int i = 0; i < (int)m_nodes.size() && !occupied; ++i)
+                {
+                    const SkillDef& def = k_SkillDefs[m_nodes[i]];
+                    occupied = (def.gridCol == col && def.gridRow == row);
+                }
+                if (occupied)
+                    continue;
+
+                const int gx = m_gridX0 + col * m_colStep + (m_colStep - gw) / 2;
+                const int gy = m_gridY0 + row * m_rowStep + (m_rowStep - gh) / 2;
+                ctx->drawSetColor(100, 60, 200, 170);
+                ctx->drawOutlinedRect(gx, gy, gx + gw, gy + gh);
+            }
+        }
+    }
 
     // ---- Connector lines between nodes and their prerequisites ----
     //
@@ -598,6 +617,9 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
     std::vector<DeferredCost> costLabels;
     costLabels.reserve(m_nodes.size());
 
+    // With the cost hidden the icon takes the whole node, centred.
+    const bool bShowCost = CVAR_GET_FLOAT("skilltree_show_cost") != 0.0f;
+
     for (int i = 0; i < (int)m_nodes.size(); ++i)
     {
         const int skillId = m_nodes[i];
@@ -648,30 +670,34 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
         ctx->drawSetColor(fr, fg, fb_col, bUnlocked ? 0 : 100);
         ctx->drawFilledRect(r.x, r.y, r.x + r.w, r.y + stripeH);
 
-        // Sprite icon (native size, centered)
+        // Sprite icon, fitted into the node above the cost room
+        //
+        // The node is sized by the layout, not by the art, so the icon is
+        // shrunk to the room it has: a HUD sprite that is 88px at 1280 and
+        // 132px at 2560 lands the same at both. The 640 bucket's 44px is
+        // smaller than the room and stays 44px, since the engine will not
+        // magnify.
         if (i < (int)m_nodeSprites.size())
         {
             const NodeSprite& ns = m_nodeSprites[i];
             if (ns.hSprite != 0)
             {
-                int sprW = ns.rc.right  - ns.rc.left;
-                int sprH = ns.rc.bottom - ns.rc.top;
-                // Nodes are sized to hold their icon, so this normally passes.
-                // It only bites when the tree has been scaled down to fit a
-                // small panel, and skipping beats spilling a sprite across the
-                // node border, which reads as corruption.
-                const int costRoom = (int)(k_CostRoom * m_scale);
-                if (sprW > 0 && sprH > 0 && sprW <= r.w - 2 && sprH <= r.h - 2 - costRoom)
+                const int costRoom = bShowCost ? (int)(k_CostRoom * m_scale) : 0;
+                const int pad      = std::max(1, (int)(k_IconPad * m_scale));
+                const int boxW     = r.w - 2 * pad;
+                const int boxH     = r.h - 2 * pad - costRoom;
+                if (boxW >= 4 && boxH >= 4)
                 {
-                    int iconAreaH = std::max(8, r.h - 4 - costRoom);
-                    int drawX = r.x + (r.w - sprW) / 2;
-                    int drawY = r.y + 2 + (iconAreaH - sprH) / 2;
                     // Tint: white=unlocked, gold=available, grey=locked
                     int tr = bUnlocked ? 255 : (bAvailable ? 255 : 100);
                     int tg = bUnlocked ? 255 : (bAvailable ? 200 :  80);
                     int tb = bUnlocked ? 255 : (bAvailable ?  60 :  80);
                     SPR_Set(ns.hSprite, tr, tg, tb);
-                    SPR_DrawAdditive(0, drawX, drawY, &ns.rc);
+                    // Shrunk to fit, never magnified: the engine clips a
+                    // sprite drawn larger than its frame (see spr_fit.h), so
+                    // an icon smaller than its node sits centred at 1:1.
+                    SPR_DrawFitted(ns.hSprite, ns.rc, r.x + pad, r.y + pad, boxW, boxH,
+                                   SPR_BLEND_ONE, SPR_BLEND_ONE);
                 }
             }
         }
@@ -680,7 +706,7 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
         //
         // The price belongs next to the thing, not one hover away. Unlocked
         // nodes show nothing: what it cost stopped being a decision.
-        if (!bUnlocked && def.cost > 0 && smallFont)
+        if (bShowCost && !bUnlocked && def.cost > 0 && smallFont)
         {
             DeferredCost dc = {};
             snprintf(dc.text, sizeof(dc.text), "%d", def.cost);

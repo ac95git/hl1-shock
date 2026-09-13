@@ -350,6 +350,6 @@ tree's total, or the tree is deliberately not completable. Not decided; to be an
 ## What is built first
 
 Not decided. Melee and Weapon Specialist need the least new machinery; the Juggernaut needs a
-press-and-release Pulse command pair; the Dash and Alien Routes each need their Module. Before any of
-them: the fitted icon draw, in the ROADMAP infrastructure notes. The id-space ceiling and the four cuts
-were built 2026-09-13.
+press-and-release Pulse command pair; the Dash and Alien Routes each need their Module. The
+infrastructure in front of them is done: the id-space ceiling and the four cuts on 2026-09-13, the fitted
+icon draw and the layout preview cvars on 2026-09-14.

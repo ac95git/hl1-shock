@@ -390,27 +390,28 @@ and the art are the same decision.
 One distinct icon per Skill, grouped so a branch reads as a branch — a shared motif or palette per column,
 with the individual Skill distinguishable inside it.
 
-### The size constraint, which is not obvious
-**`SPR_DrawAdditive` draws at native size, and that is what the tree uses.** So today a node cannot shrink
-an icon to fit; the node is sized *from* the icon (`RebuildNodeMetrics`), and the whole tree is then scaled
-to the panel. *(This entry used to say there was no scaled sprite draw in the HUD API at all. There is —
-`SPR_DrawGeneric`, and the Inventory Grid fits its tiles through it since 2026-09-12; see
-`docs/SPRITE_WORKFLOW.md` for its two traps. The tree has not been moved onto it. Until it is, everything
-below still holds; once it is, the size points below become preferences rather than limits.)*
+### The size constraint, which is no longer one
+**Since 2026-09-14 the tree fits each icon into its node** through `SPR_DrawFitted` (`cl_dll/spr_fit.h`,
+the scaled draw the Inventory Grid uses; see `docs/SPRITE_WORKFLOW.md` for the trap it wraps). The node is
+sized by the layout and the icon is scaled to the room above the cost, keeping its aspect. Before that the
+tree drew icons at native size and sized the node *from* the largest one, so the art dictated the layout.
 
-HUD sprites make this worse by being **resolution-bucketed**: `hud.txt` defines each sprite at 320/640/
-1280/2560, and the engine picks the bucket for the current screen. `item_healthkit` is 44px at 640 and
-88px at 1280. The `dmg_*` family is **128×128** at 1280 — over twice a node — which is why none of them
-are used despite being the best semantic fits (`dmg_shock` for the Discharge, `dmg_chem` for Med Expert).
+HUD sprites are still **resolution-bucketed**: `hud.txt` defines each sprite at 320/640/1280/2560 and the
+engine picks the bucket for the current screen, so `item_healthkit` is 44px at 640 and 88px at 1280. The
+fit absorbs that — the same icon now lands the same size in the node at every bucket. It also means the
+`dmg_*` family (**128×128** at 1280) is usable again for what it fits semantically (`dmg_shock` for the
+Discharge, `dmg_chem` for Med Expert); it was excluded only because it was over twice a node.
 
-Consequences for the replacement art:
+What that leaves for the replacement art:
 
-- **One fixed size, not a bucketed set.** A single size at every resolution makes node geometry stable.
-- **Small.** Seven columns must fit `panelW - 264`. Anything over ~64px forces nodes so large the tree
-  stops fitting on a 1280-wide screen.
-- Below 1024×768 the icons are dropped rather than spilled — seven columns of icons cannot fit the
-  ~340px tree area at 640×480 at any node size. That is a limit of the layout, not of the art.
+- **Make it at least as large as the box, at every bucket.** The engine shrinks but does not magnify
+  (`docs/SPRITE_WORKFLOW.md`), so an icon smaller than its node sits at native size with room around it,
+  and one larger is shrunk to fit. A Major node offers about 80×56 at full scale with the cost hidden,
+  80×44 with it shown; one size a little over that, defined at all four buckets so `GetSpriteIndex` never
+  misses, fits every node at every resolution. Oversize is safe; undersize is what shows.
+- **Aspect matters more than pixels.** The fit keeps the sprite's aspect, so a tall icon in a wide node
+  is small. Icons wider than tall use the node best.
+- Below the `k_MinScale` floor the tree clips rather than shrinks, for the cost text's sake, not the icons'.
 
 ### Done when
-Every Skill in the tree has its own icon, a player can tell two Skills apart without hovering either, and
-the icons are one fixed size small enough that the tree fits a 1280-wide screen without scaling.
+Every Skill in the tree has its own icon, and a player can tell two Skills apart without hovering either.

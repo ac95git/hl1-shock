@@ -129,8 +129,18 @@ private:
     // Cached layout geometry
     int m_lastX0 = 0, m_lastY0 = 0, m_lastW = 0, m_lastH = 0;
 
+    // The grid the last layout was built on: its extent in cells and where
+    // cell (0, 0) starts on screen. Kept so the preview can draw the cells
+    // that have no node in them.
+    int m_gridCols = 1, m_gridRows = 1;
+    int m_gridX0 = 0, m_gridY0 = 0;
+
+    // skilltree_preview_cols / _rows as last read, so a change to either
+    // invalidates the cached layout the way a resize does.
+    int m_previewCols = 0, m_previewRows = 0;
+
     // The tree is laid out to FIT the area rather than at fixed pixel steps.
-    // Seven columns at the full step is 700px against a tree area of
+    // Seven columns at the full step is 728px against a tree area of
     // panelW - 264, so a hardcoded step hangs off the sides of anything but a
     // wide screen -- and RebuildRects clamps the centering offset at zero, so
     // the overflow was silently clipped rather than visibly wrong.
@@ -141,29 +151,19 @@ private:
     int   m_colStep = 100;
     int   m_rowStep = 152;
 
-    // Node size is derived from the icons, not fixed.
-    //
-    // HUD sprites are resolution-bucketed assets sized for the HUD -- the same
-    // icon is 44px at 640 and 88px at 1280 -- and there is no scaled sprite
-    // draw in the HUD API (SPR_DrawAdditive is native size only, as the
-    // Inventory Grid also found). So a node with fixed pixel dimensions either
-    // clips its icon on big screens or wastes space on small ones. Sizing the
-    // node from the sprites instead works at every bucket, and will keep
-    // working when the placeholder icons are replaced.
-    int m_baseNodeW[3] = { 60, 74, 88 };
-    int m_baseNodeH[3] = { 44, 54, 64 };
-
     int NodeW(ENodeTier tier) const;
     int NodeH(ENodeTier tier) const;
 
-    // Fills m_baseNodeW/H from the largest loaded sprite. No-op until sprites
-    // are available, so an early paint does not lock in undersized nodes.
-    void RebuildNodeMetrics();
-
-    // Minimum node dimensions at full scale, indexed by ENodeTier. The floor,
-    // not the answer -- icons enlarge these.
+    // Node dimensions at full scale, indexed by ENodeTier. The layout owns
+    // the node size and the icon is fitted into it (SPR_DrawFitted), so the
+    // art no longer has a say here: HUD sprites are resolution-bucketed --
+    // the same icon is 44px at 640 and 88px at 1280 -- and until 2026-09-14
+    // the node was sized FROM the largest sprite, which is why the tree
+    // needed scaling down to fit anything narrower than ~1600px.
     static constexpr int k_TierNodeW[3] = { 60, 74, 88 };
     static constexpr int k_TierNodeH[3] = { 44, 54, 64 };
+    // Gap between the icon and the node's border, at full scale.
+    static constexpr int k_IconPad = 4;
     // Accent stripe height per tier
     static constexpr int k_TierStripeH[3] = { 2, 3, 4 };
     // Border thickness per tier (1=single outline, 2=double outline inset 1px)
@@ -175,9 +175,10 @@ private:
     static constexpr int k_RowGap = 76;
     // Room reserved inside a node, below the icon, for the cost.
     static constexpr int k_CostRoom = 12;
-    // Below this the nodes are too small to carry an icon and a cost, so the
-    // tree stops shrinking and clips instead. An honest limit rather than a
-    // silent one.
+    // Below this the nodes are too small to carry a cost, which is text and
+    // does not scale, so the tree stops shrinking and clips instead. An
+    // honest limit rather than a silent one. The icon scales with the node
+    // and is not what sets this floor.
     static constexpr float k_MinScale = 0.55f;
     static constexpr int k_ConnRadius = 3;  // half-width of connector lines
 };

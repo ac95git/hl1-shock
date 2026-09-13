@@ -421,6 +421,16 @@ void CHud::Init()
 	// parameters, so a blank tile can be told apart: not loaded, or loaded
 	// and drawn invisibly.
 	CVAR_CREATE("inv_icon_debug", "0", 0);
+	// Force the Skill Tree's grid to at least this many columns and rows,
+	// drawing a ghost cell wherever no node is, so a layout the Routes will
+	// need (7x5, 9x4) can be judged at a real resolution before the nodes
+	// exist. 0 is off: the grid is whatever k_SkillDefs places.
+	CVAR_CREATE("skilltree_preview_cols", "0", 0);
+	CVAR_CREATE("skilltree_preview_rows", "0", 0);
+	// 0 hides the cost on every node and gives the icon the whole node,
+	// centred. A comparison switch: the cost pushes the icon up out of the
+	// node's middle, and this is how to see the tree without it.
+	CVAR_CREATE("skilltree_show_cost", "1", 0);
 	CVAR_CREATE("cl_autowepswitch", "1", FCVAR_ARCHIVE | FCVAR_USERINFO);
 	default_fov = CVAR_CREATE("default_fov", "90", FCVAR_ARCHIVE);
 	m_pCvarStealMouse = CVAR_CREATE("hud_capturemouse", "1", FCVAR_ARCHIVE);
