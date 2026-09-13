@@ -8,7 +8,7 @@ build on, and list the questions that have to be answered before the first line 
 is built, its content moves into PILLARS.md and the entry here is deleted — this file only ever shrinks
 from the top.
 
-**Last updated:** 2026-09-13 (branch `hl-shock` — the monster roster listed; the Panthereye explored)
+**Last updated:** 2026-09-13 (branch `hl-shock` — all seven Skill Tree Routes shaped; the Dash and the alien Module shaped with them, the katana reworked on paper, a melee roster; both Regens, High Jump and Sprint cut)
 
 ## Shape legend
 
@@ -48,6 +48,7 @@ Stations are pillar 1; sounds and icons are not roadmap items at all — see [Ar
 - [Pillar 2: Monsters and bosses](#pillar-2-monsters-and-bosses)
 - [Pillar 2: Decapitation](#pillar-2-decapitation) — a design to port, already read
 - [Pillar 3: Modules](#pillar-3-modules)
+- [Pillar 4: Routes](#pillar-4-routes) — builds; all seven Routes shaped; four Skills cut
 - [Pillar 1: Transmissions](#pillar-1-transmissions)
 - [Pillar 1: The world](#pillar-1-the-world)
 - [Art and audio](#art-and-audio)
@@ -75,7 +76,7 @@ What that leaves:
 | Hook | [Modules](#pillar-3-modules) | `pm_shared/` — same route |
 | Sprint speed (`SprintSpeed`, id 6) | reserved, cut from the tree | `pm_shared/` |
 | High jump (`HighJump`, id 5) | reserved, cut from the tree | `pm_shared/` |
-| Crowbar swing speed (`CrowbarSpeed`, id 11) | reserved, cut from the tree | the crowbar's own damage rule, below |
+| Crowbar swing speed (`CrowbarSpeed`, id 11) | reserved, cut from the tree | nothing, as of 2026-09-13: the damage rule below is being dropped, see the [Melee Route](#melee) |
 | Draw speed | [Weapon handling](#weapon-handling) | nothing — unblocked |
 
 **The movement four are a genuinely different problem.** `pm_shared/` runs from `playermove_t`, not from
@@ -279,8 +280,9 @@ stealth kill from a flank. If "measurably better off" proves too thin in play, a
 victim has never acquired the player is the obvious lever, and it costs one branch on a test already being
 made.
 
-**Stealth Skills.** Ids **22** and **23** are reserved via `SKILL_RESERVED` so a stealth column can open
-later without an id shuffle — the same move already made for the alien column. Nothing gets priced until
+**Stealth Skills.** Ids **22** and **23** are spoken for, so a stealth column can open later without an id
+shuffle — the same move already made for the alien column. (Spoken for, not yet reserved: `_Count` is still
+22 and neither id is in `ESkillId`. See [Routes](#pillar-4-routes).) Nothing gets priced until
 the mechanic has been played. Note the constraint: column 7 is spoken for by the alien branch, and
 `CSkillTreeView` scales the whole tree to fit down to a `k_MinScale` floor of 0.55, so a ninth column risks
 clipping icons that [ART_DEBT.md](ART_DEBT.md) already calls blocking rather than cosmetic.
@@ -347,9 +349,10 @@ is entirely in what the crowbar's name is load-bearing for:
   populated on the client — but the swing-rate change still has to reckon with the first-swing/follow-up
   damage rule, which reads the same timer. See [the prediction problem](#the-prediction-problem).
 
-Open: does the player still find a crowbar somewhere, or is the pickaxe simply what melee *is* in this mod?
-"Replaces" reads as the latter, which is cleaner — one melee weapon, one identity, and the vocabulary
-problem gets solved once instead of twice.
+~~Open: does the player still find a crowbar somewhere, or is the pickaxe simply what melee *is* in this mod?~~
+**Answered 2026-09-13: the crowbar stays and the pickaxe joins it**, as one of a melee roster on the
+crowbar's base, each weapon leaning one way. See the [Melee Route](#melee). The rename of the crowbar-named
+Skills happens once, for the roster; the vocabulary work above still applies.
 
 #### The Gauss Katana
 
@@ -409,8 +412,23 @@ problem gets solved once instead of twice.
   `E:\CustomAssets\models\src\{v,w}_katana`, made by the loop in [MODEL_WORKFLOW.md](MODEL_WORKFLOW.md).
   The `p_` model, the sounds and the HUD icon are the crowbar's; [ART_DEBT.md](ART_DEBT.md) has them.
 
-Still open: does it consume uranium, like the Gauss and Egon? Does it charge, the way
-`GAUSS_PRIMARY_CHARGE_VOLUME` implies for the gun? `DMG_ENERGYBEAM` is the natural damage type and PILLARS
+**Rework, settled 2026-09-13 while shaping the [Energy Route](#energy):**
+
+- **Left click is a plain melee slash.** No wave, no ammo. The blade still lights up.
+- **Right click is a charged ranged attack.** Hold to charge, release a big wave. *Assumed* to spend
+  uranium, since only the left click was exempted; not said in those words.
+- **The wave pierces**: it hits everything on its path, not the first thing.
+- **The wave's damage travels with the projectile**, like the crossbow bolt. Today the damage is an instant
+  trace at swing time under a projectile *visual* (`CKatana::WaveAttack` versus `EV_KatanaArc`), so what
+  hits and what the player sees can disagree. Decoupled by accident; coupled by design from here.
+- **The katana always deals energy damage**, slash and wave, and **scales off both Melee and Energy
+  bonuses**. The v1 slash inherits the crowbar's `DMG_CLUB`; that changes.
+
+Which answers the two questions that used to sit here: it consumes uranium (on the charged wave only), and
+it charges (on the right click).
+
+~~Still open: does it consume uranium, like the Gauss and Egon? Does it charge, the way
+`GAUSS_PRIMARY_CHARGE_VOLUME` implies for the gun?~~ `DMG_ENERGYBEAM` is the natural damage type and PILLARS
 records why (the alien slave is the only thing immune to `DMG_SHOCK`, and `DMG_ENERGYBEAM` has no immunity
 anywhere) — that reasoning applies here unchanged. Whether the crowbar's own swing animations are enough
 for a heavy weapon, or the Dystopia swings get retargeted onto the stock rig, is the first thing v1 in
@@ -1085,9 +1103,9 @@ models.
 `env_shake` and `env_fade`, and a `scripted_sentence` for a first free word. When it finishes, the boss
 removes itself and the global state turns on. All of it is map entities; the only code in the ending is the
 boss knowing its health floor has been reached and firing a target instead of dying.
-- **Which Module?** The set is Pulse, Dash and Hook ([Modules](#pillar-3-modules)). The Pulse is meant to be
-  found early, which suggests Dash or Hook. The fiction has the slave teaching an alien ability, which fits
-  neither obviously.
+- ~~**Which Module?**~~ **Answered 2026-09-13: a fourth one.** The alien Module, a platform for Core-powered
+  alien weapons, whose first weapon summons ghost slaves. Designed under the [Alien Route](#alien). The
+  fiction of the slave teaching an alien ability now fits exactly.
 - **How do the items arrive?** Handed straight into the Inventory, where a full Grid refuses them, or left in
   a Box, which is not built yet.
 - Custom attacks: none written down yet.
@@ -1373,9 +1391,13 @@ can never assume, and because the same comfort goal is met better inside the Pul
 | **Pulse** | The existing Pulse, no longer available from the start. | Suit hardware — the Pulse today comes with the suit at Anomalous Materials |
 | **Dash** | A short, fast movement burst. | **The long jump module**, which serves the same purpose |
 | **Hook** | A grappling hook, in the manner of Opposing Force's barnacle grapple. | — |
+| **The alien Module** (unnamed) | A platform for alien weapons that run on **Cores**; the summon weapon is its first. Handed over by the freed alien slave. | — |
 
 The Opposing Force grapple code will be added to the project for reference; nothing about the Hook should
 be designed against guesses until it is.
+
+The fourth Module was added 2026-09-13 and is designed under the [Alien Route](#alien); it is the one
+Module carried as a *weapon*, which is a precedent for the Hook's "weapon or verb" question below.
 
 ### The precedent is already in the game — including the prediction route
 
@@ -1403,7 +1425,10 @@ Pulse:
   existing Skills (`PulseWindow` 12, `PulseRecharge` 15, `PulseDischarge` 16, `PulseRebound` 17) and the
   `CrowbarFollowUp` (18) that hangs off a deflect all belong here.
 - **Passive** — a **separate, rechargeable health pool** that protects without being timed, for a player
-  who does not want to parry. New Skills, new ids.
+  who does not want to parry. New Skills, new ids. Named the **Defense Matrix** on 2026-09-13 and shaped
+  the same day under the [Juggernaut Route](#juggernaut--resilient), where it came out as neither separate
+  nor passive: the Pulse key *held* for a second, armour as the pool, a larger armour share while up, a 20%
+  slow. The timing branch lives in the same Route.
 
 **Settled 2026-09-12:**
 
@@ -1435,31 +1460,611 @@ since the reasoning it replaces is written down and the new reasoning should be 
 
 ### Open questions
 
-- **What the pool absorbs.** Only the Shield's curated list
-  ([ADR-0005](adr/0005-the-shield-negates-a-curated-damage-list.md)), so both branches protect against the
-  same things and differ in *how* — or everything, which makes it the clearest difference from armour?
-- **How the pool recharges.** After a delay since the last hit, at a rate — or does it share the Pulse's
-  Recharge clock? And does pressing the Pulse still do anything useful for a passive-branch player?
-- **How the pool is shown.** `CHudPulse` already has a charge bar beside the armour readout; a pool is a
-  second quantity for it to carry, or a readout of its own.
+- ~~**What the pool absorbs.**~~ ~~**How the pool recharges.**~~ ~~**How the pool is shown.**~~ **Answered
+  2026-09-13** under the [Juggernaut Route](#juggernaut--resilient): there is no pool. Armour is the pool,
+  the Matrix raises armour's share while held, nothing refills by waiting, and the armour readout tints.
 - **How "inefficient to split" is priced.** The 35-point tree and a 60–70% critical-path budget are the
-  lever; a proving map is what tells whether the pricing does it.
+  lever; a proving map is what tells whether the pricing does it. Both branches now sit in one Route, so
+  "splitting" is within the Juggernaut rather than across Routes.
 - **Pulse Skills before the Module is found.** A player could spend points on a branch for a verb they do
   not have. The [alien column](PILLARS.md#wanted-the-alien-column) already wants "hidden until the player
   carries it" — the Pulse branch is a second customer for the same rendering machinery, and a reason to
   build it once.
-- **Dash's input.** The long jump is duck + jump while moving. Does Dash keep that, take its own key, or
-  work in the air?
+- ~~**Dash's input.**~~ **Answered 2026-09-13** under the [Dash Route](#the-dash-route-name-pending): a
+  tap of shift, in the direction of movement, ground only until the Route's major node puts it in the air.
+  Walk is rebound.
 - **Is the Hook a weapon or a verb?** Opposing Force's grapple occupies a weapon slot. A Module as defined
   above is a verb, which argues for its own key — to be read against the reference code.
 - **Vanilla maps place `item_longjump`.** Keeping the classname means stock maps hand out Dash with no
   edits; renaming it means they hand out nothing.
 - **Acquisition** — walk-over like the long jump, or the Pickup Prompt the suit moved to?
-- **"Dash: upgradeable"** — by Skill Points, which reuses the whole tree and is the pattern the Pulse
-  already follows, or by finding a better Dash?
+- ~~**"Dash: upgradeable"**~~ **Answered 2026-09-13: by Skill Points**, the [Dash Route](#the-dash-route-name-pending).
 - **Where are they shown?** Not a loadout, so the tab is a record of what has been found. The Inventory
   Panel's second tab is already the Skill Tree ("Upgrades"), so this is a third tab or a section of one.
   A Module occupies no Cells, like a Reset Token.
+
+---
+
+## Pillar 4: Routes
+
+**Shape: Shaped. The direction was settled 2026-09-13 and all seven Routes were shaped the same day, each
+in a grilling session. What remains is the order of building, the numbers, and the infrastructure notes
+below.** The agreed tree as one reference, with every node, the prerequisite structure and the
+cross-Route links, is [SKILL_TREE.md](SKILL_TREE.md); this section is the reasoning behind it.
+
+The tree is 16 Skills and 35 points, and the number that is wanted is closer to 50–70. Two things were
+decided about how it gets there, and they pull in opposite directions on purpose:
+
+- **More Skills are definitely needed.**
+- **Diluting the tree is not good design**, in an engine that is already being pushed hard. A bigger tree
+  of flat numbers, each a little more of the same, is the failure mode.
+
+The resolution is **builds**. Skills are added so that *combining* specific bonuses scales exponentially,
+not so that each one is worth a little on its own. The example given: several Backstab damage bonuses
+stacked with several energy damage bonuses culminate in **backstabbing a Gargantua with the Gauss Katana**.
+[ADR-0010](adr/0010-the-backstab-is-positional.md) already says this is intended, so the tree's job is to
+make the path to it exist and cost most of a campaign.
+
+A **Route** is a build path, which is not the same as a column: a Route may cross columns, and the seven
+below are what the tree is curated toward. Note the tension with the decapitation entry above, which argued
+against adding to a tree "deliberately curated down to 15". That reasoning is superseded by this section,
+and wants an ADR when the first Route lands.
+
+### Settled 2026-09-13
+
+- **Battery Regen (id 14) is cut.** It is incredibly overpowered, and it rewards idling, which the mod does
+  not want. It becomes `SKILL_RESERVED` and the id is never reused. Battery Capacity (13) keeps its place;
+  the suit column is one node until the Juggernaut Route gives it more.
+- **High Jump (id 5) is cut.** Higher places should be reachable, but **without altering the normal movement
+  rules**. Reaching is a Module's job (Dash, Hook, see [Modules](#pillar-3-modules)), not a stat's. The id
+  stays reserved; the physics-key route noticed for Modules is still the right route for the Modules
+  themselves.
+- **Regeneration (id 10) and Sprint Speed (id 6) are cut too**, confirmed later the same day, for the same
+  two reasons respectively: passive out-of-combat healing rewards idling, and sprint alters the normal
+  movement rules. Regeneration was the parent of Med Expert (19), which goes back to being a root, where it
+  started. `CPlayerRegen` loses both its Skills and can go with them.
+- **Stacking is the goal, not a hazard.** Every multiplier a Route adds is meant to multiply the others.
+  The Backstab's current tuning (49.5 against a grunt's 50, so that a one-shot is *not* reliable at full
+  melee investment) still describes the early tree. It does not describe the endgame, which is meant to
+  one-shot things that are not grunts.
+
+### What the Gargantua example actually needs
+
+Worth writing down because it is the acceptance test for the whole idea, and one fact about it is not what
+the ADR assumed.
+
+- **The Gargantua takes only energy, crush, mortar and blast** (`GARG_DAMAGE`, `dlls/gargantua.cpp:47`).
+  Everything else is zeroed in `TraceAttack` and scaled by 0.01 in `TakeDamage`.
+- **The katana's blade is club damage today.** `CKatana` overrides only `BaseDamage` and `SwingDelayScale`;
+  the blade goes through `CCrowbar::Swing`, which calls `TraceAttack` with `DMG_CLUB` (`dlls/crowbar.cpp:320`).
+  Only the *wave* is `DMG_ENERGYBEAM` (`dlls/katana.cpp:131`). ADR-0010's line "the Gauss Katana, already
+  proposed as `DMG_ENERGYBEAM`, passes that filter" describes the proposal, not v1. **A katana Backstab on a
+  Gargantua deals zero today**, exactly as the crowbar's does.
+- So the build needs one of: the blade becoming energy damage outright, or a Skill that makes it so.
+  **Settled in the Energy Route: outright.** The katana always deals energy damage; a node that made it so
+  was rejected as leaving the katana half a weapon until bought.
+- The Backstab is a multiplier on the blade only. The wave never reaches `CanBackstab`, and there is no
+  reason it should.
+
+### The seven Routes
+
+Named on 2026-09-13, to be curated one at a time; the order is not set. Routes are meant to combine: the
+Gargantua build is Melee × Energy, and a Route on its own is a starting point rather than a finished
+character. Each is recorded with what exists
+to build on, so that curation starts from the code rather than from the note.
+
+#### Juggernaut — resilient
+
+**Shape: Shaped 2026-09-13**, in a grilling session. **Low mobility, high defense**, and it holds the whole
+of the Pulse: the timing branch that exists, the Defense Matrix that replaces the passive branch, and the
+armour both lean on.
+
+##### The Defense Matrix — settled
+
+The passive health pool from [Modules](#the-pulse-as-a-module--two-branches-instead-of-a-swap) went
+through three shapes in one session and came out as none of them. What it is:
+
+- **Hold the Pulse key for one second** and the Matrix comes up. Gated by its Skill, and needing the Pulse
+  Module like everything else on the press. **The tap's Shield still fires at the front of the press**, so
+  a hold begins with the deflect window and the Matrix follows it; deflect and Matrix are separate verbs on
+  one key and neither invalidates the other.
+- **While it is up, armour takes a far larger share of every hit** than its normal ratio. **Armour is the
+  pool**: there is no second bar. Battery Capacity is its capacity, batteries and chargers are its refill,
+  and **nothing refills by waiting**. Falls and drowning bypass it because the base game already skips
+  armour for both, so no carve-out is needed.
+- **The player is slowed 20% while it is up.** This is the Route's whole cost, and it is paid exactly when
+  the protection is on, never by standing still. It is reachable without touching the movement code: the
+  engine feeds the player's own `maxspeed` into `pmove->maxspeed`, which `pm_shared/` clamps against
+  (`pm_shared/pm_shared.cpp:1144`, `:2940`), and the server sets that value per player. A cap change, not
+  a rule change, which is why it survives the rule that cut Sprint and High Jump. To be measured in play.
+- **It drops on release, at 6 seconds, or at zero armour**, whichever first. **10-second cooldown** after it
+  drops.
+- **The HUD tints the armour readout while it is up**, and nothing else changes.
+
+Rejected on the way, so they are not proposed again: a passive pool that refills after 10 seconds without
+damage (it is Battery Regen under another name); a pool that takes the whole hit (a second armour bar); a
+toggle with two presses (state to forget); changing what a tap does for a Matrix player (the branches are
+meant to mix); a movement penalty on the nodes themselves (a rule change); a lockout against the Dash
+Route (the tree is AND-only). "Low mobility" enforced by pricing alone was the recommendation and was
+overruled in favour of the slow, which is a better answer: the Juggernaut is slow *while being a
+Juggernaut*.
+
+**The word "Shield" is taken** ([CONTEXT.md](../CONTEXT.md): the field a Pulse raises) and the Matrix must
+not be called one in code, docs or commits.
+
+##### Ricochet — settled
+
+**A chance per bullet to bounce it back at the attacker, negated for the player.** The bounced bullet does
+nothing to the player; its full damage goes to the attacker as bullet damage, with a tracer drawn from the
+player back to them. Only while the player has armour, since the plates do the bouncing, and only bullets:
+explosions, melee and energy never ricochet. Ranks raise the chance. The "this hit was turned" half exists
+in the alien grunt's plating (`dlls/agrunt.cpp:221-257`); the return trip is new, and the attacker is known
+at the moment of damage and had a line to the player.
+
+##### The nodes — settled
+
+Eleven, the largest Route, because it holds the Pulse's existing four as well as its own. Ranks count as
+one node each.
+
+| Node | Effect | Note |
+| --- | --- | --- |
+| Fortitude (8) | +25 max health | Exists. Root |
+| Armor Expert (9) | Less gets past armour | Exists. Ranks |
+| Battery Capacity (13) | More max armour | Exists. Ranks |
+| Ricochet | As above | New. Ranks |
+| Pulse Window (12) | Longer Shield | Exists. The timing branch, brought inside the Route |
+| Pulse Recharge (15) | Shorter Recharge | Exists |
+| Pulse Discharge (16) | Negated hits vent at the crosshair | Exists |
+| Pulse Rebound (17) | A deflect skips the Recharge | Exists |
+| Defense Matrix | The gate: hold for 1 s | New. Needs the Pulse Module |
+| Matrix on Kill | A kill while the Matrix is up restores some armour | New. The Route's one way to sustain, and the opposite of idling |
+| Major node | **+100 decaying armour on activation** | New. Numbers to be toned down; the philosophy is below |
+
+**The major node is the Energy tie.** The Energy Route's own major node makes energy weapons drain armour
+as fuel. So a player with both raises the Matrix, gains a hundred decaying armour, and fires the egon into
+it: **the armour is consumed at an alarming rate and the damage is enormous**. What the earlier draft of this
+section called the one *conflict* between Routes is the intended build.
+
+Two things held back on purpose: refill rate and refill delay are not nodes, because shortening a wait is
+the idling lever returning through a side door; and no node touches the slow, because the slow is the
+price.
+
+**The Follow-Up (18) stays where it is**, gated on Crowbar Force and Pulse Recharge. It is now a Melee ×
+Juggernaut link, which is exactly what a cross-gated node is for.
+
+##### What it costs to build
+
+- **A decaying armour grant has to sit above the cap.** Every armour ceiling goes through `PlayerMaxArmor`
+  (the rule in [instructions/04](../instructions/04-CUSTOM-FEATURES.md)); a grant that respects it does
+  nothing for a player at full armour, so the grant is explicitly allowed above it and decays back down.
+  The armour bar is drawn against the maximum the client is sent (`gmsgBattery`'s second short), so an
+  over-cap value needs a HUD answer; the tint is the start of one.
+- **The hold.** The Pulse is an impulse, which is edge-triggered and self-clearing; "held for one second"
+  needs the press *and* the release, which an impulse does not carry. Either the client sends a second
+  impulse on release, or the Pulse moves to a `+pulse` / `-pulse` command pair like `+inventory`. The
+  second is the honest shape.
+- **The share.** Armor Expert already scales `ARMOR_RATIO` (the share that gets *past* armour) through a
+  cvar; the Matrix is a second, larger scale on the same number while it is up, applied in the same place.
+- **The slow** is one `pfnSetClientMaxspeed` call on raise and one on drop, restored on spawn and on
+  restore.
+
+##### Still open
+
+- Every number: the share, the slow (20% is the starting guess), 6 s, 10 s, the grant (100 is "to be
+  toned down"), its decay, Ricochet's chance per rank, Matrix on Kill's amount.
+- The major node's name, and the Matrix's own icon.
+- Whether Ricochet's tracer is the gauss's or its own.
+
+#### Medical
+
+**Shape: Shaped 2026-09-13**, the last of the seven. The smallest Route, and deliberately: with
+Regeneration (10) cut alongside Battery Regen, **there is no passive healing in it at all**. Every node is
+on an action: using a thing, hitting a thing, or being about to die.
+
+What exists under it: Med Expert (19), the Infusion and its three cvars (`dlls/player_infusion.cpp`),
+[ADR-0007](adr/0007-the-infusion-is-one-at-a-time.md), the medkit's single heal value
+(`gSkillData.healthkitCapacity`), and the alien chainsaw as a design intent under the
+[melee alien grunt](#melee-alien-grunt).
+
+##### The nodes — settled
+
+| Node | Effect | Note |
+| --- | --- | --- |
+| Med Expert (19) | An Infusion runs longer | Exists. **The root again**, where it started before Regeneration was made its parent |
+| Potency | An Infusion heals more per second, **and** a medkit heals more | New. Ranks. `infusion_rate` where the tick lands, and the medkit's one value. Name provisional |
+| Overheal | A Syringe used at full health raises health **above the maximum** for the Infusion's length, then it decays back | New. ADR-0007 already lets a Syringe be used at full health and today that is a waste; this makes it a decision. The Juggernaut's decaying armour grant is the same shape |
+| Leech | Melee hits heal a fraction of the damage dealt | New. All melee weapons, not only the chainsaw: **the chainsaw's lifesteal becomes its own base property**, and Leech is what every melee weapon gets. Medical × Melee, the sustain the glass-cannon build lacks |
+| Major node | **Last Stand**: a hit that would kill the player **spends an unused Syringe from the Inventory automatically** and starts the Infusion at once; and **all Infusion healing is doubled while health is below 50** | New. The only node in the tree that spends an item for the player. The below-50 doubling is what makes it felt before the day it saves anyone: a Syringe used while low is already the Route's best heal |
+
+**Cut:** *Field Medic* (medkits and wall chargers heal more; folded into Potency for the medkit half, the
+charger left alone) and a *reserved Station slot* ([Stations](#stations) do not exist; when they do, a node
+is a table row).
+
+**One rule Last Stand inherits, for the tooltip:** the Infusion is one at a time (ADR-0007), so Last Stand
+fires only when no Infusion is running. A player already infusing when the killing hit lands is not saved
+by it. That is the ADR's reasoning holding, not a gap: the alternative is stacking Infusions, which it
+declined.
+
+##### Still open
+
+- Every number: Potency's ranks, Overheal's ceiling and decay, Leech's fraction, Last Stand's cooldown if
+  it needs one.
+- Whether Last Stand should also fire for a Syringe that is *dropped* rather than in the Grid. No: it reads
+  the Inventory, and that is the point of carrying one.
+
+#### Alien
+
+**Shape: Shaped 2026-09-13**, in a grilling session that turned a speculative note into the design below.
+The Route absorbs the reserved [alien column](PILLARS.md#wanted-the-alien-column), ids 20 and 21. It is the
+one Route built on a new **Module**, and the Module came out of the grill as the larger half of the design.
+
+##### The alien Module — settled
+
+- **The summon is a Module**, the fourth after Pulse, Dash and Hook, and the answer to the boss entry's
+  *"Which Module?"*: the [freed alien slave](#friendly-alien-slave) hands it over, **whole**, after the boss
+  fight. A weapon whose right click does nothing reads as broken, so both verbs work from the hand-over and
+  the Route is what makes them grow.
+- **The Module and its ammunition serve several weapons. Marked for refinement.** The Module is a platform:
+  gaining it grants access to alien weapons that run on **Cores**, and the summon weapon below is the first
+  of them. What the others are is not decided (the alien chainsaw is the obvious candidate). The
+  consequence is that "the Module" and "the summon weapon" are two things, and the hidden-until rule below
+  keys on the Module, not on any one weapon.
+- **Cores are the resource**: a real **ammo type**, so the HUD readout, the carry ceiling and the pickup all
+  come from the engine's ammo path; `item_core` is the world pickup, the shape of the uranium box. **Found
+  in the world only, finite**, with a carry ceiling; the hand-over includes a starting stock. Not made by
+  the slave, so that "finite" stays true and the lab is not a place the player treks back to for ammo. A
+  Station that converts something into a Core is the shape a renewable source would take, if one is wanted.
+- **No new binds.** The verbs live on a weapon: **left click summons, right click is the ultimate.** Two
+  impulse binds were considered and rejected as flooding the keyboard.
+
+##### The summon weapon — settled
+
+- **Left click summons one ghost slave** for one Core, on a cooldown, up to a maximum out at once.
+- **A ghost appears near the player on an eligible surface.** Spawning at the crosshair was rejected: it
+  puts the ghost against a wall, and possibly far from the fight the player is in.
+- **A ghost is the stock alien slave on the player's side** with a lifetime and no corpse. It fights what it
+  sees and follows the player at a distance when idle, so the pack moves between rooms. The timer ends it;
+  death ends it early, with no refund. Whatever makes a slave an ally is shared with the friendly slave on
+  the roster, built once.
+- **Right click is the ultimate.** It **fills the pack to the maximum**, one Core per ghost it has to create,
+  and **refuses if the player cannot afford the fill**, so it fires at full strength or not at all. Every
+  ghost is **teleported to the player's left and right, never in front or behind**. They **charge a zap the
+  way a slave does** and **hold it for 3–5 seconds**; **left click fires them all** through the player's own
+  aim, or the timer does. **The volley is the ghosts' last act**: they vanish as it leaves, so the ultimate
+  is "everything I have, now", and a player who wants a pack afterwards summons again.
+- **The player is ethereal for the hold**: takes no damage, drawn translucent, can turn and walk to re-aim,
+  cannot fire or switch (the weapon refuses to holster). Monsters still see and shoot; the shots do nothing.
+  Ethereal ends the instant the volley leaves. The wider version, passing through hits and dropping off
+  monsters' perception, was considered and rejected as engine work for no play gain.
+- **No time freeze.** Dropped: GoldSrc has no time scale that spares the player, and the hold-and-release
+  gives the aiming time a freeze was for. The Dash Route's bullet time no longer has a sibling here.
+- **The Pulse redirect is out of the loop.** The idea (fire the volley at the player behind a standing
+  Shield and let the Discharge vent it at the crosshair) is exactly [ADR-0006](adr/0006-the-discharge-vents-at-the-crosshair.md)
+  with the cap lifted, and it was judged too complex for play. It becomes **one scripted set piece at the
+  end of the game**, outside the loop. The [Nihilanth](#the-nihilanth) entry is where it belongs.
+
+##### The Route's nodes — settled
+
+Seven, sized like the other Routes. The Route sells *more ghosts, longer, sooner*, not the same number
+bigger: ghost zap damage is deliberately not a node, because the Energy Route already sells damage.
+
+| Node | What it does | Note |
+| --- | --- | --- |
+| Hive Capacity (20) | Hivehand holds more hornets | Exists, reserved |
+| Hive Replenish (21) | Hornets replenish faster | Exists as `HiveRegrowth`; display name changes, id does not |
+| Hive Attack Speed | Hivehand fires faster | New. The cadence is predicted, so it is a both-sides node through `skill_tuning.h`, like Fast Reload |
+| Pack | Maximum ghosts out, 1 → 2 → 3 | The ranks shape: chained ids drawn as one node |
+| Tether | Ghost lifetime longer | |
+| Recall | Summon cooldown shorter | |
+| Major node | The volley is energy damage | Stands, and is expected to change. See below |
+
+**The major node is the cross-Route hook.** A slave's zap is `DMG_SHOCK` (`dlls/islave.cpp:831`), which the
+Gargantua ignores and the alien slave itself is immune to. As energy damage the volley scales with the
+Energy Route and passes the Gargantua filter, so **Alien × Energy is a second endgame build** beside
+Melee × Energy.
+
+**Dropped:** *Poise* (a longer hold window) and a *Snark node*. **Snarks may leave the mod entirely**: buggy,
+frail, and outclassed by the ghosts. Not decided; recorded.
+
+**The whole Route is hidden until the player gains the Module.** Hive nodes included: a player who found the
+Hivehand hours earlier does not see them until the slave's hand-over. A gate per node (each Skill naming the
+weapon that reveals it) was considered and set aside for the single gate.
+
+##### Still open
+
+- **Which other weapons the Module serves**, and what a Core-powered weapon is when it is not the summon.
+  The refinement the Module is marked for.
+- **The numbers.** Pack's base, lifetime, cooldown, the hold window inside 3–5 s, Core carry ceiling,
+  starting stock. First guesses, judged against a map like everything else.
+- **The summon weapon's name**, its HUD bucket, its viewmodel and world model. All [ART_DEBT.md](ART_DEBT.md)
+  entries the day it exists.
+- **"Eligible surface near the player."** The test that finds one, and what happens when the player is in
+  a vent with none.
+- **The endgame set piece** that inherits the Pulse redirect.
+- **Do Snarks go?**
+
+What already exists near each part: `CISlave` for the ghost and its zap; `CTalkMonster` plus `CLASS_NONE`
+for the friendly slave (the ally relationship should be one piece of code between them); the uranium box
+(`dlls/egon.cpp:549`) for the Core pickup; `m_iRebounds` for a count that a Skill raises; and the Pulse's
+`CanHolster`-style refusal for the hold.
+
+#### Energy
+
+**Shape: Shaped 2026-09-13**, in a grilling session. **The energy weapons are the katana and the egon**; the
+gauss is probably removed. The Pulse's Discharge and the Alien Route's volley deal energy too.
+
+##### What "energy" is — settled
+
+**Energy is the damage type, `DMG_ENERGYBEAM`, and nothing else.** With the gauss gone every energy source
+already carries it (the egon, `dlls/egon.cpp:271` and `:308`; the katana's wave, `dlls/katana.cpp:131`; the
+Discharge, [ADR-0006](adr/0006-the-discharge-vents-at-the-crosshair.md); the Alien volley's major node) except
+one, and that one changes: **the katana always deals energy damage**, slash and wave alike, and **scales off
+both Melee and Energy bonuses**. That is the Gargantua build in one sentence, and it means the Route's
+test is a damage-type check at the `ApplyMultiDamage` chokepoint, with no weapon list to maintain. A node
+that *made* the blade energy was considered and rejected: it left the katana half a weapon until bought.
+
+Two consequences, stated so they are not rediscovered: **an energy slash passes the alien grunt's
+plating**, so the [melee grunt](#melee-alien-grunt) entry's "the crowbar cannot hurt an armoured grunt" no
+longer describes the katana; and the type's identity is **energy ignores plating and is what the
+Gargantua accepts**, which the Route's tooltips should say rather than a node.
+
+##### The katana rework — settled, recorded under [the Gauss Katana](#the-gauss-katana)
+
+Left click is a plain melee slash with no wave and no ammo; right click is a charged ranged attack that
+releases a big, piercing wave whose damage travels with the projectile. Not a Route change, but the Route's
+nodes are written against it.
+
+##### The nodes — settled
+
+| Node | Effect | Note |
+| --- | --- | --- |
+| Energy Damage | Energy damage dealt up | Root. Ranks 1 → 2 → 3. The katana, the egon, the Discharge and the Alien volley all read it |
+| Egon Focus | Secondary fire unlocks the egon's **narrow beam** | Dormant code: `CEgon::PrimaryAttack` hard-sets `FIRE_WIDE` (`dlls/egon.cpp:217`) and the narrow mode, single target, its own damage (`plrDmgEgonNarrow`) and ammo cadence, is complete and unreachable. Details to be decided |
+| Egon Efficiency | Uranium drains slower | Ranks. One chokepoint, `CEgon::UseAmmo` (`:127`), the `DefaultReload` pattern. Also cheapens the katana's charged wave, so it pays twice |
+| Quick Charge | The katana's charged wave charges faster | The first to cut if the rework's charge is already short |
+| Insulation | Less energy **and shock** damage taken | Shock included so it means something in Xen: controller balls (`dlls/controller.cpp:1410`) and `env_laser`/`env_beam` hazards are energy; the slave's, controller's (`:1228`) and Nihilanth's (`dlls/nihilanth.cpp:1501`) zaps are shock |
+| Major node | **Energy attacks drain armour as well, for bonus damage. Always on, never below a floor** | Below |
+
+**The major node.** Every energy hit spends armour and gets the bonus; the drain never takes the last
+portion of the bar (20 is the starting guess), and below the floor the attack does base damage. No switch
+and no mode: a player who does not want the trade does not buy the node. **It rewards two builds**, and
+that is its purpose:
+
+- **The Juggernaut**, with a deep armour bar and the Matrix's decaying grant to burn: raise the Matrix,
+  fire the egon, and armour goes at an alarming rate for enormous damage. What an earlier draft called the
+  one *conflict* between Routes is the intended build; see the [Juggernaut](#juggernaut--resilient).
+- **The glass-cannon "ninja"**, who dashes and slashes with the katana: all damage, no defence, and the
+  little armour they carry is fuel. Melee × Energy × the Dash Route. *"Ninja"* is the first word anyone has
+  used for the Dash Route and is noted as a candidate name, not a decision.
+
+Held back on purpose: nothing that touches the Discharge specifically (Energy Damage already scales it);
+nothing that changes what the Pulse does (the Juggernaut's); no "wave pierces" node (piercing is what the
+wave does). Dropped from the idea list: a Siphon (chargers refilling uranium) and Discharge-as-Route-weapon.
+
+`PlayerMaxArmor` still governs the drain's ceiling and the floor is the drain's other bound; both live
+where the armour is spent.
+
+#### The Dash Route (name pending)
+
+**Shape: Shaped 2026-09-13**, in a grilling session that shaped the Dash Module with it, the way the Alien
+grill shaped its Module. Was called *Agility* until that collided with the Suit Variant codename
+([CONTEXT.md](../CONTEXT.md#the-suit)), which keeps the word. *"Ninja"*, the glass-cannon dash-and-slash
+build, is the one candidate name so far.
+
+##### The Dash — settled here, for the [Modules](#pillar-3-modules) entry
+
+- **A burst in the direction of movement, on a key press.** Not the long jump renumbered: the long jump
+  throws the player along their *view* (`pm_shared/pm_shared.cpp:2662-2683`, 560 units/s forward with a
+  vertical kick, jump-during-duck on the ground while moving); the Dash goes where the player is *moving*,
+  so sideways and backwards dashes exist and it is a dodge as much as a crossing. Ground only at first.
+- **The key is shift, tap only. Walk is rebound.** Shift is `+speed` in Half-Life, and this mod made
+  walking matter (the noise multiplier, Concealment's stance term), so the Dash key is the stealth key. A
+  tap-to-dash / hold-to-walk split was considered and rejected; walk gets a new default in the mod's
+  config, and everything that says "hold shift to sneak" says the new key. On the wire it needs no button
+  bit: the per-tick command's impulse field reaches the movement code, so a dash can ride the same packet
+  the Pulse does and still be predicted. To be verified when built.
+- **Charges and a cooldown.** One charge at the base, a cooldown between dashes: combat pacing, like the
+  Pulse's Recharge, not idling. Built as a count from the start, the `m_iRebounds` shape, so a node raises
+  the ceiling with one edit.
+- **In the air, only through the Route** (the major node below), and in the air it goes **where the player
+  aims, upward included**. That is how high places get reached without touching jump height, which is
+  what High Jump's cut asked for. The Hook remains the other answer, and is its own Module.
+- **No bullet time.** Dropped: the engine's only time scale slows the player with the world, so a "bullet
+  time" node would be the tree's first tooltip that lies, and a world-slows-player-does-not version is the
+  freeze's cost again. If the feel is wanted it is presentation on the air dash, not a node.
+
+##### The nodes — settled
+
+| Node | Effect | Note |
+| --- | --- | --- |
+| Sure Footing (7) | Falls deal half damage | Exists. The root: a Route about being airborne starts with landing |
+| Dash Reach | The Dash goes further | Ranks |
+| Dash Recovery | The Dash comes back sooner | Ranks. The Alien Route's Recall, same shape |
+| Second Wind | A second Dash charge | The count raised from 1 to 2 |
+| Reprisal | **A one-shot melee kill refills a Dash** | A single melee hit that kills a monster that had not been hurt before: a Backstab kill counts, a Cleave opener counts, finishing a wounded grunt does not. Name provisional |
+| Phase | **No damage taken during the Dash itself** | A dodge, not immunity: the dash lasts a fraction of a second. Where the glass cannon's defence comes from. One flag for the dash's duration. **The first to cut if it proves too strong**, since a dodge with no damage window makes every melee enemy a free hit |
+| Major node | **Air Dash**: the Dash works in the air, and in the air it goes where the player aims | The evolution, and the thing that reaches high places |
+
+Held back on purpose: nothing that changes ground speed or jump height, since the Route's premise is that
+the normal movement rules stay; nothing that touches the Hook. Kill-replenish alternatives considered and
+set aside: a kill shortly after a dash (build-agnostic, but rewards nothing the Dash itself makes
+special), a Backstab kill (Melee-only), any melee kill.
+
+##### Still open
+
+- **The Route's name.**
+- Every number: the burst's speed and length, the cooldown, the air dash's lift.
+- **Walk's new default key.**
+- `item_longjump` in stock maps: keeping the classname hands out the Dash with no map edits, renaming it
+  hands out nothing. Still the Modules entry's question.
+- Acquisition: walk-over like the long jump, or the Pickup Prompt.
+
+#### Weapon Specialist
+
+**Shape: Shaped 2026-09-13**, in a grilling session. The Route for the player who uses the whole
+arsenal: handling speed, typed damage, and a major node that makes swapping weapons the way to fight.
+
+##### The nodes — settled
+
+Seven. Two exist, one is unblocked, four are new.
+
+| Node | Effect | Note |
+| --- | --- | --- |
+| Marksman | Bullet damage up | New. **The root**: bullet damage is what most of the arsenal does and the natural first buy. `DMG_BULLET` at the `ApplyMultiDamage` chokepoint. Ranks |
+| Fast Reload (3) | Reloads quicker | Exists. Ranks. **Rank one covers the shotgun**, which feeds shell by shell and dodges `DefaultReload` today; a reload Skill that skips one gun reads as broken |
+| Quick Draw | Weapons come up faster | New. `DefaultDeploy` is the same chokepoint shape as `DefaultReload` and is predicted, so both sides through `skill_tuning.h`. Ranks |
+| Weapon Mastery (4) | All weapons +10% | Exists. Moved **deeper** into the Route: the "everything" node after the typed ones, not the toll gate in front of them |
+| Demolitions | Explosive damage dealt up, **explosive damage taken down** | New. `DMG_BLAST` at the `RadiusDamage` direct branch, and the same type on the way in. Ranks. The resistance covers the player's own grenades, which is how the "Mastery makes your own explosives hurt you more" accident is answered: not with a guard at the chokepoint, but with a node worth buying for the resistance alone |
+| Headhunter | Headshot damage up | New. One place, the head hitgroup multiplier at `dlls/combat.cpp:1582`, for player-inflicted hits. Ranks. **Designed together with [Decapitation](#pillar-2-decapitation)**, which keys on the same hitgroup; the Panthereye's head is hitgroup 2 and needs remapping first |
+| Major node | **Swap Surge**: for **1–2 seconds after a weapon swap, everything the weapon deals lands harder**, on an internal cooldown | New. A window rather than a single empowered shot so that the egon and MP5 get their burst as much as the shotgun and python get a big first shot. It is what makes Quick Draw a build rather than a convenience: the specialist juggles weapons, and every swap is a hit. Name provisional |
+
+**Cut:** *Bandolier* (ammo carry ceilings). Ammo scarcity is a level-design lever and a Skill that loosens
+it works against the mapper the moment maps exist.
+
+##### Filed elsewhere
+
+- **The animations.** A faster reload or draw with the stock animation reads as the animation being cut
+  off, which is what happens at 0.8× today ([weapon handling](#weapon-handling)). Per-tier reload and draw
+  sequences are model work per weapon per tier. They are an [ART_DEBT.md](ART_DEBT.md) entry the nodes
+  create, not a promise the nodes make; the nodes ship first and read as "faster" until the art exists.
+- **Skills or Evolutions?** Answered by this Route: **numbers are Skills, identity is an Evolution.** A
+  faster reload is a node here; a silencer or a second barrel is an [Evolution](#weapon-evolutions).
+
+##### Still open
+
+- Every number, and the Surge's window and cooldown.
+- Headhunter against Decapitation's damage floor: whether a Headhunter rank makes decapitation more
+  likely, or only the hit bigger.
+- Whether Quick Draw needs its animation to read at all, or a faster stock draw already feels right.
+
+#### Melee
+
+**Shape: Shaped 2026-09-13**, in a grilling session. Mostly built already; what the grill added is a
+roster, a Backstab node, the return of swing speed, and the removal of a base-game rule that was in the
+way of all three.
+
+##### The roster — settled
+
+**The crowbar stays**, and the roster grows on its base: several melee weapons, each cheap, each leaning
+one way.
+
+| Weapon | Lean | State |
+| --- | --- | --- |
+| Crowbar | All-round, good stats | Exists |
+| Gauss Katana | The ultimate melee weapon; always energy damage, scales off Melee *and* Energy | Exists, [reworked on paper](#the-gauss-katana) |
+| Carbon Pickaxe | Slower, stronger | [Entry above](#the-carbon-pickaxe); "replaces the crowbar" is superseded, it joins it |
+| Knife | Higher Backstab base | New |
+| Pipe wrench, others | Maybe | Named as the kind of thing, not committed |
+
+Each is `CCrowbar` with a few numbers overridden, which the katana already proved cheap: `BaseDamage`,
+`SwingDelayScale`, and now a **per-weapon Backstab base** beside them, so the knife's lean is one hook. The
+Inventory makes the roster self-limiting for free: every weapon costs three Cells, so carrying four melee
+weapons is a Row decision, which is pillar 5 doing its job.
+
+**The nodes go generic in name**: Melee Reach, Melee Force, Melee Speed. Ids 1, 2 and 11 are frozen; the
+C++ enumerators and display strings change, which the pickaxe entry already said was free. Open question 4
+below is answered: the crowbar is not replaced, so the rename happens once, for the roster, not for the
+pickaxe.
+
+##### Valve's rapid-swing halving is dropped — settled
+
+The base game halves every crowbar swing that comes within about a second of the last one
+(`dlls/crowbar.cpp:259-269`, "subsequent swings do half"). The katana inherits it, so chained katana
+swings are 20 rather than 40. **Every swing now does full damage.** Three reasons, in the order they came
+up:
+
+- **It made the tree unreadable.** A player checking whether Force worked sees 15, then 7.
+- **It made the speed node dishonest.** Speed only shortens the gap *inside* a chain, and every swing
+  inside a chain was half, so the node bought faster half-hits and never a faster full hit; a player who
+  fights approach-and-strike got nothing from it.
+- **It would have interacted with the katana's right click by accident**, since the halving keys on the
+  left-click timer alone.
+
+Sustained melee damage per second roughly doubles for a player holding the button; that is absorbed by
+retuning base damage and swing time, both already cvars. The roadmap's earlier claim that a faster cadence
+"silently makes every swing a follow-up" was wrong: Valve's test is "was there a pause", which a shorter
+interval does not change. **The word "follow-up" for Valve's subsequent swing is retired**; in this mod
+**Follow-Up** means Skill 18 and nothing else.
+
+##### The nodes — settled
+
+| Node | Effect | Note |
+| --- | --- | --- |
+| Melee Reach (1) | Swings connect from further | Exists as Crowbar Reach. Unranked |
+| Melee Force (2) | Hits land harder | Exists as Crowbar Force. Ranks |
+| Melee Speed (11) | Swings come faster | Back from reserve; with the halving gone there is nothing to untangle. Unranked |
+| Backstab | The rear-arc multiplier: **3× base, ranks raise it to about 5×** | New. Multiplies each weapon's own Backstab base, so the knife climbs highest. 3× stays free for a player with no Melee nodes, so getting behind things is worth doing from hour one |
+| Follow-Up (18) | After a deflect, the next hit lands far harder | Exists, gated on Force and Pulse Recharge. The Melee × Juggernaut link |
+| Major node | **Cleave**: the first hit after an internal cooldown hits everything in its arc **and lands harder**; every hit until the cooldown elapses is normal | New. An opener, which rewards approach-and-strike over holding the button, like the rest of the Route |
+
+**The never-noticed Backstab tier** (a larger multiplier when the victim never acquired the player, deferred
+under [stealth](#deliberately-deferred)) is **a Stealth node, not a Melee one**: it gives the reserved
+stealth ids their first real Skill, and a Melee × Stealth build beside Melee × Energy.
+
+Held back: a chain reward (dropping the halving gives that for free) and cross-Route payoffs, which belong
+to the Route that receives them. A Backstab kill refilling the Dash is the Dash Route's "under certain
+circumstances", not this one.
+
+##### The Gargantua build, restated against the Route
+
+Force × Backstab × Mastery × Follow-Up is 49.5 today, tuned to *not* one-shot a grunt at 50. The Backstab
+ranks and the Energy Route's ranks are where that ceiling climbs, on a katana that is energy and multiplies
+off both. [ADR-0010](adr/0010-the-backstab-is-positional.md)'s note about the blade being club is now
+history the moment the rework lands.
+
+### Seven Routes, seven columns, and what is not in one
+
+The count matches the column count by accident and should not be read as a layout. What is outside every
+Route:
+
+- Nothing, as of 2026-09-13. Sure Footing (7) is the Dash Route's root and Fortitude (8) the Juggernaut's.
+- **The Pulse's timing branch** (Window 12, Recharge 15, Discharge 16, Rebound 17) was the other candidate
+  and is **inside the Juggernaut** as of 2026-09-13, so that one Route holds the whole of the Pulse.
+
+### Infrastructure notes from the same session
+
+Facts found while sizing a bigger tree, so they are not found twice.
+
+- **Grow the id space once, to a ceiling.** `CRestore::ReadField` reads as many array entries as the code
+  declares, not as many as the save holds (`dlls/util.cpp:2262`). Every time `m_bUnlocked` grows, a save
+  that has unlocks in it reads the next field's bytes into the new slots. Size the saved array and the sync
+  mask to a fixed ceiling (96 is plenty) decoupled from `ESkillId::_Count`, so saves stop changing shape.
+- **The stealth ids are not actually reserved.** The stealth entry says ids 22 and 23 are `SKILL_RESERVED`;
+  `_Count` is 22 and neither is in the enum. Add them when the Route that wants them is curated.
+- **Layout.** Around 30 nodes wants 7×5 or 9×4. Rows are cheap above 1280 wide (five rows scale to about
+  0.8 on a 720-high screen); a ninth column risks the 0.55 floor. The fix PILLARS already names is to draw
+  node icons through the fitted `SPR_DrawGeneric` path the Grid uses, so node size follows the layout rather
+  than the art. That is the first UI commit of any Route.
+- **Ranks cost no ids or wire.** Chained ids drawn as one node showing 2/3 keeps saves and the sync mask as
+  they are, and shares one icon, which halves what a Route adds to [ART_DEBT.md](ART_DEBT.md).
+- **The economy.** One pickup is one point, and the brief is one point per optional space. A 60-point
+  tree doubles the optional spaces a campaign must hold, or `item_skillpoint` grows a value keyvalue, or the
+  tree stops being completable. The third reverses a recorded stance in PILLARS pillar 4.
+- **The sum, once all seven were shaped.** Juggernaut 11, Alien 7, Weapon Specialist 7, Dash 7, Energy 6,
+  Melee 6, Medical 5: **49 nodes with ranks counted once**, against 16 today, and about sixteen of them
+  carry two or three ranks. At today's prices (1–3 per node) that is roughly 100 points before ranks and
+  well past it after, against a **50–70 target**. So the target and the shape disagree, and one of them
+  moves: prices come down (a rank at 1 point, a root at 1), the 50–70 becomes what the *critical path*
+  affords rather than the tree's total, or the tree is deliberately not completable, which is the
+  reversal above. **Not decided.** It is the first question of the pricing pass, and it should be answered
+  against a map rather than in the abstract.
+
+### Open questions
+
+- How is a Route drawn? A region of the tree, a column, or nothing visible, with the build discovered by
+  hovering? Anonymization matters more the larger the tree is.
+- **Which Route is built first.** All seven are shaped. Melee and Weapon Specialist need the least new
+  machinery; the Juggernaut needs the `+pulse`/`-pulse` pair; the Dash Route and the Alien Route each need
+  their Module first.
+- The Dash Route's name. *Agility* stays with the suit; the Route needs its own word. *Ninja* is the
+  candidate.
+- ~~Does the Dash Route keep bullet time?~~ Dropped, 2026-09-13.
+- ~~Where does the Pulse's timing branch live?~~ Inside the Juggernaut, 2026-09-13.
+
+### Done when
+
+A player can describe their build in a sentence, and two players with different builds kill the same
+Gargantua in visibly different ways, one of them with a knife.
 
 ---
 
@@ -1609,6 +2214,10 @@ is designed, and may well change name first.
 | **Station** | A world entity that takes items in and gives items out. | Avoid *bench*, *workbench*, *terminal*, *fabricator*. *Terminal* especially — it will be wanted for Transmissions. |
 | **Decapitation** | A lethal head hit that removes the head: headless submodel, thrown skull, blood from the stump. | Distinct from *gibbing*, which is the whole body and already means something in this codebase. **Headless** names the resulting state. |
 | **Carbon Pickaxe** | The other custom weapon. | Named already; recorded here so it is used consistently. **Gauss Katana** graduated to CONTEXT.md on 2026-09-12 when the weapon was built. |
+| **Route** | A build path through the Skill Tree: the set of Skills whose bonuses multiply into one way of playing. Crosses columns. | Named 2026-09-13. Avoid *class*, *spec* and *tree* — the tree is the whole thing. |
+| **Defense Matrix** | The Juggernaut Route's stance: the Pulse key held for a second raises it, armour takes a far larger share of every hit while it is up, the player is slowed. Drops on release, at 6 s, or at zero armour. | Settled 2026-09-13. **Not a Shield** — that word is the Pulse's field in CONTEXT.md. |
+| **Core** | The alien Module's ammunition: an ammo type, found in the world, finite. Powers the summon weapon and whatever other alien weapons the Module serves. | Settled 2026-09-13, replacing *green battery*, which collided with the HEV **Battery** Item Type and the Battery Capacity Skill. *Cell* was also out: it is the Grid's unit. |
+| **Ghost slave** | A summoned, time-limited alien slave that fights for the player. Vanishes on its timer, on death, or with the ultimate's volley. | Settled 2026-09-13 with the Alien Route. |
 
 **Graduated 2026-08-31**, when the stealth design was settled: **Concealment** and **Backstab** are now in
 [CONTEXT.md](../CONTEXT.md), joined there by **Suspicion**, **Search**, **Post**, **Perception Profile**,
@@ -1632,10 +2241,12 @@ Ranked by how much else is waiting on the answer.
 2. ~~**Does the Pulse become a Module?**~~ **Answered 2026-09-12: yes**, with its Skills split into a timing
    branch and a passive health-pool branch so a player need not parry. Found early; branches not exclusive
    but priced so splitting is inefficient. The pool's details are open under [Modules](#pillar-3-modules).
-3. **Are weapon handling upgrades Skills or Evolutions?** Two systems currently want to make the same gun
-   faster. Building both is the failure mode.
-4. **Does the Carbon Pickaxe replace the crowbar entirely?** Decides whether five Skill enumerators, three
-   icons and a CONTEXT.md entry get renamed once or never.
+3. ~~**Are weapon handling upgrades Skills or Evolutions?**~~ **Answered 2026-09-13 by the
+   [Weapon Specialist Route](#weapon-specialist): numbers are Skills, identity is an Evolution.** Reload and
+   draw speed are nodes; a silencer or a second barrel is an Evolution.
+4. ~~**Does the Carbon Pickaxe replace the crowbar entirely?**~~ **Answered 2026-09-13: no.** The crowbar
+   stays as the all-rounder in a melee roster; the crowbar-named Skills are renamed once, to generic melee
+   names, for the roster. See the [Melee Route](#melee).
 5. **Is stealth optional everywhere?** Level design consequence, not a code one, and the answer shapes
    every encounter.
 6. **Recycling: item → materials, or item → item?** The first introduces a whole new identity space

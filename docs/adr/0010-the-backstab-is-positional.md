@@ -62,6 +62,10 @@ plays a ricochet (`:830-851`) and `TakeDamage` would multiply by 0.01 on top (`:
 already proposed as `DMG_ENERGYBEAM` in ROADMAP.md, passes that filter. **The endgame melee weapon is what
 makes a Gargantua stabbable, not a special case in the Backstab.**
 
+*Note, 2026-09-13:* the katana as built does not pass it. Its blade inherits `CCrowbar::Swing` and is
+`DMG_CLUB`; only its wave is `DMG_ENERGYBEAM`. The decision stands — the Backstab is still not special-cased
+— and closing the gap is a Route question in ROADMAP.md (Pillar 4: Routes).
+
 ## Why a virtual and not a flag
 
 `CanBackstab()` is a virtual on `CBaseMonster` returning `true`, overridden to `false` in the excluded
