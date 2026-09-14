@@ -440,6 +440,12 @@ void CHud::Init()
 	// The grid step in pixels at full scale, both axes; 0 is the designed
 	// value (k_Step). For judging node spacing by eye against a preview grid.
 	CVAR_CREATE("skilltree_step", "0", 0);
+	// Highlights any prerequisite edge whose two ends are not grid-adjacent
+	// (see docs/SKILL_TREE.md, "The matrix") -- the mistake a ~180-row,
+	// hand-placed table will eventually make. Off by default; when on it
+	// draws the offending edge thick and red and lists it to the console
+	// once, not every frame.
+	CVAR_CREATE("skilltree_debug_edges", "0", 0);
 	CVAR_CREATE("cl_autowepswitch", "1", FCVAR_ARCHIVE | FCVAR_USERINFO);
 	default_fov = CVAR_CREATE("default_fov", "90", FCVAR_ARCHIVE);
 	m_pCvarStealMouse = CVAR_CREATE("hud_capturemouse", "1", FCVAR_ARCHIVE);

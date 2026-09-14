@@ -692,6 +692,12 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
   node, to judge the footprint of a matrix at a real resolution before the nodes are built; they can only
   widen the grid, never hide a column the table already uses. `skilltree_step` (default 0, meaning the
   designed 96) overrides the grid step for judging spacing by eye.
+- **A layout check** (client), the second half of the pair SKILL_TREE.md asked for before the third Route.
+  `SkillDefsOnePerCell` is a `static_assert` that no two rows of the table share a cell.
+  `skilltree_debug_edges` (default 0) redraws any prerequisite edge whose ends are not grid neighbours,
+  diagonals included, thick and red, marks its midpoint with the span as `(dc,dr)`, and lists the edges to
+  the console once when it turns on or the count changes. Adjacency is one helper, `GridCellsAdjacent`, so
+  the overlay and the listing cannot disagree.
 - **No text labels on nodes, by design** — an icon and a cost, nothing else. Reading the tree means
   hovering, which is the same instinct behind the anonymization feature below. This makes icon
   distinctness *blocking* rather than cosmetic; see [ART_DEBT.md](ART_DEBT.md).

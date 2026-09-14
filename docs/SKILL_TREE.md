@@ -86,9 +86,11 @@ What it costs to build, before the first Stat node exists:
   2026-09-14**, with the saved field renamed so a 96-entry save resets rather than over-reads.
 - ~~**A fourth `ENodeTier`**, below Minor, and a grid step that follows the Stat node.~~ **Built
   2026-09-14**: `ENodeTier::Stat`, square nodes of 32 / 44 / 54 / 64 on a 96-pixel step, both axes.
-- **A layout check.** 180 hand-placed rows in `skill_defs.h` is where mistakes will live: two nodes in one
-  cell, an edge to a node that is not adjacent. ~~A `static_assert` for the first~~ **built 2026-09-14**
-  (`SkillDefsOnePerCell`), and a debug overlay for the second, before the third Route.
+- ~~**A layout check.**~~ **Built 2026-09-14, both halves.** 180 hand-placed rows in `skill_defs.h` is
+  where mistakes will live: two nodes in one cell, an edge to a node that is not adjacent. A
+  `static_assert` catches the first (`SkillDefsOnePerCell`); the client cvar `skilltree_debug_edges`
+  catches the second, drawing any prerequisite edge whose ends are not neighbours (diagonals count) thick
+  and red with its span at the midpoint, and listing them to the console once.
 
 ---
 

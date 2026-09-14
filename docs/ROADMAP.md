@@ -2090,9 +2090,10 @@ Facts found while sizing a bigger tree, so they are not found twice.
 - ~~**`ENodeTier` gains a fourth value**, below Minor, for the Stat node.~~ **Built 2026-09-14** as
   `ENodeTier::Stat`; the existing three were renumbered above it, which is safe because a tier is neither
   saved nor sent.
-- **A layout check before the third Route.** A `static_assert` that no two rows share a cell, and a debug
-  overlay for an edge whose ends are not adjacent. 180 hand-placed rows in a header is where the mistakes
-  will live.
+- ~~**A layout check before the third Route.**~~ **Built 2026-09-14**: the `static_assert` that no two
+  rows share a cell (`SkillDefsOnePerCell`), and the `skilltree_debug_edges` overlay for an edge whose
+  ends are not adjacent. 180 hand-placed rows in a header is where the mistakes will live; see PILLARS
+  pillar 4.
 
 ### Open questions
 

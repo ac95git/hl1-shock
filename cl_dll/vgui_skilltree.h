@@ -139,6 +139,13 @@ private:
     // invalidates the cached layout the way a resize does.
     int m_previewCols = 0, m_previewRows = 0;
 
+    // skilltree_debug_edges: whether the overlay was on last Paint, and the
+    // non-adjacent edge count it last printed to the console -- together
+    // these gate the console listing to "once, and again only if the count
+    // changes" instead of every frame.
+    bool m_bDebugEdgesOn = false;
+    int  m_iDebugEdgesLastCount = -1;
+
     // The tree is laid out to FIT the area rather than at fixed pixel steps.
     // Seven columns at the full step is 728px against a tree area of
     // panelW - 264, so a hardcoded step hangs off the sides of anything but a
