@@ -8,6 +8,7 @@
 #include "items.h"
 #include "skill.h"
 #include "game.h"
+#include "player_skills.h" // PlayerMedkitHeal
 #include "player_inventory.h"
 #include "UserMessages.h"
 #include "suit_defs.h"
@@ -496,7 +497,8 @@ int InventoryTakeItem(CBasePlayer* pPlayer, EItemTypeId type, int count)
 //=========================================================
 static bool UseMedkit(CBasePlayer* pPlayer, int index)
 {
-	if (!pPlayer->TakeHealth(gSkillData.healthkitCapacity, DMG_GENERIC))
+	// The Healing Stat nodes are in the figure, as on the walk-over kit.
+	if (!pPlayer->TakeHealth(PlayerMedkitHeal(pPlayer), DMG_GENERIC))
 		return false; // already at full health; the kit is not spent
 
 	pPlayer->m_inventory.RemoveCountAt(index, 1);

@@ -262,6 +262,11 @@ through, so "melee" is true by construction rather than by a damage-type list:
 - **Nine Melee Damage Stat nodes** (ids 24–32), the Route's roads. Each adds `skill_stat_melee_damage`
   (0.05) to one multiplier — additive within the stat, so five are ×1.25 — applied after Force. The count is
   `CPlayerSkills::CountStat(EStat::MeleeDamage)`; there is no per-node code.
+- **Leech** (id 48, the Medical Route's, 2026-09-14) heals the player `skill_leech_fraction` (0.1) of a
+  melee hit's damage, on a living monster only — crates do not bleed — for every roster weapon, and per
+  victim in a Cleave. The figure is the swing's damage before Weapon Mastery and the hitgroup, which is
+  what the tree lets the player reason about. `TakeHealth` refuses at full health, so a Leech at full
+  does nothing. Medical × Melee, the sustain the glass-cannon build lacks.
 - **The Backstab node** (id 33) multiplies a Backstab by `skill_backstab_bonus_scale` (1.5) on top of the
   weapon's own Backstab base, `CCrowbar::BackstabScale()` (the plain `backstab_damage_scale`, 3, until a
   weapon that leans on it — the knife — overrides it). 3× becomes 4.5× with the node.
@@ -567,6 +572,12 @@ gated on Regeneration, which was cut on 2026-09-13, and it is the root of the Me
 `infusion_duration_bonus` (5). Named for the mechanic rather than the Syringe, so a later source of an
 Infusion does not inherit syringe-flavoured names.
 
+**The Healing Stat nodes** (ids 50–53, the Medical Route's roads, 2026-09-14) each add `skill_stat_healing`
+(0.1) to one multiplier, `PlayerHealingScale`, on the Infusion's rate where the tick lands and on the
+medkit's heal in both places a medkit heals (`PlayerMedkitHeal`, so the walk-over kit's "wastes nothing"
+test and the Inventory's Use agree). The rate, not the duration: more per second, the same window. The
+wall charger is untouched. **Leech** (id 48) is under [pillar 2](#2-enhanced-combat) with the melee Skills.
+
 **Sounds** — `items/smallmedkit1.wav` on pickup, `items/medshot4.wav` on use, `items/medshotno1.wav` on a
 refused press, and the `!HEV_HEAL7` suit line ("hiss, morphine_shot"), throttled `SUIT_NEXT_IN_30SEC`.
 The *use* sound is deliberately not the medkit's — the two items must not sound alike in the moment they
@@ -622,13 +633,14 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
 
 **Definitions** — `game_shared/skill_defs.h`, compiled into both DLLs
 
-- **37 nodes in the tree, every one costing one point** (a `static_assert` holds every row to it): the
+- **43 nodes in the tree, every one costing one point** (a `static_assert` holds every row to it): the
   Melee Route in columns 0–3 — Reach at the root, two roads of Melee Damage Stat nodes down to Speed and
   Force, on to the Backstab node, meeting at Cleave — the Weapon Specialist Route in columns 9–11, built
   whole on 2026-09-14 (Marksman at the root in the middle of the region, Bullet Damage Stat nodes as its
-  roads, Fast Reload and Weapon Mastery moved into it, Swap Surge at the bottom), and the pre-Routes
-  columns between them (the Pulse 4–5, the suit 6, Survivability 7–8), each waiting for its Route to give
-  it roads. Follow-Up sits at
+  roads, Fast Reload and Weapon Mastery moved into it, Swap Surge at the bottom), the Medical Route
+  building in columns 12–13 (Med Expert at the root, Healing Stat nodes as its roads, Leech; Overheal and
+  Last Stand reserved), and the pre-Routes columns between them (the Pulse 4–5, the suit 6, Survivability
+  7–8), each waiting for its Route to give it roads. Follow-Up sits at
   the seam between Melee and the Pulse because it is gated on one of each. The layout is in the comment
   above `k_SkillDefs`; the design is [SKILL_TREE.md](SKILL_TREE.md#the-matrix--settled-2026-09-14).
 - **Stat nodes are rows like any other**, with `ENodeTier::Stat` and an `EStat` naming what they grant;

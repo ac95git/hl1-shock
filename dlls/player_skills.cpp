@@ -6,6 +6,7 @@
 #include "weapons.h" // MAX_NORMAL_BATTERY
 #include "player_skills.h"
 #include "game.h"
+#include "skill.h" // gSkillData, for the medkit's heal
 #include "UserMessages.h"
 #include <algorithm>
 #include <cstring>
@@ -320,6 +321,26 @@ float SkillScaleWeaponDamage(entvars_t* pevAttacker, float flDamage, int bitsDam
         flDamage *= std::max(0.0f, skill_demolitions_scale.value);
 
     return flDamage;
+}
+
+// =====================================================================
+// PlayerHealingScale / PlayerMedkitHeal
+// =====================================================================
+float PlayerHealingScale(CBasePlayer* pPlayer)
+{
+    if (!pPlayer)
+        return 1.0f;
+
+    const int iStat = pPlayer->m_skills.CountStat(EStat::Healing);
+    if (iStat <= 0)
+        return 1.0f;
+
+    return 1.0f + iStat * std::max(0.0f, skill_stat_healing.value);
+}
+
+float PlayerMedkitHeal(CBasePlayer* pPlayer)
+{
+    return gSkillData.healthkitCapacity * PlayerHealingScale(pPlayer);
 }
 
 // =====================================================================

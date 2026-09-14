@@ -40,7 +40,7 @@ are assigned when a node is built, never reused, and **22 and 23 are spoken for*
 | [Melee](#melee) | 6 + 9 Stat | Melee Reach (1) | Cleave | — . **Built 2026-09-14** |
 | [Weapon Specialist](#weapon-specialist) | 7 + 7 Stat | Marksman (35) | Swap Surge (39) | — . **Built 2026-09-14** |
 | [The Dash Route](#the-dash-route) | 7 | Sure Footing (7) | Air Dash | The Dash Module for its Dash nodes |
-| [Medical](#medical) | 5 | Med Expert (19) | Last Stand | — |
+| [Medical](#medical) | 5 + 4 Stat | Med Expert (19) | Last Stand | — . **Building since 2026-09-14** |
 
 49 Skills, ranks counted once. About sixteen carry ranks, and each rank becomes a Stat node on the road
 under [the matrix](#the-matrix--settled-2026-09-14); the tree that results is in the region of 120–180
@@ -323,15 +323,28 @@ time: dropped.
 
 ## Medical
 
-The smallest Route, with **no passive healing in it at all**. [ROADMAP](ROADMAP.md#medical).
+**Building since 2026-09-14**, node by node on the matrix. The smallest Route, with **no passive healing
+in it at all**. [ROADMAP](ROADMAP.md#medical).
 
-| Node | Id | Effect | Ranks | State |
-| --- | --- | --- | --- | --- |
-| Med Expert | 19 | An Infusion runs longer | — | Exists. **Root** |
-| Potency | new | An Infusion heals more per second, and a medkit heals more | ranks | New. Name provisional |
-| Overheal | new | A Syringe at full health raises health above the maximum for the Infusion's length, decaying back | — | New |
-| Leech | new | Melee hits heal a fraction of the damage dealt. The chainsaw's lifesteal is its own base property | — | New |
-| **Major** | new | **Last Stand**: a hit that would kill the player spends an unused Syringe automatically and starts the Infusion; all Infusion healing is doubled below 50 health | — | New |
+| Node | Id | Effect | State |
+| --- | --- | --- | --- |
+| Med Expert | 19 | An Infusion runs longer | Built. **Root**; moved to the region |
+| Healing ×4 | 50–53 | +10% on an Infusion's rate and a medkit's heal each, additive within the stat. **Potency's ranks became these** | Built. **The roads** |
+| Overheal | 47 | A Syringe at full health raises health above the maximum for the Infusion's length, decaying back | Reserved |
+| Leech | 48 | Melee hits on a living monster heal a tenth of the swing's damage (`skill_leech_fraction`), every roster weapon, per victim in a Cleave. The chainsaw's lifesteal is its own base property | Built |
+| **Major** | 49 | **Last Stand**: a hit that would kill the player spends an unused Syringe automatically and starts the Infusion; all Infusion healing is doubled below 50 health | Reserved. **One question before it is built**: whether the killing blow still lands and the Infusion races it, or the player is held at 1 health for the Syringe to work. The text reads as the second; not said |
+
+The region as placed, columns 12–13, `H` a Healing Stat node:
+
+```
+     col12       col13
+r0   Med Expert  H
+r1   H           Leech
+r2   Overheal    H
+r3   Last Stand  H
+```
+
+Leech costs 2 from nothing, Overheal 2, Last Stand 8 (both roads' ends).
 
 ```mermaid
 graph TD

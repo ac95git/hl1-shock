@@ -167,6 +167,8 @@ Raising `skill_points_start` is the way to work on the tree UI without hunting f
 | `skill_swap_surge_scale` | 1.5 | Swap Surge multiplies all player-dealt damage while its window is open |
 | `skill_swap_surge_window` | 2 | Seconds the Surge window stays open after a swap, draw delay included |
 | `skill_swap_surge_cooldown` | 6 | Seconds from one Surge's swap before the next can open |
+| `skill_stat_healing` | 0.1 | Each Healing Stat node adds this to one multiplier on an Infusion's rate and a medkit's heal |
+| `skill_leech_fraction` | 0.1 | Leech heals this fraction of a melee hit's damage on a living monster |
 
 Two rules that are easy to break:
 

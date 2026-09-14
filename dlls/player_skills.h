@@ -177,3 +177,15 @@ float SkillScaleWeaponDamage(struct entvars_s* pevAttacker, float flDamage, int 
 // Skill.  Decapitation, when built, keys on the same hitgroup.
 // =====================================================================
 float SkillHeadshotScale(struct entvars_s* pevAttacker);
+
+// =====================================================================
+// The Healing Stat nodes: one multiplier on what an Infusion tick and a
+// medkit heal, 1 + count * skill_stat_healing.  Read where each heal
+// is computed (player_infusion.cpp, healthkit.cpp, UseMedkit), never
+// anywhere passive.
+// =====================================================================
+float PlayerHealingScale(CBasePlayer* pPlayer);
+// The medkit's heal for this player: gSkillData.healthkitCapacity scaled.
+// Both places a medkit heals ask this, so the "wastes nothing" test and
+// the heal agree.
+float PlayerMedkitHeal(CBasePlayer* pPlayer);

@@ -590,6 +590,10 @@ protected:
 	// anything else, so a blade through a crate is still the blow Half-Life's
 	// breakables key their crowbar rules on.
 	int HitDamageType(CBaseEntity* pVictim);
+	// Leech (the Medical Route): heals the player a fraction of a melee hit
+	// on a living monster.  Every roster weapon, not only the chainsaw to
+	// come, whose lifesteal will be its own base property on top.
+	void LeechHeal(float flDamage);
 	// The swing's damage before anything per-victim: base, the weapon's share
 	// for this swing, Melee Force, the Melee Damage Stat nodes, and Cleave's
 	// scale on a Cleave swing.

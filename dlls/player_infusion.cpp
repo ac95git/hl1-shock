@@ -12,6 +12,7 @@
 #include "weapons.h"
 #include "player.h"
 #include "player_infusion.h"
+#include "player_skills.h" // PlayerHealingScale
 #include "UserMessages.h"
 #include "game.h"
 
@@ -211,7 +212,9 @@ void CPlayerInfusion::Think(CBasePlayer* pPlayer)
 	// spin here -- at worst this runs duration/interval times.
 	while (now >= m_flNextTick && m_flNextTick <= m_flEndTime)
 	{
-		m_flAccum += infusion_rate.value * k_InfusionTickInterval;
+		// The Healing Stat nodes scale the rate, not the duration: more per
+		// second, the same window.
+		m_flAccum += infusion_rate.value * PlayerHealingScale(pPlayer) * k_InfusionTickInterval;
 
 		const int whole = (int)m_flAccum;
 		if (whole > 0)

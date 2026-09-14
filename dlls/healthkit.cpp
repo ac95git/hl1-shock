@@ -22,6 +22,7 @@
 #include "skill.h"
 #include "gamerules.h"
 #include "UserMessages.h"
+#include "player_skills.h" // PlayerMedkitHeal
 
 class CHealthKit : public CItem
 {
@@ -75,10 +76,12 @@ bool CHealthKit::ConsumeOnContact(CBasePlayer* pPlayer)
 
 	// The test is "wastes nothing", inclusive: a kit that heals the player to
 	// exactly full is a perfect fit and should be used, not left behind.
-	if (pPlayer->pev->health + gSkillData.healthkitCapacity > pPlayer->pev->max_health)
+	// The Healing Stat nodes are in the figure, so the test and the heal agree.
+	const float flHeal = PlayerMedkitHeal(pPlayer);
+	if (pPlayer->pev->health + flHeal > pPlayer->pev->max_health)
 		return false;
 
-	if (!pPlayer->TakeHealth(gSkillData.healthkitCapacity, DMG_GENERIC))
+	if (!pPlayer->TakeHealth(flHeal, DMG_GENERIC))
 		return false;
 
 	EMIT_SOUND(ENT(pPlayer->pev), CHAN_ITEM, "items/smallmedkit1.wav", 1, ATTN_NORM);

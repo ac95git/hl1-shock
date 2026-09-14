@@ -559,6 +559,11 @@ cvar_t skill_headhunter_scale = {"skill_headhunter_scale", "1.5"};
 cvar_t skill_swap_surge_scale = {"skill_swap_surge_scale", "1.5"};
 cvar_t skill_swap_surge_window = {"skill_swap_surge_window", "2"};
 cvar_t skill_swap_surge_cooldown = {"skill_swap_surge_cooldown", "6"};
+// The Medical Route (docs/SKILL_TREE.md).  Each Healing Stat node adds this
+// to one multiplier on an Infusion's rate and a medkit's heal; Leech heals
+// this fraction of a melee hit's damage.  First guesses.
+cvar_t skill_stat_healing = {"skill_stat_healing", "0.1"};
+cvar_t skill_leech_fraction = {"skill_leech_fraction", "0.1"};
 // Scales the reload delay. Read from both DLLs through skill_tuning.h, because
 // the delay it sets is m_flNextAttack, which the client predicts.
 cvar_t skill_reload_time_scale = {"skill_reload_time_scale", "0.8"};
@@ -778,6 +783,8 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_swap_surge_scale);
 	CVAR_REGISTER(&skill_swap_surge_window);
 	CVAR_REGISTER(&skill_swap_surge_cooldown);
+	CVAR_REGISTER(&skill_stat_healing);
+	CVAR_REGISTER(&skill_leech_fraction);
 
 	CVAR_REGISTER(&pulse_window);
 	CVAR_REGISTER(&pulse_window_bonus);

@@ -139,7 +139,19 @@ enum class ESkillId : int
 	StatBullet06        = 45,
 	StatBullet07        = 46,
 
-	_Count              = 47, // keep last
+	// ---- The Medical Route (docs/SKILL_TREE.md) ----
+	// Med Expert (19) is its root; the id predates it.  Building node by
+	// node from 2026-09-14.  No passive healing anywhere in it.
+	Overheal            = 47, // a Syringe at full health heals above the maximum, decaying back
+	Leech               = 48, // melee hits heal a fraction of the damage dealt
+	LastStand           = 49, // the major: a killing hit spends a Syringe; Infusions doubled below 50
+	// The Route's Stat nodes, its roads: Potency's ranks became these.
+	StatHeal01          = 50,
+	StatHeal02          = 51,
+	StatHeal03          = 52,
+	StatHeal04          = 53,
+
+	_Count              = 54, // keep last
 };
 
 // ---------------------------------------------------------
@@ -158,6 +170,7 @@ enum class EStat : uint8_t
 	None         = 0,
 	MeleeDamage  = 1, // melee hits land harder, +skill_stat_melee_damage each
 	BulletDamage = 2, // bullets hit harder, +skill_stat_bullet_damage each
+	Healing      = 3, // Infusions and medkits heal more, +skill_stat_healing each
 };
 
 // How many ids have a row in k_SkillDefs.  Bounds every walk over the
@@ -237,6 +250,12 @@ struct SkillDef
 	{ ESkillId::idName, "Bullet Damage", "Bullets hit 5% harder. Every Bullet Damage node adds another 5%.", \
 	  "d_9mmAR", col, row, 1, ESkillId::prereqName, ESkillId::None, ENodeTier::Stat, EStat::BulletDamage }
 
+// A Healing Stat node: the road material of the Medical Route.  Potency's
+// ranks, in the shaped design, are these.
+#define STAT_HEAL(idName, col, row, prereqName) \
+	{ ESkillId::idName, "Healing", "Infusions and medkits heal 10% more. Every Healing node adds another 10%.", \
+	  "cross", col, row, 1, ESkillId::prereqName, ESkillId::None, ENodeTier::Stat, EStat::Healing }
+
 // Indexed by ESkillId, so entry [n] is always the Skill with id n.
 //
 // Every node costs ONE point: under the matrix (docs/SKILL_TREE.md) the price
@@ -249,13 +268,13 @@ struct SkillDef
 // gated on both Melee Force and Pulse Recharge, and a cross-link wants its
 // two parents adjacent.
 //
-//     MELEE ROUTE                  PULSE      (fork)  SUIT     SURVIVAL (fork)     WEAPON SPECIALIST
-//     col0     col1     col2       col3       col4    col5     col6     col7     col8       col9      col10     col11
+//     MELEE ROUTE                  PULSE      (fork)  SUIT     SURVIVAL (fork)     WEAPON SPECIALIST              MEDICAL
+//     col0     col1     col2       col3       col4    col5     col6     col7     col8       col9      col10     col11     col12     col13
 //
-// r0  S01      Reach    S02        .          Window          Capacity Fortitude            Demol     B01       Headhunt
-// r1  Speed    .        Force      Follow-Up  Recharge                 ArmorExp FallResist  B02       Marksman  B03
-// r2  S03      .        S04        .          Discharge Rebound                 MedExpert   Reload    .         QuickDraw
-// r3  S05      .        S06                                                                B04       .         B05
+// r0  S01      Reach    S02        .          Window          Capacity Fortitude            Demol     B01       Headhunt  MedExpert H01
+// r1  Speed    .        Force      Follow-Up  Recharge                 ArmorExp FallResist  B02       Marksman  B03       H02       Leech
+// r2  S03      .        S04        .          Discharge Rebound                             Reload    .         QuickDraw Overheal  H03
+// r3  S05      .        S06                                                                B04       .         B05       LastStand H04
 // r4  S07      .        Backstab                                                           .         Mastery   B06
 // r5  S08      Cleave   S09                                                                .         SwapSurge B07
 //
@@ -272,6 +291,11 @@ struct SkillDef
 // gate in front of them).  Swap Surge, the major, needs Mastery and the
 // Quick Draw road's end.  Fast Reload and Quick Draw cost 3 from nothing,
 // Demolitions and Headhunter 3, Mastery 8, Swap Surge 11.
+//
+// Medical: Med Expert is the root, the smallest Route and two columns wide.
+// The right road (H01, Leech, H03, H04) and the left (H02, Overheal) meet
+// at Last Stand.  Leech costs 2, Overheal 2, Last Stand 8.  Nodes not yet
+// built are SKILL_RESERVED with their ids held.
 inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 {
 	//  id                        name                description                                                    sprite           col row cost prereq                     prereq2                  tier              stat
@@ -323,9 +347,9 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// never deflects.
 	{ ESkillId::FollowUp,        "Follow-Up",        "After a deflect, your next melee hit lands far harder.",       "d_gauss",        3,  1,  1,  ESkillId::MeleeForce,      ESkillId::PulseRecharge, ENodeTier::Major,  EStat::None },
 
-	// 19: medical, col 9. A root again: it was gated on Regeneration, which is
-	// cut, and it is the root of the Medical Route in docs/SKILL_TREE.md.
-	{ ESkillId::MedExpert,       "Med Expert",       "An Infusion runs 5 seconds longer.",                          "flash_full",     8,  2,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Medium, EStat::None },
+	// 19: the Medical Route's root, col 12 since 2026-09-14. A root again: it
+	// was gated on Regeneration, which is cut.
+	{ ESkillId::MedExpert,       "Med Expert",       "An Infusion runs 5 seconds longer.",                          "flash_full",     12, 0,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Medium, EStat::None },
 
 	// 20-21: the alien column, held until it opens
 	SKILL_RESERVED(HiveCapacity),
@@ -385,11 +409,30 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	STAT_BULLET(StatBullet05, 11, 3, QuickDraw),
 	STAT_BULLET(StatBullet06, 11, 4, StatBullet05),
 	STAT_BULLET(StatBullet07, 11, 5, StatBullet06),
+
+	// 47: Overheal, held until it is built
+	SKILL_RESERVED(Overheal),
+
+	// 48: Leech, off the right road.  Melee hits on a living monster heal;
+	// server-side, in CCrowbar::Swing and CleaveArc.
+	{ ESkillId::Leech,           "Leech",            "Melee hits heal you a tenth of the damage they deal.",         "dmg_bio",        13, 1,  1,  ESkillId::StatHeal01,      ESkillId::None,          ENodeTier::Medium, EStat::None },
+
+	// 49: Last Stand, the Medical major, held until it is built
+	SKILL_RESERVED(LastStand),
+
+	// 50-53: the Medical Route's roads.  H01 right of Med Expert starts the
+	// right road through Leech; H02 below it starts the left road to
+	// Overheal; H03 and H04 carry the right road down to Last Stand.
+	STAT_HEAL(StatHeal01, 13, 0, MedExpert),
+	STAT_HEAL(StatHeal02, 12, 1, MedExpert),
+	STAT_HEAL(StatHeal03, 13, 2, Leech),
+	STAT_HEAL(StatHeal04, 13, 3, StatHeal03),
 };
 
 #undef SKILL_RESERVED
 #undef STAT_MELEE
 #undef STAT_BULLET
+#undef STAT_HEAL
 
 // Every node costs one.  The price of a Skill is the road to it, and a row
 // that says otherwise is a row that would be drawn with no cost on it and

@@ -83,6 +83,8 @@ extern cvar_t skill_headhunter_scale;
 extern cvar_t skill_swap_surge_scale;
 extern cvar_t skill_swap_surge_window;
 extern cvar_t skill_swap_surge_cooldown;
+extern cvar_t skill_stat_healing;
+extern cvar_t skill_leech_fraction;
 
 // The Pulse.  Every one of these is a starting guess to be judged in play.
 extern cvar_t pulse_window;

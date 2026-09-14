@@ -111,6 +111,20 @@ float CCrowbar::BackstabScale()
 	return std::max(1.0f, backstab_damage_scale.value);
 }
 
+void CCrowbar::LeechHeal(float flDamage)
+{
+	// The figure is the swing's damage before Weapon Mastery and the
+	// victim's hitgroup, which is what the player can reason about from the
+	// tree; the exact number that landed is not known here. TakeHealth
+	// refuses at full health, so a Leech at full costs nothing and does
+	// nothing.
+	if (!m_pPlayer->m_skills.HasSkill(ESkillId::Leech))
+		return;
+	const float flHeal = flDamage * std::max(0.0f, skill_leech_fraction.value);
+	if (flHeal > 0.0f)
+		m_pPlayer->TakeHealth(flHeal, DMG_GENERIC);
+}
+
 int CCrowbar::HitDamageType(CBaseEntity* pVictim)
 {
 	// A monster takes the weapon's type; that is where a type means
@@ -214,6 +228,10 @@ int CCrowbar::CleaveArc(const Vector& vecSrc, float flDamage, bool bBackstabNode
 		pEntity->TraceAttack(m_pPlayer->pev, flHit, vecTo, &tr, HitDamageType(pEntity));
 		ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
 		++nHit;
+
+		// Leech, per living victim: a Cleave through a crowd heals for each.
+		if (pMonster)
+			LeechHeal(flHit);
 
 		// After the damage, so a headcrab the hit killed is still thrown.
 		if (bFollowUp)
@@ -498,6 +516,10 @@ bool CCrowbar::Swing(bool fFirst)
 
 			pEntity->TraceAttack(m_pPlayer->pev, flDamage, gpGlobals->v_forward, &tr, HitDamageType(pEntity));
 			ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
+
+			// Leech: a hit on a living monster heals. Crates do not bleed.
+			if (pVictim)
+				LeechHeal(flDamage);
 
 			// After the damage, so a headcrab the hit killed is still thrown.
 			if (bFollowUp)
