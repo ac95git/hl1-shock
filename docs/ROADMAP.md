@@ -1682,9 +1682,9 @@ Juggernaut link, which is exactly what a cross-gated node is for.
 #### Medical
 
 **Shape: Building since 2026-09-14.** The region, Med Expert as its root, the four Healing Stat nodes
-(Potency's ranks, as the matrix turns ranks into roads) and Leech are built; see
-[SKILL_TREE.md](SKILL_TREE.md#medical) and [PILLARS.md](PILLARS.md). **Overheal and Last Stand are
-reserved**, and Last Stand has one question to answer first: whether the killing blow still lands and
+(Potency's ranks, as the matrix turns ranks into roads), Leech and Overheal are built; see
+[SKILL_TREE.md](SKILL_TREE.md#medical) and [PILLARS.md](PILLARS.md). **Last Stand is reserved**, with
+one question to answer first: whether the killing blow still lands and
 the Infusion races it, or the player is held at 1 health for the Syringe to work. Shaped 2026-09-13, the
 last of the seven. The smallest Route, and deliberately: with Regeneration (10) cut alongside Battery
 Regen, **there is no passive healing in it at all**. Every node is on an action: using a thing, hitting a

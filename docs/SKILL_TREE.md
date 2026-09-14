@@ -330,7 +330,7 @@ in it at all**. [ROADMAP](ROADMAP.md#medical).
 | --- | --- | --- | --- |
 | Med Expert | 19 | An Infusion runs longer | Built. **Root**; moved to the region |
 | Healing ×4 | 50–53 | +10% on an Infusion's rate and a medkit's heal each, additive within the stat. **Potency's ranks became these** | Built. **The roads** |
-| Overheal | 47 | A Syringe at full health raises health above the maximum for the Infusion's length, decaying back | Reserved |
+| Overheal | 47 | An Infusion's ticks that would be lost on a full bar go above the maximum instead, up to `skill_overheal_cap` (50) over; the excess drains at `skill_overheal_decay` (2/s) once the Infusion ends. Read a little wider than "a Syringe used at full health": an Infusion that *reaches* full keeps going too, which is the same waste made a decision | Built |
 | Leech | 48 | Melee hits on a living monster heal a tenth of the swing's damage (`skill_leech_fraction`), every roster weapon, per victim in a Cleave. The chainsaw's lifesteal is its own base property | Built |
 | **Major** | 49 | **Last Stand**: a hit that would kill the player spends an unused Syringe automatically and starts the Infusion; all Infusion healing is doubled below 50 health | Reserved. **One question before it is built**: whether the killing blow still lands and the Infusion races it, or the player is held at 1 health for the Syringe to work. The text reads as the second; not said |
 

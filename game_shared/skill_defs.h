@@ -410,8 +410,9 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	STAT_BULLET(StatBullet06, 11, 4, StatBullet05),
 	STAT_BULLET(StatBullet07, 11, 5, StatBullet06),
 
-	// 47: Overheal, held until it is built
-	SKILL_RESERVED(Overheal),
+	// 47: Overheal, the left road's Skill.  Server-side, in the Infusion's
+	// tick (player_infusion.cpp); the excess drains after.
+	{ ESkillId::Overheal,        "Overheal",         "An Infusion keeps healing past your maximum, up to 50 over. The extra drains away once it ends.", "item_syringe", 12, 2, 1, ESkillId::StatHeal02, ESkillId::None, ENodeTier::Medium, EStat::None },
 
 	// 48: Leech, off the right road.  Melee hits on a living monster heal;
 	// server-side, in CCrowbar::Swing and CleaveArc.

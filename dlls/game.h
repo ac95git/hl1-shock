@@ -85,6 +85,8 @@ extern cvar_t skill_swap_surge_window;
 extern cvar_t skill_swap_surge_cooldown;
 extern cvar_t skill_stat_healing;
 extern cvar_t skill_leech_fraction;
+extern cvar_t skill_overheal_cap;
+extern cvar_t skill_overheal_decay;
 
 // The Pulse.  Every one of these is a starting guess to be judged in play.
 extern cvar_t pulse_window;

@@ -15,6 +15,7 @@
 #include "player_skills.h" // PlayerHealingScale
 #include "UserMessages.h"
 #include "game.h"
+#include <algorithm>
 
 //=========================================================
 // How often a tick lands.
@@ -186,6 +187,16 @@ bool CPlayerInfusion::TryStart(CBasePlayer* pPlayer)
 //=========================================================
 void CPlayerInfusion::Think(CBasePlayer* pPlayer)
 {
+	// Overheal's excess drains once the Infusion has ended: health above the
+	// maximum comes down at skill_overheal_decay per second and stops at the
+	// maximum. Any excess, whatever put it there, so nothing else has to know.
+	// Not while the Infusion runs, or it would fight its own ticks.
+	if (!m_bActive && pPlayer->IsAlive() && pPlayer->pev->health > pPlayer->pev->max_health)
+	{
+		const float flDrain = std::max(0.0f, skill_overheal_decay.value) * gpGlobals->frametime;
+		pPlayer->pev->health = std::max(pPlayer->pev->max_health, pPlayer->pev->health - flDrain);
+	}
+
 	if (!m_bActive)
 		return;
 
@@ -223,8 +234,17 @@ void CPlayerInfusion::Think(CBasePlayer* pPlayer)
 
 			// TakeHealth refuses at max_health, so ticks that land on a full
 			// health bar are simply lost.  Deliberate: a Syringe may be used
-			// at full health, and the waste is the cost of using it early.
-			pPlayer->TakeHealth((float)whole, DMG_GENERIC);
+			// at full health, and the waste is the cost of using it early --
+			// until Overheal, which makes it a decision: with the Skill the
+			// ticks go above the maximum instead, up to skill_overheal_cap
+			// over it, and the excess drains once the Infusion ends (above).
+			if (pPlayer->m_skills.HasSkill(ESkillId::Overheal))
+			{
+				const float flCap = pPlayer->pev->max_health + std::max(0.0f, skill_overheal_cap.value);
+				pPlayer->pev->health = std::min(pPlayer->pev->health + (float)whole, std::max(flCap, pPlayer->pev->health));
+			}
+			else
+				pPlayer->TakeHealth((float)whole, DMG_GENERIC);
 		}
 
 		m_flNextTick += k_InfusionTickInterval;

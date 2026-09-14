@@ -564,6 +564,10 @@ cvar_t skill_swap_surge_cooldown = {"skill_swap_surge_cooldown", "6"};
 // this fraction of a melee hit's damage.  First guesses.
 cvar_t skill_stat_healing = {"skill_stat_healing", "0.1"};
 cvar_t skill_leech_fraction = {"skill_leech_fraction", "0.1"};
+// Overheal: how far above the maximum an Infusion may heal, and how fast the
+// excess drains, per second, once the Infusion ends.  First guesses.
+cvar_t skill_overheal_cap = {"skill_overheal_cap", "50"};
+cvar_t skill_overheal_decay = {"skill_overheal_decay", "2"};
 // Scales the reload delay. Read from both DLLs through skill_tuning.h, because
 // the delay it sets is m_flNextAttack, which the client predicts.
 cvar_t skill_reload_time_scale = {"skill_reload_time_scale", "0.8"};
@@ -785,6 +789,8 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_swap_surge_cooldown);
 	CVAR_REGISTER(&skill_stat_healing);
 	CVAR_REGISTER(&skill_leech_fraction);
+	CVAR_REGISTER(&skill_overheal_cap);
+	CVAR_REGISTER(&skill_overheal_decay);
 
 	CVAR_REGISTER(&pulse_window);
 	CVAR_REGISTER(&pulse_window_bonus);

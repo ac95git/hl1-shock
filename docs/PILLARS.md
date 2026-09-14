@@ -578,6 +578,14 @@ medkit's heal in both places a medkit heals (`PlayerMedkitHeal`, so the walk-ove
 test and the Inventory's Use agree). The rate, not the duration: more per second, the same window. The
 wall charger is untouched. **Leech** (id 48) is under [pillar 2](#2-enhanced-combat) with the melee Skills.
 
+**Overheal** (id 47, 2026-09-14). With the Skill, the ticks `TakeHealth` would refuse on a full bar go
+above the maximum instead, up to `skill_overheal_cap` (50) over it; once the Infusion ends, any health
+above the maximum drains at `skill_overheal_decay` (2 per second) down to it and stops. The drain runs
+in the Infusion's own Think, on any excess whatever put it there, so nothing else has to know. Read a
+little wider than the shaped "a Syringe used at full health": an Infusion that *reaches* full keeps going
+too, which is the same waste made a decision. A medkit is still refused above the maximum, so it is not
+spent. The Juggernaut's decaying armour grant is the same shape, when it comes.
+
 **Sounds** — `items/smallmedkit1.wav` on pickup, `items/medshot4.wav` on use, `items/medshotno1.wav` on a
 refused press, and the `!HEV_HEAL7` suit line ("hiss, morphine_shot"), throttled `SUIT_NEXT_IN_30SEC`.
 The *use* sound is deliberately not the medkit's — the two items must not sound alike in the moment they
@@ -633,12 +641,12 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
 
 **Definitions** — `game_shared/skill_defs.h`, compiled into both DLLs
 
-- **43 nodes in the tree, every one costing one point** (a `static_assert` holds every row to it): the
+- **44 nodes in the tree, every one costing one point** (a `static_assert` holds every row to it): the
   Melee Route in columns 0–3 — Reach at the root, two roads of Melee Damage Stat nodes down to Speed and
   Force, on to the Backstab node, meeting at Cleave — the Weapon Specialist Route in columns 9–11, built
   whole on 2026-09-14 (Marksman at the root in the middle of the region, Bullet Damage Stat nodes as its
   roads, Fast Reload and Weapon Mastery moved into it, Swap Surge at the bottom), the Medical Route
-  building in columns 12–13 (Med Expert at the root, Healing Stat nodes as its roads, Leech; Overheal and
+  building in columns 12–13 (Med Expert at the root, Healing Stat nodes as its roads, Leech and Overheal;
   Last Stand reserved), and the pre-Routes columns between them (the Pulse 4–5, the suit 6, Survivability
   7–8), each waiting for its Route to give it roads. Follow-Up sits at
   the seam between Melee and the Pulse because it is gated on one of each. The layout is in the comment
