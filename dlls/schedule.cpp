@@ -82,6 +82,16 @@ void CBaseMonster::ChangeSchedule(Schedule_t* pNewSchedule)
 	m_afConditions = 0; // clear all of the conditions
 	m_failSchedule = SCHED_NONE;
 
+	// m_flMoveWaitFinished is a schedule-scoped freeze (set by tasks like
+	// TASK_FIND_COVER_FROM_ENEMY and normally released by TASK_CLEAR_MOVE_WAIT);
+	// a schedule change is what ends its scope, so clear it here too or an
+	// abandoned freeze leaks into the next schedule and can stick around for
+	// its full duration. This field also carries a door-wait set by
+	// OpenDoorAndWait() in AdvanceRoute(), so clearing it here can let the
+	// monster step toward a door that is still opening; Move()'s blocked-
+	// movement handling already copes with that.
+	m_flMoveWaitFinished = gpGlobals->time;
+
 	if ((m_pSchedule->iInterruptMask & bits_COND_HEAR_SOUND) != 0 && (m_pSchedule->iSoundMask) == 0)
 	{
 		ALERT(at_aiconsole, "COND_HEAR_SOUND with no sound mask!\n");
