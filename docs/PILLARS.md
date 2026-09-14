@@ -305,10 +305,13 @@ through, so "melee" is true by construction rather than by a damage-type list:
   chokepoints rather than per weapon — `ApplyMultiDamage` and the direct-`TakeDamage` branch of
   `RadiusDamage`. Why it is two, and the two consequences that fall out of it, are under
   [pillar 4](#4-skill-trees).
-- **Fast Reload** (id 3) scales the reload delay by `skill_reload_time_scale` (0.8) in
-  `CBasePlayerWeapon::DefaultReload` — the one place every clip-fed weapon funnels through, so the
-  glock, MP5, python, crossbow and RPG all get it without a per-weapon list. The shotgun does not: it
-  feeds shells one at a time and never calls `DefaultReload`.
+- **Fast Reload** (id 3) scales the reload delay by `skill_reload_time_scale` (0.8) through
+  `CBasePlayerWeapon::ReloadTimeScale`, applied in `DefaultReload` — the one place every clip-fed weapon
+  funnels through, so the glock, MP5, python, crossbow and RPG all get it without a per-weapon list. The
+  shotgun feeds shells one at a time and never calls `DefaultReload`, so since 2026-09-14 its own reload
+  state machine calls the same scale on every timing of the sequence: the start, each shell, and the pump
+  after the last one. The stock animations play under the shorter timer; per-tier animations are
+  [ART_DEBT.md](ART_DEBT.md) work.
 
   This is the first Skill that changes a **predicted** value, and it is the proof the prediction fix
   works. `m_flNextAttack` is owned by the client frame to frame, so the two sides shortening the reload

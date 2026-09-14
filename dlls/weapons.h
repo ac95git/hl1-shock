@@ -323,6 +323,13 @@ public:
 	bool DefaultDeploy(const char* szViewModel, const char* szWeaponModel, int iAnim, const char* szAnimExt, int body = 0);
 	bool DefaultReload(int iClipSize, int iAnim, float fDelay, int body = 0);
 
+	// Fast Reload's multiplier on a reload delay, or 1.0 if the player doesn't
+	// hold the Skill. DefaultReload applies it for every clip-fed weapon; the
+	// shotgun's hand-rolled reload state machine (shotgun.cpp) calls it too,
+	// since it never goes through DefaultReload -- see skill_tuning.h for why
+	// this reads a cvar instead of the Skill table alone.
+	float ReloadTimeScale();
+
 	void ItemPostFrame() override; // called each frame by the player PostThink
 	// called by CBasePlayerWeapons ItemPostFrame()
 	virtual void PrimaryAttack() {}						  // do "+ATTACK"

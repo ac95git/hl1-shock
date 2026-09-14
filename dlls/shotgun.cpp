@@ -246,15 +246,21 @@ void CShotgun::Reload()
 	if (m_flNextPrimaryAttack > UTIL_WeaponTimeBase())
 		return;
 
+	// Fast Reload: the shotgun has no DefaultReload call to fall through to
+	// (it feeds shells one at a time via m_fInSpecialReload), so every timing
+	// below that belongs to the reload sequence -- not to firing or ordinary
+	// idle -- gets the same scale DefaultReload uses.
+	const float flReloadScale = ReloadTimeScale();
+
 	// check to see if we're ready to reload
 	if (m_fInSpecialReload == 0)
 	{
 		SendWeaponAnim(SHOTGUN_START_RELOAD);
 		m_fInSpecialReload = 1;
-		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.6;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.6;
-		m_flNextPrimaryAttack = GetNextAttackDelay(1.0);
-		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 1.0;
+		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.6 * flReloadScale;
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.6 * flReloadScale;
+		m_flNextPrimaryAttack = GetNextAttackDelay(1.0 * flReloadScale);
+		m_flNextSecondaryAttack = UTIL_WeaponTimeBase() + 1.0 * flReloadScale;
 		return;
 	}
 	else if (m_fInSpecialReload == 1)
@@ -271,8 +277,8 @@ void CShotgun::Reload()
 
 		SendWeaponAnim(SHOTGUN_RELOAD);
 
-		m_flNextReload = UTIL_WeaponTimeBase() + 0.5;
-		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5;
+		m_flNextReload = UTIL_WeaponTimeBase() + 0.5 * flReloadScale;
+		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5 * flReloadScale;
 	}
 	else
 	{
@@ -320,7 +326,9 @@ void CShotgun::WeaponIdle()
 				// play cocking sound
 				EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/scock1.wav", 1, ATTN_NORM, 0, 95 + RANDOM_LONG(0, 0x1f));
 				m_fInSpecialReload = 0;
-				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.5;
+				// Still the reload sequence finishing (the pump after the last
+				// shell), so Fast Reload applies here too.
+				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.5 * ReloadTimeScale();
 			}
 		}
 		else

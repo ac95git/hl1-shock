@@ -92,14 +92,9 @@ bool CBasePlayerWeapon::DefaultReload(int iClipSize, int iAnim, float fDelay, in
 	// Mastery lives in ApplyMultiDamage: this is the one place every clip-fed
 	// weapon funnels through, so "you reload faster" is true by construction
 	// instead of by a list somebody has to maintain. The shotgun is the one
-	// exception and feeds shells in one at a time -- see shotgun.cpp.
-	//
-	// Read through skill_tuning.h, not game.h: this function compiles into the
-	// client too, and m_flNextAttack is predicted frame to frame, so a client
-	// that shortened the delay differently from the server would hitch at the
-	// end of every reload.
-	if (m_pPlayer->m_skills.HasSkill(ESkillId::FastReload))
-		fDelay *= std::max(0.0f, g_tuneReloadTime.Value());
+	// exception and feeds shells in one at a time through its own state
+	// machine -- see ReloadTimeScale() below and shotgun.cpp.
+	fDelay *= ReloadTimeScale();
 
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + fDelay;
 
@@ -110,6 +105,19 @@ bool CBasePlayerWeapon::DefaultReload(int iClipSize, int iAnim, float fDelay, in
 
 	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 3;
 	return true;
+}
+
+// See DefaultReload above and shotgun.cpp's Reload()/WeaponIdle() for the two
+// callers. Read through skill_tuning.h, not game.h: this function compiles
+// into the client too, and the reload timings it scales are predicted frame
+// to frame, so a client that shortened them differently from the server
+// would hitch at the end of every reload.
+float CBasePlayerWeapon::ReloadTimeScale()
+{
+	if (!m_pPlayer->m_skills.HasSkill(ESkillId::FastReload))
+		return 1.0f;
+
+	return std::max(0.0f, g_tuneReloadTime.Value());
 }
 
 void CBasePlayerWeapon::ResetEmptySound()
