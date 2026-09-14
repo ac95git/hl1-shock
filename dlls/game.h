@@ -53,6 +53,8 @@ extern cvar_t item_debug;
 // Skill Tree economy
 extern cvar_t skill_points_start;
 extern cvar_t skill_reset_tokens_start;
+// Debugging aid: while set, the whole tree is held.  See game.cpp.
+extern cvar_t skill_unlock_all;
 
 // Skill effects
 extern cvar_t skill_health_bonus;

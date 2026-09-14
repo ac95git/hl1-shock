@@ -485,6 +485,11 @@ cvar_t item_debug = {"item_debug", "0"};
 // without hunting for pickups first.  See docs/PILLARS.md pillar 4.
 cvar_t skill_points_start = {"skill_points_start", "0"};
 cvar_t skill_reset_tokens_start = {"skill_reset_tokens_start", "0"};
+// Debugging aid: while set, every Skill in the tree is held, cost and
+// prerequisites ignored.  It writes into the same unlocked array a purchase
+// does, so it saves, and setting it back to 0 does not take anything away --
+// a Reset Token does, or a new game.  See docs/PILLARS.md pillar 4.
+cvar_t skill_unlock_all = {"skill_unlock_all", "0"};
 
 // Skill effects.  Every one is a starting guess to be judged in play, and each
 // is read server-side where the effect is computed -- never in prediction.
@@ -771,6 +776,7 @@ void GameDLLInit()
 
 	CVAR_REGISTER(&skill_points_start);
 	CVAR_REGISTER(&skill_reset_tokens_start);
+	CVAR_REGISTER(&skill_unlock_all);
 
 	CVAR_REGISTER(&skill_health_bonus);
 	CVAR_REGISTER(&skill_armor_ratio_scale);

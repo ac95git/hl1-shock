@@ -96,6 +96,13 @@ struct CPlayerSkills
     void AddSkillPoints(int pts);
     void AddResetTokens(int tokens);
 
+    // The skill_unlock_all debugging aid: marks every buyable Skill held,
+    // cost and prerequisites ignored.  Returns true if anything changed, so
+    // the caller knows whether to re-apply the health bonus and resync.
+    // Spending is derived, so afterwards SpentPoints exceeds TotalPoints and
+    // AvailablePoints reads zero, which is the honest figure.
+    bool UnlockAll();
+
     // Fills 'mask' (k_SkillMaskBytes long) with one bit per unlocked Skill.
     void BuildUnlockedMask(unsigned char* mask) const;
 

@@ -4464,6 +4464,15 @@ void CBasePlayer::UpdateClientData()
 	// anything finer.
 	SyncConcealState();
 
+	// The skill_unlock_all debugging aid, polled so it takes effect the
+	// moment it is set and again after a Reset while it stays set.  The
+	// walk is a few dozen bools; the resync only happens when it changed.
+	if (skill_unlock_all.value != 0 && m_skills.UnlockAll())
+	{
+		ApplySkillHealthBonus(this);
+		SendSkillTreeToClient(this);
+	}
+
 	if (m_iHideHUD != m_iClientHideHUD)
 	{
 		MESSAGE_BEGIN(MSG_ONE, gmsgHideWeapon, NULL, pev);

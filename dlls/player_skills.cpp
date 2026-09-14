@@ -210,6 +210,26 @@ void CPlayerSkills::AddResetTokens(int tokens)
     m_iResetTokens += tokens;
 }
 
+bool CPlayerSkills::UnlockAll()
+{
+    EnsureInitialised();
+
+    bool changed = false;
+    for (int i = 1; i < k_MaxSkills; ++i)
+    {
+        // A reserved id has no row and is not a Skill to hold.
+        const SkillDef& def = k_SkillDefs[i];
+        if (!def.name || !def.name[0])
+            continue;
+        if (m_bUnlocked[i])
+            continue;
+
+        m_bUnlocked[i] = true;
+        changed = true;
+    }
+    return changed;
+}
+
 // =====================================================================
 // CPlayerSkills::BuildUnlockedMask
 // =====================================================================

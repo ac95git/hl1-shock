@@ -921,7 +921,11 @@ do nothing.
 | `skill_points_start` | 0 | Skill Points a new game begins with |
 | `skill_reset_tokens_start` | 0 | Reset Tokens a new game begins with |
 
-Cheat-gated `skill_addpoints <n>` and `skill_addtokens <n>` mirror `inv_addrows`.
+Cheat-gated `skill_addpoints <n>` and `skill_addtokens <n>` mirror `inv_addrows`. For debugging a
+Skill's effect rather than the economy, `skill_unlock_all 1` holds every Skill in the tree at once, cost
+and prerequisites ignored: it writes into the same unlocked array a purchase does, so it saves, it reads
+as zero points left, and setting it back to 0 takes nothing away — a Reset Token does (and is granted
+back at once while the cvar stays set), or a new game.
 
 ~~The target is a tree **completable only by near-exhaustive exploration**: total findable points roughly
 equal to the tree's total cost, so a player who sweeps every optional space affords essentially everything
