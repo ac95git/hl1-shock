@@ -330,8 +330,12 @@ through, so "melee" is true by construction rather than by a damage-type list:
 - **Ricochet** (id 64, the Juggernaut's, 2026-09-14, off Armor Expert until the Route's region exists).
   In `CBasePlayer::TakeDamage`, after the Shield's answer and before the suit's report: a bullet hit
   while armour is above zero has `skill_ricochet_chance` (0.2) of being refused outright, the shooter
-  taking the full damage as `DMG_BULLET` with the player as inflictor, a `TE_TRACER` from the player's
-  centre to theirs and the stock ricochet spark at the player. Bullets only, armour only. Ranks later.
+  taking the full damage as `DMG_BULLET` with the player as inflictor, a `TE_TRACER` and the stock
+  ricochet spark from a point just in front of the player toward them (at the player's own centre the
+  spark sat inside the view model and was never seen), and one of the stock `weapons/ric*.wav` from the
+  player at full volume. Bullets only, armour only: the first test had no armour on and read as the node
+  doing nothing. Under `debug_damage` every bullet hit prints a `ricochet:` console line with the skill,
+  armour, roll and chance that decided it. Ranks later.
 - **Demolitions** (id 37, 2026-09-14) is the same test on `DMG_BLAST`, dealt ×`skill_demolitions_scale`
   (1.25) at the chokepoints and taken ×`skill_demolitions_resist_scale` (0.5) in `CBasePlayer::TakeDamage`
   before the armour split, own grenades included, which is how "Mastery makes your own explosives hurt you

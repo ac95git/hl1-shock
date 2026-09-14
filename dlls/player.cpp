@@ -58,6 +58,17 @@ extern bool IsBustingGame();
 #define TRAIN_FAST 0x04
 #define TRAIN_BACK 0x05
 
+// Ricochet's sound, from the player when a bullet bounces off their armour.
+// The stock set, precached by the world; the Gargantua's plating uses it too.
+static const char* const k_RicochetSounds[] =
+{
+	"weapons/ric1.wav",
+	"weapons/ric2.wav",
+	"weapons/ric3.wav",
+	"weapons/ric4.wav",
+	"weapons/ric5.wav",
+};
+
 #define FLASH_DRAIN_TIME 1.2  //100 units/3 minutes
 #define FLASH_CHARGE_TIME 0.2 // 100 units/20 seconds  (seconds per unit)
 
@@ -424,30 +435,61 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 	// explosions, melee and energy never ricochet. After the Shield, which
 	// answers first, and before the suit's report, which must not see a hit
 	// that never landed. Bounces off armour, so a bare suit cannot.
-	if ((bitsDamageType & DMG_BULLET) != 0 && pev->armorvalue > 0 && m_skills.HasSkill(ESkillId::Ricochet) &&
-		RANDOM_FLOAT(0.0f, 1.0f) < std::max(0.0f, skill_ricochet_chance.value))
+	if ((bitsDamageType & DMG_BULLET) != 0)
 	{
-		const Vector vecFrom = Center();
-		UTIL_Ricochet(vecFrom, 1.0f);
+		const bool bSkill = m_skills.HasSkill(ESkillId::Ricochet);
+		const bool bArmour = pev->armorvalue > 0;
+		const float flRoll = RANDOM_FLOAT(0.0f, 1.0f);
+		const float flChance = std::max(0.0f, skill_ricochet_chance.value);
+		const bool bBounce = bSkill && bArmour && flRoll < flChance;
 
-		CBaseEntity* pShooter = pAttacker;
-		if (pShooter && pShooter != this && pShooter->pev->takedamage != DAMAGE_NO)
+		// Measured rather than assumed: a bounce is a hit that never lands,
+		// and a Skill whose whole effect is something NOT happening cannot be
+		// judged from the screen alone. Every bullet hit reports here under
+		// debug_damage, bounced or not, with the gate that decided it.
+		if (debug_damage.value != 0)
 		{
-			const Vector vecTo = pShooter->Center();
-			MESSAGE_BEGIN(MSG_PAS, SVC_TEMPENTITY, vecFrom);
-			WRITE_BYTE(TE_TRACER);
-			WRITE_COORD(vecFrom.x);
-			WRITE_COORD(vecFrom.y);
-			WRITE_COORD(vecFrom.z);
-			WRITE_COORD(vecTo.x);
-			WRITE_COORD(vecTo.y);
-			WRITE_COORD(vecTo.z);
-			MESSAGE_END();
-
-			// The player is the inflictor: it is their armour that fired.
-			pShooter->TakeDamage(pev, pev, flDamage, DMG_BULLET);
+			ALERT(at_console, "ricochet: %s  skill %d  armour %.0f  roll %.2f vs %.2f  dmg %.0f\n",
+				bBounce ? "BOUNCED" : "landed", bSkill ? 1 : 0, pev->armorvalue, flRoll, flChance, flDamage);
 		}
-		return false;
+
+		if (bBounce)
+		{
+			CBaseEntity* pShooter = (pAttacker && pAttacker != this && pAttacker->pev->takedamage != DAMAGE_NO) ? pAttacker : nullptr;
+
+			// The spark sits a little in front of the player, toward the
+			// shooter, so it is in view in first person; at the player's own
+			// centre it would be inside the view model and never seen.
+			const Vector vecFrom = Center();
+			Vector vecSpark = vecFrom;
+			if (pShooter)
+				vecSpark = vecFrom + (pShooter->Center() - vecFrom).Normalize() * 24.0f;
+			UTIL_Ricochet(vecSpark, 1.0f);
+
+			// Heard, not only seen: the stock ricochet set, the one the
+			// Gargantua's plating plays, from the player at full volume.
+			// TE_ARMOR_RICOCHET's own client sound is too quiet to carry the
+			// event on its own.
+			EMIT_SOUND_DYN(ENT(pev), CHAN_BODY, k_RicochetSounds[RANDOM_LONG(0, 4)], 1.0, ATTN_NORM, 0, 95 + RANDOM_LONG(0, 10));
+
+			if (pShooter)
+			{
+				const Vector vecTo = pShooter->Center();
+				MESSAGE_BEGIN(MSG_PAS, SVC_TEMPENTITY, vecSpark);
+				WRITE_BYTE(TE_TRACER);
+				WRITE_COORD(vecSpark.x);
+				WRITE_COORD(vecSpark.y);
+				WRITE_COORD(vecSpark.z);
+				WRITE_COORD(vecTo.x);
+				WRITE_COORD(vecTo.y);
+				WRITE_COORD(vecTo.z);
+				MESSAGE_END();
+
+				// The player is the inflictor: it is their armour that fired.
+				pShooter->TakeDamage(pev, pev, flDamage, DMG_BULLET);
+			}
+			return false;
+		}
 	}
 
 	// Demolitions, taken: explosions hurt the player less, their own grenades
