@@ -408,6 +408,34 @@ Skills happened once, for the roster, on 2026-09-14.
   by the studio renderer in the viewmodel's pass (right place, wrong look). The attachments stay in the
   model for whatever wants them next. The glove half of the six families is picked by the player's Suit
   Variant in `cl_dll/view.cpp`; see PILLARS.md.
+- **The blade leaves a trail on the swing, in first person. Built 2026-09-15, shaped in a grilling
+  session.** `cl_dll/katana_trail.cpp`: the ribbon the blade sweeps, blade only — a quad strip between
+  successive blade lines, each from where the blade leaves the guard (`$attachment 2`, written by the
+  bend stage in MODEL_WORKFLOW.md) to the point (`$attachment 1`) — gauss orange, additive, textured
+  with the crescent's own beam sprite so the trail and the wave read as one substance, fading and
+  tapering (`katana_trail_taper`, 0.6 of the blade's length lost at the tail) over `katana_trail_life`
+  (0.12 s); `katana_trail 0` turns it off. Sampled only while an attack animation is **playing** (the
+  crowbar's sequences 3–8, judged by start time and frame count — the sequence stays *selected*,
+  frozen on its last frame, for ten seconds after, and sampling through that turned the viewmodel's
+  lag behind the camera into a smear on every mouse turn), both clicks alike, and kept in **view
+  space** so only the swing's own motion leaves a trail. **Weighted by the blade's speed**
+  (`katana_trail_speed`, 300 units/s of the point through view space for full strength, nothing
+  below half): every attack is a short cut and a slow recovery — measured with
+  `katana_swing_lead.py`, the point does 300–700 in the cut and 70–220 coming back — and the ribbon
+  belongs to the cut, thinning away as the blade slows. Chosen over a fixed sequence-depth cutoff
+  (the cut ends at 45%, 60% and 35% of the three swings, so one number fits none) and over QC
+  animation events at the cut's frames, the engine's way for muzzle flashes, which is twice the work
+  and stops hard at a frame. Drawn from **inside the viewmodel's studio draw**
+  (`CStudioModelRenderer::StudioDrawModel`, after the model), which is the one place with this frame's
+  attachments; the engine draws beams and the transparent-triangle hook before the viewmodel with
+  last frame's, which is why the beam glow lagged. Triangles drawn there **do** inherit the viewmodel's
+  narrowed depth range: the wall test passed, the ribbon stays whole where the blade does. But the
+  triangle API's colour and render-mode calls do **not** take in that pass (white and unblended,
+  through both colour calls, with the particle manager's own recipe), so the quads go through
+  **OpenGL directly** — texture modulation and additive blend set by hand, the sprite still bound
+  through the API, state restored after — and the client now links `opengl32` (`-lGL` on Linux).
+  Hardware renderer only. Two more lessons from the first build, both in MODEL_WORKFLOW.md:
+  `$attachment` coordinates are bone-local, and the katana's had been model-space since v1.
 - **The weapon exists, v1.** `weapon_katana`, `dlls/katana.cpp`: `CCrowbar` with two hooks overridden,
   base damage (`sk_plr_katana1-3`, 60 since the numbers were set on 2026-09-14; 40 before) and swing time
   (`katana_swing_time_scale`, 2.4, so 0.6 s after a hit — it started at 2×, went to 1× when the wave still

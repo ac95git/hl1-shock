@@ -198,7 +198,13 @@ away from empty (`CanDeploy`, `IsUseable`, and the select-on-empty and no-auto-s
 clicks share one cadence, and Cleave never spends on the right.
 **Every swing heats the blade** — the light at the hand and the hot skin, from `events/katana_swing.sc` on
 the left and from the arc event on the right — and the lore is that swinging heats the energy in the blade
-at no loss while a thrown wave spends some of it. Details and the open questions are in
+at no loss while a thrown wave spends some of it. **The swing leaves a trail** in first person
+(`cl_dll/katana_trail.cpp`, since 2026-09-15): the ribbon the blade sweeps, guard to point, gauss orange
+and additive in the crescent's sprite, fading over `katana_trail_life` (0.12 s), sampled only while an
+attack animation is playing, weighted by the blade's speed (`katana_trail_speed`) so it belongs to the
+cut and thins away in the recovery, kept in view space so a mouse turn never smears it, and drawn
+through OpenGL from inside the viewmodel's studio draw so it sits on the blade this frame and stays
+whole against walls as the blade does. Details and the open questions are in
 [ROADMAP.md](ROADMAP.md#the-gauss-katana).
 
 **Custom HEV gloves on every viewmodel.** Fourteen stock viewmodels plus the katana compile with three

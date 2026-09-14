@@ -20,6 +20,7 @@
 
 #include "StudioModelRenderer.h"
 #include "GameStudioModelRenderer.h"
+#include "katana_trail.h"
 extern cvar_t* tfc_newmodels;
 
 extern extra_player_info_t g_PlayerExtraInfo[MAX_PLAYERS_HUD + 1];
@@ -1219,6 +1220,12 @@ bool CStudioModelRenderer::StudioDrawModel(int flags)
 		IEngineStudio.StudioSetRemapColors(m_nTopColor, m_nBottomColor);
 
 		StudioRenderModel();
+
+		// The katana's swing trail is drawn here, inside the viewmodel's own
+		// draw, because this is the one place with this frame's attachments
+		// (katana_trail.cpp).  Every other viewmodel makes it a no-op.
+		if (m_pCurrentEntity == gEngfuncs.GetViewModel())
+			KatanaTrail_ViewModelDrawn(m_pCurrentEntity, m_vRenderOrigin, m_vNormal, m_vRight, m_vUp, m_clTime);
 	}
 
 	return true;

@@ -71,7 +71,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>..\..\utils\vgui\lib\win32_vc16\vgui.lib;wsock32.lib;..\..\lib\public\sdl2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\utils\vgui\lib\win32_vc16\vgui.lib;wsock32.lib;opengl32.lib;..\..\lib\public\sdl2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <BaseAddress>
       </BaseAddress>
     </Link>
@@ -104,7 +104,7 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>..\..\utils\vgui\lib\win32_vc16\vgui.lib;wsock32.lib;..\..\lib\public\sdl2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>..\..\utils\vgui\lib\win32_vc16\vgui.lib;wsock32.lib;opengl32.lib;..\..\lib\public\sdl2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <BaseAddress>
       </BaseAddress>
     </Link>
@@ -196,6 +196,7 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClCompile Include="..\..\cl_dll\hud_pickupprompt.cpp" />
     <ClCompile Include="..\..\cl_dll\hud_conceal.cpp" />
     <ClCompile Include="..\..\cl_dll\hud_pulse.cpp" />
+    <ClCompile Include="..\..\cl_dll\katana_trail.cpp" />
     <ClCompile Include="..\..\game_shared\filesystem_utils.cpp" />
     <ClInclude Include="..\..\game_shared\inventory_defs.h" />
     <ClInclude Include="..\..\game_shared\skill_defs.h" />

@@ -408,6 +408,22 @@ void CHud::Init()
 	// equal that decay reads as the blade cooling.
 	CVAR_CREATE("katana_glow_light", "0.9", 0);
 	CVAR_CREATE("katana_glow_hot", "0.9", 0);
+	// The swing trail (katana_trail.cpp): the ribbon the blade sweeps, in
+	// first person.  Life is how long a sample of the blade stays before it
+	// has faded, in seconds, so it sets the trail's length; 0.12 was the
+	// first guess against a half-second swing.  Taper is how much of the
+	// blade's length the ribbon's inner edge has lost at the tail, 0 for a
+	// band as wide as the blade all the way, 1 for a tail that narrows to
+	// the point's path.  katana_trail 0 turns it off.
+	// Speed is the point's speed through view space, in units a second, at
+	// which the ribbon is full; nothing is drawn below half of it, so the
+	// ribbon belongs to the cut and thins away in the recovery.  The cut
+	// runs 300 to 700, the recovery 70 to 220 (measured on the crowbar's
+	// animations); 300 is the first guess.  0 draws at full strength always.
+	CVAR_CREATE("katana_trail", "1", 0);
+	CVAR_CREATE("katana_trail_life", "0.12", 0);
+	CVAR_CREATE("katana_trail_taper", "0.6", 0);
+	CVAR_CREATE("katana_trail_speed", "300", 0);
 	// The radius of the dynamic light each progression pickup carries so it
 	// glows in the dark (cl_dll/entity.cpp, ProgressionLight).  A first guess;
 	// 0 turns the lights off.

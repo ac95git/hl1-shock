@@ -88,6 +88,12 @@ leaves out and `mdlinfo.py --extract-bmp` can supply.
   **zero** textures and zero families, which reads like a failed compile and is not; read the T file.
   Both files have to reach `models/` and `topmod/models/`: ship only the first and the engine falls back
   to valve's textures with no error.
+- **`$attachment` coordinates are bone-local.** studiomdl copies the three numbers into the model as
+  given and the engine places the attachment at the bone's matrix times them every frame; every stock
+  QC's are small hand-relative offsets. Found 2026-09-15 when the katana's swing trail rode the hand
+  at a fixed displacement: the graft had written model-space points, assuming studiomdl would
+  transform them like vertices. `katana_bend.py` converts through the hand bone's rest matrix from the
+  SMD's own skeleton (`hand_bone_local`); any script that writes an attachment has to do the same.
 - Crowbar may decompile a model without writing its textures. `mdlinfo.py --extract-bmp=DIR` pulls them
   straight out of the `.mdl` under their stored names.
 - The `'Scene' object has no attribute 'vs'` traceback Source Tools prints under factory settings is
