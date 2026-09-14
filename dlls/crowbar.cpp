@@ -24,10 +24,11 @@
 #include "skill_tuning.h"
 #include <algorithm>
 
-// This file is compiled into the client too, for weapon prediction. Crowbar
-// Force is decided server-side alone, so its cvar comes from game.h under the
-// guard; Crowbar Reach is predicted, so it reads through skill_tuning.h, which
-// resolves the same cvar from either DLL.
+// This file is compiled into the client too, for weapon prediction. Melee
+// Force, the Melee Damage Stat nodes and the Backstab node are decided
+// server-side alone, so their cvars come from game.h under the guard; Melee
+// Reach and Melee Speed are predicted, so they read through skill_tuning.h,
+// which resolves the same cvar from either DLL.
 #ifndef CLIENT_DLL
 #include "game.h"
 #endif
@@ -94,6 +95,14 @@ bool CCrowbar::Deploy()
 float CCrowbar::BaseDamage()
 {
 	return gSkillData.plrDmgCrowbar;
+}
+
+float CCrowbar::BackstabScale()
+{
+	// The roster's all-rounder takes the plain Backstab. A weapon that leans
+	// on it (the knife) overrides this; the Backstab node multiplies whatever
+	// this returns.
+	return std::max(1.0f, backstab_damage_scale.value);
 }
 #endif
 
@@ -180,13 +189,20 @@ bool CCrowbar::Swing(bool fFirst)
 	UTIL_MakeVectors(m_pPlayer->pev->v_angle);
 	Vector vecSrc = m_pPlayer->GetGunPosition();
 
-	// Crowbar Reach. Applied on BOTH sides. The server still decides whether a
+	// Melee Reach. Applied on BOTH sides. The server still decides whether a
 	// hit landed; the client's copy of this trace only picks which swing
 	// animation plays, and it has to reach as far as the server's or an unlocked
 	// player sees a miss animation for a hit that landed.
 	float flRange = 32.0f;
-	if (m_pPlayer->m_skills.HasSkill(ESkillId::CrowbarRange))
-		flRange *= std::max(1.0f, g_tuneCrowbarRange.Value());
+	if (m_pPlayer->m_skills.HasSkill(ESkillId::MeleeReach))
+		flRange *= std::max(1.0f, g_tuneMeleeReach.Value());
+
+	// Melee Speed. Both sides too: the delay it shortens is predicted. Applied
+	// to the miss and the hit alike, so the Skill reads as "faster" whatever
+	// the swing meets.
+	float flSpeed = 1.0f;
+	if (m_pPlayer->m_skills.HasSkill(ESkillId::MeleeSpeed))
+		flSpeed = std::max(0.1f, g_tuneMeleeSpeed.Value());
 
 	Vector vecEnd = vecSrc + gpGlobals->v_forward * flRange;
 
@@ -221,7 +237,7 @@ bool CCrowbar::Swing(bool fFirst)
 		if (fFirst)
 		{
 			// miss
-			m_flNextPrimaryAttack = GetNextAttackDelay(0.5 * SwingDelayScale());
+			m_flNextPrimaryAttack = GetNextAttackDelay(0.5 * SwingDelayScale() * flSpeed);
 
 			// player "shoot" animation
 			m_pPlayer->SetAnimation(PLAYER_ATTACK1);
@@ -253,28 +269,28 @@ bool CCrowbar::Swing(bool fFirst)
 
 		ClearMultiDamage();
 
-		// JoshA: Changed from < -> <= to fix the full swing logic since client weapon prediction.
-		// -1.0f + 1.0f = 0.0f. UTIL_WeaponTimeBase is always 0 with client weapon prediction (0 time base vs curtime base)
-		float flDamage;
-		const bool bFirstSwing = (m_flNextPrimaryAttack + 1.0f <= UTIL_WeaponTimeBase()) || g_pGameRules->IsMultiplayer();
-		if (bFirstSwing)
-		{
-			// first swing does full damage
-			flDamage = BaseDamage();
-		}
-		else
-		{
-			// subsequent swings do half
-			flDamage = BaseDamage() / 2;
-		}
-
+		// Every swing does full damage. Valve halved any swing within about a
+		// second of the last one ("subsequent swings do half"); the Melee Route
+		// dropped that on 2026-09-13 because it made the tree unreadable (a
+		// player checking Force sees 15, then 7), made a speed Skill dishonest
+		// (it only ever bought faster half-hits), and keyed on the left-click
+		// timer alone. Sustained melee damage roughly doubles for a player
+		// holding the button; that is absorbed by base damage and swing time,
+		// both cvars.
+		float flDamage = BaseDamage();
 		const float flBaseDamage = flDamage;
 
-		// Crowbar Force. Before the Follow-Up, so a primed swing multiplies the
+		// Melee Force. Before the Follow-Up, so a primed swing multiplies the
 		// already-stronger hit rather than a base one.
-		const bool bForce = m_pPlayer->m_skills.HasSkill(ESkillId::CrowbarDamage);
+		const bool bForce = m_pPlayer->m_skills.HasSkill(ESkillId::MeleeForce);
 		if (bForce)
-			flDamage *= std::max(0.0f, skill_crowbar_damage_scale.value);
+			flDamage *= std::max(0.0f, skill_melee_force_scale.value);
+
+		// The Melee Damage Stat nodes: additive within the stat, multiplied
+		// with everything else. Five at 0.05 are x1.25 on top of Force.
+		const int iStat = m_pPlayer->m_skills.CountStat(EStat::MeleeDamage);
+		if (iStat > 0)
+			flDamage *= 1.0f + iStat * std::max(0.0f, skill_stat_melee_damage.value);
 
 		// The Backstab. Purely positional -- whether the victim has noticed the
 		// player does not enter into it, so this lands mid-fight on anything
@@ -294,8 +310,13 @@ bool CCrowbar::Swing(bool fFirst)
 			pVictim->CanBackstab() &&
 			pVictim->FInRearArc(m_pPlayer->pev->origin, backstab_arc_dot.value);
 
+		// The weapon's own Backstab base (the knife's lean, when it exists),
+		// then the Backstab node on top of it.
+		const bool bBackstabNode = bBackstab && m_pPlayer->m_skills.HasSkill(ESkillId::Backstab);
 		if (bBackstab)
-			flDamage *= std::max(1.0f, backstab_damage_scale.value);
+			flDamage *= BackstabScale();
+		if (bBackstabNode)
+			flDamage *= std::max(1.0f, skill_backstab_bonus_scale.value);
 
 		// A deflect primes the next crowbar HIT. Consumed here rather than in
 		// PrimaryAttack so a swing that connects with nothing costs nothing.
@@ -308,11 +329,12 @@ bool CCrowbar::Swing(bool fFirst)
 		// "landed" number in the report is what finally arrived.
 		if (pVictim)
 		{
-			DebugDamageDetail("%.0f %s%s%s%s = %.0f",
+			DebugDamageDetail("%.0f%s  +%d stat%s%s%s = %.0f",
 				flBaseDamage,
-				bFirstSwing ? "1st" : "2nd",
 				bForce ? "  xForce" : "",
+				iStat,
 				bBackstab ? "  xBACKSTAB" : "",
+				bBackstabNode ? "  xNode" : "",
 				bFollowUp ? "  xFollowUp" : "",
 				flDamage);
 		}
@@ -326,7 +348,7 @@ bool CCrowbar::Swing(bool fFirst)
 
 #endif
 
-		m_flNextPrimaryAttack = GetNextAttackDelay(0.25 * SwingDelayScale());
+		m_flNextPrimaryAttack = GetNextAttackDelay(0.25 * SwingDelayScale() * flSpeed);
 
 #ifndef CLIENT_DLL
 		// play thwack, smack, or dong sound

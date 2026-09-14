@@ -374,8 +374,11 @@ The hand sits on the stock through the whole draw and fire cycle.
 The `spriteName` column of `k_SkillDefs` in `game_shared/skill_defs.h`.
 
 ### Current stand-in
-Stock HUD sprites, heavily duplicated: `suit_full` on five Skills, `d_crowbar` on three, `cross` on
-three. Six Skills are currently drawn with the same image as at least two others.
+Stock HUD sprites. The nine Melee Damage Stat nodes share `d_crowbar` **on purpose** — a Stat node's icon
+is per stat, so a road reads as what it is made of — and that shared icon is the one piece of this entry
+that is a design rather than a stand-in; it still wants art of its own, small and plainly "melee". The
+Skills are placeholders picked for being distinct from each other, not for meaning anything: Reach is a
+tripmine, Speed a revolver, the Backstab node a crossbow.
 
 ### What's wrong with it
 This is the one entry here that is **blocking rather than cosmetic**. The tree is deliberately going

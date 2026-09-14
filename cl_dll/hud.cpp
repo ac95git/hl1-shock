@@ -430,10 +430,6 @@ void CHud::Init()
 	// The grid step in pixels at full scale, both axes; 0 is the designed
 	// value (k_Step). For judging node spacing by eye against a preview grid.
 	CVAR_CREATE("skilltree_step", "0", 0);
-	// 0 hides the cost on every node and gives the icon the whole node,
-	// centred. A comparison switch: the cost pushes the icon up out of the
-	// node's middle, and this is how to see the tree without it.
-	CVAR_CREATE("skilltree_show_cost", "1", 0);
 	CVAR_CREATE("cl_autowepswitch", "1", FCVAR_ARCHIVE | FCVAR_USERINFO);
 	default_fov = CVAR_CREATE("default_fov", "90", FCVAR_ARCHIVE);
 	m_pCvarStealMouse = CVAR_CREATE("hud_capturemouse", "1", FCVAR_ARCHIVE);

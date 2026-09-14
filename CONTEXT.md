@@ -107,9 +107,15 @@ there is no unlocking a single Skill. Banked as a count rather than carried, and
 Tree, so it occupies no Cells and cannot be dropped.
 _Avoid_: respec token, refund, reroll
 
+**Stat node**:
+The smallest node in the Skill Tree: one flat bonus (+5% melee damage), one Skill Point, and a shared icon
+with every other node of the same stat. Stat nodes are the roads between Skills and the whole of their
+price; a player takes them to get somewhere, never for their own sake. A Stat node is a node, not a Skill.
+_Avoid_: passive, filler, minor (a tier name), travel node
+
 **Skill Tree**:
-The full set of Skills and the prerequisites between them. A Skill may be gated on two, and both are
-required.
+The full set of Skills and Stat nodes and the prerequisites between them. A node may be gated on two, and
+both are required. Every node costs one Skill Point, and the tree is deliberately not completable.
 _Avoid_: upgrade tree, talent tree, perk tree
 
 ### The Infusion
@@ -158,8 +164,8 @@ closes, and restored only by sitting through a normal Recharge.
 _Avoid_: reset, refund, proc, free recharge
 
 **Follow-Up**:
-A crowbar swing empowered by having just deflected. Primed by a deflect for a short time and spent on the
-next swing that connects, so missing costs nothing.
+A melee swing empowered by having just deflected. Primed by a deflect for a short time and spent on the
+next swing that connects, so missing costs nothing. Any weapon on the melee roster carries it.
 _Avoid_: riposte, counter, punish, parry attack
 
 ### The Suit
@@ -215,8 +221,8 @@ _Avoid_: sneak attack, assassination, critical hit, ambush
 
 **Gauss Katana**:
 The mod's heavy melee weapon: a blade on the crowbar's swing, slower and far harder-hitting, that will
-throw gauss arcs. Everything that applies to a melee hit — the Backstab, Crowbar Reach and Force, the
-Follow-Up — applies to it. `weapon_katana` in code and maps.
+throw gauss arcs. Everything that applies to a melee hit — the Backstab, Melee Reach, Force and Speed, the
+Melee Damage Stat nodes, the Follow-Up — applies to it. `weapon_katana` in code and maps.
 _Avoid_: sword, blade, energy sword, gauss blade; and *katana* alone where the gauss half matters
 
 **Disturbance**:

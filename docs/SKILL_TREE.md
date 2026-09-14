@@ -37,7 +37,7 @@ are assigned when a node is built, never reused, and **22 and 23 are spoken for*
 | [Juggernaut](#juggernaut) | 11 | Fortitude (8) | +100 decaying armour on Matrix activation | The Pulse Module for its Pulse nodes |
 | [Alien](#alien) | 7 | Hive Capacity (20) | The volley is energy damage | The alien Module; the whole Route is hidden until it |
 | [Energy](#energy) | 6 | Energy Damage | Energy attacks drain armour for bonus damage | — |
-| [Melee](#melee) | 6 | Melee Reach (1) | Cleave | — |
+| [Melee](#melee) | 6 + 9 Stat | Melee Reach (1) | Cleave | — . **Built 2026-09-14** but Cleave |
 | [Weapon Specialist](#weapon-specialist) | 7 | Marksman | Swap Surge | — |
 | [The Dash Route](#the-dash-route) | 7 | Sure Footing (7) | Air Dash | The Dash Module for its Dash nodes |
 | [Medical](#medical) | 5 | Med Expert (19) | Last Stand | — |
@@ -87,8 +87,8 @@ What it costs to build, before the first Stat node exists:
 - ~~**A fourth `ENodeTier`**, below Minor, and a grid step that follows the Stat node.~~ **Built
   2026-09-14**: `ENodeTier::Stat`, square nodes of 32 / 44 / 54 / 64 on a 96-pixel step, both axes.
 - **A layout check.** 180 hand-placed rows in `skill_defs.h` is where mistakes will live: two nodes in one
-  cell, an edge to a node that is not adjacent. A `static_assert` for the first and a debug overlay for the
-  second, before the third Route.
+  cell, an edge to a node that is not adjacent. ~~A `static_assert` for the first~~ **built 2026-09-14**
+  (`SkillDefsOnePerCell`), and a debug overlay for the second, before the third Route.
 
 ---
 
@@ -192,32 +192,48 @@ and the glass-cannon "ninja", who dashes and slashes with the katana.
 
 ## Melee
 
-A **roster on the crowbar's base**: crowbar all-round, katana the ultimate, pickaxe slower and stronger,
-knife with a higher Backstab base, maybe more. Valve's rapid-swing halving is dropped: every swing does
-full damage. [ROADMAP](ROADMAP.md#melee).
+**Built 2026-09-14, all but Cleave.** The first Route on the matrix. A **roster on the crowbar's base**:
+crowbar all-round, katana the ultimate, pickaxe slower and stronger, knife with a higher Backstab base,
+maybe more. Valve's rapid-swing halving is dropped: every swing does full damage. [ROADMAP](ROADMAP.md#melee).
 
-| Node | Id | Effect | Ranks | State |
-| --- | --- | --- | --- | --- |
-| Melee Reach | 1 | Swings connect from further | — | Exists as Crowbar Reach. **Root** |
-| Melee Force | 2 | Hits land harder | ranks | Exists as Crowbar Force |
-| Melee Speed | 11 | Swings come faster | — | Reserved; returns |
-| Backstab | new | The rear-arc multiplier: 3× base, ranks raise it to ~5×. Multiplies each weapon's own Backstab base | ranks | New |
-| Follow-Up | 18 | After a deflect, the next hit lands far harder | — | Exists. **Cross-Route link** |
-| **Major** | new | **Cleave**: the first hit after an internal cooldown hits everything in its arc and lands harder | — | New |
+| Node | Id | Effect | State |
+| --- | --- | --- | --- |
+| Melee Reach | 1 | Swings connect 25% further | Built. **Root** |
+| Melee Force | 2 | Hits land 50% harder | Built |
+| Melee Speed | 11 | Swings come 30% faster | Built; back from reserve |
+| Melee Damage ×9 | 24–32 | +5% melee damage each, additive within the stat | Built. **The roads** |
+| Backstab | 33 | The Backstab's multiplier ×1.5 on top of the weapon's own base (3× → 4.5×) | Built |
+| Follow-Up | 18 | After a deflect, the next hit lands far harder | Built. **Cross-Route link**, at the seam with the Pulse |
+| **Major** | 34, held | **Cleave**: the first hit after an internal cooldown hits everything in its arc and lands harder | Not built; its cell is empty |
+
+The region as placed, columns 0–3, `S` a Melee Damage Stat node, `[Cleave]` the empty cell:
+
+```
+     col0     col1     col2       col3
+r0   S        Reach    S
+r1   Speed    .        Force      Follow-Up ← also Pulse Recharge (col 4)
+r2   S        .        S
+r3   S        .        S
+r4   S        .        Backstab
+r5   S        [Cleave] S
+```
+
+Every edge runs down its column, except the two from Reach sideways to the top of each road. Speed costs
+3 points from nothing, Force 3, Backstab 6; Cleave, needing both roads' ends, will cost 14 — the Route's
+whole 15 nodes minus Follow-Up. A player who takes Follow-Up and nothing else on the left road spends 5.
 
 ```mermaid
 graph TD
-  MR[Melee Reach 1] --> MF[Melee Force 2]
-  MR --> MS[Melee Speed 11]
-  MF --> BS[Backstab]
+  MR[Melee Reach 1] --> S1[S] --> MS[Melee Speed 11] --> S3[S] --> S5[S] --> S7[S] --> S8[S]
+  MR --> S2[S] --> MF[Melee Force 2] --> S4[S] --> S6[S] --> BS[Backstab 33] --> S9[S]
   MF --> FU[Follow-Up 18]
-  PR[Pulse Recharge 15, Juggernaut] -.-> FU
-  BS --> CL{{"Major: Cleave"}}
-  MS --> CL
+  PR[Pulse Recharge 15, Juggernaut] --> FU
+  S8 --> CL{{"Major: Cleave, not built"}}
+  S9 --> CL
 ```
 
 The never-noticed Backstab tier (a larger multiplier when the victim never acquired the player) is a
-**Stealth** node, not a Melee one.
+**Stealth** node, not a Melee one. "Ranks" in the earlier draft of this table became the Stat nodes.
 
 ---
 
@@ -400,7 +416,7 @@ question of where the roads run rather than what the nodes cost. Still to be jud
 
 ## What is built first
 
-Not decided. Melee and Weapon Specialist need the least new machinery; the Juggernaut needs a
-press-and-release Pulse command pair; the Dash and Alien Routes each need their Module. The
-infrastructure in front of them is done: the id-space ceiling and the four cuts on 2026-09-13, the fitted
-icon draw and the layout preview cvars on 2026-09-14.
+**Melee, 2026-09-14**, all but Cleave; it is the worked example. Weapon Specialist needs the least new
+machinery of the rest; the Juggernaut needs a press-and-release Pulse command pair; the Dash and Alien
+Routes each need their Module. The infrastructure in front of them is done: the four cuts on 2026-09-13,
+the fitted icon draw, the 256-id ceiling, the Stat tier and the layout cvars on 2026-09-14.

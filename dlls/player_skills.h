@@ -60,6 +60,12 @@ struct CPlayerSkills
 
     bool AnyUnlocked() const;
 
+    // How many unlocked Stat nodes grant 'stat'.  A Stat node's effect is
+    // the same for every node of its kind, so this count times the stat's
+    // cvar is the whole bonus; read it where the effect is computed, the
+    // way HasSkill is.
+    int CountStat(EStat stat) const;
+
     // Every point the player has ever had.
     int TotalPoints() const { return m_iPointsBase + m_iPointsGranted; }
 

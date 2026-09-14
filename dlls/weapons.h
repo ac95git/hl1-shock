@@ -563,11 +563,15 @@ public:
 	}
 
 protected:
-	// The two numbers a heavier weapon on the same swing changes.  The Gauss
-	// Katana is CCrowbar with these overridden and different models; the
-	// Backstab, Crowbar Force, Reach and the Follow-Up come along unchanged.
+	// The numbers a weapon on the same swing changes -- the melee roster is
+	// CCrowbar with these overridden and different models (docs/SKILL_TREE.md,
+	// Melee); the Melee Skills, the Stat nodes and the Follow-Up come along
+	// unchanged.
 #ifndef CLIENT_DLL
 	virtual float BaseDamage(); // gSkillData is server-side only
+	// The weapon's own Backstab multiplier, before the Backstab node.  The
+	// knife's lean lives here.  Server-side: the Backstab is damage.
+	virtual float BackstabScale();
 #endif
 	// Multiplies the miss and hit delays.  Predicted, so an override must read
 	// a value both DLLs can see -- see skill_tuning.h.

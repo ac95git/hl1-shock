@@ -8,7 +8,7 @@ build on, and list the questions that have to be answered before the first line 
 is built, its content moves into PILLARS.md and the entry here is deleted — this file only ever shrinks
 from the top.
 
-**Last updated:** 2026-09-14 (branch `hl-shock` — the Skill Tree becomes a matrix: Stat nodes as roads, every node one point, not completable, settled in SKILL_TREE.md; the fitted node icon draw and the layout preview cvars built the same day; the day before, all seven Routes shaped, the Dash and alien Modules with them, the katana reworked on paper, four Skills cut and the id ceiling built)
+**Last updated:** 2026-09-14 (branch `hl-shock` — the Skill Tree becomes a matrix: Stat nodes as roads, every node one point, not completable, settled in SKILL_TREE.md and the Melee Route built on it the same day, all but Cleave; the fitted node icon draw, the 256-id ceiling and the layout cvars too; the day before, all seven Routes shaped, the Dash and alien Modules with them, the katana reworked on paper, four Skills cut)
 
 ## Shape legend
 
@@ -76,7 +76,7 @@ What that leaves:
 | Hook | [Modules](#pillar-3-modules) | `pm_shared/` — same route |
 | Sprint speed (`SprintSpeed`, id 6) | cut from the tree for good, 2026-09-13 | nothing — cut by design, see the [Routes](#pillar-4-routes) |
 | High jump (`HighJump`, id 5) | cut from the tree for good, 2026-09-13 | nothing — cut by design, see the [Routes](#pillar-4-routes) |
-| Crowbar swing speed (`CrowbarSpeed`, id 11) | reserved, cut from the tree | nothing, as of 2026-09-13: the damage rule below is being dropped, see the [Melee Route](#melee) |
+| ~~Crowbar swing speed (`CrowbarSpeed`, id 11)~~ | **built 2026-09-14** as Melee Speed, with the Melee Route | nothing — the halving rule was dropped and the Skill is in the tree |
 | Draw speed | [Weapon handling](#weapon-handling) | nothing — unblocked |
 
 **The movement four are a genuinely different problem.** `pm_shared/` runs from `playermove_t`, not from
@@ -338,12 +338,10 @@ Replaces the crowbar. Heavier, slower, hits harder.
 The mechanic is trivial — it is `dlls/crowbar.cpp` with different numbers and a different model. The cost
 is entirely in what the crowbar's name is load-bearing for:
 
-- **Five Skill ids are named for it**: `CrowbarRange` (1), `CrowbarDamage` (2), `CrowbarSpeed` (11,
-  reserved), `CrowbarFollowUp` (18), and id 12 which was `CrowbarParry` before it became `PulseWindow`.
-  Ids are frozen and must stay frozen; the C++ enumerator names and the display strings ("Crowbar Reach",
-  "Crowbar Force") are free to change, and would have to.
-- **CONTEXT.md's Follow-Up entry says "crowbar swing"** and would need rewording. Any rename here is a
-  CONTEXT.md change in the same commit, per the glossary rule in CLAUDE.md.
+- ~~**Five Skill ids are named for it**~~ **Renamed 2026-09-14 with the Melee Route**: Melee Reach (1),
+  Melee Force (2), Melee Speed (11) and Follow-Up (18) are generic now, in enumerator, display string and
+  cvar. Ids unchanged. Nothing in the tree is named for the crowbar any more.
+- ~~**CONTEXT.md's Follow-Up entry says "crowbar swing"**~~ Reworded with the rename.
 - **`d_crowbar` is the icon for three Skills** (see [ART_DEBT.md](ART_DEBT.md)).
 - `crowbar.cpp` compiles into both DLLs for prediction. That is no longer a blocker — `m_skills` is
   populated on the client — but the swing-rate change still has to reckon with the first-swing/follow-up
@@ -352,7 +350,7 @@ is entirely in what the crowbar's name is load-bearing for:
 ~~Open: does the player still find a crowbar somewhere, or is the pickaxe simply what melee *is* in this mod?~~
 **Answered 2026-09-13: the crowbar stays and the pickaxe joins it**, as one of a melee roster on the
 crowbar's base, each weapon leaning one way. See the [Melee Route](#melee). The rename of the crowbar-named
-Skills happens once, for the roster; the vocabulary work above still applies.
+Skills happened once, for the roster, on 2026-09-14.
 
 #### The Gauss Katana
 
@@ -1953,9 +1951,12 @@ it works against the mapper the moment maps exist.
 
 #### Melee
 
-**Shape: Shaped 2026-09-13**, in a grilling session. Mostly built already; what the grill added is a
-roster, a Backstab node, the return of swing speed, and the removal of a base-game rule that was in the
-way of all three.
+**Shape: Built 2026-09-14, all but Cleave.** The first Route on the matrix and the worked example for the
+other six: Reach, Force, Speed, the Backstab node, nine Melee Damage Stat nodes as its roads, the crowbar
+names retired, the halving rule dropped. What is built is in [PILLARS.md](PILLARS.md#2-enhanced-combat)
+and the layout is in the comment above `k_SkillDefs`. What remains here: **Cleave**, the major, whose cell
+is empty and whose id (34) is held; and the roster weapons below, which are weapons rather than Skills.
+The text below is kept as the reasoning.
 
 ##### The roster — settled
 
@@ -2251,7 +2252,7 @@ is designed, and may well change name first.
 | **Decapitation** | A lethal head hit that removes the head: headless submodel, thrown skull, blood from the stump. | Distinct from *gibbing*, which is the whole body and already means something in this codebase. **Headless** names the resulting state. |
 | **Carbon Pickaxe** | The other custom weapon. | Named already; recorded here so it is used consistently. **Gauss Katana** graduated to CONTEXT.md on 2026-09-12 when the weapon was built. |
 | **Route** | A build path through the Skill Tree: the set of Skills whose bonuses multiply into one way of playing. Crosses columns. | Named 2026-09-13. Avoid *class*, *spec* and *tree* — the tree is the whole thing. |
-| **Stat node** | The smallest node in the Skill Tree: one flat bonus, one Skill Point, a shared icon per stat. The roads between Skills and the whole of their price. | Settled 2026-09-14. A Stat node is a node, not a Skill: "Skill" stays for the nodes that change how the game plays. Avoid *passive*, *filler*, *minor* (that is a tier name already) and *travel node*. |
+| ~~**Stat node**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#skills) on 2026-09-14, when the Melee Route built the first nine. | |
 | **Defense Matrix** | The Juggernaut Route's stance: the Pulse key held for a second raises it, armour takes a far larger share of every hit while it is up, the player is slowed. Drops on release, at 6 s, or at zero armour. | Settled 2026-09-13. **Not a Shield** — that word is the Pulse's field in CONTEXT.md. |
 | **Core** | The alien Module's ammunition: an ammo type, found in the world, finite. Powers the summon weapon and whatever other alien weapons the Module serves. | Settled 2026-09-13, replacing *green battery*, which collided with the HEV **Battery** Item Type and the Battery Capacity Skill. *Cell* was also out: it is the Grid's unit. |
 | **Ghost slave** | A summoned, time-limited alien slave that fights for the player. Vanishes on its timer, on death, or with the ultimate's volley. | Settled 2026-09-13 with the Alien Route. |

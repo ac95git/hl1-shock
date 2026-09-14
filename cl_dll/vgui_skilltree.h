@@ -178,12 +178,9 @@ private:
     // skilltree_step overrides it for judging by eye; 0 means this.
     static constexpr int k_Step = 96;
     int m_step = k_Step; // as last read from the cvar, part of the cached layout
-    // Room reserved inside a node, below the icon, for the cost.
-    static constexpr int k_CostRoom = 12;
-    // Below this the nodes are too small to carry a cost, which is text and
-    // does not scale, so the tree stops shrinking and clips instead. An
-    // honest limit rather than a silent one. The icon scales with the node
-    // and is not what sets this floor.
-    static constexpr float k_MinScale = 0.55f;
+    // Nothing is printed on a node (every node costs one, docs/SKILL_TREE.md)
+    // and the icon scales with it, so the only floor is the one that keeps a
+    // Stat node from vanishing. Below it the tree clips instead of shrinking.
+    static constexpr float k_MinScale = 0.3f;
     static constexpr int k_ConnRadius = 3;  // half-width of connector lines
 };

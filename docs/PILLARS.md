@@ -27,7 +27,7 @@ This file records **what exists today**. Intended work that has not been built l
 | 1 | [Exploration](#1-exploration) | **Not started** | Its rewards exist — Row Grants, Skill Points, Reset Tokens are all findable entities — but no map places one, so nothing is explored *for* yet. |
 | 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar. Melee Skills land, and the Backstab gives melee its first positional decision. Numbers untuned. |
 | 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. |
-| 4 | [Skill trees](#4-skill-trees) | **Playable** | 14 curated Skills, **all with effects**. Points and Reset Tokens are earned and spent, the tree fits any screen, and nothing in it lies about what it does. Numbers untuned; no map places a Skill Point yet. |
+| 4 | [Skill trees](#4-skill-trees) | **Playable** | 24 nodes, **all with effects**: the Melee Route built on the matrix (nine Stat nodes as its roads, every node one point), and the other six columns waiting for theirs. Points and Reset Tokens are earned and spent, the tree fits any screen, and nothing in it lies about what it does. Numbers untuned; no map places a Skill Point yet. |
 | 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work over a server-owned model. Row Grants are now placeable; Boxes are the remaining gap. |
 | 6 | [Stealth](#6-stealth) | **Partial** | Concealment and Suspicion are live: monsters no longer acquire the player on sight, they fill a meter at a rate set by angle, distance, stance and light, and the player is warned by `CHudConceal`. Quiet movement is deliberate. Nothing after acquisition has changed — once acquired, a monster stays acquired. |
 
@@ -229,15 +229,29 @@ deliberately unanswered until then. Vocabulary in [CONTEXT.md](../CONTEXT.md#the
 There is **no console command** to set the variant. Variants are tested by placing `item_suit` entities
 of each variant in the test map — see [MAP_BRIEF.md](MAP_BRIEF.md).
 
-**Four melee and damage Skills.** The first three follow the `PulseWindowFor` pattern — the modifier is
-read from `m_skills` where the value is computed, rather than through a hook of its own:
+**The Melee Route, and two damage Skills.** All of them follow the `PulseWindowFor` pattern — the
+modifier is read from `m_skills` where the value is computed, rather than through a hook of its own. The
+melee ones live in `CCrowbar::Swing`, which every weapon on the melee roster (crowbar, katana) goes
+through, so "melee" is true by construction rather than by a damage-type list:
 
-- **Crowbar Reach** (id 1) scales the swing trace by `skill_crowbar_range_scale` (1.25) in
-  `CCrowbar::Swing`, on **both** sides. The server still decides whether a hit landed; the client's copy
-  of the trace only picks which swing animation plays, and now reaches as far as the server's.
-- **Crowbar Force** (id 2) scales crowbar damage by `skill_crowbar_damage_scale` (1.5),
-  applied *before* the Follow-Up so a primed swing multiplies the already-stronger hit rather than a
+- **Melee Reach** (id 1, *Crowbar Reach* until 2026-09-14) scales the swing trace by
+  `skill_melee_reach_scale` (1.25), on **both** sides. The server still decides whether a hit landed; the
+  client's copy of the trace only picks which swing animation plays, and reaches as far as the server's.
+- **Melee Speed** (id 11, back from reserve 2026-09-14) scales the miss and hit delays by
+  `skill_melee_speed_scale` (0.7), on both sides too, since the delay is predicted. It could return because
+  **Valve's rapid-swing halving is gone**: any swing within about a second of the last used to do half
+  damage, which made a speed Skill buy only faster half-hits. Every swing does full damage now; sustained
+  melee damage roughly doubles for a player holding the button, absorbed by the base-damage and swing-time
+  cvars.
+- **Melee Force** (id 2, *Crowbar Force* until 2026-09-14) scales melee damage by `skill_melee_force_scale`
+  (1.5), applied *before* the Follow-Up so a primed swing multiplies the already-stronger hit rather than a
   base one.
+- **Nine Melee Damage Stat nodes** (ids 24–32), the Route's roads. Each adds `skill_stat_melee_damage`
+  (0.05) to one multiplier — additive within the stat, so five are ×1.25 — applied after Force. The count is
+  `CPlayerSkills::CountStat(EStat::MeleeDamage)`; there is no per-node code.
+- **The Backstab node** (id 33) multiplies a Backstab by `skill_backstab_bonus_scale` (1.5) on top of the
+  weapon's own Backstab base, `CCrowbar::BackstabScale()` (the plain `backstab_damage_scale`, 3, until a
+  weapon that leans on it — the knife — overrides it). 3× becomes 4.5× with the node.
 - **Weapon Mastery** (id 4) scales every player weapon by `skill_weapon_damage_scale` (1.1), at two
   chokepoints rather than per weapon — `ApplyMultiDamage` and the direct-`TakeDamage` branch of
   `RadiusDamage`. Why it is two, and the two consequences that fall out of it, are under
@@ -515,10 +529,10 @@ table row, one `EItemTypeId`, one `CItem` subclass, one FGD line, one `case`.
 
 **Status: Playable**
 
-**Planned:** the seven Routes in [SKILL_TREE.md](SKILL_TREE.md), built one at a time from
-[ROADMAP.md](ROADMAP.md#pillar-4-routes). Of the seven reserved ids, `CrowbarSpeed` returns as Melee Speed
-with the Melee Route and `HiveCapacity` / `HiveRegrowth` with the Alien Route; the other four are cut for
-good.
+**Planned:** the six remaining Routes in [SKILL_TREE.md](SKILL_TREE.md), built one at a time from
+[ROADMAP.md](ROADMAP.md#pillar-4-routes). The **Melee Route was built first, 2026-09-14**, all but its
+major (Cleave); it is the worked example of a Route on the matrix. Of the reserved ids, `HiveCapacity` /
+`HiveRegrowth` return with the Alien Route and 22–23 wait for the stealth column; four are cut for good.
 
 Every Skill in the tree changes how the game plays. The pillar's own acceptance criterion — "every unlocked
 skill has an observable effect" — is met, which is what moved this off Scaffolded.
@@ -527,16 +541,24 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
 
 **Definitions** — `game_shared/skill_defs.h`, compiled into both DLLs
 
-- **14 Skills in the tree**, across seven columns: Melee (0), the Pulse (1–2), the suit (3), Armaments (4),
-  Survivability (5–6). Total cost **29 points**. This is the pre-Routes tree minus four cuts; the Routes
-  replace it node by node, under the matrix design settled 2026-09-14 (every node one point, Stat nodes as
-  the roads, the tree not completable — [SKILL_TREE.md](SKILL_TREE.md#the-matrix--settled-2026-09-14)).
-- **Seven reserved ids** with no row. Four are **cut for good** (2026-09-13): `HealthRegen` (10) and
+- **24 nodes in the tree, every one costing one point** (a `static_assert` holds every row to it): the
+  Melee Route in columns 0–3 — Reach at the root, two roads of Melee Damage Stat nodes down to Speed and
+  Force, on to the Backstab node, ending where Cleave will sit — and the pre-Routes columns shifted right
+  of it (the Pulse 4–5, the suit 6, Armaments 7, Survivability 8–9), each waiting for its Route to give it
+  roads. Follow-Up sits at the seam between Melee and the Pulse because it is gated on one of each. The
+  layout is in the comment above `k_SkillDefs`; the design is
+  [SKILL_TREE.md](SKILL_TREE.md#the-matrix--settled-2026-09-14).
+- **Stat nodes are rows like any other**, with `ENodeTier::Stat` and an `EStat` naming what they grant;
+  `STAT_MELEE(id, col, row, prereq)` stamps one out. A Skill has `EStat::None`. Only stats a built Route
+  uses are in the enum.
+- **Eight reserved ids** with no row. Four are **cut for good** (2026-09-13): `HealthRegen` (10) and
   `BatteryRegen` (14) rewarded standing still, `HighJump` (5) and `SprintSpeed` (6) altered the normal
-  movement rules. `CrowbarSpeed` (11) waits on the crowbar's first-swing damage rule being dropped;
-  `HiveCapacity` (20) and `HiveRegrowth` (21) are held for the alien column below. A reserved row is
-  `SKILL_RESERVED(id)` — the id stays frozen and, for the ones that return, the Skill comes back unchanged,
-  which is exactly what `FastReload` (id 3) did.
+  movement rules. `HiveCapacity` (20) and `HiveRegrowth` (21) are held for the alien column below, 22 and
+  23 for the stealth column. A reserved row is `SKILL_RESERVED(id)` — the id stays frozen and, for the ones
+  that return, the Skill comes back unchanged, which is exactly what `FastReload` (id 3) and `MeleeSpeed`
+  (id 11) did.
+- **A second `static_assert` refuses two rows in one cell**, the mistake a hand-placed 180-row table will
+  make, which would draw as one node hiding another.
 - **The id space has a ceiling.** `k_SkillIdCeiling` (256 since 2026-09-14, 96 the day before) sizes the
   saved unlocked array and the sync mask; `ESkillId::_Count` bounds only the definition table, and a
   `static_assert` fires if it ever passes the ceiling. The raise was for the matrix tree, whose Stat nodes
@@ -549,9 +571,9 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
 - A `static_assert` enforces that the table is ordered by id. It is indexed positionally, so a row out of
   place would silently make a save's unlocked bits refer to different abilities — the grouping that reads
   most naturally to a human is exactly the mistake, so it is a compile error.
-- Each `SkillDef` carries id, display name, description, icon, grid column/row, cost, **two**
-  prerequisites, and a visual tier (`Minor` / `Medium` / `Major`). Both prerequisites are required, so a
-  connector line always means "you need this".
+- Each `SkillDef` carries id, display name, description, icon, grid column/row, cost (always 1), **two**
+  prerequisites, a visual tier (`Stat` / `Minor` / `Medium` / `Major`) and a stat. Both prerequisites are
+  required, so a connector line always means "you need this".
 - `SkillPrereqMet` is the one implementation of the gating rule; server and client both call it.
 
 **Server** — `dlls/player_skills.cpp` / `dlls/player_skills.h`
@@ -604,11 +626,10 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
   scale. **The fit shrinks but never magnifies**: the engine clips a sprite drawn larger than its frame
   (found the same day on the gauss and egon icons), so a sprite smaller than its node sits centred at 1:1.
   What that asks of the replacement icons is in [ART_DEBT.md](ART_DEBT.md).
-- **`skilltree_show_cost 0`** (client, default 1) hides the cost on every node and gives the icon the
-  whole node. Added as a comparison switch on 2026-09-14, when the cost was seen to push the icon out of
-  the node's middle; judged better without, and the matrix design settled the same day makes every node
-  cost one, so the cost stops being drawn anywhere. The default flips, and the switch goes, with the first
-  Route built under the matrix; until then the old tree still has 2- and 3-point nodes to show.
+- **Nothing is printed on a node.** The cost used to be, bottom-right; it pushed the icon out of the
+  node's middle, was judged better hidden (2026-09-14), and then every node came to cost one with the
+  matrix, so there is no price to print. The scale floor dropped from 0.55 to 0.3 with it, since the cost
+  text was the only thing on a node that did not scale.
 - **Three layout cvars** (client). `skilltree_preview_cols` and `skilltree_preview_rows` (default 0) force
   the grid to at least that many columns and rows and draw a Stat-sized ghost outline in every cell with no
   node, to judge the footprint of a matrix at a real resolution before the nodes are built; they can only

@@ -576,7 +576,7 @@ bool CPlayerPulse::TryNegate(CBasePlayer* pPlayer, float flDamage, int bitsDamag
 
 	// Prime the crowbar. Only while the Skill is held, so nothing carries
 	// state it can never spend.
-	if (pPlayer->m_skills.HasSkill(ESkillId::CrowbarFollowUp))
+	if (pPlayer->m_skills.HasSkill(ESkillId::FollowUp))
 		m_flFollowUpUntil = gpGlobals->time + std::max(0.1f, pulse_followup_time.value);
 
 	// CHAN_AUTO so several hits landing inside one window each get their own

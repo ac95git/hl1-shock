@@ -494,8 +494,20 @@ cvar_t skill_health_bonus = {"skill_health_bonus", "25"};
 cvar_t skill_armor_ratio_scale = {"skill_armor_ratio_scale", "0.9"};
 cvar_t skill_fall_damage_scale = {"skill_fall_damage_scale", "0.5"};
 cvar_t skill_battery_bonus = {"skill_battery_bonus", "50"};
-cvar_t skill_crowbar_range_scale = {"skill_crowbar_range_scale", "1.25"};
-cvar_t skill_crowbar_damage_scale = {"skill_crowbar_damage_scale", "1.5"};
+// The Melee Route.  Reach and Speed are predicted and read from both DLLs
+// through skill_tuning.h; Force, the Stat nodes and the Backstab node are
+// server-side damage.
+cvar_t skill_melee_reach_scale = {"skill_melee_reach_scale", "1.25"};
+cvar_t skill_melee_force_scale = {"skill_melee_force_scale", "1.5"};
+// Multiplies the swing delay: 0.7 is 30% faster.
+cvar_t skill_melee_speed_scale = {"skill_melee_speed_scale", "0.7"};
+// Each Melee Damage Stat node adds this to a multiplier on melee damage, so
+// five of them at 0.05 are x1.25.  Additive within the stat, multiplied with
+// the Skills.
+cvar_t skill_stat_melee_damage = {"skill_stat_melee_damage", "0.05"};
+// The Backstab node multiplies the Backstab's own multiplier
+// (backstab_damage_scale, 3): 1.5 takes it to 4.5x.
+cvar_t skill_backstab_bonus_scale = {"skill_backstab_bonus_scale", "1.5"};
 
 // The Gauss Katana.  Slower and heavier than the crowbar; both numbers are
 // first guesses.  Damage goes through the sk_plr_katana skill cvars below so
@@ -706,8 +718,11 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_armor_ratio_scale);
 	CVAR_REGISTER(&skill_fall_damage_scale);
 	CVAR_REGISTER(&skill_battery_bonus);
-	CVAR_REGISTER(&skill_crowbar_range_scale);
-	CVAR_REGISTER(&skill_crowbar_damage_scale);
+	CVAR_REGISTER(&skill_melee_reach_scale);
+	CVAR_REGISTER(&skill_melee_force_scale);
+	CVAR_REGISTER(&skill_melee_speed_scale);
+	CVAR_REGISTER(&skill_stat_melee_damage);
+	CVAR_REGISTER(&skill_backstab_bonus_scale);
 	CVAR_REGISTER(&katana_swing_time_scale);
 	CVAR_REGISTER(&katana_wave_damage_scale);
 	CVAR_REGISTER(&katana_wave_range);

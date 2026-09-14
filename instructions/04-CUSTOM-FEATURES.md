@@ -146,8 +146,11 @@ Raising `skill_points_start` is the way to work on the tree UI without hunting f
 | `skill_armor_ratio_scale` | 0.9 | Armor Expert multiplies `ARMOR_RATIO` — the share of a blow that gets **past** armor — so lower is better armor |
 | `skill_fall_damage_scale` | 0.5 | Sure Footing multiplies fall damage |
 | `skill_battery_bonus` | 50 | Extra max armor from Battery Capacity |
-| `skill_crowbar_range_scale` | 1.25 | Crowbar Reach multiplies the 32-unit swing trace |
-| `skill_crowbar_damage_scale` | 1.5 | Crowbar Force multiplies crowbar damage |
+| `skill_melee_reach_scale` | 1.25 | Melee Reach multiplies the 32-unit swing trace |
+| `skill_melee_force_scale` | 1.5 | Melee Force multiplies melee damage |
+| `skill_melee_speed_scale` | 0.7 | Melee Speed multiplies the swing delay, miss and hit |
+| `skill_stat_melee_damage` | 0.05 | Each Melee Damage Stat node adds this to one multiplier on melee damage |
+| `skill_backstab_bonus_scale` | 1.5 | The Backstab node multiplies the weapon's own Backstab base |
 | `skill_weapon_damage_scale` | 1.1 | Weapon Mastery multiplies all player-dealt damage |
 | `skill_reload_time_scale` | 0.8 | Fast Reload multiplies `DefaultReload`'s delay |
 
@@ -185,7 +188,7 @@ that it plays the right swing animation for a hit the *server* resolved.
 Two traps:
 
 - **A tuning cvar is not visible from the client.** They are defined and registered in `dlls/game.cpp`,
-  which is not in the client project, so naming `skill_crowbar_range_scale` in unguarded code is an
+  which is not in the client project, so naming `skill_melee_reach_scale` in unguarded code is an
   undefined symbol. Add a `CSkillTuning` to `dlls/skill_tuning.h` instead; it resolves the cvar by name
   through `CVAR_GET_POINTER`, which works in both DLLs. Put only predicted knobs there.
 - **A `CSkillTuning` falls back to the *neutral* value**, not to the cvar's default, so a failed lookup
@@ -215,14 +218,24 @@ keep in step, and no networking change. See
    - `name` is the display label
    - `description` is the hover text
    - `spriteName` is a HUD sprite from `sprites/hud.txt`; `nullptr` renders the node without an icon
-   - `gridCol` and `gridRow` place the node in the tree
-   - `cost` is the Skill Point cost
+   - `gridCol` and `gridRow` place the node in the tree. No two rows may share a cell; a `static_assert`
+     refuses it.
+   - `cost` is **always 1**, and a `static_assert` holds every row to it. The price of a Skill is the road
+     of Stat nodes to it ([docs/SKILL_TREE.md](../docs/SKILL_TREE.md), *The matrix*); nothing is printed
+     on a node.
    - `prereq` and `prereq2` each link to another `ESkillId`, or `ESkillId::None`. **Both are required** —
-     a Skill with `None` in both slots is a root.
-   - `tier` controls the visual size of the node
+     a Skill with `None` in both slots is a root. Roads are made by chaining Stat nodes on `prereq`.
+   - `tier` controls the visual size of the node: `Stat` for a Stat node, `Minor` / `Medium` / `Major` for
+     a Skill.
+   - `stat` is `EStat::None` for a Skill. A **Stat node** is a row whose `stat` names what it grants and
+     whose effect is the same for every node of that stat; use the `STAT_MELEE`-style macro for its
+     kind rather than writing the row out, so every node of a stat has one name, text and icon.
 4. Update the game logic that should react to the Skill being unlocked. Read the modifier server-side from
    `m_skills` at the point the effect is computed, following `PulseWindowFor` / `PulseRechargeFor` in
-   [dlls/player_pulse.cpp](../dlls/player_pulse.cpp). Never apply an effect in prediction as well.
+   [dlls/player_pulse.cpp](../dlls/player_pulse.cpp). Never apply an effect in prediction as well. A Stat
+   node's effect is `m_skills.CountStat(stat)` times its cvar, read the same way; adding a new stat is one
+   `EStat` value, one cvar, and one place that reads the count — see the Melee Damage nodes in
+   `CCrowbar::Swing`.
 
 `SendSkillTreeToClient()` needs no change: it sends only which Skills are unlocked and how many points are
 unspent. Position, cost, prerequisites and tier are already on the client.

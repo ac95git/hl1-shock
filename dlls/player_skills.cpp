@@ -101,6 +101,20 @@ bool CPlayerSkills::AnyUnlocked() const
     return false;
 }
 
+int CPlayerSkills::CountStat(EStat stat) const
+{
+    if (stat == EStat::None)
+        return 0;
+
+    int count = 0;
+    for (int i = 1; i < k_MaxSkills; ++i)
+    {
+        if (m_bUnlocked[i] && k_SkillDefs[i].stat == stat)
+            ++count;
+    }
+    return count;
+}
+
 int CPlayerSkills::SpentPoints() const
 {
     int spent = 0;

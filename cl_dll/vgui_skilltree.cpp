@@ -613,16 +613,6 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
         }
     }
 
-    // Costs are text, and text drawn before a sprite gets eaten, so they are
-    // collected here and flushed with the rest of the text at the end of the
-    // paint. See docs/TECH_DEBT.md, "VGUI Draw Order".
-    struct DeferredCost { int x, y, r, g, b; char text[8]; };
-    std::vector<DeferredCost> costLabels;
-    costLabels.reserve(m_nodes.size());
-
-    // With the cost hidden the icon takes the whole node, centred.
-    const bool bShowCost = CVAR_GET_FLOAT("skilltree_show_cost") != 0.0f;
-
     for (int i = 0; i < (int)m_nodes.size(); ++i)
     {
         const int skillId = m_nodes[i];
@@ -673,22 +663,22 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
         ctx->drawSetColor(fr, fg, fb_col, bUnlocked ? 0 : 100);
         ctx->drawFilledRect(r.x, r.y, r.x + r.w, r.y + stripeH);
 
-        // Sprite icon, fitted into the node above the cost room
+        // Sprite icon, fitted into the node
         //
         // The node is sized by the layout, not by the art, so the icon is
         // shrunk to the room it has: a HUD sprite that is 88px at 1280 and
         // 132px at 2560 lands the same at both. The 640 bucket's 44px is
         // smaller than the room and stays 44px, since the engine will not
-        // magnify.
+        // magnify. Nothing else is drawn on a node: every node costs one,
+        // so there is no price to print (docs/SKILL_TREE.md).
         if (i < (int)m_nodeSprites.size())
         {
             const NodeSprite& ns = m_nodeSprites[i];
             if (ns.hSprite != 0)
             {
-                const int costRoom = bShowCost ? (int)(k_CostRoom * m_scale) : 0;
-                const int pad      = std::max(1, (int)(k_IconPad * m_scale));
-                const int boxW     = r.w - 2 * pad;
-                const int boxH     = r.h - 2 * pad - costRoom;
+                const int pad  = std::max(1, (int)(k_IconPad * m_scale));
+                const int boxW = r.w - 2 * pad;
+                const int boxH = r.h - 2 * pad;
                 if (boxW >= 4 && boxH >= 4)
                 {
                     // Tint: white=unlocked, gold=available, grey=locked
@@ -705,39 +695,6 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
             }
         }
 
-        // ---- Cost, bottom-right of the node ----
-        //
-        // The price belongs next to the thing, not one hover away. Unlocked
-        // nodes show nothing: what it cost stopped being a decision.
-        if (bShowCost && !bUnlocked && def.cost > 0 && smallFont)
-        {
-            DeferredCost dc = {};
-            snprintf(dc.text, sizeof(dc.text), "%d", def.cost);
-
-            int cw = TextWidth(smallFont, dc.text);
-            int ch = smallFont->getTall();
-
-            dc.x = r.x + r.w - cw - 4;
-            dc.y = r.y + r.h - ch - 2;
-
-            if (bAvailable)
-            {
-                // Affordable now.
-                dc.r = 255; dc.g = 220; dc.b = 120;
-            }
-            else if (SkillPrereqMet(skillId, [this](ESkillId p) { return IsUnlocked(static_cast<int>(p)); }))
-            {
-                // Reachable, just not affordable yet -- the one case worth
-                // distinguishing, because it is the thing to save up for.
-                dc.r = 200; dc.g = 120; dc.b = 90;
-            }
-            else
-            {
-                dc.r = 120; dc.g = 120; dc.b = 120;
-            }
-
-            costLabels.push_back(dc);
-        }
     }
 
     // ---- Hover tooltip bubble ----
@@ -807,14 +764,6 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
         ctx->drawSetTextPos(m_resetBtnRect.x + std::max(2, (m_resetBtnRect.w - labelW) / 2),
                             m_resetBtnRect.y + std::max(0, (m_resetBtnRect.h - labelH) / 2));
         ctx->drawPrintText(resetLabel, resetLen);
-
-        // ---- Node costs ----
-        for (const DeferredCost& dc : costLabels)
-        {
-            ctx->drawSetTextColor(dc.r, dc.g, dc.b, 0);
-            ctx->drawSetTextPos(dc.x, dc.y);
-            ctx->drawPrintText(dc.text, (int)strlen(dc.text));
-        }
     }
 
     // ---- Tooltip text, over everything ----

@@ -37,10 +37,14 @@ struct CSkillTuning
 	}
 };
 
-// Crowbar Reach multiplies the 32-unit swing trace.  The client traces too --
+// Melee Reach multiplies the 32-unit swing trace.  The client traces too --
 // its copy picks which swing animation plays -- so it needs the same number or
 // an unlocked player sees a miss animation for a hit that landed.
-inline CSkillTuning g_tuneCrowbarRange = {"skill_crowbar_range_scale", 1.0f, nullptr};
+inline CSkillTuning g_tuneMeleeReach = {"skill_melee_reach_scale", 1.0f, nullptr};
+
+// Melee Speed multiplies the swing delay, which is m_flNextPrimaryAttack and
+// predicted.  Neutral is the weapon's own rate.
+inline CSkillTuning g_tuneMeleeSpeed = {"skill_melee_speed_scale", 1.0f, nullptr};
 
 // Fast Reload scales the reload delay in CBasePlayerWeapon::DefaultReload.
 // m_flNextAttack is predicted frame to frame, so the two sides disagreeing
