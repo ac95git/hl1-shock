@@ -427,6 +427,9 @@ void CHud::Init()
 	// exist. 0 is off: the grid is whatever k_SkillDefs places.
 	CVAR_CREATE("skilltree_preview_cols", "0", 0);
 	CVAR_CREATE("skilltree_preview_rows", "0", 0);
+	// The grid step in pixels at full scale, both axes; 0 is the designed
+	// value (k_Step). For judging node spacing by eye against a preview grid.
+	CVAR_CREATE("skilltree_step", "0", 0);
 	// 0 hides the cost on every node and gives the icon the whole node,
 	// centred. A comparison switch: the cost pushes the icon up out of the
 	// node's middle, and this is how to see the tree without it.

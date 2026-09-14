@@ -22,13 +22,17 @@
 // ENodeTier
 //
 // The visual weight of a node in the client's Skill Tree.
-// Presentation only -- nothing in the rules reads it.
+// Presentation only -- nothing in the rules reads it, nothing
+// saves it and nothing sends it, which is why the values could be
+// renumbered when Stat was added below Minor on 2026-09-14.
 // ---------------------------------------------------------
 enum class ENodeTier : uint8_t
 {
-	Minor  = 0, // small node  -- cheap/root Skills
-	Medium = 1, // medium node -- mid-tree Skills
-	Major  = 2, // large node  -- powerful end-tree Skills
+	Stat   = 0, // smallest -- a Stat node: one flat bonus, the roads between Skills (docs/SKILL_TREE.md)
+	Minor  = 1, // small node  -- cheap/root Skills
+	Medium = 2, // medium node -- mid-tree Skills
+	Major  = 3, // large node  -- powerful end-tree Skills
+	_Count = 4,
 };
 
 // ---------------------------------------------------------
@@ -119,8 +123,13 @@ inline constexpr int k_MaxSkills = static_cast<int>(ESkillId::_Count);
 // the static_assert below is where that is enforced.
 //
 // Do not lower this: the save format is written against it.
+//
+// Raised from 96 to 256 on 2026-09-14 for the matrix tree, whose
+// Stat nodes each take an id (docs/SKILL_TREE.md).  The saved array
+// changed name with it (dlls/player_skills.cpp), so a 96-entry save
+// resets its tree rather than over-reading.
 // ---------------------------------------------------------
-inline constexpr int k_SkillIdCeiling = 96;
+inline constexpr int k_SkillIdCeiling = 256;
 
 static_assert(k_MaxSkills <= k_SkillIdCeiling,
 	"ESkillId has grown past k_SkillIdCeiling; raise the ceiling (a save-format change) rather than "

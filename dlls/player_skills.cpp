@@ -32,7 +32,11 @@ static TYPEDESCRIPTION g_SkillsSaveData[] =
     // it.  A field the save does not contain is simply left cleared, which
     // for this array means an old save loads with its tree reset and every
     // point refunded -- the same self-correction a cut Skill relies on.
-    { FIELD_BOOLEAN, "m_bUnlockedCeiling", static_cast<int>(offsetof(CPlayerSkills, m_bUnlocked)), k_SkillIdCeiling, 0 },
+    //
+    // The name carries the ceiling for the same reason: "m_bUnlockedCeiling"
+    // was the 96-entry array, and a save holding it would be over-read by
+    // the 256-entry one.  Rename again if the ceiling ever moves again.
+    { FIELD_BOOLEAN, "m_bUnlocked256", static_cast<int>(offsetof(CPlayerSkills, m_bUnlocked)), k_SkillIdCeiling, 0 },
 };
 
 // =====================================================================

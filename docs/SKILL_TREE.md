@@ -82,10 +82,10 @@ draw showed the panel could hold well over a hundred nodes.
 
 What it costs to build, before the first Stat node exists:
 
-- **The id ceiling** (96) is a save-format constant and has to be raised once, to 256, while there are no
-  saves worth protecting. See the ROADMAP infrastructure notes.
-- **A fourth `ENodeTier`**, below Minor, and a grid step that follows the Stat node rather than the Major
-  one, or 180 nodes do not fit at the scale floor. Nodes can be square now that nothing is printed on them.
+- ~~**The id ceiling** (96) is a save-format constant and has to be raised once, to 256.~~ **Built
+  2026-09-14**, with the saved field renamed so a 96-entry save resets rather than over-reads.
+- ~~**A fourth `ENodeTier`**, below Minor, and a grid step that follows the Stat node.~~ **Built
+  2026-09-14**: `ENodeTier::Stat`, square nodes of 32 / 44 / 54 / 64 on a 96-pixel step, both axes.
 - **A layout check.** 180 hand-placed rows in `skill_defs.h` is where mistakes will live: two nodes in one
   cell, an edge to a node that is not adjacent. A `static_assert` for the first and a debug overlay for the
   second, before the third Route.

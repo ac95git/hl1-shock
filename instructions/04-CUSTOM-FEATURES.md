@@ -205,7 +205,7 @@ keep in step, and no networking change. See
 [ADR-0008](../docs/adr/0008-skill-definitions-are-shared-not-networked.md).
 
 1. Add a new entry to `ESkillId`, before `_Count`, which bounds the definition table. The saved unlocked
-   array and the sync mask are sized by `k_SkillIdCeiling` (96), not by `_Count`, so adding a Skill changes
+   array and the sync mask are sized by `k_SkillIdCeiling` (256), not by `_Count`, so adding a Skill changes
    neither the save format nor the message length; a `static_assert` fires if `_Count` ever passes the
    ceiling. Do not lower the ceiling, and treat raising it as a save-format change.
 2. Add a matching row to `k_SkillDefs[]`. **The table is indexed positionally by id**, so the row must sit

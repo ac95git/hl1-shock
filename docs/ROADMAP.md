@@ -2064,16 +2064,18 @@ Facts found while sizing a bigger tree, so they are not found twice.
   lands somewhere in 120–180 nodes. ~~At today's prices that is roughly 100 points against a 50–70 target,
   and one of them moves.~~ Both moved: every node costs one and the tree is not completable. **What 50–70
   points buys is the pricing pass now**, and it is a question of where the roads run. Against a map.
-- **The id ceiling moves once more, to 256.** `k_SkillIdCeiling` is 96, sized for a tree of about fifty,
-  and raising it is a save-format change. 180 nodes needs 256 (32 mask bytes on the wire; the message is
-  length-checked on both sides and derives from the same constant). Do it before the first Stat node
-  exists, while there is no save on this branch worth keeping.
-- **Square nodes, and the step follows the Stat node.** With nothing printed on a node the height no longer
-  carries a cost line, so nodes can be square. The grid step today follows the Major node (88 + gap); at
-  180 nodes that puts the scale under the 0.55 floor on a 1280 screen. The step follows the Stat node
-  instead and the larger tiers spill into their neighbours' margins on purpose. The row gap that existed
-  for elbow connectors shrinks with it. `k_MinScale` was for the cost text and can go with the cost.
-- **`ENodeTier` gains a fourth value**, below Minor, for the Stat node. Presentation only, like the rest.
+- ~~**The id ceiling moves once more, to 256.**~~ **Built 2026-09-14.** `k_SkillIdCeiling` was 96, sized
+  for a tree of about fifty; 180 nodes needs 256 (32 mask bytes on the wire, length-checked on both sides
+  from the same constant). The saved field is `m_bUnlocked256` now, so a 96-entry save resets rather than
+  over-reads — the same move the first ceiling made.
+- ~~**Square nodes, and the step follows the Stat node.**~~ **Built 2026-09-14**: one 96-pixel step on
+  both axes, square nodes of 32 (Stat), 44, 54 and 64 (Major). A first cut of 64 put the Majors edge to
+  edge (seen in a capture) and a 16×10 preview used only two thirds of the tree area at 1720 wide, so the
+  step went up; `skilltree_step` overrides it for judging by eye. `k_MinScale` (0.55) stays for the cost
+  text and goes with the cost, when the first matrix Route flips `skilltree_show_cost`.
+- ~~**`ENodeTier` gains a fourth value**, below Minor, for the Stat node.~~ **Built 2026-09-14** as
+  `ENodeTier::Stat`; the existing three were renumbered above it, which is safe because a tier is neither
+  saved nor sent.
 - **A layout check before the third Route.** A `static_assert` that no two rows share a cell, and a debug
   overlay for an edge whose ends are not adjacent. 180 hand-placed rows in a header is where the mistakes
   will live.

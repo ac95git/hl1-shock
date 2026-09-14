@@ -208,14 +208,14 @@ void CSkillTreeView::EnsureSprites()
 // =====================================================================
 int CSkillTreeView::NodeW(ENodeTier tier) const
 {
-    int t = (int)tier < 3 ? (int)tier : 0;
-    return std::max(20, (int)(k_TierNodeW[t] * m_scale));
+    int t = (int)tier < (int)ENodeTier::_Count ? (int)tier : 0;
+    return std::max(12, (int)(k_TierNodeW[t] * m_scale));
 }
 
 int CSkillTreeView::NodeH(ENodeTier tier) const
 {
-    int t = (int)tier < 3 ? (int)tier : 0;
-    return std::max(16, (int)(k_TierNodeH[t] * m_scale));
+    int t = (int)tier < (int)ENodeTier::_Count ? (int)tier : 0;
+    return std::max(12, (int)(k_TierNodeH[t] * m_scale));
 }
 
 // =====================================================================// RebuildRects � compute screen-space rect for each node
@@ -243,9 +243,9 @@ void CSkillTreeView::RebuildRects(int x0, int y0, int areaW, int areaH)
     cols = std::max(cols, m_previewCols);
     rows = std::max(rows, m_previewRows);
 
-    // The step follows the largest node tier, at the designed size.
-    const int colStepBase = k_TierNodeW[2] + k_ColGap;
-    const int rowStepBase = k_TierNodeH[2] + k_RowGap;
+    // One square step on both axes, at the designed size.
+    const int colStepBase = m_step;
+    const int rowStepBase = m_step;
 
     const float sx = (float)areaW / (float)(cols * colStepBase);
     const float sy = (float)areaH / (float)(rows * rowStepBase);
@@ -436,12 +436,15 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
 
     // The preview grid is part of the layout, so a change to it is a
     // geometry change like any other.
-    const int previewCols = std::max(0, std::min(16, (int)CVAR_GET_FLOAT("skilltree_preview_cols")));
-    const int previewRows = std::max(0, std::min(16, (int)CVAR_GET_FLOAT("skilltree_preview_rows")));
-    if (previewCols != m_previewCols || previewRows != m_previewRows)
+    const int previewCols = std::max(0, std::min(24, (int)CVAR_GET_FLOAT("skilltree_preview_cols")));
+    const int previewRows = std::max(0, std::min(24, (int)CVAR_GET_FLOAT("skilltree_preview_rows")));
+    int step = (int)CVAR_GET_FLOAT("skilltree_step");
+    step = step > 0 ? std::max(40, std::min(200, step)) : k_Step;
+    if (previewCols != m_previewCols || previewRows != m_previewRows || step != m_step)
     {
         m_previewCols = previewCols;
         m_previewRows = previewRows;
+        m_step = step;
         m_lastW = 0;
     }
 
@@ -451,12 +454,12 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
 
     // ---- Preview: ghost cells where the grid has no node ----
     //
-    // A Medium-sized outline in every empty cell, so the footprint of a
+    // A Stat-sized outline in every empty cell, so the footprint of a
     // layout the Routes will need can be judged at a real resolution
     // before the nodes exist. Off unless a preview cvar is set.
     if (m_previewCols > 0 || m_previewRows > 0)
     {
-        const int gw = NodeW(ENodeTier::Medium), gh = NodeH(ENodeTier::Medium);
+        const int gw = NodeW(ENodeTier::Stat), gh = NodeH(ENodeTier::Stat);
         for (int col = 0; col < m_gridCols; ++col)
         {
             for (int row = 0; row < m_gridRows; ++row)
@@ -629,7 +632,7 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
 
         IRect& r = m_nodeRects[i];
         // Tier-based sizing
-        int tierIdx = (int)def.tier < 3 ? (int)def.tier : 0;
+        int tierIdx = (int)def.tier < (int)ENodeTier::_Count ? (int)def.tier : 0;
         int stripeH = k_TierStripeH[tierIdx];
         int borderW = k_TierBorderW[tierIdx];
 

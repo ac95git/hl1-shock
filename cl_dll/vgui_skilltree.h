@@ -148,31 +148,36 @@ private:
     // One uniform scale drives step and node size together, so the tree
     // compresses in proportion instead of nodes colliding as gaps shrink.
     float m_scale   = 1.0f;
-    int   m_colStep = 100;
-    int   m_rowStep = 152;
+    int   m_colStep = 96;
+    int   m_rowStep = 96;
 
     int NodeW(ENodeTier tier) const;
     int NodeH(ENodeTier tier) const;
 
     // Node dimensions at full scale, indexed by ENodeTier. The layout owns
     // the node size and the icon is fitted into it (SPR_DrawFitted), so the
-    // art no longer has a say here: HUD sprites are resolution-bucketed --
-    // the same icon is 44px at 640 and 88px at 1280 -- and until 2026-09-14
-    // the node was sized FROM the largest sprite, which is why the tree
-    // needed scaling down to fit anything narrower than ~1600px.
-    static constexpr int k_TierNodeW[3] = { 60, 74, 88 };
-    static constexpr int k_TierNodeH[3] = { 44, 54, 64 };
+    // art has no say here: HUD sprites are resolution-bucketed -- the same
+    // icon is 44px at 640 and 88px at 1280 -- and until 2026-09-14 the node
+    // was sized FROM the largest sprite, which is why the tree needed
+    // scaling down to fit anything narrower than ~1600px.
+    //
+    // Square, since nothing is printed on a node under the matrix design
+    // (docs/SKILL_TREE.md).
+    static constexpr int k_TierNodeW[(int)ENodeTier::_Count] = { 32, 44, 54, 64 };
+    static constexpr int k_TierNodeH[(int)ENodeTier::_Count] = { 32, 44, 54, 64 };
     // Gap between the icon and the node's border, at full scale.
     static constexpr int k_IconPad = 4;
     // Accent stripe height per tier
-    static constexpr int k_TierStripeH[3] = { 2, 3, 4 };
+    static constexpr int k_TierStripeH[(int)ENodeTier::_Count] = { 1, 2, 3, 4 };
     // Border thickness per tier (1=single outline, 2=double outline inset 1px)
-    static constexpr int k_TierBorderW[3] = { 1, 1, 2 };
+    static constexpr int k_TierBorderW[(int)ENodeTier::_Count] = { 1, 1, 1, 2 };
 
-    // Gaps added around the widest/tallest node to get the grid step. The row
-    // gap is generous because connectors route through it.
-    static constexpr int k_ColGap = 16;
-    static constexpr int k_RowGap = 76;
+    // The grid step, both axes. At 64 the Majors touched (2026-09-14, from
+    // a capture); 96 leaves a Stat node's width between two Majors, and a
+    // 180-node grid at 15x12 still fits a 1450-wide tree area at ~0.9.
+    // skilltree_step overrides it for judging by eye; 0 means this.
+    static constexpr int k_Step = 96;
+    int m_step = k_Step; // as last read from the cvar, part of the cached layout
     // Room reserved inside a node, below the icon, for the cost.
     static constexpr int k_CostRoom = 12;
     // Below this the nodes are too small to carry a cost, which is text and

@@ -537,9 +537,11 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
   `HiveCapacity` (20) and `HiveRegrowth` (21) are held for the alien column below. A reserved row is
   `SKILL_RESERVED(id)` — the id stays frozen and, for the ones that return, the Skill comes back unchanged,
   which is exactly what `FastReload` (id 3) did.
-- **The id space has a ceiling.** `k_SkillIdCeiling` (96) sizes the saved unlocked array and the sync
-  mask; `ESkillId::_Count` bounds only the definition table, and a `static_assert` fires if it ever passes
-  the ceiling. Before this, both were sized by `_Count`, and `CRestore::ReadField` reads as many array
+- **The id space has a ceiling.** `k_SkillIdCeiling` (256 since 2026-09-14, 96 the day before) sizes the
+  saved unlocked array and the sync mask; `ESkillId::_Count` bounds only the definition table, and a
+  `static_assert` fires if it ever passes the ceiling. The raise was for the matrix tree, whose Stat nodes
+  each take an id; the saved field was renamed again (`m_bUnlocked256`) so a 96-entry save resets rather
+  than over-reads. Before this, both were sized by `_Count`, and `CRestore::ReadField` reads as many array
   entries as the code declares rather than as many as the save holds, so every Skill added over-read an
   older save's unlocked bits into the bytes of the field after them. The array is saved under its own field
   name (`m_bUnlockedCeiling`) so a save from before the ceiling is skipped rather than over-read: it loads
@@ -573,7 +575,7 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
 **Networking**
 
 - `gmsgSkillTree`, **fixed** length: a bitmask of unlocked Skills, one bit per id up to the ceiling, then
-  the player's unspent Skill Points, then their banked Reset Tokens. 14 bytes (12 of mask), and the length
+  the player's unspent Skill Points, then their banked Reset Tokens. 34 bytes (32 of mask), and the length
   no longer changes when a Skill is added. Static Skill data is shared rather than sent — see
   [ADR-0008](adr/0008-skill-definitions-are-shared-not-networked.md).
 - Client → server is the `skill_unlock <id>` console command (`dlls/client.cpp:647`); on success the server
@@ -607,10 +609,11 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
   the node's middle; judged better without, and the matrix design settled the same day makes every node
   cost one, so the cost stops being drawn anywhere. The default flips, and the switch goes, with the first
   Route built under the matrix; until then the old tree still has 2- and 3-point nodes to show.
-- **Two preview cvars, `skilltree_preview_cols` and `skilltree_preview_rows`** (client, default 0), force
-  the grid to at least that many columns and rows and draw a Medium-sized ghost outline in every cell with
-  no node. They exist to judge the footprint the Routes will need (7×5, 9×4) at a real resolution before
-  the nodes are built. They can only widen the grid, never hide a column the table already uses.
+- **Three layout cvars** (client). `skilltree_preview_cols` and `skilltree_preview_rows` (default 0) force
+  the grid to at least that many columns and rows and draw a Stat-sized ghost outline in every cell with no
+  node, to judge the footprint of a matrix at a real resolution before the nodes are built; they can only
+  widen the grid, never hide a column the table already uses. `skilltree_step` (default 0, meaning the
+  designed 96) overrides the grid step for judging spacing by eye.
 - **No text labels on nodes, by design** — an icon and a cost, nothing else. Reading the tree means
   hovering, which is the same instinct behind the anonymization feature below. This makes icon
   distinctness *blocking* rather than cosmetic; see [ART_DEBT.md](ART_DEBT.md).
