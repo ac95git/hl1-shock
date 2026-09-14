@@ -547,6 +547,12 @@ cvar_t skill_stat_bullet_damage = {"skill_stat_bullet_damage", "0.05"};
 // Quick Draw scales the draw delay.  Read from both DLLs through
 // skill_tuning.h, because m_flNextAttack is predicted.
 cvar_t skill_draw_time_scale = {"skill_draw_time_scale", "0.6"};
+// Demolitions multiplies player DMG_BLAST dealt, and DMG_BLAST taken (own
+// grenades included).  Headhunter multiplies the head hitgroup multiplier
+// for player hits.  First guesses.
+cvar_t skill_demolitions_scale = {"skill_demolitions_scale", "1.25"};
+cvar_t skill_demolitions_resist_scale = {"skill_demolitions_resist_scale", "0.5"};
+cvar_t skill_headhunter_scale = {"skill_headhunter_scale", "1.5"};
 // Scales the reload delay. Read from both DLLs through skill_tuning.h, because
 // the delay it sets is m_flNextAttack, which the client predicts.
 cvar_t skill_reload_time_scale = {"skill_reload_time_scale", "0.8"};
@@ -760,6 +766,9 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_marksman_scale);
 	CVAR_REGISTER(&skill_stat_bullet_damage);
 	CVAR_REGISTER(&skill_draw_time_scale);
+	CVAR_REGISTER(&skill_demolitions_scale);
+	CVAR_REGISTER(&skill_demolitions_resist_scale);
+	CVAR_REGISTER(&skill_headhunter_scale);
 
 	CVAR_REGISTER(&pulse_window);
 	CVAR_REGISTER(&pulse_window_bonus);

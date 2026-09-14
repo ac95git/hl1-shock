@@ -362,9 +362,14 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// skill_tuning.h, the Fast Reload shape.
 	{ ESkillId::QuickDraw,       "Quick Draw",       "Weapons come up 40% faster.",                                 "d_357",          11, 2,  1,  ESkillId::StatBullet03,    ESkillId::None,          ENodeTier::Medium, EStat::None },
 
-	// 37-39: the Route's other Skills, held until each is built
-	SKILL_RESERVED(Demolitions),
-	SKILL_RESERVED(Headhunter),
+	// 37-38: the typed pair above Marksman, off B01.  Demolitions is dealt
+	// and taken: the resistance covers the player's own grenades, which is
+	// how "Mastery makes your own explosives hurt you more" is answered.
+	// Headhunter is the head hitgroup multiplier, player hits only.
+	{ ESkillId::Demolitions,     "Demolitions",      "Your explosives deal 25% more, and explosions hurt you half as much.", "d_rpg_rocket", 9, 0, 1, ESkillId::StatBullet01, ESkillId::None,          ENodeTier::Medium, EStat::None },
+	{ ESkillId::Headhunter,      "Headhunter",       "Your hits to the head land half again as hard.",              "d_skull",        11, 0,  1,  ESkillId::StatBullet01,    ESkillId::None,          ENodeTier::Medium, EStat::None },
+
+	// 39: the Route's major, held until it is built
 	SKILL_RESERVED(SwapSurge),
 
 	// 40-46: the Weapon Specialist's roads.  B01 above Marksman for

@@ -169,3 +169,11 @@ int PlayerMaxArmor(CBasePlayer* pPlayer);
 // =====================================================================
 struct entvars_s;
 float SkillScaleWeaponDamage(struct entvars_s* pevAttacker, float flDamage, int bitsDamageType);
+
+// =====================================================================
+// Headhunter: the multiplier on a PLAYER's hit to the head hitgroup, on
+// top of gSkillData.monHead, read where that multiplier is applied
+// (CBaseMonster::TraceAttack).  1.0 for a non-player or without the
+// Skill.  Decapitation, when built, keys on the same hitgroup.
+// =====================================================================
+float SkillHeadshotScale(struct entvars_s* pevAttacker);

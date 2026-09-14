@@ -252,8 +252,8 @@ typed damage, and a major node that makes swapping weapons the way to fight. Num
 | Fast Reload | 3 | Reloads quicker; the shotgun included | Built; moved into the region |
 | Quick Draw | 36 | Weapons come up 40% faster (`skill_draw_time_scale` 0.6 in both copies of `DefaultDeploy`; predicted) | Built |
 | Weapon Mastery | 4 | All weapons +10% | Built; moved deeper, where the two roads meet |
-| Demolitions | 37 | Explosive damage dealt up, explosive damage taken down (own grenades included) | Reserved |
-| Headhunter | 38 | Headshot damage up. Designed with Decapitation | Reserved |
+| Demolitions | 37 | Explosives dealt ×1.25 (`DMG_BLAST` at the chokepoints), explosions taken ×0.5 (own grenades included) | Built |
+| Headhunter | 38 | Hits to the head ×1.5 on top of the head multiplier, player hits only. Decapitation keys on the same hitgroup | Built |
 | **Major** | 39 | **Swap Surge**: for 1–2 s after a weapon swap, everything the weapon deals lands harder; internal cooldown | Reserved. Name provisional |
 
 "Ranks" in the earlier draft became the Stat nodes, as in Melee. The region as placed, columns 9–11, `B`

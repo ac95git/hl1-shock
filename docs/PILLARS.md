@@ -314,6 +314,14 @@ through, so "melee" is true by construction rather than by a damage-type list:
   `skill_marksman_scale` (1.15) at the same chokepoints, and each **Bullet Damage Stat node** (ids 40–46,
   the Route's roads) adds `skill_stat_bullet_damage` (0.05) to one multiplier on it. A damage-type test,
   not a weapon list: the glock, MP5, shotgun and python are bullets; the crossbow's bolt is not.
+- **Demolitions** (id 37, 2026-09-14) is the same test on `DMG_BLAST`, dealt ×`skill_demolitions_scale`
+  (1.25) at the chokepoints and taken ×`skill_demolitions_resist_scale` (0.5) in `CBasePlayer::TakeDamage`
+  before the armour split, own grenades included, which is how "Mastery makes your own explosives hurt you
+  more" is answered: with a node worth buying for the resistance alone. The egon's splash carries the blast
+  bit beside its energy and is scaled too; accepted rather than special-cased.
+- **Headhunter** (id 38, 2026-09-14) multiplies the head hitgroup multiplier by `skill_headhunter_scale`
+  (1.5) in `CBaseMonster::TraceAttack`, through `SkillHeadshotScale`, for player hits only. Decapitation,
+  when built, keys on the same hitgroup; the Panthereye's head is hitgroup 2 and needs remapping first.
 - **Fast Reload** (id 3) scales the reload delay by `skill_reload_time_scale` (0.8) through
   `CBasePlayerWeapon::ReloadTimeScale`, applied in `DefaultReload` — the one place every clip-fed weapon
   funnels through, so the glock, MP5, python, crossbow and RPG all get it without a per-weapon list. The

@@ -1580,7 +1580,8 @@ void CBaseMonster::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector ve
 		case HITGROUP_GENERIC:
 			break;
 		case HITGROUP_HEAD:
-			flDamage *= gSkillData.monHead;
+			// Headhunter multiplies the head multiplier, player hits only.
+			flDamage *= gSkillData.monHead * SkillHeadshotScale(pevAttacker);
 			break;
 		case HITGROUP_CHEST:
 			flDamage *= gSkillData.monChest;

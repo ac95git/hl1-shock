@@ -305,7 +305,32 @@ float SkillScaleWeaponDamage(entvars_t* pevAttacker, float flDamage, int bitsDam
             flDamage *= 1.0f + iStat * std::max(0.0f, skill_stat_bullet_damage.value);
     }
 
+    // Demolitions, dealt.  Grenades, the satchel, the tripmine, the RPG and
+    // the MP5's launcher all arrive here as DMG_BLAST through RadiusDamage,
+    // by either branch.  So does the egon's splash, which carries the bit
+    // beside its energy; accepted rather than special-cased.
+    if ((bitsDamageType & DMG_BLAST) != 0 && sk.HasSkill(ESkillId::Demolitions))
+        flDamage *= std::max(0.0f, skill_demolitions_scale.value);
+
     return flDamage;
+}
+
+// =====================================================================
+// SkillHeadshotScale
+// =====================================================================
+float SkillHeadshotScale(entvars_t* pevAttacker)
+{
+    if (!pevAttacker)
+        return 1.0f;
+
+    CBaseEntity* pAttacker = CBaseEntity::Instance(pevAttacker);
+    if (!pAttacker || !pAttacker->IsPlayer())
+        return 1.0f;
+
+    if (!((CBasePlayer*)pAttacker)->m_skills.HasSkill(ESkillId::Headhunter))
+        return 1.0f;
+
+    return std::max(0.0f, skill_headhunter_scale.value);
 }
 
 // =====================================================================

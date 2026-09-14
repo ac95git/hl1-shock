@@ -416,6 +416,12 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 		return false;
 	}
 
+	// Demolitions, taken: explosions hurt the player less, their own grenades
+	// included. Before the armour split and the suit's report, so both see
+	// the blow that actually arrived, the way Sure Footing scales a fall.
+	if ((bitsDamageType & DMG_BLAST) != 0 && m_skills.HasSkill(ESkillId::Demolitions))
+		flDamage *= std::max(0.0f, skill_demolitions_resist_scale.value);
+
 	// keep track of amount of damage last sustained
 	m_lastDamageAmount = flDamage;
 
