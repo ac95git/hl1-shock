@@ -91,6 +91,7 @@ extern cvar_t skill_energy_damage_scale;
 extern cvar_t skill_stat_energy_damage;
 extern cvar_t skill_egon_efficiency_scale;
 extern cvar_t skill_insulation_scale;
+extern cvar_t skill_ricochet_chance;
 
 // The Pulse.  Every one of these is a starting guess to be judged in play.
 extern cvar_t pulse_window;

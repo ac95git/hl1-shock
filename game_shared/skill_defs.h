@@ -166,7 +166,14 @@ enum class ESkillId : int
 	StatEnergy03        = 62,
 	StatEnergy04        = 63,
 
-	_Count              = 64, // keep last
+	// ---- The Juggernaut Route (docs/SKILL_TREE.md) ----
+	// Fortitude (8), Armor Expert (9), Battery Capacity (13) and the four
+	// Pulse Skills are its older nodes.  Its region is not laid out yet
+	// (the Matrix needs a press-and-release Pulse pair first); Ricochet
+	// hangs off Armor Expert where it stands.
+	Ricochet            = 64, // a chance per bullet to bounce it back at the attacker
+
+	_Count              = 65, // keep last
 };
 
 // ---------------------------------------------------------
@@ -294,7 +301,7 @@ struct SkillDef
 //
 // r0  S01      Reach    S02        .          Window          Capacity Fortitude            Demol     B01       Headhunt  MedExpert H01       EnergyDmg  E01
 // r1  Speed    .        Force      Follow-Up  Recharge                 ArmorExp FallResist  B02       Marksman  B03       H02       Leech     E02        EgonEff
-// r2  S03      .        S04        .          Discharge Rebound                             Reload    .         QuickDraw Overheal  H03       Insulation E03
+// r2  S03      .        S04        .          Discharge Rebound        Ricochet             Reload    .         QuickDraw Overheal  H03       Insulation E03
 // r3  S05      .        S06                                                                B04       .         B05       LastStand H04       E04        EgonFocus
 // r4  S07      .        Backstab                                                           .         Mastery   B06                           QuickChg   Major
 // r5  S08      Cleave   S09                                                                .         SwapSurge B07
@@ -482,6 +489,11 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	STAT_ENERGY(StatEnergy02, 14, 1, EnergyDamage),
 	STAT_ENERGY(StatEnergy03, 15, 2, EgonEfficiency),
 	STAT_ENERGY(StatEnergy04, 14, 3, Insulation),
+
+	// 64: Ricochet, the Juggernaut's, off Armor Expert in the Survivability
+	// column until the Route's region is laid out.  Server-side, in the
+	// player's TakeDamage: bullets only, armour required.
+	{ ESkillId::Ricochet,        "Ricochet",         "One bullet in five bounces off your armor and back at whoever fired it.", "d_tracktrain", 7, 2, 1, ESkillId::ArmorEfficiency, ESkillId::None, ENodeTier::Medium, EStat::None },
 };
 
 #undef SKILL_RESERVED

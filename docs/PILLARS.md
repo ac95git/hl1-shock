@@ -327,6 +327,11 @@ through, so "melee" is true by construction rather than by a damage-type list:
   by `skill_insulation_scale` (0.7) in `CBasePlayer::TakeDamage`, shock included so it means something in
   Xen. **Egon Efficiency** (id 56) scales the interval between the egon's ammo ticks by
   `skill_egon_efficiency_scale` (1.33), server-side, where `CEgon::Fire` spends them.
+- **Ricochet** (id 64, the Juggernaut's, 2026-09-14, off Armor Expert until the Route's region exists).
+  In `CBasePlayer::TakeDamage`, after the Shield's answer and before the suit's report: a bullet hit
+  while armour is above zero has `skill_ricochet_chance` (0.2) of being refused outright, the shooter
+  taking the full damage as `DMG_BULLET` with the player as inflictor, a `TE_TRACER` from the player's
+  centre to theirs and the stock ricochet spark at the player. Bullets only, armour only. Ranks later.
 - **Demolitions** (id 37, 2026-09-14) is the same test on `DMG_BLAST`, dealt ×`skill_demolitions_scale`
   (1.25) at the chokepoints and taken ×`skill_demolitions_resist_scale` (0.5) in `CBasePlayer::TakeDamage`
   before the armour split, own grenades included, which is how "Mastery makes your own explosives hurt you
@@ -649,7 +654,7 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
 
 **Definitions** — `game_shared/skill_defs.h`, compiled into both DLLs
 
-- **51 nodes in the tree, every one costing one point** (a `static_assert` holds every row to it): the
+- **52 nodes in the tree, every one costing one point** (a `static_assert` holds every row to it): the
   Melee Route in columns 0–3 — Reach at the root, two roads of Melee Damage Stat nodes down to Speed and
   Force, on to the Backstab node, meeting at Cleave — the Weapon Specialist Route in columns 9–11, built
   whole on 2026-09-14 (Marksman at the root in the middle of the region, Bullet Damage Stat nodes as its
@@ -658,7 +663,7 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
   Last Stand reserved), the Energy Route building in columns 14–15 (Energy Damage at the root, Energy
   Damage Stat nodes as its roads, Egon Efficiency and Insulation; Egon Focus, Quick Charge and the major
   reserved), and the pre-Routes columns between them (the Pulse 4–5, the suit 6, Survivability
-  7–8), each waiting for its Route to give it roads. Follow-Up sits at
+  7–8, with Ricochet added under Armor Expert), each waiting for its Route to give it roads. Follow-Up sits at
   the seam between Melee and the Pulse because it is gated on one of each. The layout is in the comment
   above `k_SkillDefs`; the design is [SKILL_TREE.md](SKILL_TREE.md#the-matrix--settled-2026-09-14).
 - **Stat nodes are rows like any other**, with `ENodeTier::Stat` and an `EStat` naming what they grant;

@@ -1625,6 +1625,12 @@ explosions, melee and energy never ricochet. Ranks raise the chance. The "this h
 in the alien grunt's plating (`dlls/agrunt.cpp:221-257`); the return trip is new, and the attacker is known
 at the moment of damage and had a line to the player.
 
+**Built 2026-09-14** as a single node (id 64) off Armor Expert, in the player's `TakeDamage` after the
+Shield's answer and before the suit's report: `skill_ricochet_chance` (0.2) per bullet hit while armour is
+above zero, the hit refused, the shooter dealt the full damage as `DMG_BULLET` with the player as
+inflictor, a `TE_TRACER` from the player's centre to theirs and the stock ricochet spark at the player.
+The ranks and the tracer's look wait on the Route's region.
+
 ##### The nodes — settled
 
 Eleven, the largest Route, because it holds the Pulse's existing four as well as its own. Ranks count as

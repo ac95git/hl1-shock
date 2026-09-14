@@ -175,6 +175,7 @@ Raising `skill_points_start` is the way to work on the tree UI without hunting f
 | `skill_stat_energy_damage` | 0.05 | Each Energy Damage Stat node adds this to one multiplier on player `DMG_ENERGYBEAM` damage |
 | `skill_egon_efficiency_scale` | 1.33 | Egon Efficiency multiplies the interval between the egon's ammo ticks; above 1 is slower |
 | `skill_insulation_scale` | 0.7 | Insulation multiplies `DMG_ENERGYBEAM` and `DMG_SHOCK` the player takes |
+| `skill_ricochet_chance` | 0.2 | Ricochet's chance per bullet hit, while the player has armour, to bounce it back at the shooter |
 
 Two rules that are easy to break:
 

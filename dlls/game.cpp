@@ -577,6 +577,10 @@ cvar_t skill_energy_damage_scale = {"skill_energy_damage_scale", "1.15"};
 cvar_t skill_stat_energy_damage = {"skill_stat_energy_damage", "0.05"};
 cvar_t skill_egon_efficiency_scale = {"skill_egon_efficiency_scale", "1.33"};
 cvar_t skill_insulation_scale = {"skill_insulation_scale", "0.7"};
+// Ricochet (the Juggernaut Route): the chance per bullet hit, while the
+// player has armour, that it bounces back at the shooter.  A first guess;
+// ranks will raise it when the Route's region is laid out.
+cvar_t skill_ricochet_chance = {"skill_ricochet_chance", "0.2"};
 // Scales the reload delay. Read from both DLLs through skill_tuning.h, because
 // the delay it sets is m_flNextAttack, which the client predicts.
 cvar_t skill_reload_time_scale = {"skill_reload_time_scale", "0.8"};
@@ -804,6 +808,7 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_stat_energy_damage);
 	CVAR_REGISTER(&skill_egon_efficiency_scale);
 	CVAR_REGISTER(&skill_insulation_scale);
+	CVAR_REGISTER(&skill_ricochet_chance);
 
 	CVAR_REGISTER(&pulse_window);
 	CVAR_REGISTER(&pulse_window_bonus);

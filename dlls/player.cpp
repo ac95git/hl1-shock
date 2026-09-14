@@ -418,6 +418,38 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 		return false;
 	}
 
+	// Ricochet (the Juggernaut Route): a chance per bullet, while the player
+	// has armour, to turn it away entirely and send its full damage back at
+	// whoever fired it, with a tracer from the player to them. Only bullets:
+	// explosions, melee and energy never ricochet. After the Shield, which
+	// answers first, and before the suit's report, which must not see a hit
+	// that never landed. Bounces off armour, so a bare suit cannot.
+	if ((bitsDamageType & DMG_BULLET) != 0 && pev->armorvalue > 0 && m_skills.HasSkill(ESkillId::Ricochet) &&
+		RANDOM_FLOAT(0.0f, 1.0f) < std::max(0.0f, skill_ricochet_chance.value))
+	{
+		const Vector vecFrom = Center();
+		UTIL_Ricochet(vecFrom, 1.0f);
+
+		CBaseEntity* pShooter = pAttacker;
+		if (pShooter && pShooter != this && pShooter->pev->takedamage != DAMAGE_NO)
+		{
+			const Vector vecTo = pShooter->Center();
+			MESSAGE_BEGIN(MSG_PAS, SVC_TEMPENTITY, vecFrom);
+			WRITE_BYTE(TE_TRACER);
+			WRITE_COORD(vecFrom.x);
+			WRITE_COORD(vecFrom.y);
+			WRITE_COORD(vecFrom.z);
+			WRITE_COORD(vecTo.x);
+			WRITE_COORD(vecTo.y);
+			WRITE_COORD(vecTo.z);
+			MESSAGE_END();
+
+			// The player is the inflictor: it is their armour that fired.
+			pShooter->TakeDamage(pev, pev, flDamage, DMG_BULLET);
+		}
+		return false;
+	}
+
 	// Demolitions, taken: explosions hurt the player less, their own grenades
 	// included. Before the armour split and the suit's report, so both see
 	// the blow that actually arrived, the way Sure Footing scales a fall.

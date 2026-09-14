@@ -104,7 +104,7 @@ Matrix, and the armour both lean on. [ROADMAP](ROADMAP.md#juggernaut--resilient)
 | Fortitude | 8 | +25 max health | — | Exists. **Root** |
 | Armor Expert | 9 | Less of each hit gets past armour | 1→2→3 | Exists |
 | Battery Capacity | 13 | More max armour | 1→2 | Exists |
-| Ricochet | new | A chance per bullet to bounce it, negated for the player, dealt to the attacker. Bullets only, needs armour | ranks | New |
+| Ricochet | 64 | A chance per bullet (`skill_ricochet_chance` 0.2) to bounce it, negated for the player, its full damage dealt to the attacker as bullet damage with a tracer back to them. Bullets only, needs armour | ranks later | **Built 2026-09-14**, off Armor Expert where it stands; its ranks and the region wait on the Route |
 | Pulse Window | 12 | The Shield stands longer | — | Exists |
 | Pulse Recharge | 15 | The Recharge is shorter | — | Exists |
 | Pulse Discharge | 16 | Negated hits vent at the crosshair, as energy | — | Exists |
