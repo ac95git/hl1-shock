@@ -224,11 +224,11 @@ backwards *and* the freezing *and* the sparks as one fault rather than three, an
 evidence and a one-line fix in
 [TECH_DEBT.md](TECH_DEBT.md#a-leaked-move-wait-freezes-a-monster-for-up-to-99-seconds).
 
-~~**Fix it before judging anything else here.**~~ **Fixed 2026-09-14**: `ChangeSchedule` clears the
-move-wait, so a freeze is scoped to the schedule that set it. Not yet checked in game; the TECH_DEBT entry
-stays open until it is. Post-aggro stealth behaviour could not be evaluated against a monster that may be
-frozen for 99 seconds, and the aim seam above may look less urgent now that a monster that loses the
-player actually turns around.
+~~**Fix it before judging anything else here.**~~ **Fixed and verified 2026-09-14**: `ChangeSchedule`
+clears the move-wait, so a freeze is scoped to the schedule that set it; the TECH_DEBT entry is closed.
+Post-aggro stealth behaviour could not be evaluated against a monster that may be frozen for 99 seconds,
+and the aim seam above may look less urgent now that a monster that loses the player actually turns
+around. **5a's question is the next thing to put.**
 
 **How this step is sliced** — agreed 2026-09-12, small commits with aim first, each independently playable:
 

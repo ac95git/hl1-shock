@@ -1,16 +1,17 @@
 # Technical Debt Register
 
-## A Leaked Move-Wait Freezes A Monster For Up To 99 Seconds — FIXED 2026-09-14, closure pending
+## A Leaked Move-Wait Freezes A Monster For Up To 99 Seconds — RESOLVED 2026-09-14
 
 **Base-game bug, present in unmodified Half-Life.** Diagnosed 2026-09-12 from in-game capture; left alone
 at the time because it is a movement/schedule fault and did not belong inside stealth work.
 
-**Fixed 2026-09-14 by step 1 below, in its own commit.** `CBaseMonster::ChangeSchedule`
-(`dlls/schedule.cpp`) now clears `m_flMoveWaitFinished` to `gpGlobals->time` — the value
-`TASK_CLEAR_MOVE_WAIT` itself assigns — beside the other per-schedule state it already resets, so a
-freeze set by one schedule cannot outlive that schedule. The door-wait side effect in step 2 is accepted
-and noted in the code comment. The acceptance criteria below are **not yet checked in game**; the entry
-stays open until `debug_monster_aim` shows `mw0.00` on a grunt whose grenade-cover schedule fails.
+**Fixed 2026-09-14 by step 1 below, in its own commit, and verified in game the same day.**
+`CBaseMonster::ChangeSchedule` (`dlls/schedule.cpp`) now clears `m_flMoveWaitFinished` to
+`gpGlobals->time` — the value `TASK_CLEAR_MOVE_WAIT` itself assigns — beside the other per-schedule state
+it already resets, so a freeze set by one schedule cannot outlive that schedule. The door-wait side effect
+in step 2 is accepted and noted in the code comment. `debug_monster_aim` stays in `dlls/combat.cpp` for
+the post-aggro stealth work, which can now be judged against a monster that actually moves. The original
+entry is kept below for the reasoning.
 
 ### Scope
 `dlls/schedule.cpp` (`ChangeSchedule`, the `TASK_FIND_COVER_*` family, `TASK_CLEAR_MOVE_WAIT`),
