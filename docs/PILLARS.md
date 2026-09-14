@@ -163,7 +163,12 @@ instead of one per frame. `CPlayerPulse::ForgetSentState()`, called where `m_fIn
 against the crowbar's 10) and `SwingDelayScale()` reads `katana_swing_time_scale` (2.0) through
 `skill_tuning.h`, because the delay it scales is predicted and the client must see the same number. The
 Backstab, Melee Reach, Force and Speed, the Melee Damage Stat nodes, Cleave and the Follow-Up therefore apply to it with no code of their own,
-which is what subclassing buys. It sits in the melee bucket beside the crowbar, `impulse 101` gives it,
+which is what subclassing buys. **Its blade is energy damage, since 2026-09-14**: a third hook,
+`SwingDamageType`, is `DMG_CLUB` on the crowbar and `DMG_ENERGYBEAM` on the katana, and every monster the
+blade or the Cleave arc reaches takes that type, so a katana Backstab passes the Gargantua's filter and
+the alien grunt's plating. Anything that is not a monster still takes `DMG_CLUB` from every roster
+weapon, so the crowbar rules on breakables (instant on a crowbar-sensitive crate, double damage) hold for
+a blade too. It sits in the melee bucket beside the crowbar, `impulse 101` gives it,
 and `weapon_katana` is in the FGD. Its viewmodel and world model are the mod's own (`models/v_katana.mdl`
 on the crowbar's hands and animations, `models/w_katana.mdl` lying flat); the third-person model, the
 sounds and the HUD icon are the crowbar's and are in [ART_DEBT.md](ART_DEBT.md).

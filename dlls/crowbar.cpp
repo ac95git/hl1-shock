@@ -111,6 +111,18 @@ float CCrowbar::BackstabScale()
 	return std::max(1.0f, backstab_damage_scale.value);
 }
 
+int CCrowbar::HitDamageType(CBaseEntity* pVictim)
+{
+	// A monster takes the weapon's type; that is where a type means
+	// something (plating, the Gargantua's filter, the Energy Route's bonus
+	// to come). Everything else is struck: func_breakable keys its crowbar
+	// rules on DMG_CLUB (instant on a crowbar-sensitive one, double damage),
+	// and a blade through a crate should still be a blow.
+	if (pVictim && pVictim->MyMonsterPointer() != nullptr)
+		return SwingDamageType();
+	return DMG_CLUB;
+}
+
 float CCrowbar::SwingDamage(bool bCleaveSwing)
 {
 	float flDamage = BaseDamage() * std::max(0.0f, BladeDamageScale());
@@ -199,7 +211,7 @@ int CCrowbar::CleaveArc(const Vector& vecSrc, float flDamage, bool bBackstabNode
 			bFollowUp ? "  xFollowUp" : "");
 
 		ClearMultiDamage();
-		pEntity->TraceAttack(m_pPlayer->pev, flHit, vecTo, &tr, DMG_CLUB);
+		pEntity->TraceAttack(m_pPlayer->pev, flHit, vecTo, &tr, HitDamageType(pEntity));
 		ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
 		++nHit;
 
@@ -484,7 +496,7 @@ bool CCrowbar::Swing(bool fFirst)
 					flDamage);
 			}
 
-			pEntity->TraceAttack(m_pPlayer->pev, flDamage, gpGlobals->v_forward, &tr, DMG_CLUB);
+			pEntity->TraceAttack(m_pPlayer->pev, flDamage, gpGlobals->v_forward, &tr, HitDamageType(pEntity));
 			ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
 
 			// After the damage, so a headcrab the hit killed is still thrown.

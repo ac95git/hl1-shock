@@ -431,7 +431,8 @@ with Cleave:**
   trace at swing time under a projectile *visual* (`CKatana::WaveAttack` versus `EV_KatanaArc`), so what
   hits and what the player sees can disagree. Decoupled by accident; coupled by design from here.
 - **The katana always deals energy damage**, slash and wave, and **scales off both Melee and Energy
-  bonuses**. The v1 slash inherits the crowbar's `DMG_CLUB`; that changes.
+  bonuses**. ~~The v1 slash inherits the crowbar's `DMG_CLUB`; that changes.~~ **The slash is energy since
+  2026-09-14** (`SwingDamageType`); the Energy bonus waits on the Energy Route.
 
 The rest is *the katana's own story*, to be tuned as one piece: the charge, the cost, the piercing, the
 projectile damage, the energy type, the blade's share on the right click.
@@ -1558,14 +1559,14 @@ the ADR assumed.
 
 - **The Gargantua takes only energy, crush, mortar and blast** (`GARG_DAMAGE`, `dlls/gargantua.cpp:47`).
   Everything else is zeroed in `TraceAttack` and scaled by 0.01 in `TakeDamage`.
-- **The katana's blade is club damage today.** `CKatana` overrides only `BaseDamage` and `SwingDelayScale`;
-  the blade goes through `CCrowbar::Swing`, which calls `TraceAttack` with `DMG_CLUB` (`dlls/crowbar.cpp:320`).
-  Only the *wave* is `DMG_ENERGYBEAM` (`dlls/katana.cpp:131`). ADR-0010's line "the Gauss Katana, already
-  proposed as `DMG_ENERGYBEAM`, passes that filter" describes the proposal, not v1. **A katana Backstab on a
-  Gargantua deals zero today**, exactly as the crowbar's does.
-- So the build needs one of: the blade becoming energy damage outright, or a Skill that makes it so.
-  **Settled in the Energy Route: outright.** The katana always deals energy damage; a node that made it so
-  was rejected as leaving the katana half a weapon until bought.
+- ~~**The katana's blade is club damage today.**~~ **Built 2026-09-14.** `CCrowbar::SwingDamageType` is
+  the blade's type against a monster, `DMG_CLUB` by default and `DMG_ENERGYBEAM` on the katana, for the
+  single hit and the Cleave arc alike. Anything that is not a monster still takes `DMG_CLUB` from every
+  roster weapon, because `func_breakable` keys its crowbar rules on that bit and a blade through a crate is
+  still a blow. A katana Backstab on a Gargantua now passes the filter; ADR-0010's note is closed.
+- ~~So the build needs one of: the blade becoming energy damage outright, or a Skill that makes it so.~~
+  **Settled in the Energy Route: outright**, and built as above. A node that made it so was rejected as
+  leaving the katana half a weapon until bought.
 - The Backstab is a multiplier on the blade only. The wave never reaches `CanBackstab`, and there is no
   reason it should.
 

@@ -579,6 +579,14 @@ protected:
 	// The weapon's own Backstab multiplier, before the Backstab node.  The
 	// knife's lean lives here.  Server-side: the Backstab is damage.
 	virtual float BackstabScale();
+	// The damage type the blade deals to a monster.  The katana's is energy,
+	// which is the type's whole identity: it passes the Gargantua's filter
+	// and the alien grunt's plating (docs/SKILL_TREE.md, Energy).
+	virtual int SwingDamageType() { return DMG_CLUB; }
+	// The type for this victim: SwingDamageType for a monster, DMG_CLUB for
+	// anything else, so a blade through a crate is still the blow Half-Life's
+	// breakables key their crowbar rules on.
+	int HitDamageType(CBaseEntity* pVictim);
 	// The swing's damage before anything per-victim: base, the weapon's share
 	// for this swing, Melee Force, the Melee Damage Stat nodes, and Cleave's
 	// scale on a Cleave swing.
@@ -648,6 +656,10 @@ protected:
 #ifndef CLIENT_DLL
 	float BaseDamage() override;
 	float BladeDamageScale() override;
+	// Always energy, slash and wave alike (docs/SKILL_TREE.md, Energy): a
+	// node that made the blade energy was rejected as leaving the katana
+	// half a weapon until bought.
+	int SwingDamageType() override { return DMG_ENERGYBEAM; }
 	// The wave hurts: energy damage to the first thing on its path beyond
 	// the blade's own reach, falling off with distance the way the visual
 	// fades.  Server-side only; the client draws, the server decides.

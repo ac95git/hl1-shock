@@ -66,6 +66,10 @@ makes a Gargantua stabbable, not a special case in the Backstab.**
 `DMG_CLUB`; only its wave is `DMG_ENERGYBEAM`. The decision stands — the Backstab is still not special-cased
 — and closing the gap is a Route question in ROADMAP.md (Pillar 4: Routes).
 
+*Closed, 2026-09-14:* the Energy Route settled it outright rather than as a node, and the blade is now
+`DMG_ENERGYBEAM` through `CCrowbar::SwingDamageType`, which the katana overrides. A katana Backstab passes
+the Gargantua's filter. The Backstab itself is unchanged.
+
 ## Why a virtual and not a flag
 
 `CanBackstab()` is a virtual on `CBaseMonster` returning `true`, overridden to `false` in the excluded
