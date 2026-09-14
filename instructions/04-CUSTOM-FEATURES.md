@@ -160,6 +160,7 @@ Raising `skill_points_start` is the way to work on the tree UI without hunting f
 | `skill_reload_time_scale` | 0.8 | Fast Reload multiplies `DefaultReload`'s delay, and the shotgun's shell-by-shell reload |
 | `skill_marksman_scale` | 1.15 | Marksman multiplies player `DMG_BULLET` damage |
 | `skill_stat_bullet_damage` | 0.05 | Each Bullet Damage Stat node adds this to one multiplier on player `DMG_BULLET` damage |
+| `skill_draw_time_scale` | 0.6 | Quick Draw multiplies `DefaultDeploy`'s draw delay, both copies |
 
 Two rules that are easy to break:
 

@@ -329,6 +329,9 @@ public:
 	// since it never goes through DefaultReload -- see skill_tuning.h for why
 	// this reads a cvar instead of the Skill table alone.
 	float ReloadTimeScale();
+	// Quick Draw's multiplier on the draw delay, or 1.0 without the Skill.
+	// Both copies of DefaultDeploy apply it.
+	float DrawTimeScale();
 
 	void ItemPostFrame() override; // called each frame by the player PostThink
 	// called by CBasePlayerWeapons ItemPostFrame()

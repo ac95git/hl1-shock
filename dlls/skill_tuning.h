@@ -51,6 +51,11 @@ inline CSkillTuning g_tuneMeleeSpeed = {"skill_melee_speed_scale", 1.0f, nullptr
 // here is visible as a hitch at the end of every reload.
 inline CSkillTuning g_tuneReloadTime = {"skill_reload_time_scale", 1.0f, nullptr};
 
+// Quick Draw scales the draw delay in CBasePlayerWeapon::DefaultDeploy, which
+// has a copy on each side (dlls/weapons.cpp, cl_dll/hl/hl_weapons.cpp) and
+// sets m_flNextAttack, predicted.  Same rule as Fast Reload.
+inline CSkillTuning g_tuneDrawTime = {"skill_draw_time_scale", 1.0f, nullptr};
+
 // The Gauss Katana's swing time, as a multiple of the crowbar's.  Not a Skill,
 // but the same rule applies: m_flNextPrimaryAttack is predicted, so the client
 // has to see the same number.  Neutral means "as fast as the crowbar".

@@ -171,8 +171,10 @@ bool CBasePlayerWeapon::DefaultDeploy(const char* szViewModel, const char* szWea
 	SendWeaponAnim(iAnim, body);
 
 	g_irunninggausspred = false;
-	m_pPlayer->m_flNextAttack = 0.5;
-	m_flTimeWeaponIdle = 1.0;
+	// Quick Draw, the same scale the server's copy applies (dlls/weapons.cpp).
+	const float flDraw = DrawTimeScale();
+	m_pPlayer->m_flNextAttack = 0.5 * flDraw;
+	m_flTimeWeaponIdle = 1.0 * flDraw;
 	return true;
 }
 

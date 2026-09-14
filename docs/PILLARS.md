@@ -321,6 +321,10 @@ through, so "melee" is true by construction rather than by a damage-type list:
   state machine calls the same scale on every timing of the sequence: the start, each shell, and the pump
   after the last one. The stock animations play under the shorter timer; per-tier animations are
   [ART_DEBT.md](ART_DEBT.md) work.
+- **Quick Draw** (id 36, 2026-09-14) scales the draw delay by `skill_draw_time_scale` (0.6) through
+  `CBasePlayerWeapon::DrawTimeScale`, in **both** copies of `DefaultDeploy` (`dlls/weapons.cpp` and
+  `cl_dll/hl/hl_weapons.cpp`), since the delay it sets is predicted. The same animation caveat as Fast
+  Reload.
 
   This is the first Skill that changes a **predicted** value, and it is the proof the prediction fix
   works. `m_flNextAttack` is owned by the client frame to frame, so the two sides shortening the reload

@@ -120,6 +120,17 @@ float CBasePlayerWeapon::ReloadTimeScale()
 	return std::max(0.0f, g_tuneReloadTime.Value());
 }
 
+// Quick Draw, the same shape.  DefaultDeploy has a copy per DLL
+// (dlls/weapons.cpp and cl_dll/hl/hl_weapons.cpp) and both call this, so
+// the draw delay they set is the same on both sides.
+float CBasePlayerWeapon::DrawTimeScale()
+{
+	if (!m_pPlayer->m_skills.HasSkill(ESkillId::QuickDraw))
+		return 1.0f;
+
+	return std::max(0.0f, g_tuneDrawTime.Value());
+}
+
 void CBasePlayerWeapon::ResetEmptySound()
 {
 	m_iPlayEmptySound = true;

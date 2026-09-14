@@ -284,10 +284,9 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// 3-4: the Weapon Specialist's two older Skills, in its region since
 	// 2026-09-14.  Fast Reload heads the left road down from Marksman;
 	// Mastery is where the two roads meet, after the typed nodes rather than
-	// in front of them.  Mastery's second gate, the Quick Draw road's end,
-	// arrives with Quick Draw.
+	// in front of them, and it needs both roads' ends.
 	{ ESkillId::FastReload,      "Fast Reload",      "Every magazine you feed goes in 20% quicker. Shotgun shells too.", "d_9mmhandgun", 9,  2,  1,  ESkillId::StatBullet02,    ESkillId::None,          ENodeTier::Medium, EStat::None },
-	{ ESkillId::ExtraDamage,     "Weapon Mastery",   "Every weapon you carry deals 10% more damage.",               "d_shotgun",      10, 4,  1,  ESkillId::StatBullet04,    ESkillId::None,          ENodeTier::Major,  EStat::None },
+	{ ESkillId::ExtraDamage,     "Weapon Mastery",   "Every weapon you carry deals 10% more damage.",               "d_shotgun",      10, 4,  1,  ESkillId::StatBullet04,    ESkillId::StatBullet05,  ENodeTier::Major,  EStat::None },
 
 	// 5-6: cut (movement rules)
 	SKILL_RESERVED(HighJump),
@@ -358,8 +357,12 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// 35: Marksman, the Weapon Specialist's root, in the middle of its region
 	{ ESkillId::Marksman,        "Marksman",         "Bullets hit 15% harder.",                                     "d_bolt",         10, 1,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor,  EStat::None },
 
-	// 36-39: the Route's other Skills, held until each is built
-	SKILL_RESERVED(QuickDraw),
+	// 36: Quick Draw heads the right road down from Marksman.  Predicted:
+	// DefaultDeploy runs on both sides, so the scale comes through
+	// skill_tuning.h, the Fast Reload shape.
+	{ ESkillId::QuickDraw,       "Quick Draw",       "Weapons come up 40% faster.",                                 "d_357",          11, 2,  1,  ESkillId::StatBullet03,    ESkillId::None,          ENodeTier::Medium, EStat::None },
+
+	// 37-39: the Route's other Skills, held until each is built
 	SKILL_RESERVED(Demolitions),
 	SKILL_RESERVED(Headhunter),
 	SKILL_RESERVED(SwapSurge),
@@ -373,7 +376,7 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	STAT_BULLET(StatBullet02, 9,  1, Marksman),
 	STAT_BULLET(StatBullet03, 11, 1, Marksman),
 	STAT_BULLET(StatBullet04, 9,  3, FastReload),
-	SKILL_RESERVED(StatBullet05),
+	STAT_BULLET(StatBullet05, 11, 3, QuickDraw),
 	SKILL_RESERVED(StatBullet06),
 	SKILL_RESERVED(StatBullet07),
 };

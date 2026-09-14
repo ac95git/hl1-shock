@@ -544,6 +544,9 @@ cvar_t skill_weapon_damage_scale = {"skill_weapon_damage_scale", "1.1"};
 // multiplier on it, the Melee Damage nodes' shape.  First guesses.
 cvar_t skill_marksman_scale = {"skill_marksman_scale", "1.15"};
 cvar_t skill_stat_bullet_damage = {"skill_stat_bullet_damage", "0.05"};
+// Quick Draw scales the draw delay.  Read from both DLLs through
+// skill_tuning.h, because m_flNextAttack is predicted.
+cvar_t skill_draw_time_scale = {"skill_draw_time_scale", "0.6"};
 // Scales the reload delay. Read from both DLLs through skill_tuning.h, because
 // the delay it sets is m_flNextAttack, which the client predicts.
 cvar_t skill_reload_time_scale = {"skill_reload_time_scale", "0.8"};
@@ -756,6 +759,7 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_weapon_damage_scale);
 	CVAR_REGISTER(&skill_marksman_scale);
 	CVAR_REGISTER(&skill_stat_bullet_damage);
+	CVAR_REGISTER(&skill_draw_time_scale);
 
 	CVAR_REGISTER(&pulse_window);
 	CVAR_REGISTER(&pulse_window_bonus);

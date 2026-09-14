@@ -854,8 +854,12 @@ bool CBasePlayerWeapon::DefaultDeploy(const char* szViewModel, const char* szWea
 	strcpy(m_pPlayer->m_szAnimExtention, szAnimExt);
 	SendWeaponAnim(iAnim, body);
 
-	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5;
-	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.0;
+	// Quick Draw. The client's copy (cl_dll/hl/hl_weapons.cpp) scales the
+	// same two numbers by the same call; the draw animation plays under the
+	// shorter timer, the accepted state until per-tier draws exist.
+	const float flDraw = DrawTimeScale();
+	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5 * flDraw;
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.0 * flDraw;
 	m_flLastFireTime = 0.0;
 
 	return true;
