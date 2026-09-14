@@ -27,7 +27,7 @@ This file records **what exists today**. Intended work that has not been built l
 | 1 | [Exploration](#1-exploration) | **Not started** | Its rewards exist — Row Grants, Skill Points, Reset Tokens are all findable entities — but no map places one, so nothing is explored *for* yet. |
 | 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar. Melee Skills land, and the Backstab gives melee its first positional decision. Numbers untuned. |
 | 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. |
-| 4 | [Skill trees](#4-skill-trees) | **Playable** | 25 nodes, **all with effects**: the Melee Route built whole on the matrix (nine Stat nodes as its roads, every node one point, Cleave at the end), and the other six columns waiting for theirs. Points and Reset Tokens are earned and spent, the tree fits any screen, and nothing in it lies about what it does. Numbers untuned; no map places a Skill Point yet. |
+| 4 | [Skill trees](#4-skill-trees) | **Playable** | 37 nodes, **all with effects**: the Melee and Weapon Specialist Routes built whole on the matrix (Stat nodes as their roads, every node one point, a major at the end of each), and the other five columns waiting for theirs. Points and Reset Tokens are earned and spent, the tree fits any screen, and nothing in it lies about what it does. Numbers untuned; no map places a Skill Point yet. |
 | 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work over a server-owned model. Row Grants are now placeable; Boxes are the remaining gap. |
 | 6 | [Stealth](#6-stealth) | **Partial** | Concealment and Suspicion are live: monsters no longer acquire the player on sight, they fill a meter at a rate set by angle, distance, stance and light, and the player is warned by `CHudConceal`. Quiet movement is deliberate. Nothing after acquisition has changed — once acquired, a monster stays acquired. |
 
@@ -322,6 +322,14 @@ through, so "melee" is true by construction rather than by a damage-type list:
 - **Headhunter** (id 38, 2026-09-14) multiplies the head hitgroup multiplier by `skill_headhunter_scale`
   (1.5) in `CBaseMonster::TraceAttack`, through `SkillHeadshotScale`, for player hits only. Decapitation,
   when built, keys on the same hitgroup; the Panthereye's head is hitgroup 2 and needs remapping first.
+- **Swap Surge** (id 39, the Weapon Specialist's major, 2026-09-14). `DefaultDeploy` on the server, the
+  one place every weapon comes up through, opens a window (`skill_swap_surge_window`, 2 s, counted from
+  the swap so a faster draw is more of it spent firing) if the Skill is held and the cooldown
+  (`skill_swap_surge_cooldown`, 6 s, also from the swap) has passed; while it is open everything the
+  player deals is scaled at the chokepoints by `skill_swap_surge_scale` (1.5). A window rather than one
+  empowered shot, so the egon and MP5 get their burst as much as the shotgun and python get a big first
+  shot. Both times are the player's and saved. No readout yet: the player has to feel the window, which
+  is a thing to judge before an icon is drawn for it.
 - **Fast Reload** (id 3) scales the reload delay by `skill_reload_time_scale` (0.8) through
   `CBasePlayerWeapon::ReloadTimeScale`, applied in `DefaultReload` — the one place every clip-fed weapon
   funnels through, so the glock, MP5, python, crossbow and RPG all get it without a per-weapon list. The
@@ -614,12 +622,13 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
 
 **Definitions** — `game_shared/skill_defs.h`, compiled into both DLLs
 
-- **30 nodes in the tree, every one costing one point** (a `static_assert` holds every row to it): the
+- **37 nodes in the tree, every one costing one point** (a `static_assert` holds every row to it): the
   Melee Route in columns 0–3 — Reach at the root, two roads of Melee Damage Stat nodes down to Speed and
-  Force, on to the Backstab node, meeting at Cleave — the Weapon Specialist Route building in columns
-  9–11 since 2026-09-14 (Marksman at the root in the middle of the region, Bullet Damage Stat nodes as its
-  roads, Fast Reload and Weapon Mastery moved into it), and the pre-Routes columns between them (the
-  Pulse 4–5, the suit 6, Survivability 7–8), each waiting for its Route to give it roads. Follow-Up sits at
+  Force, on to the Backstab node, meeting at Cleave — the Weapon Specialist Route in columns 9–11, built
+  whole on 2026-09-14 (Marksman at the root in the middle of the region, Bullet Damage Stat nodes as its
+  roads, Fast Reload and Weapon Mastery moved into it, Swap Surge at the bottom), and the pre-Routes
+  columns between them (the Pulse 4–5, the suit 6, Survivability 7–8), each waiting for its Route to give
+  it roads. Follow-Up sits at
   the seam between Melee and the Pulse because it is gated on one of each. The layout is in the comment
   above `k_SkillDefs`; the design is [SKILL_TREE.md](SKILL_TREE.md#the-matrix--settled-2026-09-14).
 - **Stat nodes are rows like any other**, with `ENodeTier::Stat` and an `EStat` naming what they grant;

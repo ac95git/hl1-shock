@@ -80,6 +80,9 @@ extern cvar_t skill_draw_time_scale;
 extern cvar_t skill_demolitions_scale;
 extern cvar_t skill_demolitions_resist_scale;
 extern cvar_t skill_headhunter_scale;
+extern cvar_t skill_swap_surge_scale;
+extern cvar_t skill_swap_surge_window;
+extern cvar_t skill_swap_surge_cooldown;
 
 // The Pulse.  Every one of these is a starting guess to be judged in play.
 extern cvar_t pulse_window;

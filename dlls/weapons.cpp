@@ -862,6 +862,10 @@ bool CBasePlayerWeapon::DefaultDeploy(const char* szViewModel, const char* szWea
 	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.0 * flDraw;
 	m_flLastFireTime = 0.0;
 
+	// Swap Surge. Server-side only, here because this is the one place every
+	// weapon comes up through; the client's copy does not need to know.
+	m_pPlayer->SwapSurgeOnDeploy();
+
 	return true;
 }
 

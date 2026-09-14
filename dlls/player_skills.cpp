@@ -283,11 +283,18 @@ float SkillScaleWeaponDamage(entvars_t* pevAttacker, float flDamage, int bitsDam
     if (!pAttacker || !pAttacker->IsPlayer())
         return flDamage;
 
-    const CPlayerSkills& sk = ((CBasePlayer*)pAttacker)->m_skills;
+    CBasePlayer* pPlayer = (CBasePlayer*)pAttacker;
+    const CPlayerSkills& sk = pPlayer->m_skills;
 
     // Weapon Mastery: everything.
     if (sk.HasSkill(ESkillId::ExtraDamage))
         flDamage *= std::max(0.0f, skill_weapon_damage_scale.value);
+
+    // Swap Surge: everything, while the window after a swap is open.  A
+    // window rather than one empowered shot, so the egon and MP5 get their
+    // burst as much as the shotgun and python get a big first shot.
+    if (pPlayer->SwapSurgeActive())
+        flDamage *= std::max(0.0f, skill_swap_surge_scale.value);
 
     // The Weapon Specialist's typed damage.  A damage-type test here rather
     // than a weapon list: whatever a weapon fires as bullets is bullets, so

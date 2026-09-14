@@ -38,7 +38,7 @@ are assigned when a node is built, never reused, and **22 and 23 are spoken for*
 | [Alien](#alien) | 7 | Hive Capacity (20) | The volley is energy damage | The alien Module; the whole Route is hidden until it |
 | [Energy](#energy) | 6 | Energy Damage | Energy attacks drain armour for bonus damage | — |
 | [Melee](#melee) | 6 + 9 Stat | Melee Reach (1) | Cleave | — . **Built 2026-09-14** |
-| [Weapon Specialist](#weapon-specialist) | 7 + 7 Stat | Marksman (35) | Swap Surge | — . **Building since 2026-09-14** |
+| [Weapon Specialist](#weapon-specialist) | 7 + 7 Stat | Marksman (35) | Swap Surge (39) | — . **Built 2026-09-14** |
 | [The Dash Route](#the-dash-route) | 7 | Sure Footing (7) | Air Dash | The Dash Module for its Dash nodes |
 | [Medical](#medical) | 5 | Med Expert (19) | Last Stand | — |
 
@@ -241,20 +241,20 @@ The never-noticed Backstab tier (a larger multiplier when the victim never acqui
 
 ## Weapon Specialist
 
-**Building since 2026-09-14**, node by node on the matrix, the second Route after Melee. Handling speed,
-typed damage, and a major node that makes swapping weapons the way to fight. Numbers are Skills; identity
+**Built 2026-09-14, whole**, node by node on the matrix in five commits, the second Route after Melee.
+Handling speed, typed damage, and a major node that makes swapping weapons the way to fight. Numbers are Skills; identity
 (a silencer, a second barrel) is an Evolution. [ROADMAP](ROADMAP.md#weapon-specialist).
 
 | Node | Id | Effect | State |
 | --- | --- | --- | --- |
 | Marksman | 35 | Bullets hit 15% harder (`DMG_BULLET` at the damage chokepoints) | Built. **Root** |
-| Bullet Damage ×7 | 40–46 | +5% bullet damage each, additive within the stat | Building. **The roads**; five placed |
+| Bullet Damage ×7 | 40–46 | +5% bullet damage each, additive within the stat | Built. **The roads** |
 | Fast Reload | 3 | Reloads quicker; the shotgun included | Built; moved into the region |
 | Quick Draw | 36 | Weapons come up 40% faster (`skill_draw_time_scale` 0.6 in both copies of `DefaultDeploy`; predicted) | Built |
 | Weapon Mastery | 4 | All weapons +10% | Built; moved deeper, where the two roads meet |
 | Demolitions | 37 | Explosives dealt ×1.25 (`DMG_BLAST` at the chokepoints), explosions taken ×0.5 (own grenades included) | Built |
 | Headhunter | 38 | Hits to the head ×1.5 on top of the head multiplier, player hits only. Decapitation keys on the same hitgroup | Built |
-| **Major** | 39 | **Swap Surge**: for 1–2 s after a weapon swap, everything the weapon deals lands harder; internal cooldown | Reserved. Name provisional |
+| **Major** | 39 | **Swap Surge**: for 2 s after a weapon swap (`skill_swap_surge_window`, counted from the swap, draw included), everything the player deals ×1.5 (`skill_swap_surge_scale`) at the chokepoints; 6 s cooldown from the swap (`skill_swap_surge_cooldown`). Opened by `DefaultDeploy`, the one place every weapon comes up through; both times saved | Built. Name provisional |
 
 "Ranks" in the earlier draft became the Stat nodes, as in Melee. The region as placed, columns 9–11, `B`
 a Bullet Damage Stat node; Marksman sits in the middle so its four children are each one Stat node away:
@@ -436,7 +436,8 @@ question of where the roads run rather than what the nodes cost. Still to be jud
 
 ## What is built first
 
-**Melee, 2026-09-14**, whole; it is the worked example. Weapon Specialist needs the least new
-machinery of the rest; the Juggernaut needs a press-and-release Pulse command pair; the Dash and Alien
-Routes each need their Module. The infrastructure in front of them is done: the four cuts on 2026-09-13,
+**Melee, 2026-09-14**, whole; it is the worked example. **Weapon Specialist the same day**, node by node
+in five commits, the first Route built on the matrix without a grill: every node was already settled and
+the numbers are first guesses in cvars. Of the rest, the Juggernaut needs a press-and-release Pulse
+command pair; the Dash and Alien Routes each need their Module; Energy and Medical need nothing new. The infrastructure in front of them is done: the four cuts on 2026-09-13,
 the fitted icon draw, the 256-id ceiling, the Stat tier and the layout cvars on 2026-09-14.

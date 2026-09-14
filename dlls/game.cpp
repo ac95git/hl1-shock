@@ -553,6 +553,12 @@ cvar_t skill_draw_time_scale = {"skill_draw_time_scale", "0.6"};
 cvar_t skill_demolitions_scale = {"skill_demolitions_scale", "1.25"};
 cvar_t skill_demolitions_resist_scale = {"skill_demolitions_resist_scale", "0.5"};
 cvar_t skill_headhunter_scale = {"skill_headhunter_scale", "1.5"};
+// Swap Surge, the Weapon Specialist major: for the window after a weapon
+// swap, everything the player deals is scaled; the cooldown counts from the
+// swap.  Both count from the swap itself, draw delay included.  First guesses.
+cvar_t skill_swap_surge_scale = {"skill_swap_surge_scale", "1.5"};
+cvar_t skill_swap_surge_window = {"skill_swap_surge_window", "2"};
+cvar_t skill_swap_surge_cooldown = {"skill_swap_surge_cooldown", "6"};
 // Scales the reload delay. Read from both DLLs through skill_tuning.h, because
 // the delay it sets is m_flNextAttack, which the client predicts.
 cvar_t skill_reload_time_scale = {"skill_reload_time_scale", "0.8"};
@@ -769,6 +775,9 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_demolitions_scale);
 	CVAR_REGISTER(&skill_demolitions_resist_scale);
 	CVAR_REGISTER(&skill_headhunter_scale);
+	CVAR_REGISTER(&skill_swap_surge_scale);
+	CVAR_REGISTER(&skill_swap_surge_window);
+	CVAR_REGISTER(&skill_swap_surge_cooldown);
 
 	CVAR_REGISTER(&pulse_window);
 	CVAR_REGISTER(&pulse_window_bonus);

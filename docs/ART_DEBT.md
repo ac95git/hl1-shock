@@ -378,7 +378,10 @@ Stock HUD sprites. The nine Melee Damage Stat nodes share `d_crowbar` **on purpo
 is per stat, so a road reads as what it is made of — and that shared icon is the one piece of this entry
 that is a design rather than a stand-in; it still wants art of its own, small and plainly "melee". The
 Skills are placeholders picked for being distinct from each other, not for meaning anything: Reach is a
-tripmine, Speed a revolver, the Backstab node a crossbow, Cleave a hand grenade. Cleave's **ready icon**
+tripmine, Speed a revolver, the Backstab node a crossbow, Cleave a hand grenade. The Weapon Specialist's
+(2026-09-14) are the same: the seven Bullet Damage Stat nodes share `d_9mmAR` on purpose, like the melee
+road; Marksman is a bolt, Quick Draw a revolver (which Speed also is, in another region), Demolitions a
+rocket, Headhunter a skull (Force's too), Mastery a shotgun, Swap Surge a hornet. Cleave's **ready icon**
 at the screen edge is `d_crowbar` too, for want of anything that says "melee" better; when the Stat node
 gets its icon, the ready icon should be the same image so the two read as one thing.
 

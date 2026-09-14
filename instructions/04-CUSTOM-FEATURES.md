@@ -164,6 +164,9 @@ Raising `skill_points_start` is the way to work on the tree UI without hunting f
 | `skill_demolitions_scale` | 1.25 | Demolitions multiplies player `DMG_BLAST` dealt |
 | `skill_demolitions_resist_scale` | 0.5 | Demolitions multiplies `DMG_BLAST` the player takes, own grenades included |
 | `skill_headhunter_scale` | 1.5 | Headhunter multiplies the head hitgroup multiplier for player hits |
+| `skill_swap_surge_scale` | 1.5 | Swap Surge multiplies all player-dealt damage while its window is open |
+| `skill_swap_surge_window` | 2 | Seconds the Surge window stays open after a swap, draw delay included |
+| `skill_swap_surge_cooldown` | 6 | Seconds from one Surge's swap before the next can open |
 
 Two rules that are easy to break:
 

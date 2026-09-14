@@ -394,6 +394,18 @@ public:
 	// PreThink; sends only on change.
 	void CleaveThink();
 
+	// ---- Swap Surge, the Weapon Specialist major ----
+	// A window after a weapon swap in which everything the player deals
+	// lands harder, on an internal cooldown.  Both saved as times, like
+	// Cleave's, so a save mid-window or mid-cooldown resumes correctly.
+	float m_flSurgeUntil = 0;
+	float m_flSurgeReadyTime = 0;
+	// Called by DefaultDeploy, the one place every weapon comes up through.
+	// Opens the window if the Skill is held and the cooldown has passed.
+	void SwapSurgeOnDeploy();
+	// Whether the window is open now.  Read at the damage chokepoints.
+	bool SwapSurgeActive() const;
+
 	// Last Pickup Prompt sent, so it is only resent when it changes.
 	// Transient display state -- deliberately not saved; it is re-derived on
 	// the first frame after a restore.

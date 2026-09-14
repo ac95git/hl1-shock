@@ -270,8 +270,8 @@ struct SkillDef
 // the two roads down, through Fast Reload and Quick Draw, that meet at
 // Mastery (the "everything" node after the typed ones, no longer the toll
 // gate in front of them).  Swap Surge, the major, needs Mastery and the
-// Quick Draw road's end.  Nodes not yet built are SKILL_RESERVED with
-// their ids held.
+// Quick Draw road's end.  Fast Reload and Quick Draw cost 3 from nothing,
+// Demolitions and Headhunter 3, Mastery 8, Swap Surge 11.
 inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 {
 	//  id                        name                description                                                    sprite           col row cost prereq                     prereq2                  tier              stat
@@ -369,21 +369,22 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	{ ESkillId::Demolitions,     "Demolitions",      "Your explosives deal 25% more, and explosions hurt you half as much.", "d_rpg_rocket", 9, 0, 1, ESkillId::StatBullet01, ESkillId::None,          ENodeTier::Medium, EStat::None },
 	{ ESkillId::Headhunter,      "Headhunter",       "Your hits to the head land half again as hard.",              "d_skull",        11, 0,  1,  ESkillId::StatBullet01,    ESkillId::None,          ENodeTier::Medium, EStat::None },
 
-	// 39: the Route's major, held until it is built
-	SKILL_RESERVED(SwapSurge),
+	// 39: Swap Surge, the Route's major, needing Mastery and the right
+	// road's end.  The window opens on every DefaultDeploy, on a cooldown, so
+	// the specialist juggles weapons and every swap is a hit.
+	{ ESkillId::SwapSurge,       "Swap Surge",       "For two seconds after you swap weapons, everything you deal lands 50% harder. Then it needs a moment.", "d_hornet", 10, 5, 1, ESkillId::ExtraDamage, ESkillId::StatBullet07, ENodeTier::Major, EStat::None },
 
 	// 40-46: the Weapon Specialist's roads.  B01 above Marksman for
 	// Demolitions and Headhunter; B02 left and B03 right for the two roads
 	// down; B04 continues the left road past Fast Reload to Mastery; B05-B07
-	// carry the right road past Quick Draw to Mastery and on to Swap Surge,
-	// and arrive with those nodes.
+	// carry the right road past Quick Draw to Mastery and on to Swap Surge.
 	STAT_BULLET(StatBullet01, 10, 0, Marksman),
 	STAT_BULLET(StatBullet02, 9,  1, Marksman),
 	STAT_BULLET(StatBullet03, 11, 1, Marksman),
 	STAT_BULLET(StatBullet04, 9,  3, FastReload),
 	STAT_BULLET(StatBullet05, 11, 3, QuickDraw),
-	SKILL_RESERVED(StatBullet06),
-	SKILL_RESERVED(StatBullet07),
+	STAT_BULLET(StatBullet06, 11, 4, StatBullet05),
+	STAT_BULLET(StatBullet07, 11, 5, StatBullet06),
 };
 
 #undef SKILL_RESERVED

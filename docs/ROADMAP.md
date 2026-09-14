@@ -8,7 +8,7 @@ build on, and list the questions that have to be answered before the first line 
 is built, its content moves into PILLARS.md and the entry here is deleted — this file only ever shrinks
 from the top.
 
-**Last updated:** 2026-09-14 (branch `hl-shock` — the Skill Tree becomes a matrix: Stat nodes as roads, every node one point, not completable, settled in SKILL_TREE.md and the Melee Route built whole on it the same day; the fitted node icon draw, the 256-id ceiling and the layout cvars too; the day before, all seven Routes shaped, the Dash and alien Modules with them, the katana reworked on paper, four Skills cut)
+**Last updated:** 2026-09-14 (branch `hl-shock` — the Skill Tree becomes a matrix: Stat nodes as roads, every node one point, not completable, settled in SKILL_TREE.md and the Melee Route built whole on it the same day; the fitted node icon draw, the 256-id ceiling and the layout cvars too; later the same day, without a grill, the Weapon Specialist Route whole, the katana's blade as energy, Fast Reload on the shotgun, the move-wait leak fixed, the edge-adjacency overlay; the day before, all seven Routes shaped, the Dash and alien Modules with them, the katana reworked on paper, four Skills cut)
 
 ## Shape legend
 
@@ -1926,8 +1926,13 @@ special), a Backstab kill (Melee-only), any melee kill.
 
 #### Weapon Specialist
 
-**Shape: Shaped 2026-09-13**, in a grilling session. The Route for the player who uses the whole
-arsenal: handling speed, typed damage, and a major node that makes swapping weapons the way to fight.
+**Shape: Built 2026-09-14, whole**, node by node in five commits, on the layout in
+[SKILL_TREE.md](SKILL_TREE.md#weapon-specialist); what is built is in
+[PILLARS.md](PILLARS.md#2-enhanced-combat). Every number is a first guess in a cvar
+(`instructions/04`), Swap Surge has no readout yet, and the placement on the matrix was the agent's call
+from the graph below, to be judged by eye. The text below is kept as the reasoning. Shaped 2026-09-13, in
+a grilling session. The Route for the player who uses the whole arsenal: handling speed, typed damage,
+and a major node that makes swapping weapons the way to fight.
 
 ##### The nodes — settled
 
@@ -2104,9 +2109,9 @@ Facts found while sizing a bigger tree, so they are not found twice.
 - **The Stat node's bonuses.** About eight stats, themed by Route, at first-guess sizes (+5% was the
   example given). Which eight, and whether a stat is one flat percentage or scales with the Route's own
   ranks, is the first question of the first Route built under the matrix.
-- **Which Route is built first.** All seven are shaped. Melee and Weapon Specialist need the least new
-  machinery; the Juggernaut needs the `+pulse`/`-pulse` pair; the Dash Route and the Alien Route each need
-  their Module first.
+- ~~**Which Route is built first.**~~ Melee, then Weapon Specialist, both on 2026-09-14. Of the five
+  left, Energy and Medical need nothing new; the Juggernaut needs the `+pulse`/`-pulse` pair; the Dash
+  Route and the Alien Route each need their Module first.
 - The Dash Route's name. *Agility* stays with the suit; the Route needs its own word. *Ninja* is the
   candidate.
 - ~~Does the Dash Route keep bullet time?~~ Dropped, 2026-09-13.

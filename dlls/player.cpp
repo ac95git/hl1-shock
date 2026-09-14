@@ -67,6 +67,8 @@ TYPEDESCRIPTION CBasePlayer::m_playerSaveData[] =
 		DEFINE_FIELD(CBasePlayer, m_flFlashLightTime, FIELD_TIME),
 		DEFINE_FIELD(CBasePlayer, m_iFlashBattery, FIELD_INTEGER),
 		DEFINE_FIELD(CBasePlayer, m_flCleaveReadyTime, FIELD_TIME),
+		DEFINE_FIELD(CBasePlayer, m_flSurgeUntil, FIELD_TIME),
+		DEFINE_FIELD(CBasePlayer, m_flSurgeReadyTime, FIELD_TIME),
 
 		DEFINE_FIELD(CBasePlayer, m_afButtonLast, FIELD_INTEGER),
 		DEFINE_FIELD(CBasePlayer, m_afButtonPressed, FIELD_INTEGER),
@@ -3204,6 +3206,28 @@ bool CBasePlayer::CleaveReady() const
 void CBasePlayer::CleaveSpend()
 {
 	m_flCleaveReadyTime = gpGlobals->time + std::max(0.1f, cleave_cooldown.value);
+}
+
+// ---- Swap Surge ----
+
+void CBasePlayer::SwapSurgeOnDeploy()
+{
+	if (!m_skills.HasSkill(ESkillId::SwapSurge))
+		return;
+	if (gpGlobals->time < m_flSurgeReadyTime)
+		return;
+
+	// The window counts from the swap, draw delay included, so Quick Draw
+	// buys more of it: a faster draw is more of the window spent firing.
+	// The cooldown counts from the swap too, so a player who swaps every
+	// few seconds gets one Surge per cooldown, never one per swap.
+	m_flSurgeUntil = gpGlobals->time + std::max(0.1f, skill_swap_surge_window.value);
+	m_flSurgeReadyTime = gpGlobals->time + std::max(0.1f, skill_swap_surge_cooldown.value);
+}
+
+bool CBasePlayer::SwapSurgeActive() const
+{
+	return m_skills.HasSkill(ESkillId::SwapSurge) && gpGlobals->time < m_flSurgeUntil;
 }
 
 void CBasePlayer::CleaveThink()
