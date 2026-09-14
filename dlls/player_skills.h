@@ -154,15 +154,18 @@ void ApplySkillHealthBonus(CBasePlayer* pPlayer);
 int PlayerMaxArmor(CBasePlayer* pPlayer);
 
 // =====================================================================
-// Weapon Mastery: scales damage a PLAYER is dealing.
+// Weapon Mastery and the Weapon Specialist's typed damage: scales damage
+// a PLAYER is dealing.
 //
 // Applied at the two chokepoints every player weapon funnels through --
 // ApplyMultiDamage, and the direct-TakeDamage branch of RadiusDamage --
 // rather than in each weapon, so "every weapon you carry" is true by
-// construction instead of by a list somebody has to maintain.
+// construction instead of by a list somebody has to maintain.  The typed
+// Skills (Marksman and the Bullet Damage Stat nodes on DMG_BULLET) test
+// bitsDamageType here for the same reason: no weapon list.
 //
-// Returns flDamage unchanged when the attacker is not a player, or does
-// not hold the Skill, so monsters are unaffected.
+// Returns flDamage unchanged when the attacker is not a player, or holds
+// none of the Skills, so monsters are unaffected.
 // =====================================================================
 struct entvars_s;
-float SkillScaleWeaponDamage(struct entvars_s* pevAttacker, float flDamage);
+float SkillScaleWeaponDamage(struct entvars_s* pevAttacker, float flDamage, int bitsDamageType);

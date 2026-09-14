@@ -122,7 +122,24 @@ enum class ESkillId : int
 	StatMelee09         = 32,
 	// 33 is Backstab and 34 is Cleave, above.
 
-	_Count              = 35, // keep last
+	// ---- The Weapon Specialist Route (docs/SKILL_TREE.md) ----
+	// Fast Reload (3) and Weapon Mastery (4) belong to it too; their ids
+	// predate it.  Built node by node from 2026-09-14.
+	Marksman            = 35, // bullets hit harder; the root
+	QuickDraw           = 36, // weapons come up faster
+	Demolitions         = 37, // explosives dealt up, explosives taken down
+	Headhunter          = 38, // head hits land harder
+	SwapSurge           = 39, // the major: a window after a swap where everything lands harder
+	// The Route's Stat nodes, its roads.
+	StatBullet01        = 40,
+	StatBullet02        = 41,
+	StatBullet03        = 42,
+	StatBullet04        = 43,
+	StatBullet05        = 44,
+	StatBullet06        = 45,
+	StatBullet07        = 46,
+
+	_Count              = 47, // keep last
 };
 
 // ---------------------------------------------------------
@@ -138,8 +155,9 @@ enum class ESkillId : int
 // ---------------------------------------------------------
 enum class EStat : uint8_t
 {
-	None        = 0,
-	MeleeDamage = 1, // melee hits land harder, +skill_stat_melee_damage each
+	None         = 0,
+	MeleeDamage  = 1, // melee hits land harder, +skill_stat_melee_damage each
+	BulletDamage = 2, // bullets hit harder, +skill_stat_bullet_damage each
 };
 
 // How many ids have a row in k_SkillDefs.  Bounds every walk over the
@@ -214,31 +232,46 @@ struct SkillDef
 	{ ESkillId::idName, "Melee Damage", "Melee hits land 5% harder. Every Melee Damage node adds another 5%.", \
 	  "d_crowbar", col, row, 1, ESkillId::prereqName, ESkillId::None, ENodeTier::Stat, EStat::MeleeDamage }
 
+// A Bullet Damage Stat node: the road material of the Weapon Specialist Route.
+#define STAT_BULLET(idName, col, row, prereqName) \
+	{ ESkillId::idName, "Bullet Damage", "Bullets hit 5% harder. Every Bullet Damage node adds another 5%.", \
+	  "d_9mmAR", col, row, 1, ESkillId::prereqName, ESkillId::None, ENodeTier::Stat, EStat::BulletDamage }
+
 // Indexed by ESkillId, so entry [n] is always the Skill with id n.
 //
 // Every node costs ONE point: under the matrix (docs/SKILL_TREE.md) the price
 // of a Skill is the road of Stat nodes to it, and a static_assert below holds
 // every row to that.
 //
-// The Melee Route is built and occupies columns 0-3; the six other columns
-// are the pre-Routes tree shifted right, each waiting for its Route to give
-// it roads.  Follow-Up sits at the seam because it is gated on both Melee
-// Force and Pulse Recharge, and a cross-link wants its two parents adjacent.
+// The Melee Route occupies columns 0-3 and the Weapon Specialist Route
+// columns 9-11; between them are the pre-Routes columns, each waiting for
+// its Route to give it roads.  Follow-Up sits at the seam because it is
+// gated on both Melee Force and Pulse Recharge, and a cross-link wants its
+// two parents adjacent.
 //
-//     MELEE ROUTE                  PULSE      (fork)  SUIT     ARMS     SURVIVAL (fork)
-//     col0     col1     col2       col3       col4    col5     col6     col7     col8      col9
+//     MELEE ROUTE                  PULSE      (fork)  SUIT     SURVIVAL (fork)     WEAPON SPECIALIST
+//     col0     col1     col2       col3       col4    col5     col6     col7     col8       col9      col10     col11
 //
-// r0  S01      Reach    S02        .          Window          Capacity Mastery  Fortitude
-// r1  Speed    .        Force      Follow-Up  Recharge                 Reload   ArmorExp  FallResist
-// r2  S03      .        S04        .          Discharge Rebound                          MedExpert
-// r3  S05      .        S06
-// r4  S07      .        Backstab
-// r5  S08      Cleave   S09
+// r0  S01      Reach    S02        .          Window          Capacity Fortitude            Demol     B01       Headhunt
+// r1  Speed    .        Force      Follow-Up  Recharge                 ArmorExp FallResist  B02       Marksman  B03
+// r2  S03      .        S04        .          Discharge Rebound                 MedExpert   Reload    .         QuickDraw
+// r3  S05      .        S06                                                                B04       .         B05
+// r4  S07      .        Backstab                                                           .         Mastery   B06
+// r5  S08      Cleave   S09                                                                .         SwapSurge B07
 //
-// Reach is the root.  The left road (S01, Speed, S03, S05, S07, S08) and the
-// right road (S02, Force, S04, S06, Backstab, S09) meet at Cleave, the Melee
-// major, which needs both S08 and S09.  Speed costs 3 points from nothing,
-// Force 3, Backstab 6, Cleave 14.
+// Melee: Reach is the root.  The left road (S01, Speed, S03, S05, S07, S08)
+// and the right road (S02, Force, S04, S06, Backstab, S09) meet at Cleave,
+// the Melee major, which needs both S08 and S09.  Speed costs 3 points from
+// nothing, Force 3, Backstab 6, Cleave 14.
+//
+// Weapon Specialist: Marksman is the root, in the middle so its four
+// children are each one Stat node away, as SKILL_TREE.md draws them.  B01
+// above it feeds Demolitions and Headhunter; B02 and B03 beside it start
+// the two roads down, through Fast Reload and Quick Draw, that meet at
+// Mastery (the "everything" node after the typed ones, no longer the toll
+// gate in front of them).  Swap Surge, the major, needs Mastery and the
+// Quick Draw road's end.  Nodes not yet built are SKILL_RESERVED with
+// their ids held.
 inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 {
 	//  id                        name                description                                                    sprite           col row cost prereq                     prereq2                  tier              stat
@@ -248,20 +281,22 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	{ ESkillId::MeleeReach,      "Melee Reach",      "Your melee swings connect from 25% further away.",            "d_tripmine",     1,  0,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor,  EStat::None },
 	{ ESkillId::MeleeForce,      "Melee Force",      "Melee hits land 50% harder.",                                 "d_skull",        2,  1,  1,  ESkillId::StatMelee02,     ESkillId::None,          ENodeTier::Medium, EStat::None },
 
-	// 3-4: armaments, col 7. Mastery is the root and Fast Reload hangs off it,
-	// rather than the reverse: the cheap utility Skill should not be the toll
-	// gate in front of the column's headline effect.
-	{ ESkillId::FastReload,      "Fast Reload",      "Every magazine you feed goes in 20% quicker.",                "d_9mmhandgun",   7,  1,  1,  ESkillId::ExtraDamage,     ESkillId::None,          ENodeTier::Medium, EStat::None },
-	{ ESkillId::ExtraDamage,     "Weapon Mastery",   "Every weapon you carry deals 10% more damage.",               "d_9mmAR",        7,  0,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Major,  EStat::None },
+	// 3-4: the Weapon Specialist's two older Skills, in its region since
+	// 2026-09-14.  Fast Reload heads the left road down from Marksman;
+	// Mastery is where the two roads meet, after the typed nodes rather than
+	// in front of them.  Mastery's second gate, the Quick Draw road's end,
+	// arrives with Quick Draw.
+	{ ESkillId::FastReload,      "Fast Reload",      "Every magazine you feed goes in 20% quicker. Shotgun shells too.", "d_9mmhandgun", 9,  2,  1,  ESkillId::StatBullet02,    ESkillId::None,          ENodeTier::Medium, EStat::None },
+	{ ESkillId::ExtraDamage,     "Weapon Mastery",   "Every weapon you carry deals 10% more damage.",               "d_shotgun",      10, 4,  1,  ESkillId::StatBullet04,    ESkillId::None,          ENodeTier::Major,  EStat::None },
 
 	// 5-6: cut (movement rules)
 	SKILL_RESERVED(HighJump),
 	SKILL_RESERVED(SprintSpeed),
 
-	// 7-9: survivability, cols 8-9
-	{ ESkillId::FallResistance,  "Sure Footing",     "Falls deal half as much damage.",                             "item_longjump",  9,  1,  1,  ESkillId::MoreHealth,      ESkillId::None,          ENodeTier::Minor,  EStat::None },
-	{ ESkillId::MoreHealth,      "Fortitude",        "+25 maximum health.",                                         "item_healthkit", 8,  0,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor,  EStat::None },
-	{ ESkillId::ArmorEfficiency, "Armor Expert",     "A tenth less damage gets past your armor.",                   "suit_full",      8,  1,  1,  ESkillId::MoreHealth,      ESkillId::None,          ENodeTier::Medium, EStat::None },
+	// 7-9: survivability, cols 7-8 (8-9 until the Weapon Specialist took 9-11)
+	{ ESkillId::FallResistance,  "Sure Footing",     "Falls deal half as much damage.",                             "item_longjump",  8,  1,  1,  ESkillId::MoreHealth,      ESkillId::None,          ENodeTier::Minor,  EStat::None },
+	{ ESkillId::MoreHealth,      "Fortitude",        "+25 maximum health.",                                         "item_healthkit", 7,  0,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor,  EStat::None },
+	{ ESkillId::ArmorEfficiency, "Armor Expert",     "A tenth less damage gets past your armor.",                   "suit_full",      7,  1,  1,  ESkillId::MoreHealth,      ESkillId::None,          ENodeTier::Medium, EStat::None },
 
 	// 10: cut (rewarded idling)
 	SKILL_RESERVED(HealthRegen),
@@ -291,7 +326,7 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 
 	// 19: medical, col 9. A root again: it was gated on Regeneration, which is
 	// cut, and it is the root of the Medical Route in docs/SKILL_TREE.md.
-	{ ESkillId::MedExpert,       "Med Expert",       "An Infusion runs 5 seconds longer.",                          "flash_full",     9,  2,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Medium, EStat::None },
+	{ ESkillId::MedExpert,       "Med Expert",       "An Infusion runs 5 seconds longer.",                          "flash_full",     8,  2,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Medium, EStat::None },
 
 	// 20-21: the alien column, held until it opens
 	SKILL_RESERVED(HiveCapacity),
@@ -319,10 +354,33 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 
 	// 34: Cleave, the Melee major, where the two roads meet
 	{ ESkillId::Cleave,          "Cleave",           "When Cleave is ready, your next melee hit strikes everything in front of you, and harder. Then it needs a moment.", "d_handgrenade", 1, 5, 1, ESkillId::StatMelee08, ESkillId::StatMelee09, ENodeTier::Major, EStat::None },
+
+	// 35: Marksman, the Weapon Specialist's root, in the middle of its region
+	{ ESkillId::Marksman,        "Marksman",         "Bullets hit 15% harder.",                                     "d_bolt",         10, 1,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor,  EStat::None },
+
+	// 36-39: the Route's other Skills, held until each is built
+	SKILL_RESERVED(QuickDraw),
+	SKILL_RESERVED(Demolitions),
+	SKILL_RESERVED(Headhunter),
+	SKILL_RESERVED(SwapSurge),
+
+	// 40-46: the Weapon Specialist's roads.  B01 above Marksman for
+	// Demolitions and Headhunter; B02 left and B03 right for the two roads
+	// down; B04 continues the left road past Fast Reload to Mastery; B05-B07
+	// carry the right road past Quick Draw to Mastery and on to Swap Surge,
+	// and arrive with those nodes.
+	STAT_BULLET(StatBullet01, 10, 0, Marksman),
+	STAT_BULLET(StatBullet02, 9,  1, Marksman),
+	STAT_BULLET(StatBullet03, 11, 1, Marksman),
+	STAT_BULLET(StatBullet04, 9,  3, FastReload),
+	SKILL_RESERVED(StatBullet05),
+	SKILL_RESERVED(StatBullet06),
+	SKILL_RESERVED(StatBullet07),
 };
 
 #undef SKILL_RESERVED
 #undef STAT_MELEE
+#undef STAT_BULLET
 
 // Every node costs one.  The price of a Skill is the road to it, and a row
 // that says otherwise is a row that would be drawn with no cost on it and

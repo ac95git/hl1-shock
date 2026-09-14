@@ -274,7 +274,7 @@ int PlayerMaxArmor(CBasePlayer* pPlayer)
 // =====================================================================
 // SkillScaleWeaponDamage
 // =====================================================================
-float SkillScaleWeaponDamage(entvars_t* pevAttacker, float flDamage)
+float SkillScaleWeaponDamage(entvars_t* pevAttacker, float flDamage, int bitsDamageType)
 {
     if (!pevAttacker || flDamage <= 0.0f)
         return flDamage;
@@ -283,11 +283,29 @@ float SkillScaleWeaponDamage(entvars_t* pevAttacker, float flDamage)
     if (!pAttacker || !pAttacker->IsPlayer())
         return flDamage;
 
-    CBasePlayer* pPlayer = (CBasePlayer*)pAttacker;
-    if (!pPlayer->m_skills.HasSkill(ESkillId::ExtraDamage))
-        return flDamage;
+    const CPlayerSkills& sk = ((CBasePlayer*)pAttacker)->m_skills;
 
-    return flDamage * std::max(0.0f, skill_weapon_damage_scale.value);
+    // Weapon Mastery: everything.
+    if (sk.HasSkill(ESkillId::ExtraDamage))
+        flDamage *= std::max(0.0f, skill_weapon_damage_scale.value);
+
+    // The Weapon Specialist's typed damage.  A damage-type test here rather
+    // than a weapon list: whatever a weapon fires as bullets is bullets, so
+    // the glock, MP5, shotgun and python are covered and the crossbow's bolt
+    // (DMG_NEVERGIB alone) is not.  Melee and energy have their own Routes.
+    if ((bitsDamageType & DMG_BULLET) != 0)
+    {
+        if (sk.HasSkill(ESkillId::Marksman))
+            flDamage *= std::max(0.0f, skill_marksman_scale.value);
+
+        // The Bullet Damage Stat nodes: additive within the stat, multiplied
+        // with everything else, the Melee Damage nodes' shape.
+        const int iStat = sk.CountStat(EStat::BulletDamage);
+        if (iStat > 0)
+            flDamage *= 1.0f + iStat * std::max(0.0f, skill_stat_bullet_damage.value);
+    }
+
+    return flDamage;
 }
 
 // =====================================================================

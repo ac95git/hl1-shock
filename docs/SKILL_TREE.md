@@ -38,7 +38,7 @@ are assigned when a node is built, never reused, and **22 and 23 are spoken for*
 | [Alien](#alien) | 7 | Hive Capacity (20) | The volley is energy damage | The alien Module; the whole Route is hidden until it |
 | [Energy](#energy) | 6 | Energy Damage | Energy attacks drain armour for bonus damage | — |
 | [Melee](#melee) | 6 + 9 Stat | Melee Reach (1) | Cleave | — . **Built 2026-09-14** |
-| [Weapon Specialist](#weapon-specialist) | 7 | Marksman | Swap Surge | — |
+| [Weapon Specialist](#weapon-specialist) | 7 + 7 Stat | Marksman (35) | Swap Surge | — . **Building since 2026-09-14** |
 | [The Dash Route](#the-dash-route) | 7 | Sure Footing (7) | Air Dash | The Dash Module for its Dash nodes |
 | [Medical](#medical) | 5 | Med Expert (19) | Last Stand | — |
 
@@ -241,18 +241,36 @@ The never-noticed Backstab tier (a larger multiplier when the victim never acqui
 
 ## Weapon Specialist
 
-Handling speed, typed damage, and a major node that makes swapping weapons the way to fight. Numbers are
-Skills; identity (a silencer, a second barrel) is an Evolution. [ROADMAP](ROADMAP.md#weapon-specialist).
+**Building since 2026-09-14**, node by node on the matrix, the second Route after Melee. Handling speed,
+typed damage, and a major node that makes swapping weapons the way to fight. Numbers are Skills; identity
+(a silencer, a second barrel) is an Evolution. [ROADMAP](ROADMAP.md#weapon-specialist).
 
-| Node | Id | Effect | Ranks | State |
-| --- | --- | --- | --- | --- |
-| Marksman | new | Bullet damage up | ranks | New. **Root** |
-| Fast Reload | 3 | Reloads quicker; rank one covers the shotgun | ranks | Exists |
-| Quick Draw | new | Weapons come up faster (predicted; both DLLs) | ranks | New |
-| Weapon Mastery | 4 | All weapons +10% | — | Exists. Moved deeper |
-| Demolitions | new | Explosive damage dealt up, explosive damage taken down (own grenades included) | ranks | New |
-| Headhunter | new | Headshot damage up. Designed with Decapitation | ranks | New |
-| **Major** | new | **Swap Surge**: for 1–2 s after a weapon swap, everything the weapon deals lands harder; internal cooldown | — | New. Name provisional |
+| Node | Id | Effect | State |
+| --- | --- | --- | --- |
+| Marksman | 35 | Bullets hit 15% harder (`DMG_BULLET` at the damage chokepoints) | Built. **Root** |
+| Bullet Damage ×7 | 40–46 | +5% bullet damage each, additive within the stat | Building. **The roads**; four placed |
+| Fast Reload | 3 | Reloads quicker; the shotgun included | Built; moved into the region |
+| Quick Draw | 36 | Weapons come up faster (predicted; both DLLs) | Reserved |
+| Weapon Mastery | 4 | All weapons +10% | Built; moved deeper, where the two roads meet |
+| Demolitions | 37 | Explosive damage dealt up, explosive damage taken down (own grenades included) | Reserved |
+| Headhunter | 38 | Headshot damage up. Designed with Decapitation | Reserved |
+| **Major** | 39 | **Swap Surge**: for 1–2 s after a weapon swap, everything the weapon deals lands harder; internal cooldown | Reserved. Name provisional |
+
+"Ranks" in the earlier draft became the Stat nodes, as in Melee. The region as placed, columns 9–11, `B`
+a Bullet Damage Stat node; Marksman sits in the middle so its four children are each one Stat node away:
+
+```
+     col9        col10       col11
+r0   Demolitions B           Headhunter
+r1   B           Marksman    B
+r2   Fast Reload .           Quick Draw
+r3   B           .           B
+r4   .           Mastery     B
+r5   .           Swap Surge  B
+```
+
+Mastery needs both roads' ends (row 3); Swap Surge needs Mastery and the right road's end (row 5). Fast
+Reload and Quick Draw cost 3 from nothing, Demolitions and Headhunter 3, Mastery 8, Swap Surge 11.
 
 ```mermaid
 graph TD

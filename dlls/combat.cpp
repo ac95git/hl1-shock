@@ -1313,11 +1313,12 @@ void RadiusDamage(Vector vecSrc, entvars_t* pevInflictor, entvars_t* pevAttacker
 				}
 				else
 				{
-					// Weapon Mastery. Only this branch: the one above goes
-					// through ApplyMultiDamage, which scales it already, so
-					// scaling before the split would apply the Skill twice.
+					// Weapon Mastery and the typed damage Skills. Only this
+					// branch: the one above goes through ApplyMultiDamage,
+					// which scales it already, so scaling before the split
+					// would apply the Skills twice.
 					pEntity->TakeDamage(pevInflictor, pevAttacker,
-						SkillScaleWeaponDamage(pevAttacker, flAdjustedDamage), bitsDamageType);
+						SkillScaleWeaponDamage(pevAttacker, flAdjustedDamage, bitsDamageType), bitsDamageType);
 				}
 			}
 		}

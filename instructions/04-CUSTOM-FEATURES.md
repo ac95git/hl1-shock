@@ -157,7 +157,9 @@ Raising `skill_points_start` is the way to work on the tree UI without hunting f
 | `cleave_damage_scale` | 1.5 | Every hit in a Cleave |
 | `katana_wave_swing_damage_scale` | 0.5 | The blade's share on the katana's right click, which swings it beside the wave |
 | `skill_weapon_damage_scale` | 1.1 | Weapon Mastery multiplies all player-dealt damage |
-| `skill_reload_time_scale` | 0.8 | Fast Reload multiplies `DefaultReload`'s delay |
+| `skill_reload_time_scale` | 0.8 | Fast Reload multiplies `DefaultReload`'s delay, and the shotgun's shell-by-shell reload |
+| `skill_marksman_scale` | 1.15 | Marksman multiplies player `DMG_BULLET` damage |
+| `skill_stat_bullet_damage` | 0.05 | Each Bullet Damage Stat node adds this to one multiplier on player `DMG_BULLET` damage |
 
 Two rules that are easy to break:
 
@@ -170,7 +172,8 @@ Two rules that are easy to break:
 - **Scale player damage at the chokepoints, not per weapon.** `SkillScaleWeaponDamage` is called from
   `ApplyMultiDamage` and from the direct-`TakeDamage` branch of `RadiusDamage` — every player weapon
   reaches one or the other. Do not scale before the branch in `RadiusDamage`: the other side already goes
-  through `ApplyMultiDamage` and would be scaled twice.
+  through `ApplyMultiDamage` and would be scaled twice. It takes the damage type, so a **typed** Skill
+  (Marksman on `DMG_BULLET`) is a test there, never a weapon list.
 
 ### Effects in shared weapon code
 

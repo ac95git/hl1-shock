@@ -310,6 +310,10 @@ through, so "melee" is true by construction rather than by a damage-type list:
   chokepoints rather than per weapon — `ApplyMultiDamage` and the direct-`TakeDamage` branch of
   `RadiusDamage`. Why it is two, and the two consequences that fall out of it, are under
   [pillar 4](#4-skill-trees).
+- **Marksman** (id 35, the Weapon Specialist's root, 2026-09-14) multiplies player `DMG_BULLET` damage by
+  `skill_marksman_scale` (1.15) at the same chokepoints, and each **Bullet Damage Stat node** (ids 40–46,
+  the Route's roads) adds `skill_stat_bullet_damage` (0.05) to one multiplier on it. A damage-type test,
+  not a weapon list: the glock, MP5, shotgun and python are bullets; the crossbow's bolt is not.
 - **Fast Reload** (id 3) scales the reload delay by `skill_reload_time_scale` (0.8) through
   `CBasePlayerWeapon::ReloadTimeScale`, applied in `DefaultReload` — the one place every clip-fed weapon
   funnels through, so the glock, MP5, python, crossbow and RPG all get it without a per-weapon list. The
@@ -598,13 +602,14 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
 
 **Definitions** — `game_shared/skill_defs.h`, compiled into both DLLs
 
-- **25 nodes in the tree, every one costing one point** (a `static_assert` holds every row to it): the
+- **30 nodes in the tree, every one costing one point** (a `static_assert` holds every row to it): the
   Melee Route in columns 0–3 — Reach at the root, two roads of Melee Damage Stat nodes down to Speed and
-  Force, on to the Backstab node, meeting at Cleave — and the pre-Routes columns shifted right
-  of it (the Pulse 4–5, the suit 6, Armaments 7, Survivability 8–9), each waiting for its Route to give it
-  roads. Follow-Up sits at the seam between Melee and the Pulse because it is gated on one of each. The
-  layout is in the comment above `k_SkillDefs`; the design is
-  [SKILL_TREE.md](SKILL_TREE.md#the-matrix--settled-2026-09-14).
+  Force, on to the Backstab node, meeting at Cleave — the Weapon Specialist Route building in columns
+  9–11 since 2026-09-14 (Marksman at the root in the middle of the region, Bullet Damage Stat nodes as its
+  roads, Fast Reload and Weapon Mastery moved into it), and the pre-Routes columns between them (the
+  Pulse 4–5, the suit 6, Survivability 7–8), each waiting for its Route to give it roads. Follow-Up sits at
+  the seam between Melee and the Pulse because it is gated on one of each. The layout is in the comment
+  above `k_SkillDefs`; the design is [SKILL_TREE.md](SKILL_TREE.md#the-matrix--settled-2026-09-14).
 - **Stat nodes are rows like any other**, with `ENodeTier::Stat` and an `EStat` naming what they grant;
   `STAT_MELEE(id, col, row, prereq)` stamps one out. A Skill has `EStat::None`. Only stats a built Route
   uses are in the enum.
@@ -747,7 +752,8 @@ second line style before it could be read.
 
 A branch of Skills for alien weapons, **hidden entirely until the player carries one**, so that reading the
 tree does not spoil that the branch exists. The column is reserved now rather than built: ids 20 and 21 are
-held for it, and it takes column 7 when it opens.
+held for it, and it takes a region of its own when it opens (column 7 until the Weapon Specialist
+Route rearranged the right of the tree on 2026-09-14).
 
 Half-Life has exactly two alien weapons — the **Hivehand** and **Snarks**. The Gauss, Egon and Tau are all
 HEV/human tech and belong in Armaments; the Displacer is not in HL1. So the column is naturally small, and
