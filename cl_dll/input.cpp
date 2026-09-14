@@ -106,7 +106,7 @@ kbutton_t in_duck;
 kbutton_t in_reload;
 kbutton_t in_alt1;
 kbutton_t in_score;
-kbutton_t in_inventory;
+kbutton_t in_inventory; // Client-local by design: no usercmd bit, never sent to the server
 kbutton_t in_break;
 kbutton_t in_graph; // Display the netgraph
 
@@ -872,10 +872,6 @@ int CL_ButtonBits(bool bResetState)
 	if ((in_score.state & 3) != 0)
 	{
 		bits |= IN_SCORE;
-	}
-	if ((in_inventory.state & 3) != 0)
-	{
-		bits |= IN_INVENTORY;
 	}
 
 	// Dead or in intermission? Shore scoreboard, too

@@ -15,6 +15,11 @@
 
 #pragma once
 
+// usercmd_t.buttons (common/usercmd.h) is an unsigned short, so bit 15 is the
+// ceiling for any IN_ bit here; anything at (1 << 16) or above is silently
+// dropped before it reaches the server. All 16 bits below are allocated;
+// IN_ALT1 (bit 14) and IN_CANCEL (bit 6) are set by the client but read by
+// nothing in dlls/, so they are the only reclaimable ones.
 #define IN_ATTACK (1 << 0)
 #define IN_JUMP (1 << 1)
 #define IN_DUCK (1 << 2)
@@ -31,5 +36,4 @@
 #define IN_RELOAD (1 << 13)
 #define IN_ALT1 (1 << 14)
 #define IN_SCORE (1 << 15) // Used by client.dll for when scoreboard is held down
-#define IN_INVENTORY (1 << 16) // Used by client.dll for when inventory is held down
 

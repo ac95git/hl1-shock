@@ -380,7 +380,12 @@ inconsistency is now visible: bullets deflect cleanly, claws do not.
 - A deflected melee attack produces no view punch and no hit-flesh sound.
 - Monsters still react normally when they strike something they genuinely damaged.
 
-## `IN_INVENTORY` Is Silently Truncated And Never Reaches The Server
+## `IN_INVENTORY` Is Silently Truncated And Never Reaches The Server — RESOLVED 2026-09-14
+
+Closed by the "drop it" option below: the constant is gone, `CL_ButtonBits` no longer sets it, the
+inventory key is a plain client-local `kbutton_t` with a comment saying so, and `common/in_buttons.h`
+states the `unsigned short` ceiling and names the two reclaimable bits. Both acceptance criteria are met.
+The original entry is kept below for the reasoning.
 
 ### Scope
 [common/in_buttons.h](../common/in_buttons.h), [cl_dll/input.cpp](../cl_dll/input.cpp).
