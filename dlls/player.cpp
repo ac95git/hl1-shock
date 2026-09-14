@@ -424,6 +424,12 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 	if ((bitsDamageType & DMG_BLAST) != 0 && m_skills.HasSkill(ESkillId::Demolitions))
 		flDamage *= std::max(0.0f, skill_demolitions_resist_scale.value);
 
+	// Insulation, the same way: energy and shock. Shock included so it means
+	// something in Xen, where the slave's, controller's and Nihilanth's zaps
+	// are shock and the controller's balls and env_beam hazards are energy.
+	if ((bitsDamageType & (DMG_ENERGYBEAM | DMG_SHOCK)) != 0 && m_skills.HasSkill(ESkillId::Insulation))
+		flDamage *= std::max(0.0f, skill_insulation_scale.value);
+
 	// keep track of amount of damage last sustained
 	m_lastDamageAmount = flDamage;
 

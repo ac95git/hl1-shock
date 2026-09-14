@@ -23,6 +23,13 @@
 #include "customentity.h"
 #include "gamerules.h"
 #include "UserMessages.h"
+#include <algorithm>
+
+// Egon Efficiency is server-side damage-adjacent tuning (ammo), so its cvar
+// comes from game.h under the guard, like the melee damage Skills.
+#ifndef CLIENT_DLL
+#include "game.h"
+#endif
 
 #ifdef CLIENT_DLL
 #include "hud.h"
@@ -123,6 +130,18 @@ bool CEgon::HasAmmo()
 
 	return true;
 }
+
+#ifndef CLIENT_DLL
+// Egon Efficiency: the interval between the egon's ammo ticks, scaled up so
+// uranium drains slower. Server-side only: ammo use is not predicted, and
+// Fire() below only spends it under this same guard.
+static float EgonAmmoInterval(CBasePlayer* pPlayer, float flBase)
+{
+	if (pPlayer->m_skills.HasSkill(ESkillId::EgonEfficiency))
+		return flBase * std::max(0.1f, skill_egon_efficiency_scale.value);
+	return flBase;
+}
+#endif
 
 void CEgon::UseAmmo(int count)
 {
@@ -278,7 +297,7 @@ void CEgon::Fire(const Vector& vecOrigSrc, const Vector& vecDir)
 				if (gpGlobals->time >= m_flAmmoUseTime)
 				{
 					UseAmmo(1);
-					m_flAmmoUseTime = gpGlobals->time + 0.1;
+					m_flAmmoUseTime = gpGlobals->time + EgonAmmoInterval(m_pPlayer, 0.1);
 				}
 			}
 			else
@@ -287,7 +306,7 @@ void CEgon::Fire(const Vector& vecOrigSrc, const Vector& vecDir)
 				if (gpGlobals->time >= m_flAmmoUseTime)
 				{
 					UseAmmo(1);
-					m_flAmmoUseTime = gpGlobals->time + 0.166;
+					m_flAmmoUseTime = gpGlobals->time + EgonAmmoInterval(m_pPlayer, 0.166);
 				}
 			}
 
@@ -324,7 +343,7 @@ void CEgon::Fire(const Vector& vecOrigSrc, const Vector& vecDir)
 				if (gpGlobals->time >= m_flAmmoUseTime)
 				{
 					UseAmmo(1);
-					m_flAmmoUseTime = gpGlobals->time + 0.2;
+					m_flAmmoUseTime = gpGlobals->time + EgonAmmoInterval(m_pPlayer, 0.2);
 				}
 			}
 			else
@@ -333,7 +352,7 @@ void CEgon::Fire(const Vector& vecOrigSrc, const Vector& vecDir)
 				if (gpGlobals->time >= m_flAmmoUseTime)
 				{
 					UseAmmo(1);
-					m_flAmmoUseTime = gpGlobals->time + 0.1;
+					m_flAmmoUseTime = gpGlobals->time + EgonAmmoInterval(m_pPlayer, 0.1);
 				}
 			}
 

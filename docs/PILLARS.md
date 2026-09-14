@@ -319,6 +319,14 @@ through, so "melee" is true by construction rather than by a damage-type list:
   `skill_marksman_scale` (1.15) at the same chokepoints, and each **Bullet Damage Stat node** (ids 40–46,
   the Route's roads) adds `skill_stat_bullet_damage` (0.05) to one multiplier on it. A damage-type test,
   not a weapon list: the glock, MP5, shotgun and python are bullets; the crossbow's bolt is not.
+- **Energy Damage** (id 54, the Energy Route's root, 2026-09-14) is the same test on `DMG_ENERGYBEAM`,
+  ×`skill_energy_damage_scale` (1.15), and each **Energy Damage Stat node** (ids 60–63) adds
+  `skill_stat_energy_damage` (0.05) to one multiplier on it. The katana's slash and wave, the egon and
+  the Discharge all read it, so the katana scales off Melee (in its Swing) and Energy (here) both — the
+  Gargantua build in one sentence. **Insulation** (id 58) scales `DMG_ENERGYBEAM` and `DMG_SHOCK` taken
+  by `skill_insulation_scale` (0.7) in `CBasePlayer::TakeDamage`, shock included so it means something in
+  Xen. **Egon Efficiency** (id 56) scales the interval between the egon's ammo ticks by
+  `skill_egon_efficiency_scale` (1.33), server-side, where `CEgon::Fire` spends them.
 - **Demolitions** (id 37, 2026-09-14) is the same test on `DMG_BLAST`, dealt ×`skill_demolitions_scale`
   (1.25) at the chokepoints and taken ×`skill_demolitions_resist_scale` (0.5) in `CBasePlayer::TakeDamage`
   before the armour split, own grenades included, which is how "Mastery makes your own explosives hurt you
@@ -641,13 +649,15 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
 
 **Definitions** — `game_shared/skill_defs.h`, compiled into both DLLs
 
-- **44 nodes in the tree, every one costing one point** (a `static_assert` holds every row to it): the
+- **51 nodes in the tree, every one costing one point** (a `static_assert` holds every row to it): the
   Melee Route in columns 0–3 — Reach at the root, two roads of Melee Damage Stat nodes down to Speed and
   Force, on to the Backstab node, meeting at Cleave — the Weapon Specialist Route in columns 9–11, built
   whole on 2026-09-14 (Marksman at the root in the middle of the region, Bullet Damage Stat nodes as its
   roads, Fast Reload and Weapon Mastery moved into it, Swap Surge at the bottom), the Medical Route
   building in columns 12–13 (Med Expert at the root, Healing Stat nodes as its roads, Leech and Overheal;
-  Last Stand reserved), and the pre-Routes columns between them (the Pulse 4–5, the suit 6, Survivability
+  Last Stand reserved), the Energy Route building in columns 14–15 (Energy Damage at the root, Energy
+  Damage Stat nodes as its roads, Egon Efficiency and Insulation; Egon Focus, Quick Charge and the major
+  reserved), and the pre-Routes columns between them (the Pulse 4–5, the suit 6, Survivability
   7–8), each waiting for its Route to give it roads. Follow-Up sits at
   the seam between Melee and the Pulse because it is gated on one of each. The layout is in the comment
   above `k_SkillDefs`; the design is [SKILL_TREE.md](SKILL_TREE.md#the-matrix--settled-2026-09-14).

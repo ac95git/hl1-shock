@@ -151,7 +151,22 @@ enum class ESkillId : int
 	StatHeal03          = 52,
 	StatHeal04          = 53,
 
-	_Count              = 54, // keep last
+	// ---- The Energy Route (docs/SKILL_TREE.md) ----
+	// Energy is DMG_ENERGYBEAM and nothing else: the katana, the egon, the
+	// Discharge.  Building node by node from 2026-09-14.
+	EnergyDamage        = 54, // energy hits harder; the root
+	EgonFocus           = 55, // secondary fire unlocks the egon's narrow beam
+	EgonEfficiency      = 56, // uranium drains slower
+	QuickCharge         = 57, // the katana's charged wave charges faster
+	Insulation          = 58, // less energy and shock damage taken
+	EnergyMajor         = 59, // the major: energy attacks drain armour for bonus damage; name pending
+	// The Route's Stat nodes, its roads: Energy Damage's ranks became these.
+	StatEnergy01        = 60,
+	StatEnergy02        = 61,
+	StatEnergy03        = 62,
+	StatEnergy04        = 63,
+
+	_Count              = 64, // keep last
 };
 
 // ---------------------------------------------------------
@@ -171,6 +186,7 @@ enum class EStat : uint8_t
 	MeleeDamage  = 1, // melee hits land harder, +skill_stat_melee_damage each
 	BulletDamage = 2, // bullets hit harder, +skill_stat_bullet_damage each
 	Healing      = 3, // Infusions and medkits heal more, +skill_stat_healing each
+	EnergyDamage = 4, // energy hits harder, +skill_stat_energy_damage each
 };
 
 // How many ids have a row in k_SkillDefs.  Bounds every walk over the
@@ -256,6 +272,11 @@ struct SkillDef
 	{ ESkillId::idName, "Healing", "Infusions and medkits heal 10% more. Every Healing node adds another 10%.", \
 	  "cross", col, row, 1, ESkillId::prereqName, ESkillId::None, ENodeTier::Stat, EStat::Healing }
 
+// An Energy Damage Stat node: the road material of the Energy Route.
+#define STAT_ENERGY(idName, col, row, prereqName) \
+	{ ESkillId::idName, "Energy Damage", "Energy hits 5% harder. Every Energy Damage node adds another 5%.", \
+	  "dmg_shock", col, row, 1, ESkillId::prereqName, ESkillId::None, ENodeTier::Stat, EStat::EnergyDamage }
+
 // Indexed by ESkillId, so entry [n] is always the Skill with id n.
 //
 // Every node costs ONE point: under the matrix (docs/SKILL_TREE.md) the price
@@ -268,14 +289,14 @@ struct SkillDef
 // gated on both Melee Force and Pulse Recharge, and a cross-link wants its
 // two parents adjacent.
 //
-//     MELEE ROUTE                  PULSE      (fork)  SUIT     SURVIVAL (fork)     WEAPON SPECIALIST              MEDICAL
-//     col0     col1     col2       col3       col4    col5     col6     col7     col8       col9      col10     col11     col12     col13
+//     MELEE ROUTE                  PULSE      (fork)  SUIT     SURVIVAL (fork)     WEAPON SPECIALIST              MEDICAL             ENERGY
+//     col0     col1     col2       col3       col4    col5     col6     col7     col8       col9      col10     col11     col12     col13     col14      col15
 //
-// r0  S01      Reach    S02        .          Window          Capacity Fortitude            Demol     B01       Headhunt  MedExpert H01
-// r1  Speed    .        Force      Follow-Up  Recharge                 ArmorExp FallResist  B02       Marksman  B03       H02       Leech
-// r2  S03      .        S04        .          Discharge Rebound                             Reload    .         QuickDraw Overheal  H03
-// r3  S05      .        S06                                                                B04       .         B05       LastStand H04
-// r4  S07      .        Backstab                                                           .         Mastery   B06
+// r0  S01      Reach    S02        .          Window          Capacity Fortitude            Demol     B01       Headhunt  MedExpert H01       EnergyDmg  E01
+// r1  Speed    .        Force      Follow-Up  Recharge                 ArmorExp FallResist  B02       Marksman  B03       H02       Leech     E02        EgonEff
+// r2  S03      .        S04        .          Discharge Rebound                             Reload    .         QuickDraw Overheal  H03       Insulation E03
+// r3  S05      .        S06                                                                B04       .         B05       LastStand H04       E04        EgonFocus
+// r4  S07      .        Backstab                                                           .         Mastery   B06                           QuickChg   Major
 // r5  S08      Cleave   S09                                                                .         SwapSurge B07
 //
 // Melee: Reach is the root.  The left road (S01, Speed, S03, S05, S07, S08)
@@ -296,6 +317,12 @@ struct SkillDef
 // The right road (H01, Leech, H03, H04) and the left (H02, Overheal) meet
 // at Last Stand.  Leech costs 2, Overheal 2, Last Stand 8.  Nodes not yet
 // built are SKILL_RESERVED with their ids held.
+//
+// Energy: Energy Damage is the root.  The right road (E01, Egon Efficiency,
+// E03, Egon Focus) and the left (E02, Insulation, E04, Quick Charge) meet
+// at the major.  Where Melee's region reaches Energy's -- the Gargantua
+// build as a literal path -- is still to be curated; the two are at
+// opposite ends of the tree today.  Nodes not yet built are SKILL_RESERVED.
 inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 {
 	//  id                        name                description                                                    sprite           col row cost prereq                     prereq2                  tier              stat
@@ -428,12 +455,40 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	STAT_HEAL(StatHeal02, 12, 1, MedExpert),
 	STAT_HEAL(StatHeal03, 13, 2, Leech),
 	STAT_HEAL(StatHeal04, 13, 3, StatHeal03),
+
+	// 54: Energy Damage, the Energy Route's root.  DMG_ENERGYBEAM at the
+	// damage chokepoints, the Marksman shape.
+	{ ESkillId::EnergyDamage,    "Energy Damage",    "Energy hits 15% harder: the katana, the egon, the Discharge.", "d_egon",       14, 0,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor,  EStat::None },
+
+	// 55: Egon Focus, held: its details are to be decided
+	SKILL_RESERVED(EgonFocus),
+
+	// 56: Egon Efficiency, the right road's Skill.  Server-side, the interval
+	// between the egon's ammo ticks.
+	{ ESkillId::EgonEfficiency,  "Egon Efficiency",  "The egon drains uranium a quarter slower.",                   "d_satchel",      15, 1,  1,  ESkillId::StatEnergy01,    ESkillId::None,          ENodeTier::Medium, EStat::None },
+
+	// 57: Quick Charge, held: the katana's charge is not built
+	SKILL_RESERVED(QuickCharge),
+
+	// 58: Insulation, the left road's Skill.  Server-side, in the player's
+	// TakeDamage; shock included so it means something in Xen.
+	{ ESkillId::Insulation,      "Insulation",       "Energy and shock hurt you 30% less.",                         "dmg_rad",        14, 2,  1,  ESkillId::StatEnergy02,    ESkillId::None,          ENodeTier::Medium, EStat::None },
+
+	// 59: the Energy major, held
+	SKILL_RESERVED(EnergyMajor),
+
+	// 60-63: the Energy Route's roads
+	STAT_ENERGY(StatEnergy01, 15, 0, EnergyDamage),
+	STAT_ENERGY(StatEnergy02, 14, 1, EnergyDamage),
+	STAT_ENERGY(StatEnergy03, 15, 2, EgonEfficiency),
+	STAT_ENERGY(StatEnergy04, 14, 3, Insulation),
 };
 
 #undef SKILL_RESERVED
 #undef STAT_MELEE
 #undef STAT_BULLET
 #undef STAT_HEAL
+#undef STAT_ENERGY
 
 // Every node costs one.  The price of a Skill is the road to it, and a row
 // that says otherwise is a row that would be drawn with no cost on it and

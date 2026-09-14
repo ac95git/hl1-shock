@@ -36,7 +36,7 @@ are assigned when a node is built, never reused, and **22 and 23 are spoken for*
 | --- | --- | --- | --- | --- |
 | [Juggernaut](#juggernaut) | 11 | Fortitude (8) | +100 decaying armour on Matrix activation | The Pulse Module for its Pulse nodes |
 | [Alien](#alien) | 7 | Hive Capacity (20) | The volley is energy damage | The alien Module; the whole Route is hidden until it |
-| [Energy](#energy) | 6 | Energy Damage | Energy attacks drain armour for bonus damage | — |
+| [Energy](#energy) | 6 + 4 Stat | Energy Damage (54) | Energy attacks drain armour for bonus damage | — . **Building since 2026-09-14** |
 | [Melee](#melee) | 6 + 9 Stat | Melee Reach (1) | Cleave | — . **Built 2026-09-14** |
 | [Weapon Specialist](#weapon-specialist) | 7 + 7 Stat | Marksman (35) | Swap Surge (39) | — . **Built 2026-09-14** |
 | [The Dash Route](#the-dash-route) | 7 | Sure Footing (7) | Air Dash | The Dash Module for its Dash nodes |
@@ -164,18 +164,36 @@ Dropped: Poise (a longer hold window) and a Snark node; Snarks may leave the mod
 
 ## Energy
 
-**Energy is `DMG_ENERGYBEAM` and nothing else.** The energy weapons are the katana and the egon; the gauss
-is probably removed. The katana always deals energy damage, slash and wave, and scales off both Melee and
-Energy. [ROADMAP](ROADMAP.md#energy).
+**Building since 2026-09-14**, node by node on the matrix. **Energy is `DMG_ENERGYBEAM` and nothing
+else.** The energy weapons are the katana and the egon; the gauss is probably removed. The katana always
+deals energy damage, slash and wave (built 2026-09-14), and scales off both Melee and Energy.
+[ROADMAP](ROADMAP.md#energy).
 
-| Node | Id | Effect | Ranks | State |
-| --- | --- | --- | --- | --- |
-| Energy Damage | new | Energy damage dealt up. The katana, the egon, the Discharge and the Alien volley all read it | 1→2→3 | New. **Root** |
-| Egon Efficiency | new | Uranium drains slower; also cheapens the katana's charged wave | ranks | New |
-| Egon Focus | new | Secondary fire unlocks the egon's narrow beam (dormant in the SDK) | — | New. Details to be decided |
-| Quick Charge | new | The katana's charged wave charges faster | — | New. First to cut |
-| Insulation | new | Less energy **and shock** damage taken | — | New |
-| **Major** | new | **Energy attacks drain armour as well, for bonus damage. Always on, never below a floor** (~20) | — | New |
+| Node | Id | Effect | State |
+| --- | --- | --- | --- |
+| Energy Damage | 54 | Energy hits 15% harder (`DMG_ENERGYBEAM` at the damage chokepoints). The katana, the egon, the Discharge and the Alien volley all read it | Built. **Root** |
+| Energy Damage ×4 | 60–63 | +5% energy damage each, additive within the stat. **The root's ranks became these** | Built. **The roads** |
+| Egon Efficiency | 56 | The egon's ammo ticks come a third further apart (`skill_egon_efficiency_scale` 1.33), so uranium drains a quarter slower. The katana's charged wave, when it spends uranium, should read it too | Built |
+| Egon Focus | 55 | Secondary fire unlocks the egon's narrow beam (dormant in the SDK) | Reserved. Details to be decided |
+| Quick Charge | 57 | The katana's charged wave charges faster | Reserved. Waits on the charge; first to cut |
+| Insulation | 58 | Energy **and shock** taken ×0.7 (`skill_insulation_scale`) in the player's `TakeDamage` | Built |
+| **Major** | 59 | **Energy attacks drain armour as well, for bonus damage. Always on, never below a floor** (~20) | Reserved. Name pending |
+
+The region as placed, columns 14–15, `E` an Energy Damage Stat node:
+
+```
+     col14         col15
+r0   Energy Damage E
+r1   E             Egon Efficiency
+r2   Insulation    E
+r3   E             Egon Focus
+r4   Quick Charge  Major
+```
+
+Egon Efficiency and Insulation cost 2 from nothing, Egon Focus and Quick Charge 4, the major 9 (both
+roads' ends). **Still to be curated: the road from Melee's region to this one**, which SKILL_TREE.md's
+matrix section promises so the Gargantua build is a literal path; today the two Routes sit at opposite
+ends of the tree.
 
 ```mermaid
 graph TD

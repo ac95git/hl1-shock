@@ -568,6 +568,15 @@ cvar_t skill_leech_fraction = {"skill_leech_fraction", "0.1"};
 // excess drains, per second, once the Infusion ends.  First guesses.
 cvar_t skill_overheal_cap = {"skill_overheal_cap", "50"};
 cvar_t skill_overheal_decay = {"skill_overheal_decay", "2"};
+// The Energy Route (docs/SKILL_TREE.md).  Energy Damage multiplies player
+// DMG_ENERGYBEAM; each Energy Damage Stat node adds to one multiplier on it;
+// Egon Efficiency scales the interval between the egon's ammo ticks (above 1
+// is slower); Insulation scales DMG_ENERGYBEAM and DMG_SHOCK taken.  First
+// guesses.
+cvar_t skill_energy_damage_scale = {"skill_energy_damage_scale", "1.15"};
+cvar_t skill_stat_energy_damage = {"skill_stat_energy_damage", "0.05"};
+cvar_t skill_egon_efficiency_scale = {"skill_egon_efficiency_scale", "1.33"};
+cvar_t skill_insulation_scale = {"skill_insulation_scale", "0.7"};
 // Scales the reload delay. Read from both DLLs through skill_tuning.h, because
 // the delay it sets is m_flNextAttack, which the client predicts.
 cvar_t skill_reload_time_scale = {"skill_reload_time_scale", "0.8"};
@@ -791,6 +800,10 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_leech_fraction);
 	CVAR_REGISTER(&skill_overheal_cap);
 	CVAR_REGISTER(&skill_overheal_decay);
+	CVAR_REGISTER(&skill_energy_damage_scale);
+	CVAR_REGISTER(&skill_stat_energy_damage);
+	CVAR_REGISTER(&skill_egon_efficiency_scale);
+	CVAR_REGISTER(&skill_insulation_scale);
 
 	CVAR_REGISTER(&pulse_window);
 	CVAR_REGISTER(&pulse_window_bonus);

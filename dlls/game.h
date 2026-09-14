@@ -87,6 +87,10 @@ extern cvar_t skill_stat_healing;
 extern cvar_t skill_leech_fraction;
 extern cvar_t skill_overheal_cap;
 extern cvar_t skill_overheal_decay;
+extern cvar_t skill_energy_damage_scale;
+extern cvar_t skill_stat_energy_damage;
+extern cvar_t skill_egon_efficiency_scale;
+extern cvar_t skill_insulation_scale;
 
 // The Pulse.  Every one of these is a starting guess to be judged in play.
 extern cvar_t pulse_window;

@@ -313,6 +313,20 @@ float SkillScaleWeaponDamage(entvars_t* pevAttacker, float flDamage, int bitsDam
             flDamage *= 1.0f + iStat * std::max(0.0f, skill_stat_bullet_damage.value);
     }
 
+    // The Energy Route: energy is DMG_ENERGYBEAM and nothing else, so the
+    // katana (slash and wave), the egon and the Discharge all read it here.
+    // The katana therefore scales off Melee (in its Swing) and Energy (here)
+    // both, which is the Gargantua build in one sentence.
+    if ((bitsDamageType & DMG_ENERGYBEAM) != 0)
+    {
+        if (sk.HasSkill(ESkillId::EnergyDamage))
+            flDamage *= std::max(0.0f, skill_energy_damage_scale.value);
+
+        const int iStat = sk.CountStat(EStat::EnergyDamage);
+        if (iStat > 0)
+            flDamage *= 1.0f + iStat * std::max(0.0f, skill_stat_energy_damage.value);
+    }
+
     // Demolitions, dealt.  Grenades, the satchel, the tripmine, the RPG and
     // the MP5's launcher all arrive here as DMG_BLAST through RadiusDamage,
     // by either branch.  So does the egon's splash, which carries the bit

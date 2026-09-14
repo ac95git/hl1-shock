@@ -1819,8 +1819,13 @@ for the friendly slave (the ally relationship should be one piece of code betwee
 
 #### Energy
 
-**Shape: Shaped 2026-09-13**, in a grilling session. **The energy weapons are the katana and the egon**; the
-gauss is probably removed. The Pulse's Discharge and the Alien Route's volley deal energy too.
+**Shape: Building since 2026-09-14.** The region, Energy Damage as its root, the four Energy Damage Stat
+nodes (the root's ranks, as the matrix turns ranks into roads), Egon Efficiency and Insulation are built;
+see [SKILL_TREE.md](SKILL_TREE.md#energy) and [PILLARS.md](PILLARS.md). **Reserved**: Egon Focus (details
+to be decided), Quick Charge (waits on the katana's charge) and the major (the armour drain, name
+pending). **Still to be curated**: the road from Melee's region to Energy's; today they sit at opposite
+ends of the tree. Shaped 2026-09-13, in a grilling session. **The energy weapons are the katana and the
+egon**; the gauss is probably removed. The Pulse's Discharge and the Alien Route's volley deal energy too.
 
 ##### What "energy" is — settled
 

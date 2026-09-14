@@ -171,6 +171,10 @@ Raising `skill_points_start` is the way to work on the tree UI without hunting f
 | `skill_leech_fraction` | 0.1 | Leech heals this fraction of a melee hit's damage on a living monster |
 | `skill_overheal_cap` | 50 | Overheal lets an Infusion heal this far above the maximum |
 | `skill_overheal_decay` | 2 | Health above the maximum drains this much per second once the Infusion ends |
+| `skill_energy_damage_scale` | 1.15 | Energy Damage multiplies player `DMG_ENERGYBEAM` damage |
+| `skill_stat_energy_damage` | 0.05 | Each Energy Damage Stat node adds this to one multiplier on player `DMG_ENERGYBEAM` damage |
+| `skill_egon_efficiency_scale` | 1.33 | Egon Efficiency multiplies the interval between the egon's ammo ticks; above 1 is slower |
+| `skill_insulation_scale` | 0.7 | Insulation multiplies `DMG_ENERGYBEAM` and `DMG_SHOCK` the player takes |
 
 Two rules that are easy to break:
 
