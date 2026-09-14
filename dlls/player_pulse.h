@@ -73,13 +73,17 @@ struct CPlayerPulse
 	// on load anyway, and ForgetSentState() re-syncs it.
 	int m_iSentState = -1;
 
+	// Whether the Follow-Up's "primed" status icon is on screen.  Transient
+	// like m_iSentState, and cleared with it.
+	bool m_bFollowUpIconSent = false;
+
 	// Takes the player because Rebounds start full, and how many that is
 	// depends on their Skills.
 	void Clear(CBasePlayer* pPlayer);
 
 	// Makes the next sync send unconditionally.  Called when the client's HUD
 	// is reset, so the bar cannot be left showing a stale state.
-	void ForgetSentState() { m_iSentState = -1; }
+	void ForgetSentState() { m_iSentState = -1; m_bFollowUpIconSent = false; }
 
 	// A Shield is standing and has not yet fallen.
 	bool ShieldActive() const { return m_bShieldUp; }
@@ -116,6 +120,8 @@ struct CPlayerPulse
 private:
 	// Pushes the current state to the client if it has changed.
 	void SyncClient(CBasePlayer* pPlayer);
+	// Keeps the Follow-Up's primed icon in step with the window.
+	void SyncFollowUpIcon(CBasePlayer* pPlayer);
 };
 
 //=========================================================
@@ -156,6 +162,16 @@ void PulsePrecache();
 // server-only block.
 //=========================================================
 class CBaseEntity;
+
+// Is a Follow-Up primed right now?  A pure query, for a swing that has to
+// decide before it knows what it will hit -- a Cleave.
+bool PulseFollowUpPrimed(CBasePlayer* pPlayer);
+
+// The Follow-Up's multiplier, and the act of spending it.  A Cleave applies
+// the one to every victim and calls the other once; a plain swing uses
+// PulseTakeCrowbarFollowUp, which is the two together.
+float PulseFollowUpScale();
+void PulseSpendFollowUp(CBasePlayer* pPlayer);
 
 // Scales flDamage if a Follow-Up is primed and the Skill is held, consuming it.
 // Returns true if it fired, which is the caller's cue to knock the target back.

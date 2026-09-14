@@ -1304,6 +1304,49 @@ static void EV_KatanaArcThink(struct tempent_s* ent, float frametime, float curr
 	}
 }
 
+// The blade heats.  Every katana swing does this, slash or wave: the lore is
+// that swinging heats the energy in the blade at no loss, and a thrown wave
+// spends some of it.  Two parts: a dynamic light at the hand, which the
+// studio renderer folds into the viewmodel's lighting so the hands and the
+// blade themselves go orange, and the hot skin family, which view.cpp picks
+// while g_flKatanaHotEnd holds.  All the event does is start the clock.
+static void EV_KatanaHeat(int idx, const Vector& vecSrc, const Vector& forward, const Vector& right)
+{
+	const float lightLife = gEngfuncs.pfnGetCvarFloat("katana_glow_light");
+	if (lightLife > 0.0f)
+	{
+		Vector at;
+		VectorMA(vecSrc, 14.0f, forward, at);
+		VectorMA(at, 6.0f, right, at);
+		dlight_t* dl = gEngfuncs.pEfxAPI->CL_AllocDlight(0);
+		if (dl != nullptr)
+		{
+			VectorCopy(at, dl->origin);
+			dl->radius = 200.0f;
+			dl->color.r = 255;
+			dl->color.g = 128;
+			dl->color.b = 0;
+			dl->die = gEngfuncs.GetClientTime() + lightLife;
+			dl->decay = dl->radius / lightLife;
+		}
+	}
+	const float hotLife = gEngfuncs.pfnGetCvarFloat("katana_glow_hot");
+	if (hotLife > 0.0f && EV_IsLocal(idx))
+		g_flKatanaHotEnd = gEngfuncs.GetClientTime() + hotLife;
+}
+
+// The slash: the left click.  Heat and nothing else; the swing itself is the
+// crowbar's event, and a Cleave's air shock is its own.
+void EV_KatanaSwing(event_args_t* args)
+{
+	Vector origin, angles, vecSrc, forward, right, up;
+	VectorCopy(args->origin, origin);
+	VectorCopy(args->angles, angles);
+	EV_GetGunPosition(args, vecSrc, origin);
+	AngleVectors(angles, forward, right, up);
+	EV_KatanaHeat(args->entindex, vecSrc, forward, right);
+}
+
 void EV_KatanaArc(event_args_t* args)
 {
 	const int idx = args->entindex;
@@ -1329,36 +1372,8 @@ void EV_KatanaArc(event_args_t* args)
 		gEngfuncs.pfnRandomLong(0, 1) != 0 ? "weapons/electro4.wav" : "weapons/electro5.wav",
 		0.35, ATTN_NORM, 0, 90 + gEngfuncs.pfnRandomLong(0, 20));
 
-	// The blade lights up.  Two parts: a dynamic light at the hand, which the
-	// studio renderer folds into the viewmodel's lighting so the hands and the
-	// blade themselves go orange, and a beam along the edge between the
-	// viewmodel's two attachments, grip and tip -- for the local player the
-	// engine maps a player attachment onto the viewmodel, which is how the
-	// egon's beam starts at its gun.  Other players have no attachments on the
-	// crowbar's p_ model, so the edge is local only.
-	const float lightLife = gEngfuncs.pfnGetCvarFloat("katana_glow_light");
-	if (lightLife > 0.0f)
-	{
-		Vector at;
-		VectorMA(vecSrc, 14.0f, forward, at);
-		VectorMA(at, 6.0f, right, at);
-		dlight_t* dl = gEngfuncs.pEfxAPI->CL_AllocDlight(0);
-		if (dl != nullptr)
-		{
-			VectorCopy(at, dl->origin);
-			dl->radius = 200.0f;
-			dl->color.r = 255;
-			dl->color.g = 128;
-			dl->color.b = 0;
-			dl->die = gEngfuncs.GetClientTime() + lightLife;
-			dl->decay = dl->radius / lightLife;
-		}
-	}
-	// The blade goes hot: view.cpp switches the viewmodel to its hot skin
-	// family while this clock holds.  All the event does is start it.
-	const float hotLife = gEngfuncs.pfnGetCvarFloat("katana_glow_hot");
-	if (hotLife > 0.0f && EV_IsLocal(idx))
-		g_flKatanaHotEnd = gEngfuncs.GetClientTime() + hotLife;
+	// A wave leaving the blade heats it like any swing.
+	EV_KatanaHeat(idx, vecSrc, forward, right);
 
 	// Born past the blade, every part of it ahead of the player: a leaned
 	// crescent trails its tips behind its centre by up to its whole depth, so
@@ -1390,6 +1405,150 @@ void EV_KatanaArc(event_args_t* args)
 }
 //======================
 //	   KATANA ARC END
+//======================
+
+//======================
+//	   CLEAVE START
+//======================
+// The air shock drawn on a Cleave swing: the front edge of the hit region,
+// a bow, born at the weapon and travelling outward to the region's radius
+// over its life, widening as the sector widens and fading as it goes, so it
+// dies exactly where the hit test ends.  The radius and the half-angle
+// arrive with the event from the same cvars the server tested with; the
+// style is the weapon's (CCrowbar::CleaveSweepStyle): 0 white air for the
+// crowbar, 1 gauss-orange for the katana.  Motion is what says "air" and the
+// belly leading is what says it came from the swing.  A stationary gold
+// laser bow was the first build and read as a fence.  Placeholder look,
+// docs/ART_DEBT.md; the mechanism stays.
+static void EV_CleaveThink(struct tempent_s* ent, float frametime, float currenttime)
+{
+	const Vector src = ent->entity.baseline.vuser3;
+	const Vector forward = ent->entity.baseline.vuser1;
+	const Vector right = ent->entity.baseline.vuser2;
+	const float speed = ent->entity.baseline.fuser1;
+	const float radius = ent->entity.baseline.fuser2;
+	const float half = ent->entity.baseline.fuser3 * (M_PI / 180.0f);
+	const float born = ent->entity.baseline.fuser4;
+	const int style = ent->entity.baseline.iuser1;
+
+	// Two knobs judged by eye.  Each segment is its own quad with the texture
+	// stretched across it, so too few read as a row of tiles; and the lag is
+	// what makes it a wave rather than a ring: the right end of the bow leaves
+	// first and the left end last, so the front crosses the arc the way the
+	// swing that made it did.
+	float lag = gEngfuncs.pfnGetCvarFloat("cleave_wave_lag");
+	if (lag < 0.0f)
+		lag = 0.0f;
+	int segments = (int)gEngfuncs.pfnGetCvarFloat("cleave_wave_segments");
+	if (segments < 4)
+		segments = 4;
+	if (segments > 64)
+		segments = 64;
+	// The band's height at the far edge; it starts at about a third of it.
+	float height = gEngfuncs.pfnGetCvarFloat("cleave_wave_height");
+	if (height < 1.0f)
+		height = 1.0f;
+
+	const float age = currenttime - born;
+	if (radius <= 0.0f || speed * (age - lag) >= radius)
+	{
+		ent->die = currenttime; // the last point has reached the edge
+		return;
+	}
+
+	const int iWave = gEngfuncs.pEventAPI->EV_FindModelIndex("sprites/shockwave.spr");
+
+	float r = 1.0f, g = 1.0f, b = 1.0f, bright = 0.55f;
+	if (style == 1)
+	{
+		r = 1.0f; g = 0.5f; b = 0.0f; bright = 0.85f; // the gauss's orange, the katana's
+	}
+
+	// The sector's front edge, each point at its own distance: point 0 is
+	// the left end (theta = -half) and lags most, the right end leads.
+	Vector pts[65];
+	float prog[65];
+	for (int i = 0; i <= segments; i++)
+	{
+		const float u = (float)i / (float)segments;      // 0 left .. 1 right
+		const float theta = -half + (2.0f * half) * u;
+		float dist = speed * (age - lag * (1.0f - u));
+		if (dist < 0.0f)
+			dist = 0.0f;
+		prog[i] = dist / radius;
+		if (prog[i] > 1.0f)
+			prog[i] = 1.0f;
+		Vector p;
+		VectorMA(src, dist * cosf(theta), forward, p);
+		VectorMA(p, dist * sinf(theta), right, p);
+		pts[i] = p;
+	}
+
+	for (int i = 0; i < segments; i++)
+	{
+		// A segment neither end of which has left the weapon yet is not
+		// drawn, so the wave is born at the right and grows across.
+		const float p = 0.5f * (prog[i] + prog[i + 1]);
+		if (p <= 0.005f || p >= 1.0f)
+			continue;
+		const float fade = 1.0f - p;
+		// Growing as it travels; heavier in the middle than at the ends.
+		const float t = fabsf((float)i / (float)segments - 0.5f) * 2.0f;
+		const float width = height * (0.35f + 0.65f * p) * (1.0f - 0.4f * t);
+		gEngfuncs.pEfxAPI->R_BeamPoints(pts[i], pts[i + 1], iWave,
+			0.06f, width, 0.0f, bright * fade * (1.0f - 0.3f * t), 0.0f, 0, 0.0f,
+			r, g, b);
+	}
+}
+
+void EV_Cleave(event_args_t* args)
+{
+	const int idx = args->entindex;
+	Vector origin, angles, vecSrc, forward, right, up;
+	VectorCopy(args->origin, origin);
+	VectorCopy(args->angles, angles);
+
+	const float radius = args->fparam1;
+	const float halfDeg = args->fparam2;
+	const int style = args->iparam1;
+	if (radius <= 0.0f || halfDeg <= 0.0f)
+		return;
+
+	EV_GetGunPosition(args, vecSrc, origin);
+	AngleVectors(angles, forward, right, up);
+
+	// Placeholder: the crowbar's miss, pitched down to read as a heavier
+	// swing.  Played here rather than on the server so it is one event.
+	gEngfuncs.pEventAPI->EV_PlaySound(idx, origin, CHAN_WEAPON, "weapons/cbar_miss1.wav",
+		1.0, ATTN_NORM, 0, 70);
+
+	// Born a little below the eyes, at the weapon's height, and it crosses
+	// the region in a quarter of a second whatever the radius, plus the lag
+	// the trailing end carries.
+	const float life = 0.25f;
+	float lag = gEngfuncs.pfnGetCvarFloat("cleave_wave_lag");
+	if (lag < 0.0f)
+		lag = 0.0f;
+	Vector start;
+	VectorMA(vecSrc, -6.0f, up, start);
+
+	TEMPENTITY* wave = gEngfuncs.pEfxAPI->CL_TempEntAllocNoModel(start);
+	if (wave == nullptr)
+		return;
+	wave->flags = FTENT_NOMODEL | FTENT_CLIENTCUSTOM | FTENT_PERSIST;
+	wave->callback = EV_CleaveThink;
+	wave->die = gEngfuncs.GetClientTime() + life + lag + 0.05f;
+	wave->entity.baseline.vuser1 = forward;
+	wave->entity.baseline.vuser2 = right;
+	wave->entity.baseline.vuser3 = start;
+	wave->entity.baseline.fuser1 = radius / life;
+	wave->entity.baseline.fuser2 = radius;
+	wave->entity.baseline.fuser3 = halfDeg;
+	wave->entity.baseline.fuser4 = gEngfuncs.GetClientTime();
+	wave->entity.baseline.iuser1 = style;
+}
+//======================
+//	   CLEAVE END
 //======================
 //======================
 //	   CROWBAR END

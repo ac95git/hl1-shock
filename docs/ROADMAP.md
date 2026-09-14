@@ -8,7 +8,7 @@ build on, and list the questions that have to be answered before the first line 
 is built, its content moves into PILLARS.md and the entry here is deleted — this file only ever shrinks
 from the top.
 
-**Last updated:** 2026-09-14 (branch `hl-shock` — the Skill Tree becomes a matrix: Stat nodes as roads, every node one point, not completable, settled in SKILL_TREE.md and the Melee Route built on it the same day, all but Cleave; the fitted node icon draw, the 256-id ceiling and the layout cvars too; the day before, all seven Routes shaped, the Dash and alien Modules with them, the katana reworked on paper, four Skills cut)
+**Last updated:** 2026-09-14 (branch `hl-shock` — the Skill Tree becomes a matrix: Stat nodes as roads, every node one point, not completable, settled in SKILL_TREE.md and the Melee Route built whole on it the same day; the fitted node icon draw, the 256-id ceiling and the layout cvars too; the day before, all seven Routes shaped, the Dash and alien Modules with them, the katana reworked on paper, four Skills cut)
 
 ## Shape legend
 
@@ -412,17 +412,27 @@ Skills happened once, for the roster, on 2026-09-14.
   `E:\CustomAssets\models\src\{v,w}_katana`, made by the loop in [MODEL_WORKFLOW.md](MODEL_WORKFLOW.md).
   The `p_` model, the sounds and the HUD icon are the crowbar's; [ART_DEBT.md](ART_DEBT.md) has them.
 
-**Rework, settled 2026-09-13 while shaping the [Energy Route](#energy):**
+**Rework, settled 2026-09-13 while shaping the [Energy Route](#energy). First step built 2026-09-14,
+with Cleave:**
 
-- **Left click is a plain melee slash.** No wave, no ammo. The blade still lights up.
+- ~~**Left click is a plain melee slash.** No wave, no ammo. The blade still lights up.~~ **Built.** The
+  slash: blade only, full damage, Melee Speed applies, and it is the click that carries Cleave (an orange
+  air shock on the katana). Every swing heats the blade, through `events/katana_swing.sc`.
 - **Right click is a charged ranged attack.** Hold to charge, release a big wave. *Assumed* to spend
-  uranium, since only the left click was exempted; not said in those words.
+  uranium, since only the left click was exempted; not said in those words. **Built as far as "the old
+  swing, on the right click"**: the blade at a reduced share (`katana_wave_swing_damage_scale`, 0.5) and
+  the crescent wave exactly as v1 threw it, same cadence, Melee Speed scaling it too for now. Cleave never
+  spends on it. No charge, no uranium yet. **The lore, settled the same day:** swinging heats the energy in
+  the blade at no loss; a thrown wave spends some of it. The blade heats on both clicks.
 - **The wave pierces**: it hits everything on its path, not the first thing.
 - **The wave's damage travels with the projectile**, like the crossbow bolt. Today the damage is an instant
   trace at swing time under a projectile *visual* (`CKatana::WaveAttack` versus `EV_KatanaArc`), so what
   hits and what the player sees can disagree. Decoupled by accident; coupled by design from here.
 - **The katana always deals energy damage**, slash and wave, and **scales off both Melee and Energy
   bonuses**. The v1 slash inherits the crowbar's `DMG_CLUB`; that changes.
+
+The rest is *the katana's own story*, to be tuned as one piece: the charge, the cost, the piercing, the
+projectile damage, the energy type, the blade's share on the right click.
 
 Which answers the two questions that used to sit here: it consumes uranium (on the charged wave only), and
 it charges (on the right click).
@@ -1951,12 +1961,12 @@ it works against the mapper the moment maps exist.
 
 #### Melee
 
-**Shape: Built 2026-09-14, all but Cleave.** The first Route on the matrix and the worked example for the
-other six: Reach, Force, Speed, the Backstab node, nine Melee Damage Stat nodes as its roads, the crowbar
+**Shape: Built 2026-09-14, whole.** The first Route on the matrix and the worked example for the other
+six: Reach, Force, Speed, the Backstab node, Cleave, nine Melee Damage Stat nodes as its roads, the crowbar
 names retired, the halving rule dropped. What is built is in [PILLARS.md](PILLARS.md#2-enhanced-combat)
-and the layout is in the comment above `k_SkillDefs`. What remains here: **Cleave**, the major, whose cell
-is empty and whose id (34) is held; and the roster weapons below, which are weapons rather than Skills.
-The text below is kept as the reasoning.
+and the layout is in the comment above `k_SkillDefs`. What remains here is the roster weapons below, which
+are weapons rather than Skills, and Cleave's numbers, which are first guesses. The text below is kept as
+the reasoning.
 
 ##### The roster — settled
 

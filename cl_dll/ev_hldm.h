@@ -23,7 +23,9 @@ void EV_FirePython(event_args_t* args);
 void EV_FireGauss(event_args_t* args);
 void EV_SpinGauss(event_args_t* args);
 void EV_Crowbar(event_args_t* args);
+void EV_KatanaSwing(event_args_t* args);
 void EV_KatanaArc(event_args_t* args);
+void EV_Cleave(event_args_t* args);
 // Until when the katana's blade is hot: the swing event starts it, view.cpp picks the skin by it.
 extern float g_flKatanaHotEnd;
 void EV_FireCrossbow(event_args_t* args);

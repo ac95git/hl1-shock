@@ -64,33 +64,66 @@ void CKatana::Precache()
 	// exactly this reason, so the event is shared as-is.
 	m_usCrowbar = PRECACHE_EVENT(1, "events/crowbar.sc");
 
-	// The arcs.  Client-side, from an event, the way the gauss gun does its
-	// wall hits (cl_dll/ev_hldm.cpp, EV_KatanaArc); the server only says
-	// "a swing happened here, facing this way".  Sprites and sounds the
-	// event uses are precached here because the client cannot.
+	// The heat and the arcs.  Client-side, from two events, the way the gauss
+	// gun does its wall hits (cl_dll/ev_hldm.cpp, EV_KatanaSwing and
+	// EV_KatanaArc); the server only says "a swing happened here, facing
+	// this way".  Sprites and sounds the events use are precached here
+	// because the client cannot.
+	m_usKatanaSwing = PRECACHE_EVENT(1, "events/katana_swing.sc");
 	m_usKatanaArc = PRECACHE_EVENT(1, "events/katana_arc.sc");
 	PRECACHE_MODEL("sprites/laserbeam.spr");
 	PRECACHE_MODEL("sprites/hotglow.spr");
 	PRECACHE_SOUND("weapons/electro4.wav");
 	PRECACHE_SOUND("weapons/electro5.wav");
+
+	// Cleave's air shock, which the crowbar's Precache would have registered
+	// had this one called it.  It does not, so here.
+	m_usCleave = PRECACHE_EVENT(1, "events/cleave.sc");
+	PRECACHE_MODEL("sprites/shockwave.spr");
 }
 
 void CKatana::PrimaryAttack()
 {
+	// The slash.  Blade only, full share; the heat, always.
+	m_bWaveSwing = false;
 	CCrowbar::PrimaryAttack();
 
 	// Origin and angles as the gauss passes them; the client turns them into
 	// the gun position and the aim vector.  FEV_NOTHOST because this file is
 	// predicted: the local client reaches this line itself.
+	PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usKatanaSwing,
+		0.0, m_pPlayer->pev->origin, m_pPlayer->pev->angles, 0.0, 0.0, 0, 0, 0, 0);
+
+	// One cadence for both clicks, so they cannot be alternated faster than
+	// either swings.
+	m_flNextSecondaryAttack = m_flNextPrimaryAttack;
+}
+
+void CKatana::SecondaryAttack()
+{
+	// The wave.  The old swing entire: the blade at its reduced share, then
+	// the crescent and the wave's damage.  The lore: a swing heats the
+	// energy in the blade at no loss, a thrown wave spends some of it.
+	m_bWaveSwing = true;
+	CCrowbar::PrimaryAttack();
+
 	PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usKatanaArc,
 		0.0, m_pPlayer->pev->origin, m_pPlayer->pev->angles, 0.0, 0.0, 0, 0, 0, 0);
 
 #ifndef CLIENT_DLL
 	WaveAttack();
 #endif
+
+	m_flNextSecondaryAttack = m_flNextPrimaryAttack;
 }
 
 #ifndef CLIENT_DLL
+float CKatana::BladeDamageScale()
+{
+	// A first guess, to be tuned in the katana's own story.
+	return m_bWaveSwing ? std::max(0.0f, katana_wave_swing_damage_scale.value) : 1.0f;
+}
+
 void CKatana::WaveAttack()
 {
 	const float flRange = std::max(0.0f, katana_wave_range.value);

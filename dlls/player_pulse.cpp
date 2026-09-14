@@ -329,23 +329,66 @@ void CPlayerPulse::Clear(CBasePlayer* pPlayer)
 //=========================================================
 // PulseTakeCrowbarFollowUp
 //=========================================================
-bool PulseTakeCrowbarFollowUp(CBasePlayer* pPlayer, float& flDamage)
+bool PulseFollowUpPrimed(CBasePlayer* pPlayer)
 {
 	if (!pPlayer)
 		return false;
 
-	CPlayerPulse& pulse = pPlayer->m_pulse;
+	const CPlayerPulse& pulse = pPlayer->m_pulse;
+	return pulse.m_flFollowUpUntil > 0 && gpGlobals->time <= pulse.m_flFollowUpUntil;
+}
 
-	if (pulse.m_flFollowUpUntil <= 0 || gpGlobals->time > pulse.m_flFollowUpUntil)
+float PulseFollowUpScale()
+{
+	return std::max(1.0f, pulse_followup_damage.value);
+}
+
+void PulseSpendFollowUp(CBasePlayer* pPlayer)
+{
+	if (pPlayer)
+		pPlayer->m_pulse.m_flFollowUpUntil = 0;
+}
+
+bool PulseTakeCrowbarFollowUp(CBasePlayer* pPlayer, float& flDamage)
+{
+	if (!PulseFollowUpPrimed(pPlayer))
 		return false;
 
-	// Spent on a HIT, not on a swing -- this is only reached once the crowbar
+	// Spent on a HIT, not on a swing -- this is only reached once the weapon
 	// has connected with something, so whiffing after a deflect costs nothing.
-	pulse.m_flFollowUpUntil = 0;
-
-	flDamage *= std::max(1.0f, pulse_followup_damage.value);
-
+	PulseSpendFollowUp(pPlayer);
+	flDamage *= PulseFollowUpScale();
 	return true;
+}
+
+//=========================================================
+// CPlayerPulse::SyncFollowUpIcon
+//
+// A primed Follow-Up shows at the screen edge the way a ready Cleave does,
+// so the player knows the next swing is the big one without counting.
+// Placeholder sprite: the Follow-Up's own tree icon.  docs/ART_DEBT.md.
+//=========================================================
+void CPlayerPulse::SyncFollowUpIcon(CBasePlayer* pPlayer)
+{
+	const bool bWant = pPlayer->m_skills.HasSkill(ESkillId::FollowUp) && PulseFollowUpPrimed(pPlayer);
+	if (bWant == m_bFollowUpIconSent)
+		return;
+
+	m_bFollowUpIconSent = bWant;
+
+	if (gmsgStatusIcon == 0)
+		return;
+
+	MESSAGE_BEGIN(MSG_ONE, gmsgStatusIcon, NULL, pPlayer->pev);
+	WRITE_BYTE(bWant ? 1 : 0);
+	WRITE_STRING("d_gauss");
+	if (bWant)
+	{
+		WRITE_BYTE(255);
+		WRITE_BYTE(200);
+		WRITE_BYTE(60);
+	}
+	MESSAGE_END();
 }
 
 //=========================================================
@@ -548,6 +591,7 @@ void CPlayerPulse::Think(CBasePlayer* pPlayer)
 	}
 
 	SyncClient(pPlayer);
+	SyncFollowUpIcon(pPlayer);
 }
 
 //=========================================================

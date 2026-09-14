@@ -67,6 +67,12 @@ void CCrowbar::Precache()
 	PRECACHE_SOUND("debris/bustflesh2.wav");
 
 	m_usCrowbar = PRECACHE_EVENT(1, "events/crowbar.sc");
+
+	// Cleave's sweep, client-side from an event like the katana's crescent;
+	// the beam sprite it draws with is precached here because the client
+	// cannot.  Its sound is the miss pitched down, precached above.
+	m_usCleave = PRECACHE_EVENT(1, "events/cleave.sc");
+	PRECACHE_MODEL("sprites/shockwave.spr");
 }
 
 bool CCrowbar::GetItemInfo(ItemInfo* p)
@@ -103,6 +109,106 @@ float CCrowbar::BackstabScale()
 	// on it (the knife) overrides this; the Backstab node multiplies whatever
 	// this returns.
 	return std::max(1.0f, backstab_damage_scale.value);
+}
+
+float CCrowbar::SwingDamage(bool bCleaveSwing)
+{
+	float flDamage = BaseDamage() * std::max(0.0f, BladeDamageScale());
+
+	// Melee Force. Before the Follow-Up, so a primed swing multiplies the
+	// already-stronger hit rather than a base one.
+	if (m_pPlayer->m_skills.HasSkill(ESkillId::MeleeForce))
+		flDamage *= std::max(0.0f, skill_melee_force_scale.value);
+
+	// The Melee Damage Stat nodes: additive within the stat, multiplied
+	// with everything else. Five at 0.05 are x1.25 on top of Force.
+	const int iStat = m_pPlayer->m_skills.CountStat(EStat::MeleeDamage);
+	if (iStat > 0)
+		flDamage *= 1.0f + iStat * std::max(0.0f, skill_stat_melee_damage.value);
+
+	// Cleave's scale, on every hit of a Cleave swing.
+	if (bCleaveSwing)
+		flDamage *= std::max(1.0f, cleave_damage_scale.value);
+
+	return flDamage;
+}
+
+int CCrowbar::CleaveArc(const Vector& vecSrc, float flDamage, bool bBackstabNode)
+{
+	const float flRadius = std::max(32.0f, cleave_radius.value);
+	const float flArcDot = cleave_arc_dot.value;
+
+	// A primed Follow-Up multiplies every victim and is spent once, whether
+	// the arc finds one victim or six. Its sound plays once too.
+	const bool bFollowUp = m_pPlayer->m_skills.HasSkill(ESkillId::FollowUp) && PulseFollowUpPrimed(m_pPlayer);
+	if (bFollowUp)
+	{
+		PulseSpendFollowUp(m_pPlayer);
+		flDamage *= PulseFollowUpScale();
+		EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_WEAPON, FollowUpSound(), 1.0, ATTN_NORM, 0, 90);
+	}
+
+	int nHit = 0;
+
+	// gpGlobals->v_forward is still the aim from the swing; nothing in this
+	// loop touches it.
+	CBaseEntity* pEntity = nullptr;
+	while ((pEntity = UTIL_FindEntityInSphere(pEntity, vecSrc, flRadius)) != nullptr)
+	{
+		// Exactly what the line trace could have damaged: anything that takes
+		// damage, a crate as much as a zombie. Not the player.
+		if (pEntity == m_pPlayer || pEntity->pev->takedamage == DAMAGE_NO)
+			continue;
+
+		CBaseMonster* pMonster = pEntity->MyMonsterPointer();
+		if (pMonster && !pMonster->IsAlive())
+			continue;
+
+		// In front, within the arc.
+		Vector vecTo = pEntity->Center() - vecSrc;
+		const float flDist = vecTo.Length();
+		if (flDist > flRadius || flDist <= 0.0f)
+			continue;
+		vecTo = vecTo / flDist;
+		if (DotProduct(vecTo, gpGlobals->v_forward) < flArcDot)
+			continue;
+
+		// And not behind a wall or another thing: a Cleave does not reach
+		// through what it hits.
+		TraceResult tr;
+		UTIL_TraceLine(vecSrc, pEntity->Center(), dont_ignore_monsters, ENT(m_pPlayer->pev), &tr);
+		if (tr.flFraction < 1.0f && tr.pHit != pEntity->edict())
+			continue;
+
+		// The Backstab is per victim, monsters only: one of them can be
+		// facing away.
+		float flHit = flDamage;
+		const bool bBackstab = pMonster && pMonster->CanBackstab() &&
+			pMonster->FInRearArc(m_pPlayer->pev->origin, backstab_arc_dot.value);
+		if (bBackstab)
+		{
+			flHit *= BackstabScale();
+			if (bBackstabNode)
+				flHit *= std::max(1.0f, skill_backstab_bonus_scale.value);
+		}
+
+		DebugDamageDetail("cleave -> %s %.0f%s%s%s",
+			STRING(pEntity->pev->classname), flHit,
+			bBackstab ? "  xBACKSTAB" : "",
+			bBackstab && bBackstabNode ? "  xNode" : "",
+			bFollowUp ? "  xFollowUp" : "");
+
+		ClearMultiDamage();
+		pEntity->TraceAttack(m_pPlayer->pev, flHit, vecTo, &tr, DMG_CLUB);
+		ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
+		++nHit;
+
+		// After the damage, so a headcrab the hit killed is still thrown.
+		if (bFollowUp)
+			PulseCrowbarFollowUpKnockback(pEntity, vecTo);
+	}
+
+	return nHit;
 }
 #endif
 
@@ -231,6 +337,56 @@ bool CCrowbar::Swing(bool fFirst)
 			0.0, 0, 0.0);
 	}
 
+	// Which swing this is. Server-only facts -- neither readiness reaches the
+	// client -- so on the client both stay false and the stock animation
+	// plays, which is what the sequence hooks below fall back to anyway.
+	bool bCleaveSwing = false;
+	bool bFollowUpSwing = false;
+#ifndef CLIENT_DLL
+	// Cleave, the Melee major. While it is ready the swing IS the arc: spent
+	// on the swing whether or not anything is there, so the player has to
+	// see the difference without a live target (the sweep and the sound),
+	// and so a swarm is hit the moment it enters the arc rather than once
+	// one of them lines up with the crowbar.
+	// Never on a secondary swing: Cleave is the melee verb's major.
+	bCleaveSwing = fFirst && !IsSecondarySwing() && m_pPlayer->CleaveReady();
+	bFollowUpSwing = PulseFollowUpPrimed(m_pPlayer);
+
+	if (bCleaveSwing)
+	{
+		// The air shock and its sound, one event, to everyone including the
+		// host: this block is not predicted. The region's radius and
+		// half-angle ride along so the drawn wave dies where the hit test
+		// ends, and the weapon's style picks its look.
+		PLAYBACK_EVENT_FULL(0, m_pPlayer->edict(), m_usCleave,
+			0.0, m_pPlayer->pev->origin, m_pPlayer->pev->angles,
+			std::max(32.0f, cleave_radius.value),
+			acosf(std::max(-1.0f, std::min(1.0f, cleave_arc_dot.value))) * (180.0f / M_PI),
+			CleaveSweepStyle(), 0, 0, 0);
+
+		// The arc is the hit: everything in it, now, whatever the line trace
+		// below finds. Then the cooldown, hit or not.
+		CleaveArc(vecSrc, SwingDamage(true), m_pPlayer->m_skills.HasSkill(ESkillId::Backstab));
+		m_pPlayer->CleaveSpend();
+	}
+#endif
+
+	// The animation the swing plays when it lands: the stock three in turn,
+	// or a roster weapon's own Follow-Up or Cleave swing when it has one.
+	// The Follow-Up's wins when a swing is both.
+	auto HitSequence = [&]() -> int
+	{
+		if (bFollowUpSwing && FollowUpSequence() >= 0)
+			return FollowUpSequence();
+		if (bCleaveSwing && CleaveSequence() >= 0)
+			return CleaveSequence();
+		switch (((m_iSwing++) % 2) + 1)
+		{
+		case 1:  return CROWBAR_ATTACK2HIT;
+		case 2:  return CROWBAR_ATTACK3HIT;
+		default: return CROWBAR_ATTACK1HIT;
+		}
+	};
 
 	if (tr.flFraction >= 1.0)
 	{
@@ -245,18 +401,7 @@ bool CCrowbar::Swing(bool fFirst)
 	}
 	else
 	{
-		switch (((m_iSwing++) % 2) + 1)
-		{
-		case 0:
-			SendWeaponAnim(CROWBAR_ATTACK1HIT);
-			break;
-		case 1:
-			SendWeaponAnim(CROWBAR_ATTACK2HIT);
-			break;
-		case 2:
-			SendWeaponAnim(CROWBAR_ATTACK3HIT);
-			break;
-		}
+		SendWeaponAnim(HitSequence());
 
 		// player "shoot" animation
 		m_pPlayer->SetAnimation(PLAYER_ATTACK1);
@@ -277,33 +422,28 @@ bool CCrowbar::Swing(bool fFirst)
 		// timer alone. Sustained melee damage roughly doubles for a player
 		// holding the button; that is absorbed by base damage and swing time,
 		// both cvars.
-		float flDamage = BaseDamage();
-		const float flBaseDamage = flDamage;
-
-		// Melee Force. Before the Follow-Up, so a primed swing multiplies the
-		// already-stronger hit rather than a base one.
+		float flDamage = SwingDamage(bCleaveSwing);
+		const float flBaseDamage = BaseDamage();
 		const bool bForce = m_pPlayer->m_skills.HasSkill(ESkillId::MeleeForce);
-		if (bForce)
-			flDamage *= std::max(0.0f, skill_melee_force_scale.value);
-
-		// The Melee Damage Stat nodes: additive within the stat, multiplied
-		// with everything else. Five at 0.05 are x1.25 on top of Force.
 		const int iStat = m_pPlayer->m_skills.CountStat(EStat::MeleeDamage);
-		if (iStat > 0)
-			flDamage *= 1.0f + iStat * std::max(0.0f, skill_stat_melee_damage.value);
+
+		// On a Cleave swing the arc has already dealt with everything that
+		// takes damage, this entity included if it does; what is left of the
+		// line trace is the wall response below.
+		const bool bDamageHere = !bCleaveSwing && pEntity && pEntity->pev->takedamage != DAMAGE_NO;
 
 		// The Backstab. Purely positional -- whether the victim has noticed the
 		// player does not enter into it, so this lands mid-fight on anything
 		// you can get behind. See docs/adr/0010-the-backstab-is-positional.md.
 		//
-		// Sits between Crowbar Force and the Follow-Up for the same reason
-		// Force sits before the Follow-Up: each stage multiplies the
-		// already-stronger hit, so the biggest number the player can produce
-		// is every bonus at once rather than whichever happens to be last.
+		// Sits between Force and the Follow-Up for the same reason Force sits
+		// before the Follow-Up: each stage multiplies the already-stronger hit,
+		// so the biggest number the player can produce is every bonus at once
+		// rather than whichever happens to be last.
 		//
 		// FInRearArc deliberately does not touch gpGlobals->v_forward, which
 		// still holds the player's aim vector and is needed below.
-		CBaseMonster* pVictim = pEntity ? pEntity->MyMonsterPointer() : nullptr;
+		CBaseMonster* pVictim = bDamageHere ? pEntity->MyMonsterPointer() : nullptr;
 		const bool bBackstab =
 			pVictim &&
 			pVictim->IsAlive() &&
@@ -318,33 +458,39 @@ bool CCrowbar::Swing(bool fFirst)
 		if (bBackstabNode)
 			flDamage *= std::max(1.0f, skill_backstab_bonus_scale.value);
 
-		// A deflect primes the next crowbar HIT. Consumed here rather than in
+		// A deflect primes the next melee HIT. Consumed here rather than in
 		// PrimaryAttack so a swing that connects with nothing costs nothing.
-		const bool bFollowUp = PulseTakeCrowbarFollowUp(m_pPlayer, flDamage);
-
-		// Damage debug readout. Stashed only when the target will actually
-		// reach TakeDamage, so a swing into a wall cannot leave a stale
-		// breakdown for the next hit to pick up. The figure here is
-		// PRE-Weapon-Mastery: that lands later, at ApplyMultiDamage, and the
-		// "landed" number in the report is what finally arrived.
-		if (pVictim)
-		{
-			DebugDamageDetail("%.0f%s  +%d stat%s%s%s = %.0f",
-				flBaseDamage,
-				bForce ? "  xForce" : "",
-				iStat,
-				bBackstab ? "  xBACKSTAB" : "",
-				bBackstabNode ? "  xNode" : "",
-				bFollowUp ? "  xFollowUp" : "",
-				flDamage);
-		}
-
-		pEntity->TraceAttack(m_pPlayer->pev, flDamage, gpGlobals->v_forward, &tr, DMG_CLUB);
-		ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
-
-		// After the damage, so a headcrab the hit killed is still thrown.
+		// A Cleave swing spends it in the arc instead.
+		const bool bFollowUp = bDamageHere && PulseTakeCrowbarFollowUp(m_pPlayer, flDamage);
 		if (bFollowUp)
-			PulseCrowbarFollowUpKnockback(pEntity, gpGlobals->v_forward);
+			EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_WEAPON, FollowUpSound(), 1.0, ATTN_NORM, 0, 90);
+
+		if (bDamageHere)
+		{
+			// Damage debug readout. Stashed only when the target will actually
+			// reach TakeDamage, so a swing into a wall cannot leave a stale
+			// breakdown for the next hit to pick up. The figure here is
+			// PRE-Weapon-Mastery: that lands later, at ApplyMultiDamage, and the
+			// "landed" number in the report is what finally arrived.
+			if (pVictim)
+			{
+				DebugDamageDetail("%.0f%s  +%d stat%s%s%s = %.0f",
+					flBaseDamage,
+					bForce ? "  xForce" : "",
+					iStat,
+					bBackstab ? "  xBACKSTAB" : "",
+					bBackstabNode ? "  xNode" : "",
+					bFollowUp ? "  xFollowUp" : "",
+					flDamage);
+			}
+
+			pEntity->TraceAttack(m_pPlayer->pev, flDamage, gpGlobals->v_forward, &tr, DMG_CLUB);
+			ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
+
+			// After the damage, so a headcrab the hit killed is still thrown.
+			if (bFollowUp)
+				PulseCrowbarFollowUpKnockback(pEntity, gpGlobals->v_forward);
+		}
 
 #endif
 

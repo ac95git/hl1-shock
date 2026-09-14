@@ -572,16 +572,54 @@ protected:
 	// The weapon's own Backstab multiplier, before the Backstab node.  The
 	// knife's lean lives here.  Server-side: the Backstab is damage.
 	virtual float BackstabScale();
+	// The swing's damage before anything per-victim: base, the weapon's share
+	// for this swing, Melee Force, the Melee Damage Stat nodes, and Cleave's
+	// scale on a Cleave swing.
+	float SwingDamage(bool bCleaveSwing);
+	// The blade's share on this swing.  The katana's right click swings the
+	// blade at a reduced share beside its wave, so the left click stays the
+	// melee verb.
+	virtual float BladeDamageScale() { return 1.0f; }
+	// Cleave: every damageable thing in the arc takes flDamage, with its own
+	// Backstab test; a primed Follow-Up multiplies all of them and is spent
+	// once.  Returns how many it hit.  Called by Swing on a Cleave swing,
+	// in place of the single-target hit.
+	int CleaveArc(const Vector& vecSrc, float flDamage, bool bBackstabNode);
+
+	// The Follow-Up's attack sound, per roster weapon.  Placeholder
+	// (docs/ART_DEBT.md).  Cleave's is in its event, cl_dll/ev_hldm.cpp.
+	virtual const char* FollowUpSound() { return "zombie/claw_strike1.wav"; }
 #endif
 	// Multiplies the miss and hit delays.  Predicted, so an override must read
 	// a value both DLLs can see -- see skill_tuning.h.
 	virtual float SwingDelayScale() { return 1.0f; }
 
+	// The animations of the two empowered swings, per roster weapon: a
+	// sequence index into the viewmodel, or -1 for the stock swing.  Nothing
+	// overrides them yet.  When a model has one, note that the swing animation
+	// is predicted and neither readiness reaches the client, so a real
+	// override also needs Cleave-ready and Follow-Up-primed sent to the
+	// client.  The Follow-Up's wins when a swing is both.
+	virtual int CleaveSequence() { return -1; }
+	virtual int FollowUpSequence() { return -1; }
+
+	// The look of the Cleave's air shock, per roster weapon; carried in the
+	// event and read by EV_Cleave (cl_dll/ev_hldm.cpp).  0 is white air,
+	// the crowbar's; 1 is gauss-orange, the katana's.
+	virtual int CleaveSweepStyle() { return 0; }
+
+	// Is this swing the weapon's secondary verb?  Cleave is the primary's
+	// major and never spends on a secondary swing.
+	virtual bool IsSecondarySwing() { return false; }
+
 	unsigned short m_usCrowbar;
+	unsigned short m_usCleave;
 };
 
-// The Gauss Katana.  v1: the crowbar's swing, slower and heavier, with its own
-// models.  The gauss arcs it is named for are not here yet -- see ROADMAP.md.
+// The Gauss Katana.  Two clicks on the crowbar's swing (docs/ROADMAP.md, the
+// katana rework, first step 2026-09-14): the left is the slash, blade only,
+// full damage, and carries Cleave; the right is the old swing entire, blade
+// at a reduced share and the crescent wave.  Every swing heats the blade.
 class CKatana : public CCrowbar
 {
 public:
@@ -589,13 +627,20 @@ public:
 	void Precache() override;
 	bool GetItemInfo(ItemInfo* p) override;
 	bool Deploy() override;
-	// The crowbar's swing, then the arc event.  Once per swing, not once per
-	// attempt: SwingAgain retries a miss a tenth later and must not arc twice.
+	// The slash: the crowbar's swing, then the heat event.
 	void PrimaryAttack() override;
+	// The wave: the crowbar's swing at the blade's reduced share, then the
+	// arc event and the wave's damage.  Once per swing, not once per
+	// attempt: SwingAgain retries a miss a tenth later and must not arc twice.
+	void SecondaryAttack() override;
+
+	int CleaveSweepStyle() override { return 1; }
+	bool IsSecondarySwing() override { return m_bWaveSwing; }
 
 protected:
 #ifndef CLIENT_DLL
 	float BaseDamage() override;
+	float BladeDamageScale() override;
 	// The wave hurts: energy damage to the first thing on its path beyond
 	// the blade's own reach, falling off with distance the way the visual
 	// fades.  Server-side only; the client draws, the server decides.
@@ -604,6 +649,12 @@ protected:
 	float SwingDelayScale() override;
 
 private:
+	// Which click the swing in flight belongs to.  Set by the click and
+	// left set, so a SwingAgain retry inherits it.  Transient: a swing does
+	// not straddle a save.
+	bool m_bWaveSwing = false;
+
+	unsigned short m_usKatanaSwing;
 	unsigned short m_usKatanaArc;
 };
 

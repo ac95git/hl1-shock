@@ -378,7 +378,9 @@ Stock HUD sprites. The nine Melee Damage Stat nodes share `d_crowbar` **on purpo
 is per stat, so a road reads as what it is made of — and that shared icon is the one piece of this entry
 that is a design rather than a stand-in; it still wants art of its own, small and plainly "melee". The
 Skills are placeholders picked for being distinct from each other, not for meaning anything: Reach is a
-tripmine, Speed a revolver, the Backstab node a crossbow.
+tripmine, Speed a revolver, the Backstab node a crossbow, Cleave a hand grenade. Cleave's **ready icon**
+at the screen edge is `d_crowbar` too, for want of anything that says "melee" better; when the Stat node
+gets its icon, the ready icon should be the same image so the two read as one thing.
 
 ### What's wrong with it
 This is the one entry here that is **blocking rather than cosmetic**. The tree is deliberately going
@@ -418,3 +420,38 @@ What that leaves for the replacement art:
 
 ### Done when
 Every Skill in the tree has its own icon, and a player can tell two Skills apart without hovering either.
+
+## Cleave and the Follow-Up — the two empowered swings have borrowed everything
+
+### Scope
+`EV_Cleave` in `cl_dll/ev_hldm.cpp` (the sweep and the swing sound), `CBasePlayer::CleaveThink` in
+`dlls/player.cpp` (the ready icon and cue), `CPlayerPulse::SyncFollowUpIcon` in `dlls/player_pulse.cpp`
+(the primed icon), `CCrowbar::FollowUpSound()` and the two sequence hooks in `dlls/weapons.h`.
+
+### Current stand-in
+| Cue | Stand-in | Why it is wrong |
+| --- | --- | --- |
+| The Cleave air shock | Twelve `shockwave.spr` beam segments as the region's front edge, born at the weapon and travelling to the radius in a quarter second, widening and fading; white for the crowbar, gauss-orange for the katana (`CleaveSweepStyle`) | The right idea in the wrong material: it traces the region honestly and moves like displaced air, but it is still a beam texture, and the katana's orange is the crescent's colour rather than a look of its own. Wants a real displacement — heat-haze, dust, a ring sprite — per weapon |
+| The Cleave swing sound | `weapons/cbar_miss1.wav` at pitch 70 | The ordinary miss, lower. Reads as heavier, not as a different act |
+| The Cleave ready icon | `d_crowbar`, gold, at the screen edge | The death-notice crowbar; also the Melee Damage Stat node's icon, on purpose for now |
+| The Cleave ready cue | `buttons/blip2.wav` at pitch 130, quiet | A button |
+| The Follow-Up primed icon | `d_gauss`, gold | The Follow-Up's own tree placeholder, itself a gauss gun |
+| The Follow-Up attack sound | `zombie/claw_strike1.wav` at pitch 90 | A zombie's swipe, on top of the crowbar's own body-hit sound |
+| The two swing animations | None: the stock swing plays | The hooks exist (`CleaveSequence`, `FollowUpSequence`, −1 for stock) and nothing overrides them |
+
+### What to look for
+- **One visual language for "the big swing"**, shared by the sweep and the two icons, so the region on
+  the ground, the mark at the screen edge and the node in the tree read as one thing. The sweep should
+  say *weight* — a crowbar going through the air — rather than light.
+- **A Cleave swing animation per roster weapon**, and a Follow-Up one, on each viewmodel. The Follow-Up's
+  wins when a swing is both. Before either can play, Cleave-ready and Follow-Up-primed have to reach the
+  client, because the swing animation is predicted; that is code, not art, and it is the first thing to
+  do when the first animation exists.
+- **Two sounds that are not the crowbar's own**: the Cleave's swing, and the Follow-Up's hit, which today
+  lands in the same instant as the body-hit sound and has to be told from it — the Backstab cue's lesson.
+- The ready cue should sit with the Pulse's Recharge cue, which is the precedent: quiet, short, and not a
+  button.
+
+### Done when
+A player who has never read a tooltip can tell a Cleave swing from a plain one with the sound off, can
+tell it is ready without looking at the screen edge, and sees a Follow-Up coming.

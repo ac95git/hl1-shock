@@ -1060,6 +1060,12 @@ void ClientPrecache()
 	// The Pulse's ring sprite and sounds.
 	PulsePrecache();
 
+	// Cleave's ready cue and the Follow-Up's attack sound, both placeholders
+	// (docs/ART_DEBT.md).  Here rather than on the crowbar because the cue
+	// plays from the player, whatever is in hand.
+	PRECACHE_SOUND("buttons/blip2.wav");
+	PRECACHE_SOUND("zombie/claw_strike1.wav");
+
 	// The Infusion's sounds.
 	InfusionPrecache();
 

@@ -37,7 +37,7 @@ are assigned when a node is built, never reused, and **22 and 23 are spoken for*
 | [Juggernaut](#juggernaut) | 11 | Fortitude (8) | +100 decaying armour on Matrix activation | The Pulse Module for its Pulse nodes |
 | [Alien](#alien) | 7 | Hive Capacity (20) | The volley is energy damage | The alien Module; the whole Route is hidden until it |
 | [Energy](#energy) | 6 | Energy Damage | Energy attacks drain armour for bonus damage | — |
-| [Melee](#melee) | 6 + 9 Stat | Melee Reach (1) | Cleave | — . **Built 2026-09-14** but Cleave |
+| [Melee](#melee) | 6 + 9 Stat | Melee Reach (1) | Cleave | — . **Built 2026-09-14** |
 | [Weapon Specialist](#weapon-specialist) | 7 | Marksman | Swap Surge | — |
 | [The Dash Route](#the-dash-route) | 7 | Sure Footing (7) | Air Dash | The Dash Module for its Dash nodes |
 | [Medical](#medical) | 5 | Med Expert (19) | Last Stand | — |
@@ -192,7 +192,7 @@ and the glass-cannon "ninja", who dashes and slashes with the katana.
 
 ## Melee
 
-**Built 2026-09-14, all but Cleave.** The first Route on the matrix. A **roster on the crowbar's base**:
+**Built 2026-09-14, whole.** The first Route on the matrix. A **roster on the crowbar's base**:
 crowbar all-round, katana the ultimate, pickaxe slower and stronger, knife with a higher Backstab base,
 maybe more. Valve's rapid-swing halving is dropped: every swing does full damage. [ROADMAP](ROADMAP.md#melee).
 
@@ -204,9 +204,9 @@ maybe more. Valve's rapid-swing halving is dropped: every swing does full damage
 | Melee Damage ×9 | 24–32 | +5% melee damage each, additive within the stat | Built. **The roads** |
 | Backstab | 33 | The Backstab's multiplier ×1.5 on top of the weapon's own base (3× → 4.5×) | Built |
 | Follow-Up | 18 | After a deflect, the next hit lands far harder | Built. **Cross-Route link**, at the seam with the Pulse |
-| **Major** | 34, held | **Cleave**: the first hit after an internal cooldown hits everything in its arc and lands harder | Not built; its cell is empty |
+| **Major** | 34 | **Cleave**: while ready, the swing *is* an 80° arc 160 units deep — everything in it that can take damage is hit, every hit ×1.5, a primed Follow-Up on all of them — spent on the swing hit or not, then a 4 s cooldown. An air shock in the weapon's colour and a heavier sound on the swing; an icon and a cue when ready. The primary click only | Built. Revised in two grills on 2026-09-14: the first shape needed a landed hit, and was short, wide and drawn as a laser |
 
-The region as placed, columns 0–3, `S` a Melee Damage Stat node, `[Cleave]` the empty cell:
+The region as placed, columns 0–3, `S` a Melee Damage Stat node:
 
 ```
      col0     col1     col2       col3
@@ -215,7 +215,7 @@ r1   Speed    .        Force      Follow-Up ← also Pulse Recharge (col 4)
 r2   S        .        S
 r3   S        .        S
 r4   S        .        Backstab
-r5   S        [Cleave] S
+r5   S        Cleave   S
 ```
 
 Every edge runs down its column, except the two from Reach sideways to the top of each road. Speed costs
@@ -228,7 +228,7 @@ graph TD
   MR --> S2[S] --> MF[Melee Force 2] --> S4[S] --> S6[S] --> BS[Backstab 33] --> S9[S]
   MF --> FU[Follow-Up 18]
   PR[Pulse Recharge 15, Juggernaut] --> FU
-  S8 --> CL{{"Major: Cleave, not built"}}
+  S8 --> CL{{"Major: Cleave"}}
   S9 --> CL
 ```
 
@@ -416,7 +416,7 @@ question of where the roads run rather than what the nodes cost. Still to be jud
 
 ## What is built first
 
-**Melee, 2026-09-14**, all but Cleave; it is the worked example. Weapon Specialist needs the least new
+**Melee, 2026-09-14**, whole; it is the worked example. Weapon Specialist needs the least new
 machinery of the rest; the Juggernaut needs a press-and-release Pulse command pair; the Dash and Alien
 Routes each need their Module. The infrastructure in front of them is done: the four cuts on 2026-09-13,
 the fitted icon draw, the 256-id ceiling, the Stat tier and the layout cvars on 2026-09-14.

@@ -151,6 +151,11 @@ Raising `skill_points_start` is the way to work on the tree UI without hunting f
 | `skill_melee_speed_scale` | 0.7 | Melee Speed multiplies the swing delay, miss and hit |
 | `skill_stat_melee_damage` | 0.05 | Each Melee Damage Stat node adds this to one multiplier on melee damage |
 | `skill_backstab_bonus_scale` | 1.5 | The Backstab node multiplies the weapon's own Backstab base |
+| `cleave_cooldown` | 4 | Seconds before Cleave is ready again |
+| `cleave_arc_dot` | 0.77 | Cosine of Cleave's half-angle: 0.77 is 40° either side of the aim |
+| `cleave_radius` | 160 | How far from the eyes the arc reaches |
+| `cleave_damage_scale` | 1.5 | Every hit in a Cleave |
+| `katana_wave_swing_damage_scale` | 0.5 | The blade's share on the katana's right click, which swings it beside the wave |
 | `skill_weapon_damage_scale` | 1.1 | Weapon Mastery multiplies all player-dealt damage |
 | `skill_reload_time_scale` | 0.8 | Fast Reload multiplies `DefaultReload`'s delay |
 

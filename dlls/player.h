@@ -377,6 +377,23 @@ public:
 	// ---- The Infusion ----
 	CPlayerInfusion m_infusion;
 
+	// ---- Cleave, the Melee major ----
+	// Per player rather than per weapon, so switching from the crowbar to the
+	// katana does not hand out a second one.  Zero or past means ready.
+	// Saved as FIELD_TIME, so a cooldown caught by a save resumes with the
+	// right time remaining.
+	float m_flCleaveReadyTime = 0;
+	// Whether the "ready" status icon is on screen.  Transient: a HUD reset
+	// wipes the icon and clears this so CleaveThink re-sends it.
+	bool m_bCleaveIconSent = false;
+
+	bool CleaveReady() const;
+	// Starts the cooldown.  Called by the swing that cleaved.
+	void CleaveSpend();
+	// Keeps the ready icon in step with the Skill and the cooldown.  Every
+	// PreThink; sends only on change.
+	void CleaveThink();
+
 	// Last Pickup Prompt sent, so it is only resent when it changes.
 	// Transient display state -- deliberately not saved; it is re-derived on
 	// the first frame after a restore.

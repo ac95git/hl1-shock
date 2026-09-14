@@ -165,7 +165,8 @@ _Avoid_: reset, refund, proc, free recharge
 
 **Follow-Up**:
 A melee swing empowered by having just deflected. Primed by a deflect for a short time and spent on the
-next swing that connects, so missing costs nothing. Any weapon on the melee roster carries it.
+next swing that connects, so missing costs nothing; a Cleave swing spends it on everything in its arc at
+once. Any weapon on the melee roster carries it, and it shows at the screen edge while primed.
 _Avoid_: riposte, counter, punish, parry attack
 
 ### The Suit
@@ -220,9 +221,11 @@ _Avoid_: sneak attack, assassination, critical hit, ambush
 ### Weapons
 
 **Gauss Katana**:
-The mod's heavy melee weapon: a blade on the crowbar's swing, slower and far harder-hitting, that will
-throw gauss arcs. Everything that applies to a melee hit — the Backstab, Melee Reach, Force and Speed, the
-Melee Damage Stat nodes, the Follow-Up — applies to it. `weapon_katana` in code and maps.
+The mod's heavy melee weapon: a blade on the crowbar's swing, slower and far harder-hitting. Two clicks:
+the left is the slash, blade only, and carries Cleave; the right swings the blade at a reduced share and
+throws the crescent wave. Every swing heats the blade; a thrown wave spends some of that heat. Everything
+that applies to a melee hit — the Backstab, Melee Reach, Force and Speed, the Melee Damage Stat nodes, the
+Follow-Up — applies to it. `weapon_katana` in code and maps.
 _Avoid_: sword, blade, energy sword, gauss blade; and *katana* alone where the gauss half matters
 
 **Disturbance**:

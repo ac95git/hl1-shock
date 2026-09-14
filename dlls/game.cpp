@@ -508,6 +508,19 @@ cvar_t skill_stat_melee_damage = {"skill_stat_melee_damage", "0.05"};
 // The Backstab node multiplies the Backstab's own multiplier
 // (backstab_damage_scale, 3): 1.5 takes it to 4.5x.
 cvar_t skill_backstab_bonus_scale = {"skill_backstab_bonus_scale", "1.5"};
+// Cleave, the Melee major.  The first melee hit on a monster after the
+// cooldown also strikes every monster in the arc, and every one of those
+// hits, the first included, is scaled up.  All first guesses.
+// 8 was the first guess and read as too long in play; 4 is the entry point
+// that still stops spamming.
+cvar_t cleave_cooldown = {"cleave_cooldown", "4"};
+// Cosine of the half-angle: 0.77 is 40 degrees either side of the aim.  The
+// first guess of 60 degrees was 277 units wide at the far edge and read as
+// width where depth was wanted.
+cvar_t cleave_arc_dot = {"cleave_arc_dot", "0.77"};
+// How far from the player's eyes the arc reaches.  80 read as too short.
+cvar_t cleave_radius = {"cleave_radius", "160"};
+cvar_t cleave_damage_scale = {"cleave_damage_scale", "1.5"};
 
 // The Gauss Katana.  Slower and heavier than the crowbar; both numbers are
 // first guesses.  Damage goes through the sk_plr_katana skill cvars below so
@@ -522,6 +535,9 @@ cvar_t katana_swing_time_scale = {"katana_swing_time_scale", "1.0"};
 // fades over on the client (katana_arc_range there), so keep the two equal.
 cvar_t katana_wave_damage_scale = {"katana_wave_damage_scale", "0.5"};
 cvar_t katana_wave_range = {"katana_wave_range", "1200"};
+// The blade's share on the right click, which swings it beside the wave.
+// Toned down so the left click stays the melee verb; a first guess.
+cvar_t katana_wave_swing_damage_scale = {"katana_wave_swing_damage_scale", "0.5"};
 cvar_t skill_weapon_damage_scale = {"skill_weapon_damage_scale", "1.1"};
 // Scales the reload delay. Read from both DLLs through skill_tuning.h, because
 // the delay it sets is m_flNextAttack, which the client predicts.
@@ -723,9 +739,14 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_melee_speed_scale);
 	CVAR_REGISTER(&skill_stat_melee_damage);
 	CVAR_REGISTER(&skill_backstab_bonus_scale);
+	CVAR_REGISTER(&cleave_cooldown);
+	CVAR_REGISTER(&cleave_arc_dot);
+	CVAR_REGISTER(&cleave_radius);
+	CVAR_REGISTER(&cleave_damage_scale);
 	CVAR_REGISTER(&katana_swing_time_scale);
 	CVAR_REGISTER(&katana_wave_damage_scale);
 	CVAR_REGISTER(&katana_wave_range);
+	CVAR_REGISTER(&katana_wave_swing_damage_scale);
 	CVAR_REGISTER(&skill_reload_time_scale);
 	CVAR_REGISTER(&skill_weapon_damage_scale);
 

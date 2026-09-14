@@ -56,6 +56,7 @@ enum class ESkillId : int
 	MeleeSpeed          = 11, // swings come faster               (was CrowbarSpeed, reserved 2026-08 to 2026-09-14)
 	FollowUp            = 18, // the hit after a deflect lands far harder (was CrowbarFollowUp)
 	Backstab            = 33, // the rear-arc multiplier climbs
+	Cleave              = 34, // the major: the first hit after a cooldown hits everything in its arc, harder
 
 	// ---- Armaments ----
 	FastReload          = 3,  // reload delay -20%
@@ -119,9 +120,9 @@ enum class ESkillId : int
 	StatMelee07         = 30,
 	StatMelee08         = 31,
 	StatMelee09         = 32,
-	// 33 is Backstab, above.  34 is spoken for by Cleave, the Melee major.
+	// 33 is Backstab and 34 is Cleave, above.
 
-	_Count              = 34, // keep last
+	_Count              = 35, // keep last
 };
 
 // ---------------------------------------------------------
@@ -232,13 +233,12 @@ struct SkillDef
 // r2  S03      .        S04        .          Discharge Rebound                          MedExpert
 // r3  S05      .        S06
 // r4  S07      .        Backstab
-// r5  S08      [Cleave] S09
+// r5  S08      Cleave   S09
 //
 // Reach is the root.  The left road (S01, Speed, S03, S05, S07, S08) and the
 // right road (S02, Force, S04, S06, Backstab, S09) meet at Cleave, the Melee
-// major, which needs both S08 and S09 and is not built yet -- its cell is
-// empty and id 34 is held for it.  Speed costs 3 points from nothing, Force 3,
-// Backstab 6, and Cleave will cost 14.
+// major, which needs both S08 and S09.  Speed costs 3 points from nothing,
+// Force 3, Backstab 6, Cleave 14.
 inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 {
 	//  id                        name                description                                                    sprite           col row cost prereq                     prereq2                  tier              stat
@@ -316,6 +316,9 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 
 	// 33: the Backstab node, end of the right road before Cleave
 	{ ESkillId::Backstab,        "Backstab",         "Hits from behind land half again as hard as a plain Backstab.", "d_crossbow",    2,  4,  1,  ESkillId::StatMelee06,     ESkillId::None,          ENodeTier::Medium, EStat::None },
+
+	// 34: Cleave, the Melee major, where the two roads meet
+	{ ESkillId::Cleave,          "Cleave",           "When Cleave is ready, your next melee hit strikes everything in front of you, and harder. Then it needs a moment.", "d_handgrenade", 1, 5, 1, ESkillId::StatMelee08, ESkillId::StatMelee09, ENodeTier::Major, EStat::None },
 };
 
 #undef SKILL_RESERVED

@@ -27,7 +27,7 @@ This file records **what exists today**. Intended work that has not been built l
 | 1 | [Exploration](#1-exploration) | **Not started** | Its rewards exist — Row Grants, Skill Points, Reset Tokens are all findable entities — but no map places one, so nothing is explored *for* yet. |
 | 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar. Melee Skills land, and the Backstab gives melee its first positional decision. Numbers untuned. |
 | 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. |
-| 4 | [Skill trees](#4-skill-trees) | **Playable** | 24 nodes, **all with effects**: the Melee Route built on the matrix (nine Stat nodes as its roads, every node one point), and the other six columns waiting for theirs. Points and Reset Tokens are earned and spent, the tree fits any screen, and nothing in it lies about what it does. Numbers untuned; no map places a Skill Point yet. |
+| 4 | [Skill trees](#4-skill-trees) | **Playable** | 25 nodes, **all with effects**: the Melee Route built whole on the matrix (nine Stat nodes as its roads, every node one point, Cleave at the end), and the other six columns waiting for theirs. Points and Reset Tokens are earned and spent, the tree fits any screen, and nothing in it lies about what it does. Numbers untuned; no map places a Skill Point yet. |
 | 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work over a server-owned model. Row Grants are now placeable; Boxes are the remaining gap. |
 | 6 | [Stealth](#6-stealth) | **Partial** | Concealment and Suspicion are live: monsters no longer acquire the player on sight, they fill a meter at a rate set by angle, distance, stance and light, and the player is warned by `CHudConceal`. Quiet movement is deliberate. Nothing after acquisition has changed — once acquired, a monster stays acquired. |
 
@@ -162,17 +162,25 @@ instead of one per frame. `CPlayerPulse::ForgetSentState()`, called where `m_fIn
 `CCrowbar` with two hooks overridden rather than as a copy: `BaseDamage()` reads `sk_plr_katana1-3` (40,
 against the crowbar's 10) and `SwingDelayScale()` reads `katana_swing_time_scale` (2.0) through
 `skill_tuning.h`, because the delay it scales is predicted and the client must see the same number. The
-Backstab, Crowbar Reach and Force, and the Follow-Up therefore apply to it with no code of their own,
+Backstab, Melee Reach, Force and Speed, the Melee Damage Stat nodes, Cleave and the Follow-Up therefore apply to it with no code of their own,
 which is what subclassing buys. It sits in the melee bucket beside the crowbar, `impulse 101` gives it,
 and `weapon_katana` is in the FGD. Its viewmodel and world model are the mod's own (`models/v_katana.mdl`
 on the crowbar's hands and animations, `models/w_katana.mdl` lying flat); the third-person model, the
-sounds and the HUD icon are the crowbar's and are in [ART_DEBT.md](ART_DEBT.md). Every swing throws a
-crescent off the blade, a `)` tilted to the cut that flies forward (`EV_KatanaArc`, client-side from
-`events/katana_arc.sc`), and where it meets a wall it burns a line of glows across it; the blade itself goes hot for the swing,
-lighting the room and shining in the dark. The wave also hurts: energy damage to
-the first thing on the aim line beyond the blade's reach, at half strength and falling off with
-distance, which makes the katana a ranged melee weapon. Floors are scraped, not hit, so a low cut at a
-headcrab keeps its wave. Details and the open questions are in [ROADMAP.md](ROADMAP.md#the-gauss-katana).
+sounds and the HUD icon are the crowbar's and are in [ART_DEBT.md](ART_DEBT.md).
+
+**Two clicks, since 2026-09-14** (the first step of the rework in ROADMAP.md, taken with Cleave). **The
+left click is the slash**: the blade alone at full damage, Melee Speed on it, and the click that carries
+Cleave, whose air shock is gauss-orange on the katana (`CleaveSweepStyle`). **The right click is the old
+swing entire**: the blade at a reduced share (`katana_wave_swing_damage_scale`, 0.5, so the left click stays
+the melee verb) and the crescent thrown off it, a `)` tilted to the cut that flies forward (`EV_KatanaArc`,
+client-side from `events/katana_arc.sc`), burning a line of glows where it meets a wall. The wave also
+hurts: energy damage to the first thing on the aim line beyond the blade's reach, at half strength and
+falling off with distance, which makes the katana a ranged melee weapon. Floors are scraped, not hit, so a
+low cut at a headcrab keeps its wave. Both clicks share one cadence, and Cleave never spends on the right.
+**Every swing heats the blade** — the light at the hand and the hot skin, from `events/katana_swing.sc` on
+the left and from the arc event on the right — and the lore is that swinging heats the energy in the blade
+at no loss while a thrown wave spends some of it. Details and the open questions are in
+[ROADMAP.md](ROADMAP.md#the-gauss-katana).
 
 **Custom HEV gloves on every viewmodel.** Fourteen stock viewmodels plus the katana compile with three
 glove skin families — grey plates with cyan, red or purple light channels. Which one the player sees is
@@ -252,6 +260,40 @@ through, so "melee" is true by construction rather than by a damage-type list:
 - **The Backstab node** (id 33) multiplies a Backstab by `skill_backstab_bonus_scale` (1.5) on top of the
   weapon's own Backstab base, `CCrowbar::BackstabScale()` (the plain `backstab_damage_scale`, 3, until a
   weapon that leans on it — the knife — overrides it). 3× becomes 4.5× with the node.
+- **Cleave** (id 34), the Route's major. **While it is ready, the swing is the arc**: everything within
+  `cleave_radius` (160) of the eyes, inside the arc (`cleave_arc_dot` 0.77, so 40° either side of the
+  aim; the first guess of 80 and 60° read as short and wide), with a clear line, and able to take damage —
+  a crate as much as a zombie, exactly the set the line trace could have hit — takes the swing's damage
+  times `cleave_damage_scale` (1.5). Force and the Stat nodes are
+  in that number; the Backstab is tested per victim, monsters only; a primed Follow-Up multiplies every
+  victim and is spent once. The line trace still runs for the wall decal and sound, and does no damage of
+  its own on a Cleave swing. **Spent on the swing, hit or not**, then `cleave_cooldown` (4 s; 8 read as too
+  long). The first shape, tried and rejected the same day, fired only off a landed primary hit, so a swarm
+  had to line up and the middle one be struck. The cooldown is the player's, not the weapon's
+  (`m_flCleaveReadyTime`, saved as a time), so a swap to the katana does not hand out a second.
+
+  **What the player sees and hears.** On the swing: **an air shock** — the front edge of the region as a
+  bow, born at the weapon and travelling out to the radius over a quarter second, widening as the sector
+  widens and fading as it goes, so it dies exactly where the hit test ends — from `events/cleave.sc` →
+  `EV_Cleave` (`cl_dll/ev_hldm.cpp`), with the radius and half-angle carried in the event from the server's
+  cvars; and the crowbar's miss sound pitched down, from the same event. Its look is **per roster weapon**
+  (`CCrowbar::CleaveSweepStyle()`, carried in the event): white air for the crowbar, gauss-orange for the
+  katana. A stationary gold bow was the first build and read as a fence; motion is what says "air". Two
+  client cvars shape it: `cleave_wave_segments` (32; each segment is one quad of texture, and too few read
+  as a row of tiles), `cleave_wave_lag` (0.08 s between the right end of the bow leaving the weapon and
+  the left, so the front crosses the arc the way the swing did rather than ringing out of it) and
+  `cleave_wave_height` (14 units at the far edge, from about a third of that at birth; 28 was the first
+  guess and read as heavy). On ready: the status icon at the left edge (through
+  `gmsgStatusIcon` like the Infusion's, from `CBasePlayer::CleaveThink`, re-sent after a HUD reset) and a
+  quiet cue when it comes back from a cooldown. **All placeholders** ([ART_DEBT.md](ART_DEBT.md)).
+  `CCrowbar::CleaveSequence()` and `FollowUpSequence()` are the hooks for a per-weapon swing animation,
+  returning −1 (the stock swing) until a model has one; the Follow-Up's wins when a swing is both. A real
+  override also needs both readiness states sent to the client, since the swing animation is predicted.
+  `debug_damage` prints one `cleave ->` line per victim, with its Backstab and Follow-Up flags.
+- **The Follow-Up shows itself too.** A primed Follow-Up puts its own icon at the screen edge for the
+  window it is primed (`CPlayerPulse::SyncFollowUpIcon`, the Follow-Up's tree icon as a placeholder), and
+  the swing that spends it plays `CCrowbar::FollowUpSound()`, a placeholder per roster weapon. On a plain
+  swing it is still spent by the hit that connects, as before.
 - **Weapon Mastery** (id 4) scales every player weapon by `skill_weapon_damage_scale` (1.1), at two
   chokepoints rather than per weapon — `ApplyMultiDamage` and the direct-`TakeDamage` branch of
   `RadiusDamage`. Why it is two, and the two consequences that fall out of it, are under
@@ -278,7 +320,7 @@ the rejected alternatives and the exclusion list are in
 
 Three things worth knowing rather than rediscovering:
 
-- **It stacks between Crowbar Force and the Follow-Up**, so each stage multiplies an already-stronger hit
+- **It stacks between Melee Force and the Follow-Up**, so each stage multiplies an already-stronger hit
   and the largest number a player can produce is every bonus at once. 3× is tuned to land just short of
   one-shotting a grunt at full melee investment (10 × 1.5 × 3 × 1.1 = 49.5 against 50 health), on the
   grounds that a reliable one-shot removes any reason to fight a grunt head-on.
@@ -367,7 +409,7 @@ user message and a `CHud` element.
 `m_flShieldEndTime` and `m_flPulseReadyTime` as `FIELD_TIME` (which rebases on restore, so timers survive
 save/load and level transitions) plus a `FIELD_BOOLEAN` recording whether the window absorbed anything.
 
-**The Follow-Up** — `CrowbarFollowUp` (id 18) primes the crowbar for `pulse_followup_time` seconds after a
+**The Follow-Up** — `FollowUp` (id 18, `CrowbarFollowUp` until 2026-09-14) primes the next melee swing for `pulse_followup_time` seconds after a
 deflect; the next swing that **connects** deals `pulse_followup_damage`× and is then spent. A whiff costs
 nothing, so the timer rather than the swing is what stops it being banked.
 
@@ -530,8 +572,8 @@ table row, one `EItemTypeId`, one `CItem` subclass, one FGD line, one `case`.
 **Status: Playable**
 
 **Planned:** the six remaining Routes in [SKILL_TREE.md](SKILL_TREE.md), built one at a time from
-[ROADMAP.md](ROADMAP.md#pillar-4-routes). The **Melee Route was built first, 2026-09-14**, all but its
-major (Cleave); it is the worked example of a Route on the matrix. Of the reserved ids, `HiveCapacity` /
+[ROADMAP.md](ROADMAP.md#pillar-4-routes). The **Melee Route was built first, 2026-09-14**, whole; it is
+the worked example of a Route on the matrix. Of the reserved ids, `HiveCapacity` /
 `HiveRegrowth` return with the Alien Route and 22–23 wait for the stealth column; four are cut for good.
 
 Every Skill in the tree changes how the game plays. The pillar's own acceptance criterion — "every unlocked
@@ -541,9 +583,9 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
 
 **Definitions** — `game_shared/skill_defs.h`, compiled into both DLLs
 
-- **24 nodes in the tree, every one costing one point** (a `static_assert` holds every row to it): the
+- **25 nodes in the tree, every one costing one point** (a `static_assert` holds every row to it): the
   Melee Route in columns 0–3 — Reach at the root, two roads of Melee Damage Stat nodes down to Speed and
-  Force, on to the Backstab node, ending where Cleave will sit — and the pre-Routes columns shifted right
+  Force, on to the Backstab node, meeting at Cleave — and the pre-Routes columns shifted right
   of it (the Pulse 4–5, the suit 6, Armaments 7, Survivability 8–9), each waiting for its Route to give it
   roads. Follow-Up sits at the seam between Melee and the Pulse because it is gated on one of each. The
   layout is in the comment above `k_SkillDefs`; the design is

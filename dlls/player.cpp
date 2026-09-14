@@ -66,6 +66,7 @@ TYPEDESCRIPTION CBasePlayer::m_playerSaveData[] =
 	{
 		DEFINE_FIELD(CBasePlayer, m_flFlashLightTime, FIELD_TIME),
 		DEFINE_FIELD(CBasePlayer, m_iFlashBattery, FIELD_INTEGER),
+		DEFINE_FIELD(CBasePlayer, m_flCleaveReadyTime, FIELD_TIME),
 
 		DEFINE_FIELD(CBasePlayer, m_afButtonLast, FIELD_INTEGER),
 		DEFINE_FIELD(CBasePlayer, m_afButtonPressed, FIELD_INTEGER),
@@ -1929,6 +1930,9 @@ void CBasePlayer::PreThink()
 	// Land any Infusion ticks that are due, and end one whose time is up.
 	m_infusion.Think(this);
 
+	// The Cleave's ready icon, following the Skill and the cooldown.
+	CleaveThink();
+
 	if (g_pGameRules && g_pGameRules->FAllowFlashlight())
 		m_iHideHUD &= ~HIDEHUD_FLASHLIGHT;
 	else
@@ -3177,6 +3181,56 @@ bool CBasePlayer::Save(CSave& save)
 }
 
 
+//=========================================================
+// Cleave, the Melee major.  The hit itself is in CCrowbar::Swing; this is
+// the cooldown it keys on and the icon that says it is ready.
+//=========================================================
+
+// Placeholder: the crowbar's death-notice icon, so "ready" reads as
+// "melee".  See docs/ART_DEBT.md.
+static const char* const k_CleaveIconSprite = "d_crowbar";
+
+bool CBasePlayer::CleaveReady() const
+{
+	return m_skills.HasSkill(ESkillId::Cleave) && gpGlobals->time >= m_flCleaveReadyTime;
+}
+
+void CBasePlayer::CleaveSpend()
+{
+	m_flCleaveReadyTime = gpGlobals->time + std::max(0.1f, cleave_cooldown.value);
+}
+
+void CBasePlayer::CleaveThink()
+{
+	const bool bWant = CleaveReady();
+	if (bWant == m_bCleaveIconSent)
+		return;
+
+	// Coming back from a cooldown -- not the first unlock, and not a HUD
+	// reset re-sending the icon -- gets a quiet cue, the way the Pulse's
+	// Recharge completing does: at 4 seconds the player is mid-fight when it
+	// returns and cannot be looking at the screen edge.  Placeholder sound.
+	if (bWant && m_flCleaveReadyTime > 0 && gpGlobals->time - m_flCleaveReadyTime < 0.5f)
+		EMIT_SOUND_DYN(ENT(pev), CHAN_ITEM, "buttons/blip2.wav", 0.5, ATTN_NORM, 0, 130);
+
+	m_bCleaveIconSent = bWant;
+
+	if (gmsgStatusIcon == 0)
+		return;
+
+	MESSAGE_BEGIN(MSG_ONE, gmsgStatusIcon, NULL, pev);
+	WRITE_BYTE(bWant ? 1 : 0);
+	WRITE_STRING(k_CleaveIconSprite);
+	if (bWant)
+	{
+		// The Skill Tree's "available" gold, so the icon and the node agree.
+		WRITE_BYTE(255);
+		WRITE_BYTE(200);
+		WRITE_BYTE(60);
+	}
+	MESSAGE_END();
+}
+
 //
 // Marks everything as new so the player will resend this to the hud.
 //
@@ -4265,6 +4319,7 @@ void CBasePlayer::UpdateClientData()
 		// It wipes CHudStatusIcons too, so a running Infusion has to re-assert
 		// its icon or it heals invisibly for the rest of its duration.
 		m_infusion.ForgetSentIcon();
+		m_bCleaveIconSent = false;
 
 		// And the Concealment readout, which would otherwise sit blank until
 		// the next threshold crossing -- i.e. a player who loads a save while

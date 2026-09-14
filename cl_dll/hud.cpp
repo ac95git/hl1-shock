@@ -389,6 +389,16 @@ void CHud::Init()
 	CVAR_CREATE("katana_arc_speed", "1200", 0);
 	CVAR_CREATE("katana_arc_roll", "30", 0);
 	CVAR_CREATE("katana_arc_lean", "90", 0);
+	// Cleave's air shock (EV_Cleave, ev_hldm.cpp).  How many quads the bow is
+	// drawn with -- too few and the texture reads as a row of tiles -- and
+	// the delay between the right end leaving the weapon and the left end,
+	// which is what makes it cross the arc like the swing rather than ring
+	// out of it.  Seconds.
+	CVAR_CREATE("cleave_wave_segments", "32", 0);
+	CVAR_CREATE("cleave_wave_lag", "0.08", 0);
+	// The band's height in units at the far edge; it grows to that from
+	// about a third of it as it travels.
+	CVAR_CREATE("cleave_wave_height", "14", 0);
 	// The blade lights up on the swing: a dynamic light at the hand, and the
 	// blade itself going HOT -- the viewmodel's hot skin family, whose blade
 	// texture is drawn additive.  Life in seconds; 0 turns each off.  The hot

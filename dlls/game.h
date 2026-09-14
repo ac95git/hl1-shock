@@ -64,9 +64,14 @@ extern cvar_t skill_melee_force_scale;
 extern cvar_t skill_melee_speed_scale;
 extern cvar_t skill_stat_melee_damage;
 extern cvar_t skill_backstab_bonus_scale;
+extern cvar_t cleave_cooldown;
+extern cvar_t cleave_arc_dot;
+extern cvar_t cleave_radius;
+extern cvar_t cleave_damage_scale;
 extern cvar_t katana_swing_time_scale;
 extern cvar_t katana_wave_damage_scale;
 extern cvar_t katana_wave_range;
+extern cvar_t katana_wave_swing_damage_scale;
 extern cvar_t skill_weapon_damage_scale;
 extern cvar_t skill_reload_time_scale;
 
