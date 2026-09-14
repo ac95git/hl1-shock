@@ -155,7 +155,11 @@ Raising `skill_points_start` is the way to work on the tree UI without hunting f
 | `cleave_arc_dot` | 0.77 | Cosine of Cleave's half-angle: 0.77 is 40° either side of the aim |
 | `cleave_radius` | 160 | How far from the eyes the arc reaches |
 | `cleave_damage_scale` | 1.5 | Every hit in a Cleave |
-| `katana_wave_swing_damage_scale` | 0.5 | The blade's share on the katana's right click, which swings it beside the wave |
+| `katana_swing_time_scale` | 2.4 | The katana slash's swing delay as a multiple of the crowbar's; both DLLs, through `skill_tuning.h` |
+| `katana_wave_swing_time_scale` | 1.0 | The same for the right click, which throws the wave |
+| `katana_wave_blade_damage` | 10 | The blade's damage on the katana's right click, which swings it beside the wave; the melee Skills still multiply it |
+| `katana_wave_damage` | 15 | The wave's damage per target, full to `katana_wave_full_range` (800) and then falling off to nothing at `katana_wave_range` (1200) |
+| `katana_wave_cost` | 5 | Uranium per wave, divided by Energy Efficiency; both DLLs |
 | `skill_weapon_damage_scale` | 1.1 | Weapon Mastery multiplies all player-dealt damage |
 | `skill_reload_time_scale` | 0.8 | Fast Reload multiplies `DefaultReload`'s delay, and the shotgun's shell-by-shell reload |
 | `skill_marksman_scale` | 1.15 | Marksman multiplies player `DMG_BULLET` damage |
@@ -173,7 +177,7 @@ Raising `skill_points_start` is the way to work on the tree UI without hunting f
 | `skill_overheal_decay` | 2 | Health above the maximum drains this much per second once the Infusion ends |
 | `skill_energy_damage_scale` | 1.15 | Energy Damage multiplies player `DMG_ENERGYBEAM` damage |
 | `skill_stat_energy_damage` | 0.05 | Each Energy Damage Stat node adds this to one multiplier on player `DMG_ENERGYBEAM` damage |
-| `skill_egon_efficiency_scale` | 1.33 | Egon Efficiency multiplies the interval between the egon's ammo ticks; above 1 is slower |
+| `skill_energy_efficiency_scale` | 1.33 | Energy Efficiency multiplies the interval between the egon's ammo ticks and divides the katana's wave's uranium cost; above 1 is cheaper |
 | `skill_insulation_scale` | 0.7 | Insulation multiplies `DMG_ENERGYBEAM` and `DMG_SHOCK` the player takes |
 | `skill_ricochet_chance` | 0.2 | Ricochet's chance per bullet hit, while the player has armour, to bounce it back at the shooter |
 

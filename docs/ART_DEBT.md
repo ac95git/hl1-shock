@@ -384,7 +384,7 @@ road; Marksman is a bolt, Quick Draw a revolver (which Speed also is, in another
 rocket, Headhunter a skull (Force's too), Mastery a shotgun, Swap Surge a hornet. The Medical Route's four
 Healing Stat nodes share `cross`, the HUD's health cross, which is the one placeholder here that says what
 it is; Leech is `dmg_bio`, Overheal the Syringe's own `item_syringe`. The Energy Route's four Energy
-Damage Stat nodes share `dmg_shock`; Energy Damage is the egon, Egon Efficiency a satchel, Insulation the
+Damage Stat nodes share `dmg_shock`; Energy Damage is the egon, Energy Efficiency a satchel, Insulation the
 radiation tile. Ricochet is the tracktrain. Cleave's **ready icon**
 at the screen edge is `d_crowbar` too, for want of anything that says "melee" better; when the Stat node
 gets its icon, the ready icon should be the same image so the two read as one thing.

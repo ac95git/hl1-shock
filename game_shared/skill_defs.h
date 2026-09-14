@@ -156,7 +156,7 @@ enum class ESkillId : int
 	// Discharge.  Building node by node from 2026-09-14.
 	EnergyDamage        = 54, // energy hits harder; the root
 	EgonFocus           = 55, // secondary fire unlocks the egon's narrow beam
-	EgonEfficiency      = 56, // uranium drains slower
+	EnergyEfficiency    = 56, // uranium drains slower; was Egon Efficiency until the katana's wave spent uranium too
 	QuickCharge         = 57, // the katana's charged wave charges faster
 	Insulation          = 58, // less energy and shock damage taken
 	EnergyMajor         = 59, // the major: energy attacks drain armour for bonus damage; name pending
@@ -325,7 +325,7 @@ struct SkillDef
 // at Last Stand.  Leech costs 2, Overheal 2, Last Stand 8.  Nodes not yet
 // built are SKILL_RESERVED with their ids held.
 //
-// Energy: Energy Damage is the root.  The right road (E01, Egon Efficiency,
+// Energy: Energy Damage is the root.  The right road (E01, Energy Efficiency,
 // E03, Egon Focus) and the left (E02, Insulation, E04, Quick Charge) meet
 // at the major.  Where Melee's region reaches Energy's -- the Gargantua
 // build as a literal path -- is still to be curated; the two are at
@@ -470,9 +470,11 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// 55: Egon Focus, held: its details are to be decided
 	SKILL_RESERVED(EgonFocus),
 
-	// 56: Egon Efficiency, the right road's Skill.  Server-side, the interval
-	// between the egon's ammo ticks.
-	{ ESkillId::EgonEfficiency,  "Egon Efficiency",  "The egon drains uranium a quarter slower.",                   "d_satchel",      15, 1,  1,  ESkillId::StatEnergy01,    ESkillId::None,          ENodeTier::Medium, EStat::None },
+	// 56: Energy Efficiency, the right road's Skill.  The interval between the
+	// egon's ammo ticks (server-side) and the katana's wave's uranium cost
+	// (both DLLs, the cost check being predicted).  Was Egon Efficiency until
+	// the wave spent uranium, 2026-09-14.
+	{ ESkillId::EnergyEfficiency, "Energy Efficiency", "The egon and the katana's wave spend uranium a quarter slower.", "d_satchel",   15, 1,  1,  ESkillId::StatEnergy01,    ESkillId::None,          ENodeTier::Medium, EStat::None },
 
 	// 57: Quick Charge, held: the katana's charge is not built
 	SKILL_RESERVED(QuickCharge),
@@ -487,7 +489,7 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// 60-63: the Energy Route's roads
 	STAT_ENERGY(StatEnergy01, 15, 0, EnergyDamage),
 	STAT_ENERGY(StatEnergy02, 14, 1, EnergyDamage),
-	STAT_ENERGY(StatEnergy03, 15, 2, EgonEfficiency),
+	STAT_ENERGY(StatEnergy03, 15, 2, EnergyEfficiency),
 	STAT_ENERGY(StatEnergy04, 14, 3, Insulation),
 
 	// 64: Ricochet, the Juggernaut's, off Armor Expert in the Survivability

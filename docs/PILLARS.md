@@ -159,9 +159,12 @@ instead of one per frame. `CPlayerPulse::ForgetSentState()`, called where `m_fIn
 `UpdateClientData`, forces a resend after the client's HUD is reset so the bar cannot go stale.
 
 **The Gauss Katana, v1** — `weapon_katana`, `dlls/katana.cpp`. The mod's first custom weapon, built as
-`CCrowbar` with two hooks overridden rather than as a copy: `BaseDamage()` reads `sk_plr_katana1-3` (40,
-against the crowbar's 10) and `SwingDelayScale()` reads `katana_swing_time_scale` (2.0) through
-`skill_tuning.h`, because the delay it scales is predicted and the client must see the same number. The
+`CCrowbar` with two hooks overridden rather than as a copy: `BaseDamage()` reads `sk_plr_katana1-3` (60,
+against the crowbar's 10) and `SwingDelayScale()` reads `katana_swing_time_scale` (2.4, so 0.6 s after a
+hit) for the slash and `katana_wave_swing_time_scale` (1.0, the crowbar's rate) for the right click,
+through `skill_tuning.h`, because the delay it scales is predicted and the client must see the same
+number. **Burst and DPS, set 2026-09-14 against the gauss's two clicks**: the slash is one heavy cut, the
+right click a light blade plus the wave at four a second for uranium. The
 Backstab, Melee Reach, Force and Speed, the Melee Damage Stat nodes, Cleave and the Follow-Up therefore apply to it with no code of their own,
 which is what subclassing buys. **Its blade is energy damage, since 2026-09-14**: a third hook,
 `SwingDamageType`, is `DMG_CLUB` on the crowbar and `DMG_ENERGYBEAM` on the katana, and every monster the
@@ -176,12 +179,23 @@ sounds and the HUD icon are the crowbar's and are in [ART_DEBT.md](ART_DEBT.md).
 **Two clicks, since 2026-09-14** (the first step of the rework in ROADMAP.md, taken with Cleave). **The
 left click is the slash**: the blade alone at full damage, Melee Speed on it, and the click that carries
 Cleave, whose air shock is gauss-orange on the katana (`CleaveSweepStyle`). **The right click is the old
-swing entire**: the blade at a reduced share (`katana_wave_swing_damage_scale`, 0.5, so the left click stays
-the melee verb) and the crescent thrown off it, a `)` tilted to the cut that flies forward (`EV_KatanaArc`,
-client-side from `events/katana_arc.sc`), burning a line of glows where it meets a wall. The wave also
-hurts: energy damage to the first thing on the aim line beyond the blade's reach, at half strength and
-falling off with distance, which makes the katana a ranged melee weapon. Floors are scraped, not hit, so a
-low cut at a headcrab keeps its wave. Both clicks share one cadence, and Cleave never spends on the right.
+swing entire**: the blade light (`katana_wave_blade_damage`, 10, so the left click stays the melee verb;
+the melee Skills still multiply it) and the wave thrown off it. **The wave is a projectile, since 2026-09-14**: `CKatanaWave`
+(`dlls/katana.cpp`), unseen, born 32 units past the blade and stepping along the aim at `katana_wave_speed`
+(1200) to `katana_wave_range` (1200), each step swept as a line then the small hull, striking everything
+damageable it meets once with `katana_wave_damage` (15) of energy damage, full out to
+`katana_wave_full_range` (800) and then falling off to nothing at the range. Its look is the crescent, a
+`)` tilted to the cut (`EV_KatanaArc`, client-side from `events/katana_arc.sc`), which reads those three
+cvars by name so the two are one flight, and burns a line of glows where its belly meets a wall. Only the
+belly ends the flight, and only on a wall: floors and ceilings are scraped and flown through, on both
+sides, and the tips scrape whatever they meet, so a doorframe or a ceiling beam no longer eats the wave in
+a low room. It makes the katana a ranged melee weapon, and a crowd on the path is a crowd hit. **The wave
+spends uranium**: `katana_wave_cost` (5), divided by Energy Efficiency (four with it), checked on both sides
+because it gates a predicted swing, and refused with the empty click when short. The katana carries
+uranium for it (`KATANA_DEFAULT_GIVE`, 20, on pickup, and the counter on the HUD from
+`sprites/weapon_katana.txt`), and since the slash needs none it can always be drawn and is never switched
+away from empty (`CanDeploy`, `IsUseable`, and the select-on-empty and no-auto-switch item flags). Both
+clicks share one cadence, and Cleave never spends on the right.
 **Every swing heats the blade** — the light at the hand and the hot skin, from `events/katana_swing.sc` on
 the left and from the arc event on the right — and the lore is that swinging heats the energy in the blade
 at no loss while a thrown wave spends some of it. Details and the open questions are in
@@ -335,8 +349,10 @@ through, so "melee" is true by construction rather than by a damage-type list:
   the Discharge all read it, so the katana scales off Melee (in its Swing) and Energy (here) both — the
   Gargantua build in one sentence. **Insulation** (id 58) scales `DMG_ENERGYBEAM` and `DMG_SHOCK` taken
   by `skill_insulation_scale` (0.7) in `CBasePlayer::TakeDamage`, shock included so it means something in
-  Xen. **Egon Efficiency** (id 56) scales the interval between the egon's ammo ticks by
-  `skill_egon_efficiency_scale` (1.33), server-side, where `CEgon::Fire` spends them.
+  Xen. **Energy Efficiency** (id 56; Egon Efficiency until the katana's wave spent uranium, 2026-09-14)
+  scales the interval between the egon's ammo ticks by `skill_energy_efficiency_scale` (1.33),
+  server-side, where `CEgon::Fire` spends them, and divides the katana's wave's uranium cost by the same
+  number, on both sides through `skill_tuning.h` because that check gates a predicted swing.
 - **Ricochet** (id 64, the Juggernaut's, 2026-09-14, off Armor Expert until the Route's region exists).
   In `CBasePlayer::TakeDamage`, after the Shield's answer and before the suit's report: a bullet hit
   while armour is above zero has `skill_ricochet_chance` (0.2) of being refused outright, the shooter

@@ -25,8 +25,9 @@
 #include "UserMessages.h"
 #include <algorithm>
 
-// Egon Efficiency is server-side damage-adjacent tuning (ammo), so its cvar
-// comes from game.h under the guard, like the melee damage Skills.
+// Energy Efficiency is server-side damage-adjacent tuning (ammo) here, so its
+// cvar comes from game.h under the guard, like the melee damage Skills.  (The
+// katana reads the same cvar on both sides, its cost check being predicted.)
 #ifndef CLIENT_DLL
 #include "game.h"
 #endif
@@ -132,13 +133,13 @@ bool CEgon::HasAmmo()
 }
 
 #ifndef CLIENT_DLL
-// Egon Efficiency: the interval between the egon's ammo ticks, scaled up so
+// Energy Efficiency: the interval between the egon's ammo ticks, scaled up so
 // uranium drains slower. Server-side only: ammo use is not predicted, and
 // Fire() below only spends it under this same guard.
 static float EgonAmmoInterval(CBasePlayer* pPlayer, float flBase)
 {
-	if (pPlayer->m_skills.HasSkill(ESkillId::EgonEfficiency))
-		return flBase * std::max(0.1f, skill_egon_efficiency_scale.value);
+	if (pPlayer->m_skills.HasSkill(ESkillId::EnergyEfficiency))
+		return flBase * std::max(0.1f, skill_energy_efficiency_scale.value);
 	return flBase;
 }
 #endif

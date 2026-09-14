@@ -291,9 +291,9 @@ cvar_t sk_plr_crowbar3 = {"sk_plr_crowbar3", "0"};
 // Gauss Katana.  Real defaults rather than "0": the mod ships no skill.cfg of
 // its own and falls back to Half-Life's, which has never heard of these, and
 // GetSkillCvar treats zero as an error.
-cvar_t sk_plr_katana1 = {"sk_plr_katana1", "40"};
-cvar_t sk_plr_katana2 = {"sk_plr_katana2", "40"};
-cvar_t sk_plr_katana3 = {"sk_plr_katana3", "40"};
+cvar_t sk_plr_katana1 = {"sk_plr_katana1", "60"};
+cvar_t sk_plr_katana2 = {"sk_plr_katana2", "60"};
+cvar_t sk_plr_katana3 = {"sk_plr_katana3", "60"};
 
 // Glock Round
 cvar_t sk_plr_9mm_bullet1 = {"sk_plr_9mm_bullet1", "0"};
@@ -527,22 +527,37 @@ cvar_t cleave_arc_dot = {"cleave_arc_dot", "0.77"};
 cvar_t cleave_radius = {"cleave_radius", "160"};
 cvar_t cleave_damage_scale = {"cleave_damage_scale", "1.5"};
 
-// The Gauss Katana.  Slower and heavier than the crowbar; both numbers are
-// first guesses.  Damage goes through the sk_plr_katana skill cvars below so
-// it scales with difficulty like every other weapon; the swing time is read
-// from both DLLs through skill_tuning.h because it is predicted.
-// 1.0 is the crowbar's own rate.  Started at 2.0; halved after play, the wave
-// having made the slow swing feel like waiting rather than weight.
-cvar_t katana_swing_time_scale = {"katana_swing_time_scale", "1.0"};
-// The wave the swing throws.  Energy damage to the first thing on its path
-// beyond the blade's reach, as a fraction of the katana's base damage, falling
-// off to nothing at katana_wave_range -- the same distance the drawn wave
-// fades over on the client (katana_arc_range there), so keep the two equal.
-cvar_t katana_wave_damage_scale = {"katana_wave_damage_scale", "0.5"};
+// The Gauss Katana.  The slash is burst and the wave is DPS (decided
+// 2026-09-14 against the gauss's two clicks, which it replaces): the left
+// click hits hard and swings slow, the right click hits light, swings at the
+// crowbar's rate, pierces and spends uranium.  The slash's damage goes
+// through the sk_plr_katana skill cvars below like every other weapon's; the
+// two swing times are read from both DLLs through skill_tuning.h because the
+// delay they scale is predicted.  Multiples of the crowbar's own rate: 2.4 is
+// 0.6 s after a hit and 1.2 s after a miss.  The slash started at 2.0, went
+// to 1.0 when the wave still rode on it and the slow swing read as waiting,
+// and is slow again now that the fast click is the other one.
+cvar_t katana_swing_time_scale = {"katana_swing_time_scale", "2.4"};
+cvar_t katana_wave_swing_time_scale = {"katana_wave_swing_time_scale", "1.0"};
+// The wave the right click throws (CKatanaWave, dlls/katana.cpp): an unseen
+// projectile whose look is the crescent the client draws (EV_KatanaArc).
+// Energy damage to everything on its path, each once: katana_wave_damage
+// full out to katana_wave_full_range, then falling off to nothing at
+// katana_wave_range.  Speed in units per second.  The client reads range,
+// full range and speed by name for the crescent, so the drawn wave and the
+// damage are one thing; there are no client copies.  Damage is a plain
+// number, not a fraction of the slash's: the two are tuned apart.
+cvar_t katana_wave_damage = {"katana_wave_damage", "15"};
 cvar_t katana_wave_range = {"katana_wave_range", "1200"};
-// The blade's share on the right click, which swings it beside the wave.
-// Toned down so the left click stays the melee verb; a first guess.
-cvar_t katana_wave_swing_damage_scale = {"katana_wave_swing_damage_scale", "0.5"};
+cvar_t katana_wave_full_range = {"katana_wave_full_range", "800"};
+cvar_t katana_wave_speed = {"katana_wave_speed", "1200"};
+// Uranium a wave spends, before Energy Efficiency divides it.  Read from both
+// DLLs through skill_tuning.h: the check is predicted.  0 is free.
+cvar_t katana_wave_cost = {"katana_wave_cost", "5"};
+// The blade's damage on the right click, which swings it beside the wave.
+// Light, so the left click stays the melee verb; the melee Skills still
+// multiply it.
+cvar_t katana_wave_blade_damage = {"katana_wave_blade_damage", "10"};
 cvar_t skill_weapon_damage_scale = {"skill_weapon_damage_scale", "1.1"};
 // The Weapon Specialist Route (docs/SKILL_TREE.md).  Marksman multiplies
 // player bullet damage; each Bullet Damage Stat node adds this to one
@@ -575,12 +590,13 @@ cvar_t skill_overheal_cap = {"skill_overheal_cap", "50"};
 cvar_t skill_overheal_decay = {"skill_overheal_decay", "2"};
 // The Energy Route (docs/SKILL_TREE.md).  Energy Damage multiplies player
 // DMG_ENERGYBEAM; each Energy Damage Stat node adds to one multiplier on it;
-// Egon Efficiency scales the interval between the egon's ammo ticks (above 1
-// is slower); Insulation scales DMG_ENERGYBEAM and DMG_SHOCK taken.  First
-// guesses.
+// Energy Efficiency scales the interval between the egon's ammo ticks (above
+// 1 is slower) and divides the katana's wave's uranium cost (read from both
+// DLLs through skill_tuning.h for that); Insulation scales DMG_ENERGYBEAM and
+// DMG_SHOCK taken.  First guesses.
 cvar_t skill_energy_damage_scale = {"skill_energy_damage_scale", "1.15"};
 cvar_t skill_stat_energy_damage = {"skill_stat_energy_damage", "0.05"};
-cvar_t skill_egon_efficiency_scale = {"skill_egon_efficiency_scale", "1.33"};
+cvar_t skill_energy_efficiency_scale = {"skill_energy_efficiency_scale", "1.33"};
 cvar_t skill_insulation_scale = {"skill_insulation_scale", "0.7"};
 // Ricochet (the Juggernaut Route): the chance per bullet hit, while the
 // player has armour, that it bounces back at the shooter.  A first guess;
@@ -792,9 +808,13 @@ void GameDLLInit()
 	CVAR_REGISTER(&cleave_radius);
 	CVAR_REGISTER(&cleave_damage_scale);
 	CVAR_REGISTER(&katana_swing_time_scale);
-	CVAR_REGISTER(&katana_wave_damage_scale);
+	CVAR_REGISTER(&katana_wave_swing_time_scale);
+	CVAR_REGISTER(&katana_wave_damage);
 	CVAR_REGISTER(&katana_wave_range);
-	CVAR_REGISTER(&katana_wave_swing_damage_scale);
+	CVAR_REGISTER(&katana_wave_full_range);
+	CVAR_REGISTER(&katana_wave_speed);
+	CVAR_REGISTER(&katana_wave_cost);
+	CVAR_REGISTER(&katana_wave_blade_damage);
 	CVAR_REGISTER(&skill_reload_time_scale);
 	CVAR_REGISTER(&skill_weapon_damage_scale);
 	CVAR_REGISTER(&skill_marksman_scale);
@@ -812,7 +832,7 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_overheal_decay);
 	CVAR_REGISTER(&skill_energy_damage_scale);
 	CVAR_REGISTER(&skill_stat_energy_damage);
-	CVAR_REGISTER(&skill_egon_efficiency_scale);
+	CVAR_REGISTER(&skill_energy_efficiency_scale);
 	CVAR_REGISTER(&skill_insulation_scale);
 	CVAR_REGISTER(&skill_ricochet_chance);
 

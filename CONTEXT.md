@@ -223,9 +223,10 @@ _Avoid_: sneak attack, assassination, critical hit, ambush
 **Gauss Katana**:
 The mod's heavy melee weapon: a blade on the crowbar's swing, slower and far harder-hitting. Two clicks:
 the left is the slash, blade only, and carries Cleave; the right swings the blade at a reduced share and
-throws the crescent wave. Every swing heats the blade; a thrown wave spends some of that heat. Everything
-that applies to a melee hit — the Backstab, Melee Reach, Force and Speed, the Melee Damage Stat nodes, the
-Follow-Up — applies to it. `weapon_katana` in code and maps.
+throws **the wave**, a piercing energy projectile that spends uranium and whose look is **the crescent**.
+Every swing heats the blade; a thrown wave spends some of that heat. Everything that applies to a melee
+hit — the Backstab, Melee Reach, Force and Speed, the Melee Damage Stat nodes, the Follow-Up — applies to
+the blade. `weapon_katana` in code and maps; `katana_wave` is the projectile.
 _Avoid_: sword, blade, energy sword, gauss blade; and *katana* alone where the gauss half matters
 
 **Disturbance**:

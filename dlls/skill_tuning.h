@@ -56,7 +56,17 @@ inline CSkillTuning g_tuneReloadTime = {"skill_reload_time_scale", 1.0f, nullptr
 // sets m_flNextAttack, predicted.  Same rule as Fast Reload.
 inline CSkillTuning g_tuneDrawTime = {"skill_draw_time_scale", 1.0f, nullptr};
 
-// The Gauss Katana's swing time, as a multiple of the crowbar's.  Not a Skill,
-// but the same rule applies: m_flNextPrimaryAttack is predicted, so the client
-// has to see the same number.  Neutral means "as fast as the crowbar".
+// The Gauss Katana's two swing times, as multiples of the crowbar's: the
+// slash's and the wave's.  Not Skills, but the same rule applies:
+// m_flNextPrimaryAttack is predicted, so the client has to see the same
+// number.  Neutral means "as fast as the crowbar".
 inline CSkillTuning g_tuneKatanaSwing = {"katana_swing_time_scale", 1.0f, nullptr};
+inline CSkillTuning g_tuneKatanaWaveSwing = {"katana_wave_swing_time_scale", 1.0f, nullptr};
+
+// The katana's wave spends uranium, and whether the right click swings at all
+// depends on having it, so the check runs on both sides.  The cost, then the
+// Skill that divides it.  Neutral for the cost is free, which on a failed
+// lookup is the safe side: the client never refuses a swing the server
+// allows.  Neutral for Energy Efficiency is no discount.
+inline CSkillTuning g_tuneKatanaWaveCost = {"katana_wave_cost", 0.0f, nullptr};
+inline CSkillTuning g_tuneEnergyEfficiency = {"skill_energy_efficiency_scale", 1.0f, nullptr};

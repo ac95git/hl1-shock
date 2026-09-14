@@ -133,6 +133,7 @@ public:
 #define RPG_DEFAULT_GIVE 1
 #define GAUSS_DEFAULT_GIVE 20
 #define EGON_DEFAULT_GIVE 20
+#define KATANA_DEFAULT_GIVE 20 // uranium, for the wave; the gauss's figure
 #define HANDGRENADE_DEFAULT_GIVE 5
 #define SATCHEL_DEFAULT_GIVE 1
 #define TRIPMINE_DEFAULT_GIVE 1
@@ -641,7 +642,8 @@ protected:
 // The Gauss Katana.  Two clicks on the crowbar's swing (docs/ROADMAP.md, the
 // katana rework, first step 2026-09-14): the left is the slash, blade only,
 // full damage, and carries Cleave; the right is the old swing entire, blade
-// at a reduced share and the crescent wave.  Every swing heats the blade.
+// at a reduced share and the wave thrown off it, which spends uranium.
+// Every swing heats the blade.
 class CKatana : public CCrowbar
 {
 public:
@@ -651,10 +653,17 @@ public:
 	bool Deploy() override;
 	// The slash: the crowbar's swing, then the heat event.
 	void PrimaryAttack() override;
-	// The wave: the crowbar's swing at the blade's reduced share, then the
-	// arc event and the wave's damage.  Once per swing, not once per
-	// attempt: SwingAgain retries a miss a tenth later and must not arc twice.
+	// The wave: the uranium check, the crowbar's swing at the blade's
+	// reduced share, then the arc event and the wave itself.  Once per
+	// swing, not once per attempt: SwingAgain retries a miss a tenth later
+	// and must not arc twice.
 	void SecondaryAttack() override;
+
+	// The katana carries uranium for the wave, but the slash needs none, so
+	// it can always be drawn and is never "empty": the stock tests would
+	// refuse to deploy it and switch away from it at zero.
+	bool CanDeploy() override { return true; }
+	bool IsUseable() override { return true; }
 
 	int CleaveSweepStyle() override { return 1; }
 	bool IsSecondarySwing() override { return m_bWaveSwing; }
@@ -667,11 +676,14 @@ protected:
 	// node that made the blade energy was rejected as leaving the katana
 	// half a weapon until bought.
 	int SwingDamageType() override { return DMG_ENERGYBEAM; }
-	// The wave hurts: energy damage to the first thing on its path beyond
-	// the blade's own reach, falling off with distance the way the visual
-	// fades.  Server-side only; the client draws, the server decides.
-	void WaveAttack();
+	// Throws the wave: CKatanaWave (katana.cpp), the unseen projectile that
+	// carries the damage along the crescent's flight.  Server-side only;
+	// the client draws, the server decides.
+	void ThrowWave();
 #endif
+	// Uranium the next wave costs, after Energy Efficiency.  Both sides: the
+	// check gates a predicted swing.
+	int WaveCost();
 	float SwingDelayScale() override;
 
 private:

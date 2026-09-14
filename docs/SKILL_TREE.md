@@ -173,7 +173,7 @@ deals energy damage, slash and wave (built 2026-09-14), and scales off both Mele
 | --- | --- | --- | --- |
 | Energy Damage | 54 | Energy hits 15% harder (`DMG_ENERGYBEAM` at the damage chokepoints). The katana, the egon, the Discharge and the Alien volley all read it | Built. **Root** |
 | Energy Damage ×4 | 60–63 | +5% energy damage each, additive within the stat. **The root's ranks became these** | Built. **The roads** |
-| Egon Efficiency | 56 | The egon's ammo ticks come a third further apart (`skill_egon_efficiency_scale` 1.33), so uranium drains a quarter slower. The katana's charged wave, when it spends uranium, should read it too | Built |
+| Energy Efficiency | 56 | The egon's ammo ticks come a third further apart (`skill_energy_efficiency_scale` 1.33), so uranium drains a quarter slower, and the katana's wave costs a quarter less uranium (5 → 4). Egon Efficiency until the wave spent uranium, 2026-09-14 | Built |
 | Egon Focus | 55 | Secondary fire unlocks the egon's narrow beam (dormant in the SDK) | Reserved. Details to be decided |
 | Quick Charge | 57 | The katana's charged wave charges faster | Reserved. Waits on the charge; first to cut |
 | Insulation | 58 | Energy **and shock** taken ×0.7 (`skill_insulation_scale`) in the player's `TakeDamage` | Built |
@@ -184,20 +184,20 @@ The region as placed, columns 14–15, `E` an Energy Damage Stat node:
 ```
      col14         col15
 r0   Energy Damage E
-r1   E             Egon Efficiency
+r1   E             Energy Efficiency
 r2   Insulation    E
 r3   E             Egon Focus
 r4   Quick Charge  Major
 ```
 
-Egon Efficiency and Insulation cost 2 from nothing, Egon Focus and Quick Charge 4, the major 9 (both
+Energy Efficiency and Insulation cost 2 from nothing, Egon Focus and Quick Charge 4, the major 9 (both
 roads' ends). **Still to be curated: the road from Melee's region to this one**, which SKILL_TREE.md's
 matrix section promises so the Gargantua build is a literal path; today the two Routes sit at opposite
 ends of the tree.
 
 ```mermaid
 graph TD
-  ED[Energy Damage] --> EE[Egon Efficiency]
+  ED[Energy Damage] --> EE[Energy Efficiency]
   EE --> EF[Egon Focus]
   ED --> QC[Quick Charge]
   ED --> IN[Insulation]

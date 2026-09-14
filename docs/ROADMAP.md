@@ -381,14 +381,20 @@ Skills happened once, for the roster, on 2026-09-14.
   tip that meets one scrapes a glow along it and the wave flies on, because aiming down at a headcrab
   used to kill the wave on the first floor tile.
 - **The wave hurts. Decided 2026-09-12, when aiming down at headcrabs made a wave that only looked
-  like an attack feel like a miss.** `CKatana::WaveAttack`, server-side: energy damage
-  (`DMG_ENERGYBEAM`) to the first damageable thing on the aim line beyond the blade's own 32 units, at
-  `katana_wave_damage_scale` (0.5) of base damage, falling off to nothing at `katana_wave_range` (1200),
-  the same distance the drawn wave fades over, so what the player sees arrive and what arrives agree. A
-  line trace first, then the small hull; never the large one, which finds the floor before a headcrab.
-  The katana is therefore a **ranged melee weapon**: the blade for what is in reach, the wave for what is
-  not, at half strength and less with distance. One target per wave for now; the drawn wave flies
-  through monsters, and whether it should hit everything on its path is the next question.
+  like an attack feel like a miss.** First as an instant trace at the swing (`CKatana::WaveAttack`, the
+  first thing on the aim line, falling off from birth), **since 2026-09-14 as `CKatanaWave`**
+  (`dlls/katana.cpp`), an unseen server projectile whose look is the crescent: born 32 units past the
+  blade on the aim, flying at `katana_wave_speed` (1200) to `katana_wave_range` (1200), each frame's step
+  swept as a line then the small hull, and everything damageable it meets struck once with energy damage
+  (`DMG_ENERGYBEAM`) at `katana_wave_damage` (15; a plain number, not a share of the slash's, since the
+  two are tuned apart), full out to `katana_wave_full_range` (800) and then falling off to nothing at the
+  range. The client reads those three cvars by name for the
+  crescent, so the drawn wave and the damage are one flight; the instant trace was kept for a day on the
+  grounds that the match was good enough, until a target 800 units out taking damage at the swing showed
+  it was not. The wave dies where the crescent's belly does, on a wall; a floor or ceiling the line meets
+  is scraped and flown through, and a step spent wholly inside the world ends it. The katana is therefore
+  a **ranged melee weapon**: the blade for what is in reach, the wave for what is not, at half strength,
+  and a crowd on the path is a crowd hit.
 - **The blade goes hot on the swing.** Two parts: a dynamic light at the hand (`katana_glow_light`, 0.9 s,
   decaying over its life, which is the fade the eye reads) and the blade's own texture swapping to a hot
   one (`katana_glow_hot`, 0.9 s). The hot blade is a second state in the skin families — six now, glove
@@ -403,9 +409,11 @@ Skills happened once, for the roster, on 2026-09-14.
   model for whatever wants them next. The glove half of the six families is picked by the player's Suit
   Variant in `cl_dll/view.cpp`; see PILLARS.md.
 - **The weapon exists, v1.** `weapon_katana`, `dlls/katana.cpp`: `CCrowbar` with two hooks overridden,
-  base damage (`sk_plr_katana1-3`, 40) and swing time (`katana_swing_time_scale`, now 1.0, the crowbar's
-  own rate — it started at 2× and the wave made the slow swing feel like waiting; read from both DLLs
-  because it is predicted), and its own models. Backstab, Crowbar Force and Reach, and
+  base damage (`sk_plr_katana1-3`, 60 since the numbers were set on 2026-09-14; 40 before) and swing time
+  (`katana_swing_time_scale`, 2.4, so 0.6 s after a hit — it started at 2×, went to 1× when the wave still
+  rode on the swing and the slow swing read as waiting, and is slow again now that the slash is the burst
+  click and the wave, at `katana_wave_swing_time_scale` 1.0, the fast one; both read from both DLLs
+  because the delay is predicted), and its own models. Backstab, Crowbar Force and Reach, and
   the Follow-Up come along unchanged, which is the point of subclassing rather than copying. In the
   melee bucket beside the crowbar; `impulse 101` gives it; the FGD places it. See PILLARS.md.
 - **Viewmodel and world model are the mod's own.** The Dystopia blade on Half-Life's crowbar hands
@@ -422,20 +430,27 @@ with Cleave:**
   air shock on the katana). Every swing heats the blade, through `events/katana_swing.sc`.
 - **Right click is a charged ranged attack.** Hold to charge, release a big wave. *Assumed* to spend
   uranium, since only the left click was exempted; not said in those words. **Built as far as "the old
-  swing, on the right click"**: the blade at a reduced share (`katana_wave_swing_damage_scale`, 0.5) and
-  the crescent wave exactly as v1 threw it, same cadence, Melee Speed scaling it too for now. Cleave never
-  spends on it. No charge, no uranium yet. **The lore, settled the same day:** swinging heats the energy in
-  the blade at no loss; a thrown wave spends some of it. The blade heats on both clicks.
-- **The wave pierces**: it hits everything on its path, not the first thing.
-- **The wave's damage travels with the projectile**, like the crossbow bolt. Today the damage is an instant
-  trace at swing time under a projectile *visual* (`CKatana::WaveAttack` versus `EV_KatanaArc`), so what
-  hits and what the player sees can disagree. Decoupled by accident; coupled by design from here.
+  swing, on the right click, for uranium"**: the blade light (`katana_wave_blade_damage`, 10) and the wave,
+  at the crowbar's rate, Melee Speed scaling it too for now. **The numbers, set 2026-09-14 against the
+  gauss's two clicks**: slash 60 at 0.6 s is burst, blade 10 plus wave 15 per target at 0.25 s is DPS —
+  100 a second in reach, 60 per target down the path, for uranium. Cleave never spends on it. **The
+  cost is built (2026-09-14)**: `katana_wave_cost` (5) uranium per wave, divided by Energy Efficiency
+  (four with it), refused with the empty click and no swing when short. The katana carries uranium for
+  it — `KATANA_DEFAULT_GIVE` (20) on pickup, the gauss's figure, the uranium counter on the HUD — and can
+  always be drawn and is never switched away from empty, since the slash needs none. No charge yet.
+  **The lore, settled the same day:** swinging heats the energy in the blade at no loss; a thrown wave
+  spends some of it. The blade heats on both clicks.
+- ~~**The wave pierces**: it hits everything on its path, not the first thing.~~ **Built 2026-09-14**,
+  in `CKatanaWave`; each thing once.
+- ~~**The wave's damage travels with the projectile**, like the crossbow bolt.~~ **Built 2026-09-14**:
+  the wave is the projectile and the crescent its look, above. The bolt was the template for the entity,
+  not for the look — a crescent cannot be a model, so it stays client-drawn from the event.
 - **The katana always deals energy damage**, slash and wave, and **scales off both Melee and Energy
   bonuses**. ~~The v1 slash inherits the crowbar's `DMG_CLUB`; that changes.~~ **The slash is energy since
   2026-09-14** (`SwingDamageType`); the Energy bonus waits on the Energy Route.
 
-The rest is *the katana's own story*, to be tuned as one piece: the charge, the cost, the piercing, the
-projectile damage, the energy type, the blade's share on the right click.
+The rest is *the katana's own story*, to be tuned as one piece: the charge, the cost's number, the wave's
+damage and the blade's share on the right click against the slash's.
 
 Which answers the two questions that used to sit here: it consumes uranium (on the charged wave only), and
 it charges (on the right click).
@@ -1826,7 +1841,8 @@ for the friendly slave (the ally relationship should be one piece of code betwee
 #### Energy
 
 **Shape: Building since 2026-09-14.** The region, Energy Damage as its root, the four Energy Damage Stat
-nodes (the root's ranks, as the matrix turns ranks into roads), Egon Efficiency and Insulation are built;
+nodes (the root's ranks, as the matrix turns ranks into roads), Energy Efficiency (Egon Efficiency until
+the katana's wave spent uranium) and Insulation are built;
 see [SKILL_TREE.md](SKILL_TREE.md#energy) and [PILLARS.md](PILLARS.md). **Reserved**: Egon Focus (details
 to be decided), Quick Charge (waits on the katana's charge) and the major (the armour drain, name
 pending). **Still to be curated**: the road from Melee's region to Energy's; today they sit at opposite
@@ -1860,7 +1876,7 @@ nodes are written against it.
 | --- | --- | --- |
 | Energy Damage | Energy damage dealt up | Root. Ranks 1 → 2 → 3. The katana, the egon, the Discharge and the Alien volley all read it |
 | Egon Focus | Secondary fire unlocks the egon's **narrow beam** | Dormant code: `CEgon::PrimaryAttack` hard-sets `FIRE_WIDE` (`dlls/egon.cpp:217`) and the narrow mode, single target, its own damage (`plrDmgEgonNarrow`) and ammo cadence, is complete and unreachable. Details to be decided |
-| Egon Efficiency | Uranium drains slower | Ranks. One chokepoint, `CEgon::UseAmmo` (`:127`), the `DefaultReload` pattern. Also cheapens the katana's charged wave, so it pays twice |
+| Energy Efficiency | Uranium drains slower | Ranks. One chokepoint, `CEgon::UseAmmo` (`:127`), the `DefaultReload` pattern. Also cheapens the katana's wave (built 2026-09-14), so it pays twice; renamed from Egon Efficiency that day |
 | Quick Charge | The katana's charged wave charges faster | The first to cut if the rework's charge is already short |
 | Insulation | Less energy **and shock** damage taken | Shock included so it means something in Xen: controller balls (`dlls/controller.cpp:1410`) and `env_laser`/`env_beam` hazards are energy; the slave's, controller's (`:1228`) and Nihilanth's (`dlls/nihilanth.cpp:1501`) zaps are shock |
 | Major node | **Energy attacks drain armour as well, for bonus damage. Always on, never below a floor** | Below |

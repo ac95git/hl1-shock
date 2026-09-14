@@ -1221,13 +1221,18 @@ static void EV_KatanaArcThink(struct tempent_s* ent, float frametime, float curr
 	VectorMA(prev, speed * frametime, forward, origin);
 	ent->entity.origin = origin;
 
-	// It is a wave, and waves die out: over the flight it shrinks and dims
-	// to nothing, so running out of range never looks like a cut.  The range
-	// is long enough that a wall usually comes first.
+	// It is a wave, and waves die out: full out to the wave's full-damage
+	// range, then shrinking and dimming to nothing at the range, the same
+	// curve the damage follows (CKatanaWave::Falloff, dlls/katana.cpp), so
+	// what the player sees arrive and what arrives agree.  Running out
+	// never looks like a cut.
 	const Vector start = ent->entity.baseline.vuser3;
 	const float range = ent->entity.baseline.scale;
-	const float progress = range > 0.0f ? (origin - start).Length() / range : 1.0f;
-	const float fade = 1.0f - (progress < 1.0f ? progress : 1.0f);
+	const float full = ent->entity.baseline.frame; // the full-damage range, clamped at birth
+	const float dist = (origin - start).Length();
+	float fade = 1.0f;
+	if (dist > full)
+		fade = range > full ? 1.0f - (dist - full) / (range - full) : 0.0f;
 	if (fade <= 0.02f)
 	{
 		ent->die = currenttime;
@@ -1271,26 +1276,39 @@ static void EV_KatanaArcThink(struct tempent_s* ent, float frametime, float curr
 			1.0f, 0.5f, 0.0f);
 	}
 
-	// Did the belly or either tip cross a WALL this frame?  Anything else --
-	// a monster, the player -- is flown through: the crescent is light.
-	// A floor or ceiling is not a wall either: a tip that meets one is
-	// scraped along it, leaving a glow where it touched, and the wave flies
-	// on.  Aiming down at a headcrab used to end the wave on the first floor
-	// tile its lower tip touched.
+	// Did the belly cross a WALL this frame?  Only the belly ends the flight,
+	// because the belly's path is the line the wave's damage travels
+	// (CKatanaWave, dlls/katana.cpp), and only a wall ends it: a floor or
+	// ceiling the belly meets is scraped, leaving a glow, and the wave flies
+	// on, because aiming down at a headcrab used to end it on the first
+	// floor tile.  A belly wholly inside the world -- it has gone into the
+	// floor it scraped -- is over, quietly, as the wave is.  The tips scrape
+	// whatever they meet, wall included: a tip against a doorframe or the
+	// vertical face of a ceiling beam used to end the wave, which in a low
+	// room was every wave.  Anything else -- a monster, the player -- is
+	// flown through: the crescent is light.
 	Vector probes[3] = {pts[segments / 2], pts[0], pts[segments]};
-	for (Vector& to : probes)
+	for (int k = 0; k < 3; k++)
 	{
+		const bool belly = (k == 0);
+		Vector& to = probes[k];
 		Vector from;
 		VectorMA(to, -speed * frametime, forward, from);
 		pmtrace_t* tr = gEngfuncs.PM_TraceLine(from, to, PM_TRACELINE_PHYSENTSONLY, 2, -1);
-		if (EV_KatanaArcIsWall(tr) && fabsf(tr->plane.normal[2]) > 0.7f)
+		if (belly && tr != nullptr && tr->allsolid)
+		{
+			ent->die = currenttime;
+			return;
+		}
+		if (!EV_KatanaArcIsWall(tr))
+			continue;
+		if (!belly || fabsf(tr->plane.normal[2]) > 0.7f)
 		{
 			Vector scrape;
 			VectorMA(tr->endpos, 1.0f, tr->plane.normal, scrape);
 			gEngfuncs.pEfxAPI->R_TempSprite(scrape, vec3_origin, 0.3f * fade, iGlow, kRenderGlow, kRenderFxNoDissipation, 0.6f * fade, 3.0f * fade, FTENT_FADEOUT);
 			continue;
 		}
-		if (EV_KatanaArcIsWall(tr))
 		{
 			// Points are spread along the flight by up to the crescent's whole
 			// depth: the leading ones are a step into the wall, the trailing
@@ -1356,9 +1374,14 @@ void EV_KatanaArc(event_args_t* args)
 
 	if (gEngfuncs.pfnGetCvarFloat("katana_arc") <= 0.0f)
 		return;
-	const float range = gEngfuncs.pfnGetCvarFloat("katana_arc_range");
+	// The flight is the wave's, not the crescent's: range, full-damage range
+	// and speed are the server's katana_wave_* cvars (dlls/game.cpp), read
+	// here by name -- single-player is a listen server, one cvar registry --
+	// so the drawn wave and the damage it stands for cannot drift apart.
+	const float range = gEngfuncs.pfnGetCvarFloat("katana_wave_range");
+	const float full = gEngfuncs.pfnGetCvarFloat("katana_wave_full_range");
+	const float speed = gEngfuncs.pfnGetCvarFloat("katana_wave_speed");
 	const float radius = gEngfuncs.pfnGetCvarFloat("katana_arc_radius");
-	const float speed = gEngfuncs.pfnGetCvarFloat("katana_arc_speed");
 	const float sweep = gEngfuncs.pfnGetCvarFloat("katana_arc_sweep");
 	const float roll = gEngfuncs.pfnGetCvarFloat("katana_arc_roll");
 	const float lean = gEngfuncs.pfnGetCvarFloat("katana_arc_lean");
@@ -1401,6 +1424,7 @@ void EV_KatanaArc(event_args_t* args)
 	arc->entity.baseline.fuser4 = lean;
 	arc->entity.baseline.vuser3 = start; // where it was born, for the fade
 	arc->entity.baseline.scale = range;
+	arc->entity.baseline.frame = full < 0.0f ? 0.0f : (full > range ? range : full);
 	arc->entity.baseline.origin = Vector(0, 0, 0); // it moves itself
 }
 //======================

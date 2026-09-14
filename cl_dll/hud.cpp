@@ -371,22 +371,21 @@ void CHud::Init()
 
 	CVAR_CREATE("zoom_sensitivity_ratio", "1.2", FCVAR_ARCHIVE);
 
-	// The Gauss Katana's crescent (EV_KatanaArc, ev_hldm.cpp).  Client-side
-	// because the effect is; every one of these is a first guess to be dialled
-	// in by eye, which is why they are cvars.  katana_arc 0 turns it off.
-	// Range: how far it flies, in units.  Radius: of the circle the ")" is cut
-	// from.  Sweep: how much of that circle, in degrees (180 is a half moon).
-	// Speed: units per second.  Roll: the tilt of the cut, in degrees, sign
-	// alternating swing to swing.  Lean: degrees the belly turns from facing
-	// the player (0, a ")" seen face-on) toward pointing forward (90, a
-	// thrown blade seen edge-on).
+	// The Gauss Katana's crescent (EV_KatanaArc, ev_hldm.cpp): the look of
+	// the wave.  Client-side because the look is; every one of these is a
+	// first guess to be dialled in by eye, which is why they are cvars.
+	// katana_arc 0 turns it off.  Radius: of the circle the ")" is cut from.
+	// Sweep: how much of that circle, in degrees (180 is a half moon).  Roll:
+	// the tilt of the cut, in degrees, sign alternating swing to swing.
+	// Lean: degrees the belly turns from facing the player (0, a ")" seen
+	// face-on) toward pointing forward (90, a thrown blade seen edge-on).
+	// How far and how fast it flies are NOT here: they are the wave's own
+	// (katana_wave_range, katana_wave_full_range, katana_wave_speed, server
+	// cvars in dlls/game.cpp), read by name, so the look cannot drift from
+	// the damage.
 	CVAR_CREATE("katana_arc", "1", 0);
-	// Range doubles as the fade: the crescent shrinks and dims to nothing over
-	// it, so it is long, and a wall almost always comes first.
-	CVAR_CREATE("katana_arc_range", "1200", 0);
 	CVAR_CREATE("katana_arc_radius", "70", 0);
 	CVAR_CREATE("katana_arc_sweep", "150", 0);
-	CVAR_CREATE("katana_arc_speed", "1200", 0);
 	CVAR_CREATE("katana_arc_roll", "30", 0);
 	CVAR_CREATE("katana_arc_lean", "90", 0);
 	// Cleave's air shock (EV_Cleave, ev_hldm.cpp).  How many quads the bow is
