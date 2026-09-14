@@ -274,7 +274,10 @@ through, so "melee" is true by construction rather than by a damage-type list:
   `cleave_radius` (160) of the eyes, inside the arc (`cleave_arc_dot` 0.77, so 40° either side of the
   aim; the first guess of 80 and 60° read as short and wide), with a clear line, and able to take damage —
   a crate as much as a zombie, exactly the set the line trace could have hit — takes the swing's damage
-  times `cleave_damage_scale` (1.5). Force and the Stat nodes are
+  times `cleave_damage_scale` (1.5). **The point tested is the nearest point of the victim's box to the
+  eyes, since 2026-09-14**, not its centre: the drawn wave is the region's edge, so a body the wave
+  visibly reaches must be hit, and on the centre a monster at the edge or the side was reached and
+  missed. Standing inside a monster's box counts, straight ahead. Force and the Stat nodes are
   in that number; the Backstab is tested per victim, monsters only; a primed Follow-Up multiplies every
   victim and is spent once. The line trace still runs for the wall decal and sound, and does no damage of
   its own on a Cleave swing. **Spent on the swing, hit or not**, then `cleave_cooldown` (4 s; 8 read as too
@@ -283,24 +286,31 @@ through, so "melee" is true by construction rather than by a damage-type list:
   (`m_flCleaveReadyTime`, saved as a time), so a swap to the katana does not hand out a second.
 
   **What the player sees and hears.** On the swing: **an air shock** — the front edge of the region as a
-  bow, born at the weapon and travelling out to the radius over a quarter second, widening as the sector
-  widens and fading as it goes, so it dies exactly where the hit test ends — from `events/cleave.sc` →
-  `EV_Cleave` (`cl_dll/ev_hldm.cpp`), with the radius and half-angle carried in the event from the server's
-  cvars; and the crowbar's miss sound pitched down, from the same event. Its look is **per roster weapon**
-  (`CCrowbar::CleaveSweepStyle()`, carried in the event): white air for the crowbar, gauss-orange for the
-  katana. A stationary gold bow was the first build and read as a fence; motion is what says "air". Two
-  client cvars shape it: `cleave_wave_segments` (32; each segment is one quad of texture, and too few read
-  as a row of tiles), `cleave_wave_lag` (0.08 s between the right end of the bow leaving the weapon and
-  the left, so the front crosses the arc the way the swing did rather than ringing out of it) and
-  `cleave_wave_height` (14 units at the far edge, from about a third of that at birth; 28 was the first
-  guess and read as heavy). **The wave dies against what it meets**: every point of the bow is traced a
-  step ahead each frame, the way the katana's crescent probes, and a point that meets anything, a wall, a
-  monster, a crate, stops there and is drawn no further. So a Cleave down a corridor shows the wave
-  hitting the walls either side and the middle running on, and a Cleave into a crowd shows it breaking on
-  each body. The sound says which: a wall plays an impact once per wave at the first contact; a body plays
-  one at each thing hit, rate-limited so the several points that meet one zombie in a frame are one sound
-  and two zombies a stride apart are two. The damage itself landed at the swing; the sound is the wave
-  arriving, which is at most a quarter second later and reads as the same event. On ready: the status icon at the left edge (through
+  bow, born at the weapon and travelling out to the radius, widening as the sector widens, at full
+  strength until the last quarter of the radius and then out, so it dies exactly where the hit test ends
+  — from `events/cleave.sc` → `EV_Cleave` (`cl_dll/ev_hldm.cpp`), with the radius and half-angle carried
+  in the event from the server's cvars; and the crowbar's miss sound pitched down, from the same event.
+  Its look is **per roster weapon** (`CCrowbar::CleaveSweepStyle()`, carried in the event): white air for
+  the crowbar, gauss-orange for the katana. A stationary gold bow was the first build and read as a
+  fence; motion is what says "air". Client cvars shape it: `cleave_wave_time` (0.12 s to cross the
+  region whatever its radius; a quarter second was the first guess and visibly trailed the hit, which
+  lands at the swing, and a fade from birth left the bow all but gone by three quarters of the way, so
+  the region read as shorter than the test), `cleave_wave_segments` (32; each segment is one quad of
+  texture, and too few read as a row of tiles), `cleave_wave_lag` (0.04 s between the right end of the
+  bow leaving the weapon and the left, so the front crosses the arc the way the swing did rather than
+  ringing out of it; 0.08 at the old speed) and
+  `cleave_wave_height` (2 units at the far edge, from about a third of that at birth; 28 was the first
+  guess and read as heavy, 14 still did). **The wave dies against walls and passes through bodies**:
+  every point of the bow is traced a step ahead each frame and judged the way the katana's crescent
+  judges its probes: only a hit on a brush model is a wall. A point that meets a world brush, a door or
+  a crate stops there and is drawn no further; a monster or the player is not a wall, and the point flies
+  on through them. So a Cleave down a corridor shows the wave hitting the walls either side and the middle
+  running on. A wall plays an impact once per wave at the first contact. **The wave is cosmetic, decided
+  2026-09-14**: the damage landed at the swing and each victim shows it in its own blood and flinch, so
+  the wave carries no hit test and no body sound. The first shape broke on bodies too, and the bow is born
+  inside the player's own box, so it broke on the player as it left them. The trace flags were tried first
+  (`PM_STUDIO_IGNORE`) and did not keep the player out, because a player's physent is a plain box rather
+  than a studio model; judging the hit is what works. On ready: the status icon at the left edge (through
   `gmsgStatusIcon` like the Infusion's, from `CBasePlayer::CleaveThink`, re-sent after a HUD reset) and a
   quiet cue when it comes back from a cooldown. **All placeholders** ([ART_DEBT.md](ART_DEBT.md)).
   `CCrowbar::CleaveSequence()` and `FollowUpSequence()` are the hooks for a per-weapon swing animation,

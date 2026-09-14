@@ -190,14 +190,29 @@ int CCrowbar::CleaveArc(const Vector& vecSrc, float flDamage, bool bBackstabNode
 		if (pMonster && !pMonster->IsAlive())
 			continue;
 
-		// In front, within the arc.
-		Vector vecTo = pEntity->Center() - vecSrc;
+		// In front, within the arc.  The point tested is the nearest point of
+		// the victim's box to the eyes, not its centre: the drawn wave is the
+		// region's edge, and a body the wave visibly reaches must be hit.  On
+		// the centre, a monster at the edge or the side was touched by the
+		// wave and missed by the test.  Inside the box altogether -- the
+		// player is standing in it -- counts, straight ahead.
+		Vector vecPoint;
+		for (int k = 0; k < 3; ++k)
+			vecPoint[k] = std::clamp(vecSrc[k], pEntity->pev->absmin[k], pEntity->pev->absmax[k]);
+		Vector vecTo = vecPoint - vecSrc;
 		const float flDist = vecTo.Length();
-		if (flDist > flRadius || flDist <= 0.0f)
+		if (flDist > flRadius)
 			continue;
-		vecTo = vecTo / flDist;
-		if (DotProduct(vecTo, gpGlobals->v_forward) < flArcDot)
-			continue;
+		if (flDist > 1.0f)
+		{
+			vecTo = vecTo / flDist;
+			if (DotProduct(vecTo, gpGlobals->v_forward) < flArcDot)
+				continue;
+		}
+		else
+		{
+			vecTo = gpGlobals->v_forward;
+		}
 
 		// And not behind a wall or another thing: a Cleave does not reach
 		// through what it hits.

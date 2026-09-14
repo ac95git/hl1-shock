@@ -1412,8 +1412,8 @@ void EV_KatanaArc(event_args_t* args)
 //======================
 // The air shock drawn on a Cleave swing: the front edge of the hit region,
 // a bow, born at the weapon and travelling outward to the region's radius
-// over its life, widening as the sector widens and fading as it goes, so it
-// dies exactly where the hit test ends.  The radius and the half-angle
+// over its life, widening as the sector widens and going out over the last
+// quarter of the way, so it dies exactly where the hit test ends.  The radius and the half-angle
 // arrive with the event from the same cvars the server tested with; the
 // style is the weapon's (CCrowbar::CleaveSweepStyle): 0 white air for the
 // crowbar, 1 gauss-orange for the katana.  Motion is what says "air" and the
@@ -1466,7 +1466,12 @@ static void EV_CleaveThink(struct tempent_s* ent, float frametime, float current
 
 	// A point that has met a wall is dead: it stops there and is not drawn
 	// again, so the wave dies against walls instead of passing through them.
-	// One bit per point, in two ints the baseline has spare.
+	// Walls only -- world brushes, doors, crates -- never a monster or a
+	// player.  The damage landed at the swing (docs/PILLARS.md) and each
+	// victim shows it in its own blood and flinch; and the bow is born inside
+	// the player's own box, so a trace that could see studio models saw the
+	// player first and killed the wave as it left them.  One bit per point,
+	// in two ints the baseline has spare.
 	unsigned int dead0 = (unsigned int)ent->entity.baseline.iuser2;
 	unsigned int dead1 = (unsigned int)ent->entity.baseline.iuser3;
 	auto isDead = [&](int i) { return i < 32 ? ((dead0 >> i) & 1u) != 0 : ((dead1 >> (i - 32)) & 1u) != 0; };
@@ -1493,8 +1498,12 @@ static void EV_CleaveThink(struct tempent_s* ent, float frametime, float current
 
 		// Did this point cross a wall since last frame?  Traced from where it
 		// was, the way the katana's crescent probes, so a wall a step thick
-		// is not skipped.  The first contact of the wave plays its impact,
-		// once: a bow meeting a flat wall would otherwise fire every point.
+		// is not skipped.  And judged the way the crescent judges: only a hit
+		// on a brush model counts.  The trace flags cannot be trusted to keep
+		// the player out -- PM_STUDIO_IGNORE was tried and the bow still died
+		// on the player, whose physent is a plain box, not a studio model --
+		// so anything that is not a brush is simply not a wall and the point
+		// flies on through it, out of the player's box and through monsters.
 		if (isDead(i) || dist <= 1.0f)
 			continue;
 		float prevDist = speed * (age - frametime - lag * (1.0f - u));
@@ -1504,36 +1513,19 @@ static void EV_CleaveThink(struct tempent_s* ent, float frametime, float current
 		VectorMA(src, prevDist * cosf(theta), forward, from);
 		VectorMA(from, prevDist * sinf(theta), right, from);
 		pmtrace_t* tr = gEngfuncs.PM_TraceLine(from, p, PM_TRACELINE_PHYSENTSONLY, 2, -1);
-		if (tr == nullptr || tr->fraction >= 1.0f || tr->allsolid)
+		if (!EV_KatanaArcIsWall(tr))
 			continue;
 
-		// Something stopped it.  A wall, or a monster or entity: either way
-		// the point dies there, and the sound says which.
+		// A wall stopped it: the point dies there.  The impact plays once per
+		// wave, at the first contact; a bow meeting a flat wall would
+		// otherwise fire every point.  Placeholder: the crowbar's own wall
+		// hit, lower.
 		kill(i);
-		if (EV_KatanaArcIsWall(tr))
+		if (ent->entity.baseline.iuser4 == 0)
 		{
-			// Once per wave: a bow meeting a flat wall would otherwise fire
-			// every point.  Placeholder: the crowbar's own wall hit, lower.
-			if (ent->entity.baseline.iuser4 == 0)
-			{
-				ent->entity.baseline.iuser4 = 1;
-				gEngfuncs.pEventAPI->EV_PlaySound(-1, tr->endpos, CHAN_STATIC, "weapons/cbar_hit1.wav",
-					0.8f, ATTN_NORM, 0, 60);
-			}
-		}
-		else
-		{
-			// Rate-limited rather than once: two zombies a stride apart
-			// should each be heard, but the several points that meet one
-			// zombie in the same frame should not.  Placeholder: the
-			// crowbar's body hit, a little lower.  The damage itself landed
-			// at the swing (docs/PILLARS.md); this is the wave arriving.
-			if (currenttime - ent->entity.baseline.animtime >= 0.06f)
-			{
-				ent->entity.baseline.animtime = currenttime;
-				gEngfuncs.pEventAPI->EV_PlaySound(-1, tr->endpos, CHAN_STATIC, "weapons/cbar_hitbod1.wav",
-					0.9f, ATTN_NORM, 0, 85);
-			}
+			ent->entity.baseline.iuser4 = 1;
+			gEngfuncs.pEventAPI->EV_PlaySound(-1, tr->endpos, CHAN_STATIC, "weapons/cbar_hit1.wav",
+				0.8f, ATTN_NORM, 0, 60);
 		}
 	}
 	ent->entity.baseline.iuser2 = (int)dead0;
@@ -1549,7 +1541,10 @@ static void EV_CleaveThink(struct tempent_s* ent, float frametime, float current
 		const float p = 0.5f * (prog[i] + prog[i + 1]);
 		if (p <= 0.005f || p >= 1.0f)
 			continue;
-		const float fade = 1.0f - p;
+		// Full strength until the last quarter of the radius, then out.  A
+		// fade from birth left the bow all but invisible by three quarters
+		// of the way, so the region read as shorter than the hit test.
+		const float fade = p < 0.75f ? 1.0f : (1.0f - p) / 0.25f;
 		// Growing as it travels; heavier in the middle than at the ends.
 		const float t = fabsf((float)i / (float)segments - 0.5f) * 2.0f;
 		const float width = height * (0.35f + 0.65f * p) * (1.0f - 0.4f * t);
@@ -1581,9 +1576,13 @@ void EV_Cleave(event_args_t* args)
 		1.0, ATTN_NORM, 0, 70);
 
 	// Born a little below the eyes, at the weapon's height, and it crosses
-	// the region in a quarter of a second whatever the radius, plus the lag
-	// the trailing end carries.
-	const float life = 0.25f;
+	// the region in cleave_wave_time whatever the radius, plus the lag the
+	// trailing end carries.  The hit landed at the swing, so the crossing
+	// has to be quick enough to read as the same instant: a quarter second
+	// was the first guess and lagged the hit visibly.
+	float life = gEngfuncs.pfnGetCvarFloat("cleave_wave_time");
+	if (life < 0.02f)
+		life = 0.02f;
 	float lag = gEngfuncs.pfnGetCvarFloat("cleave_wave_lag");
 	if (lag < 0.0f)
 		lag = 0.0f;
@@ -1607,7 +1606,6 @@ void EV_Cleave(event_args_t* args)
 	wave->entity.baseline.iuser2 = 0; // dead-point masks, and
 	wave->entity.baseline.iuser3 = 0;
 	wave->entity.baseline.iuser4 = 0; // whether the wall impact has played
-	wave->entity.baseline.animtime = 0.0f; // when the last body impact played
 }
 //======================
 //	   CLEAVE END
