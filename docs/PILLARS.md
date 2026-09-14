@@ -283,7 +283,14 @@ through, so "melee" is true by construction rather than by a damage-type list:
   as a row of tiles), `cleave_wave_lag` (0.08 s between the right end of the bow leaving the weapon and
   the left, so the front crosses the arc the way the swing did rather than ringing out of it) and
   `cleave_wave_height` (14 units at the far edge, from about a third of that at birth; 28 was the first
-  guess and read as heavy). On ready: the status icon at the left edge (through
+  guess and read as heavy). **The wave dies against what it meets**: every point of the bow is traced a
+  step ahead each frame, the way the katana's crescent probes, and a point that meets anything, a wall, a
+  monster, a crate, stops there and is drawn no further. So a Cleave down a corridor shows the wave
+  hitting the walls either side and the middle running on, and a Cleave into a crowd shows it breaking on
+  each body. The sound says which: a wall plays an impact once per wave at the first contact; a body plays
+  one at each thing hit, rate-limited so the several points that meet one zombie in a frame are one sound
+  and two zombies a stride apart are two. The damage itself landed at the swing; the sound is the wave
+  arriving, which is at most a quarter second later and reads as the same event. On ready: the status icon at the left edge (through
   `gmsgStatusIcon` like the Infusion's, from `CBasePlayer::CleaveThink`, re-sent after a HUD reset) and a
   quiet cue when it comes back from a cooldown. **All placeholders** ([ART_DEBT.md](ART_DEBT.md)).
   `CCrowbar::CleaveSequence()` and `FollowUpSequence()` are the hooks for a per-weapon swing animation,

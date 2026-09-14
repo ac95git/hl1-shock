@@ -1442,8 +1442,8 @@ static void EV_CleaveThink(struct tempent_s* ent, float frametime, float current
 	int segments = (int)gEngfuncs.pfnGetCvarFloat("cleave_wave_segments");
 	if (segments < 4)
 		segments = 4;
-	if (segments > 64)
-		segments = 64;
+	if (segments > 63)
+		segments = 63; // 64 points: one bit each in the two dead masks below
 	// The band's height at the far edge; it starts at about a third of it.
 	float height = gEngfuncs.pfnGetCvarFloat("cleave_wave_height");
 	if (height < 1.0f)
@@ -1464,10 +1464,18 @@ static void EV_CleaveThink(struct tempent_s* ent, float frametime, float current
 		r = 1.0f; g = 0.5f; b = 0.0f; bright = 0.85f; // the gauss's orange, the katana's
 	}
 
+	// A point that has met a wall is dead: it stops there and is not drawn
+	// again, so the wave dies against walls instead of passing through them.
+	// One bit per point, in two ints the baseline has spare.
+	unsigned int dead0 = (unsigned int)ent->entity.baseline.iuser2;
+	unsigned int dead1 = (unsigned int)ent->entity.baseline.iuser3;
+	auto isDead = [&](int i) { return i < 32 ? ((dead0 >> i) & 1u) != 0 : ((dead1 >> (i - 32)) & 1u) != 0; };
+	auto kill = [&](int i) { if (i < 32) dead0 |= 1u << i; else dead1 |= 1u << (i - 32); };
+
 	// The sector's front edge, each point at its own distance: point 0 is
 	// the left end (theta = -half) and lags most, the right end leads.
-	Vector pts[65];
-	float prog[65];
+	Vector pts[64];
+	float prog[64];
 	for (int i = 0; i <= segments; i++)
 	{
 		const float u = (float)i / (float)segments;      // 0 left .. 1 right
@@ -1482,12 +1490,62 @@ static void EV_CleaveThink(struct tempent_s* ent, float frametime, float current
 		VectorMA(src, dist * cosf(theta), forward, p);
 		VectorMA(p, dist * sinf(theta), right, p);
 		pts[i] = p;
+
+		// Did this point cross a wall since last frame?  Traced from where it
+		// was, the way the katana's crescent probes, so a wall a step thick
+		// is not skipped.  The first contact of the wave plays its impact,
+		// once: a bow meeting a flat wall would otherwise fire every point.
+		if (isDead(i) || dist <= 1.0f)
+			continue;
+		float prevDist = speed * (age - frametime - lag * (1.0f - u));
+		if (prevDist < 0.0f)
+			prevDist = 0.0f;
+		Vector from;
+		VectorMA(src, prevDist * cosf(theta), forward, from);
+		VectorMA(from, prevDist * sinf(theta), right, from);
+		pmtrace_t* tr = gEngfuncs.PM_TraceLine(from, p, PM_TRACELINE_PHYSENTSONLY, 2, -1);
+		if (tr == nullptr || tr->fraction >= 1.0f || tr->allsolid)
+			continue;
+
+		// Something stopped it.  A wall, or a monster or entity: either way
+		// the point dies there, and the sound says which.
+		kill(i);
+		if (EV_KatanaArcIsWall(tr))
+		{
+			// Once per wave: a bow meeting a flat wall would otherwise fire
+			// every point.  Placeholder: the crowbar's own wall hit, lower.
+			if (ent->entity.baseline.iuser4 == 0)
+			{
+				ent->entity.baseline.iuser4 = 1;
+				gEngfuncs.pEventAPI->EV_PlaySound(-1, tr->endpos, CHAN_STATIC, "weapons/cbar_hit1.wav",
+					0.8f, ATTN_NORM, 0, 60);
+			}
+		}
+		else
+		{
+			// Rate-limited rather than once: two zombies a stride apart
+			// should each be heard, but the several points that meet one
+			// zombie in the same frame should not.  Placeholder: the
+			// crowbar's body hit, a little lower.  The damage itself landed
+			// at the swing (docs/PILLARS.md); this is the wave arriving.
+			if (currenttime - ent->entity.baseline.animtime >= 0.06f)
+			{
+				ent->entity.baseline.animtime = currenttime;
+				gEngfuncs.pEventAPI->EV_PlaySound(-1, tr->endpos, CHAN_STATIC, "weapons/cbar_hitbod1.wav",
+					0.9f, ATTN_NORM, 0, 85);
+			}
+		}
 	}
+	ent->entity.baseline.iuser2 = (int)dead0;
+	ent->entity.baseline.iuser3 = (int)dead1;
 
 	for (int i = 0; i < segments; i++)
 	{
 		// A segment neither end of which has left the weapon yet is not
-		// drawn, so the wave is born at the right and grows across.
+		// drawn, so the wave is born at the right and grows across; nor is
+		// one that has met a wall at either end.
+		if (isDead(i) || isDead(i + 1))
+			continue;
 		const float p = 0.5f * (prog[i] + prog[i + 1]);
 		if (p <= 0.005f || p >= 1.0f)
 			continue;
@@ -1546,6 +1604,10 @@ void EV_Cleave(event_args_t* args)
 	wave->entity.baseline.fuser3 = halfDeg;
 	wave->entity.baseline.fuser4 = gEngfuncs.GetClientTime();
 	wave->entity.baseline.iuser1 = style;
+	wave->entity.baseline.iuser2 = 0; // dead-point masks, and
+	wave->entity.baseline.iuser3 = 0;
+	wave->entity.baseline.iuser4 = 0; // whether the wall impact has played
+	wave->entity.baseline.animtime = 0.0f; // when the last body impact played
 }
 //======================
 //	   CLEAVE END
