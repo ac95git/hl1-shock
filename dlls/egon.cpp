@@ -238,6 +238,19 @@ void CEgon::PrimaryAttack()
 	Attack();
 }
 
+void CEgon::SecondaryAttack()
+{
+	// Egon Focus: right click unlocks the SDK's dormant narrow beam.
+	// Without the Skill, this is the same empty click the base
+	// CBasePlayerWeapon::SecondaryAttack always was -- no mode change, no
+	// swing.
+	if (!m_pPlayer->m_skills.HasSkill(ESkillId::EgonFocus))
+		return;
+
+	m_fireMode = FIRE_NARROW;
+	Attack();
+}
+
 void CEgon::Fire(const Vector& vecOrigSrc, const Vector& vecDir)
 {
 	Vector vecDest = vecOrigSrc + vecDir * 2048;
@@ -298,6 +311,7 @@ void CEgon::Fire(const Vector& vecOrigSrc, const Vector& vecDir)
 				if (gpGlobals->time >= m_flAmmoUseTime)
 				{
 					UseAmmo(1);
+					OverdrawSpendArmor(m_pPlayer, 1);
 					m_flAmmoUseTime = gpGlobals->time + EgonAmmoInterval(m_pPlayer, 0.1);
 				}
 			}
@@ -307,6 +321,7 @@ void CEgon::Fire(const Vector& vecOrigSrc, const Vector& vecDir)
 				if (gpGlobals->time >= m_flAmmoUseTime)
 				{
 					UseAmmo(1);
+					OverdrawSpendArmor(m_pPlayer, 1);
 					m_flAmmoUseTime = gpGlobals->time + EgonAmmoInterval(m_pPlayer, 0.166);
 				}
 			}
@@ -344,6 +359,7 @@ void CEgon::Fire(const Vector& vecOrigSrc, const Vector& vecDir)
 				if (gpGlobals->time >= m_flAmmoUseTime)
 				{
 					UseAmmo(1);
+					OverdrawSpendArmor(m_pPlayer, 1);
 					m_flAmmoUseTime = gpGlobals->time + EgonAmmoInterval(m_pPlayer, 0.2);
 				}
 			}
@@ -353,6 +369,7 @@ void CEgon::Fire(const Vector& vecOrigSrc, const Vector& vecDir)
 				if (gpGlobals->time >= m_flAmmoUseTime)
 				{
 					UseAmmo(1);
+					OverdrawSpendArmor(m_pPlayer, 1);
 					m_flAmmoUseTime = gpGlobals->time + EgonAmmoInterval(m_pPlayer, 0.1);
 				}
 			}

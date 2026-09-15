@@ -100,7 +100,24 @@ extern cvar_t skill_energy_damage_scale;
 extern cvar_t skill_stat_energy_damage;
 extern cvar_t skill_energy_efficiency_scale;
 extern cvar_t skill_insulation_scale;
+extern cvar_t skill_overdraw_armor_per_uranium;
+extern cvar_t skill_overdraw_floor;
+extern cvar_t skill_overdraw_damage_scale;
 extern cvar_t skill_ricochet_chance;
+
+// Overdraw's armour drain: defined in dlls/player_skills.cpp.  Declared
+// here rather than in player_skills.h so the egon and the katana -- which
+// already include this header under #ifndef CLIENT_DLL for the cvars above
+// -- reach it with no new include.
+class CBasePlayer;
+void OverdrawSpendArmor(CBasePlayer* pPlayer, int uraniumSpent);
+// Last Stand, the Medical major, and Glass Cannon, the keystone that arms it
+// permanently (docs/SKILL_TREE.md, "The keystone").  First guesses.
+extern cvar_t skill_last_stand_invuln;
+extern cvar_t skill_last_stand_cooldown;
+extern cvar_t skill_last_stand_low_health;
+extern cvar_t skill_last_stand_heal_scale;
+extern cvar_t skill_glass_cannon_max_health;
 
 // The Pulse.  Every one of these is a starting guess to be judged in play.
 extern cvar_t pulse_window;

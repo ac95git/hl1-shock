@@ -16,6 +16,7 @@
 #include "util.h"
 #include "cbase.h"
 #include "vgui_inventory.h"
+#include "suit_defs.h"
 #include <string>
 #include <VGUI_Label.h>
 #include <VGUI_Button.h>
@@ -23,6 +24,7 @@
 #include "ammohistory.h"
 #include <vector>
 #include <algorithm>
+#include <cctype>
 #include <cstdio>
 
 using namespace vgui;
@@ -364,6 +366,8 @@ void CInventoryPanel::Close()
     m_gridView.CancelDrag();
     // An armed Reset must not still be armed when the panel is opened again.
     m_skillTreeView.CancelResetConfirm();
+    // Nor should a held press resume as a pan on the next Open().
+    m_skillTreeView.CancelDrag();
     setVisible(false);
     if (gViewPort) gViewPort->UpdateCursorState();
 }
@@ -467,7 +471,25 @@ void CInventoryPanel::paintBackground()
     // The header label is a VGUI Label, so its colour is set rather than
     // drawn; refreshed here because the suit can change while the panel is up.
     if (m_pLabel)
+    {
         m_pLabel->setFgColor(lr, lg, lb, 0);
+
+        // The codename follows the Suit Variant worn, the same on both tabs
+        // (SKILL_PANEL.md "Header"): "HEV MK IV  //  STRENGTH". setText is a
+        // VGUI relayout, so it is only called on an actual change.
+        const int variant = gHUD.SuitVariant();
+        if (variant != m_iHeaderSuitVariant)
+        {
+            m_iHeaderSuitVariant = variant;
+
+            std::string codename = GetSuitVariant(variant).name;
+            for (char& c : codename)
+                c = (char)std::toupper((unsigned char)c);
+
+            std::string header = "HEV MK IV  //  " + codename;
+            m_pLabel->setText(header.c_str());
+        }
+    }
 
     // ----------------------------------------------------------------
     // HEADER BAR
@@ -766,6 +788,7 @@ void CInventoryPanel::mousePressed(vgui::MouseCode code, vgui::Panel* panel)
             m_gridView.CancelDrag();
             m_skillTreeView.HandleMouseMove(-1, -1);
             m_skillTreeView.CancelResetConfirm();
+            m_skillTreeView.CancelDrag();
             return;
         }
     }
@@ -799,6 +822,8 @@ void CInventoryPanel::mouseReleased(vgui::MouseCode code, vgui::Panel* panel)
 
     if (m_eActiveTab == EInventoryTab::Inventory)
         m_gridView.HandleMouseRelease(this, localx, localy, m_entries);
+    else
+        m_skillTreeView.HandleMouseRelease(this, localx, localy);
 }
 
 void CInventoryPanel::cursorMoved(int x, int y, vgui::Panel* panel)

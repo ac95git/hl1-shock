@@ -41,6 +41,13 @@ struct CPlayerSkills
     // anything; the rest are room.
     bool m_bUnlocked[k_SkillIdCeiling] = {};
 
+    // Which gates (EGate) are open, one bit per value: bit N is
+    // static_cast<int>(EGate) == N, so bit 0 is spare since EGate::None
+    // never gates anything.  EGate::PulseModule starts open (see
+    // EnsureInitialised); every other gate starts closed.  Per-player state,
+    // so it is saved and sent to the client alongside the unlocked mask.
+    int m_iOpenGates = 0;
+
     // ---- Setup ----
 
     // Applies skill_points_start and skill_reset_tokens_start if they have
@@ -80,6 +87,10 @@ struct CPlayerSkills
 
     int ResetTokens() const { return m_iResetTokens; }
 
+    // The raw bitmask, for SendSkillTreeToClient -- everything else should
+    // ask IsGateOpen/IsNodeHidden instead of reading bits itself.
+    int OpenGatesMask() const { return m_iOpenGates; }
+
     // Returns true if a node in a cell orthogonally adjacent to 'id' is held
     // (ADR-0012: the tree has no prerequisites, only neighbours).
     bool Reachable(ESkillId id) const;
@@ -89,7 +100,52 @@ struct CPlayerSkills
     // or cleared so no code path can leave a player without it.
     void HoldSuit() { m_bUnlocked[static_cast<int>(ESkillId::Suit)] = true; }
 
+    // Whether a gate value has a bit in m_iOpenGates: EGate::None does not
+    // (it never gates anything), and neither does a value past _Count --
+    // 1 << N is undefined for N >= 32, and skill_open_gates/close_gates
+    // pass a raw console int straight through, so this is the one place
+    // that range check has to happen.
+    static bool GateHasBit(EGate gate)
+    {
+        return gate > EGate::None && static_cast<int>(gate) < static_cast<int>(EGate::_Count);
+    }
+
+    // Whether the Module a gate stands for has been found.  EGate::None is
+    // always "open" -- it never gates anything -- so a caller can pass a
+    // node's gate straight through with no special case.
+    bool IsGateOpen(EGate gate) const
+    {
+        if (!GateHasBit(gate))
+            return true;
+        return (m_iOpenGates & (1 << static_cast<int>(gate))) != 0;
+    }
+
+    // A node behind a closed gate is a blank pad and cannot be bought
+    // (ADR-0012, "Hidden means impassable").
+    bool IsNodeHidden(ESkillId id) const
+    {
+        const SkillDef* def = GetSkillDef(id);
+        if (!def || def->gate == EGate::None)
+            return false;
+        return !IsGateOpen(def->gate);
+    }
+
     // ---- Mutations ----
+
+    // Opens or closes one gate.  A gate with no bit (None, or past _Count --
+    // see GateHasBit) is a no-op, which is what a garbage console argument
+    // to skill_open_gates/close_gates should do: nothing.
+    void OpenGate(EGate gate)
+    {
+        if (GateHasBit(gate))
+            m_iOpenGates |= (1 << static_cast<int>(gate));
+    }
+
+    void CloseGate(EGate gate)
+    {
+        if (GateHasBit(gate))
+            m_iOpenGates &= ~(1 << static_cast<int>(gate));
+    }
 
     // Try to unlock a skill.  Returns true on success.
     bool TryUnlock(ESkillId id);

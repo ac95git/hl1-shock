@@ -1118,6 +1118,7 @@ public:
 	void EndAttack();
 	void Attack();
 	void PrimaryAttack() override;
+	void SecondaryAttack() override; // Egon Focus: the narrow beam, right click
 	bool ShouldWeaponIdle() override { return true; }
 	void WeaponIdle() override;
 

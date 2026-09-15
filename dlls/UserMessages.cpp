@@ -88,11 +88,12 @@ void LinkUserMessages()
 
 	ALERT(at_console, "[LinkUserMessages] Done: gmsgInventoryItem=%d\n", gmsgInventoryItem);
 
-	// Fixed size: the unlocked mask, unspent Skill Points, banked Reset Tokens.
+	// Fixed size: the unlocked mask, unspent Skill Points, banked Reset
+	// Tokens, then the open-gates bitmask (one byte, 2026-09-15).
 	// Registering the exact length rather than -1 makes a client/server
 	// disagreement about k_MaxSkills an engine-level error instead of a silent
 	// misread.
-	gmsgSkillTree = REG_USER_MSG("SkillTree", k_SkillMaskBytes + 2);
+	gmsgSkillTree = REG_USER_MSG("SkillTree", k_SkillMaskBytes + 3);
 
 	ALERT(at_console, "[LinkUserMessages] Done: gmsgSkillTree=%d\n", gmsgSkillTree);
 

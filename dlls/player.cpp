@@ -80,6 +80,8 @@ TYPEDESCRIPTION CBasePlayer::m_playerSaveData[] =
 		DEFINE_FIELD(CBasePlayer, m_flCleaveReadyTime, FIELD_TIME),
 		DEFINE_FIELD(CBasePlayer, m_flSurgeUntil, FIELD_TIME),
 		DEFINE_FIELD(CBasePlayer, m_flSurgeReadyTime, FIELD_TIME),
+		DEFINE_FIELD(CBasePlayer, m_flLastStandUntil, FIELD_TIME),
+		DEFINE_FIELD(CBasePlayer, m_flLastStandReadyTime, FIELD_TIME),
 
 		DEFINE_FIELD(CBasePlayer, m_afButtonLast, FIELD_INTEGER),
 		DEFINE_FIELD(CBasePlayer, m_afButtonPressed, FIELD_INTEGER),
@@ -429,6 +431,22 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 		return false;
 	}
 
+	// Last Stand's invincibility window (the Medical major, and Glass Cannon
+	// which arms it permanently): three seconds where nothing gets through at
+	// all, no damage type excepted -- DMG_FALL and DMG_DROWN included, since
+	// the point is to break contact after the hit that would have killed, not
+	// to answer one damage type. Before Ricochet and everything else so no
+	// downstream system sees a hit that never landed.
+	if (gpGlobals->time < m_flLastStandUntil)
+	{
+		if (debug_damage.value != 0)
+		{
+			ALERT(at_console, "laststand: invulnerable, %.2fs left, dmg %.0f blocked\n",
+				m_flLastStandUntil - gpGlobals->time, flDamage);
+		}
+		return false;
+	}
+
 	// Ricochet (the Juggernaut Route): a chance per bullet, while the player
 	// has armour, to turn it away entirely and send its full damage back at
 	// whoever fired it, with a tracer from the player to them. Only bullets:
@@ -528,6 +546,45 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 			pev->armorvalue -= flArmor;
 
 		flDamage = flNew;
+	}
+
+	// Last Stand (the Medical major) and Glass Cannon (the keystone that arms
+	// it permanently): a hit that would otherwise kill is caught here, after
+	// armour has already taken its share, so the test is against what
+	// actually reaches health -- the same arithmetic the cast-to-int call
+	// below performs. Fires only with no Infusion already running
+	// (docs/adr/0007-the-infusion-is-one-at-a-time.md), off the cooldown, and
+	// with a Syringe in the Inventory to spend; the invincibility window
+	// itself is enforced at the top of this function, on the player's next hit.
+	if (LastStandArmed()
+		&& !m_infusion.Active()
+		&& gpGlobals->time >= m_flLastStandReadyTime
+		&& (pev->health - (int)flDamage) <= 0)
+	{
+		const int iSyringeIndex = m_inventory.FindEntry(EEntryKind::Item, static_cast<int>(EItemTypeId::Syringe));
+		if (iSyringeIndex >= 0)
+		{
+			const float flHitFor = flDamage;
+
+			// Clamp so the player lands at exactly 1 health once the
+			// cast-to-int subtraction below runs, however large the hit was.
+			flDamage = std::max(0.0f, pev->health - 1.0f);
+
+			m_flLastStandUntil = gpGlobals->time + std::max(0.0f, skill_last_stand_invuln.value);
+			m_flLastStandReadyTime = gpGlobals->time + std::max(0.0f, skill_last_stand_cooldown.value);
+
+			// The same path a manual Use takes: the Grid loses the Syringe and
+			// CPlayerInfusion::TryStart runs through it, so Last Stand can
+			// never desync from InventoryUseEntry.
+			InventoryUseEntry(this, iSyringeIndex, EEntryKind::Item, static_cast<int>(EItemTypeId::Syringe));
+
+			SetSuitUpdate("!HEV_HLTH3", false, SUIT_NEXT_IN_1MIN); // near death -- Last Stand fired
+
+			if (debug_damage.value != 0)
+			{
+				ALERT(at_console, "laststand: fired, health was %.0f, hit %.0f\n", flHealthPrev, flHitFor);
+			}
+		}
 	}
 
 	// this cast to INT is critical!!! If a player ends up with 0.5 health, the engine will get that

@@ -59,6 +59,7 @@ enum class EGate : uint8_t
 	DashModule  = 2, // the Shinobi region
 	AlienModule = 3, // the Alien region
 	NightVision = 4, // the Stealth region
+	_Count      = 5, // keep last; bounds the skill_open_gates/skill_close_gates "all" loop
 };
 
 // ---------------------------------------------------------
@@ -119,16 +120,15 @@ enum class ESkillId : int
 	// ---- The Infusion ----
 	MedExpert           = 19, // longer Infusion from a Health Syringe
 
-	// ---- Reserved: the Alien region ----
-	// Held for a region that stays hidden until the player carries the alien
-	// Module, so its existence is not spoiled by reading the tree.
-	HiveCapacity        = 20, // Hivehand holds more hornets
-	HiveRegrowth        = 21, // hornets replenish faster
+	// ---- The Alien region (docs/SKILL_TREE.md), gate EGate::AlienModule ----
+	HiveCapacity        = 20, // Hivehand holds more hornets.  The region's root
+	HiveRegrowth        = 21, // hornets replenish faster; display name "Hive Replenish"
 
-	// ---- Reserved: the Stealth region ----
-	// Ambush (22) and Phantom (23) since 2026-09-15; see docs/SKILL_TREE.md.
-	StealthReserved1    = 22,
-	StealthReserved2    = 23,
+	// ---- The Stealth region (docs/SKILL_TREE.md), gate EGate::NightVision ----
+	// Renamed from StealthReserved1/2 on 2026-09-15 when the region was built;
+	// the numbers did not move.
+	Ambush              = 22, // the all-weapons unaware damage multiplier
+	Phantom             = 23, // a Backstab on an Unseen monster buys silent seconds
 
 	// ---- The Melee Route's Stat nodes ----
 	// The roads between the Melee Skills: one flat bonus each, one point
@@ -244,7 +244,89 @@ enum class ESkillId : int
 	StatArmour13        = 103,
 	StatArmour14        = 104,
 
-	_Count              = 105, // keep last
+	// ---- The keystone, 2026-09-15 (docs/SKILL_TREE.md, "The keystone") ----
+	// Max health becomes 50 -- the ceiling AFTER every other health bonus --
+	// and Last Stand is armed permanently, no damage multiplier of any kind.
+	// Drawn Major-sized with a RED frame by the client.
+	GlassCannon         = 105,
+
+	// ---- Melee's top-road Stat cell, un-islanded by Glass Cannon ----
+	// (1,5) was deliberately left empty until Glass Cannon existed to fill
+	// (0,5) beside it; see docs/SKILL_MAP.md.
+	StatMelee12         = 106,
+
+	// ---- The Shinobi region, 2026-09-15 (docs/SKILL_MAP.md), gate EGate::DashModule ----
+	DashReach           = 107, // the Dash goes further
+	DashRecovery        = 108, // the Skill at (4,4); the Dash comes back sooner
+	SecondWind          = 109, // a second Dash charge
+	Reprisal            = 110, // a one-shot melee kill refills a Dash
+	Phase               = 111, // no damage taken during the Dash itself
+	AirDash             = 112, // the major: the Dash works in the air, upward included
+
+	// The region's roads: the Dash Recovery Stat nodes.
+	StatDash01          = 113,
+	StatDash02          = 114,
+	StatDash03          = 115,
+	StatDash04          = 116,
+	StatDash05          = 117,
+	StatDash06          = 118,
+	StatDash07          = 119,
+	StatDash08          = 120,
+	StatDash09          = 121,
+	StatDash10          = 122,
+	StatDash11          = 123,
+	StatDash12          = 124,
+	StatDash13          = 125,
+
+	// ---- The Stealth region, 2026-09-15 (docs/SKILL_MAP.md), gate EGate::NightVision ----
+	// Ambush (22) and Phantom (23) are above, at their frozen ids.
+	SoftStep            = 126, // the entry: crouched and walking body noise halved again
+	Nightfall           = 127, // darkness conceals twice as much
+	SlipAway            = 128, // breaking line of sight drops Suspicion by a third
+	CutTheHead          = 129, // killing a squad leader drops the squad's Suspicion
+	SilentKill          = 130, // the major: a kill below Spotted is unseen and unheard
+
+	// The region's roads: the Concealment Stat nodes.
+	StatConceal01       = 131,
+	StatConceal02       = 132,
+	StatConceal03       = 133,
+	StatConceal04       = 134,
+	StatConceal05       = 135,
+	StatConceal06       = 136,
+	StatConceal07       = 137,
+	StatConceal08       = 138,
+	StatConceal09       = 139,
+	StatConceal10       = 140,
+
+	// ---- The Alien region, 2026-09-15 (docs/SKILL_MAP.md), gate EGate::AlienModule ----
+	// Hive Capacity (20) and Hive Replenish (21) are above, at their frozen ids.
+	HiveAttackSpeed     = 141, // the Hivehand fires faster
+	Pack                = 142, // more ghosts out at once
+	Tether              = 143, // ghost lifetime longer
+	Recall              = 144, // summon cooldown shorter
+	AlienMajor          = 145, // the major: the volley is energy damage.  Name provisional
+
+	// The region's roads: the Hornet Replenish Stat nodes.
+	StatHornet01        = 146,
+	StatHornet02        = 147,
+	StatHornet03        = 148,
+	StatHornet04        = 149,
+	StatHornet05        = 150,
+	StatHornet06        = 151,
+	StatHornet07        = 152,
+	StatHornet08        = 153,
+	StatHornet09        = 154,
+	StatHornet10        = 155,
+	StatHornet11        = 156,
+
+	// ---- The Juggernaut's Matrix, 2026-09-15 (docs/SKILL_MAP.md), gate EGate::PulseModule ----
+	// The Pulse Module is open by default (dlls/player_skills.cpp), so these
+	// are shown and buyable today like the rest of the Pulse's nodes.
+	DefenseMatrix       = 157, // hold the Pulse key: armour absorbs far more, slowed, on a cooldown
+	MatrixOnKill        = 158, // a kill while the Matrix is up restores some armour
+	JuggernautMajor     = 159, // the major: decaying armour on Matrix activation.  Name provisional
+
+	_Count              = 160, // keep last
 };
 
 // ---------------------------------------------------------
@@ -371,6 +453,21 @@ struct SkillDef
 	{ ESkillId::idName, "Max Armor", "Your suit holds 5% more armor. Every Max Armor node adds another 5%.", \
 	  "item_battery", col, row, 1, ENodeTier::Stat, EStat::MaxArmour, EGate::None }
 
+// The three hidden regions' Stat macros, 2026-09-15.  Gated like every other
+// node in their region (docs/adr/0012): hidden until the player holds the
+// Module, per "Hidden means impassable".
+#define STAT_DASH(idName, col, row) \
+	{ ESkillId::idName, "Dash Recovery", "The Dash comes back sooner. Every Dash Recovery node adds more.", \
+	  "item_longjump", col, row, 1, ENodeTier::Stat, EStat::DashRecovery, EGate::DashModule }
+
+#define STAT_CONCEAL(idName, col, row) \
+	{ ESkillId::idName, "Concealment", "Monsters learn about you 5% slower. Every Concealment node adds another 5%.", \
+	  "dmg_gas", col, row, 1, ENodeTier::Stat, EStat::Concealment, EGate::NightVision }
+
+#define STAT_HORNET(idName, col, row) \
+	{ ESkillId::idName, "Hornet Replenish", "Hornets return faster. Every Hornet Replenish node adds more.", \
+	  "d_hornet", col, row, 1, ENodeTier::Stat, EStat::HornetReplenish, EGate::AlienModule }
+
 // Indexed by ESkillId, so entry [n] is always the Skill with id n.
 //
 // Every node costs ONE point except the Suit, which costs nothing and is
@@ -381,27 +478,30 @@ struct SkillDef
 // The board, from docs/SKILL_MAP.md.  Nine 5x5 regions: the hub in the
 // centre, Melee W, Medical N, Weapon Specialist E, Juggernaut S on the
 // edges, Shinobi NW, Stealth NE, Alien SE, Energy SW in the corners.
-// Cells whose Skill is not built are empty; the hidden regions (Shinobi,
-// Stealth, Alien) and the Juggernaut's Matrix nodes are placed when their
-// rows are written.  One cell is deliberately left empty until Glass
-// Cannon exists: Melee's (1,5), which would be an island without it.
+// Cells whose Skill is not built are empty.  The three hidden regions --
+// Shinobi (EGate::DashModule), Stealth (EGate::NightVision), Alien
+// (EGate::AlienModule) -- and the Juggernaut's three Matrix nodes
+// (EGate::PulseModule) are placed and gated, 2026-09-15: a hidden node is a
+// blank pad and cannot be bought until its Module is found (ADR-0012,
+// "Hidden means impassable").  Melee's (1,5) was deliberately left empty
+// until Glass Cannon filled (0,5) beside it; both are built now.
 //
 //       c0     c1     c2     c3     c4   c5     c6     c7     c8     c9   c10    c11    c12    c13    c14
-//  r0   .      .      .      .      .    Overh  H      .      H    Leech  .      .      .      .      .
-//  r1   .      .      .      .      .    H      .      .      .      H    .      .      .      .      .
-//  r2   .      .      .      .      .    H      H    MedEx    H      H    .      .      .      .      .
-//  r3   .      .      .      .      .    .      .      H      .      .    .      .      .      .      .
-//  r4   .      .      .      .      .    .      .      H      .      .    .      .      .      .      .
-//  r5   .      .      .      S      .    .      .    Fort     .      .    B      B    Headh    B    Demol
+//  r0  [AirD]  D      .      D      D    Overh  H    LastS    H    Leech  C      .    Night   C    [Silnt]
+//  r1   D      .    Phase    .      D    H      .      .      .      H    C      C      C      .      C
+//  r2   D      D      D    Reach    D    H      H    MedEx    H      H    Phntm   .      C    CutHd   C
+//  r3  Reprs   .      D      .    SecW   .      .      H      .      .    .      .    SlipA    .      .
+//  r4   D      D      .      D    Recov  .      .      H      .      .    SoftS   C    Ambsh    .      C
+//  r5  {GlsC}  S      .      S      .    .      .    Fort     .      .    B      B    Headh    B    Demol
 //  r6   S      .    Speed    S      S    Sure   H      H      H      .    .      .      B      .      B
 //  r7   S    Bkstb    S    Reach    S    Force  M    (SUIT)   B    Marks  B    QDraw    B      B    Mstry
 //  r8   S      .      .      .      .    A      A      A      A    ArmEx  .      .      B      .      B
 //  r9  [Clev]  S      S      S      .    F-Up   .    Batt     .      .    B      B    FastR    B    [Swap]
-//  r10  E    EnDmg    .      .      E    A      .      A      .      A    .      .      .      .      .
-//  r11  E      .      E      E      E    A      A      A      A    Ricoc  .      .      .      .      .
-//  r12 Insul   .      .      .      .    A      .      .      .    PWin   .      .      .      .      .
-//  r13  E      E      E      .      .    A      .      .      .    PRech  .      .      .      .      .
-//  r14  .      .    EnEff    E      .    A    PDsch  PRebd    .      .    .      .      .      .      .
+//  r10  E    EnDmg    .      .      E    A      .      A      .      A    N      .    HiveC    .      N
+//  r11  E      .      E      E      E    A      A      A      A    Ricoc  N      N      N    HiveR   N
+//  r12 Insul   .      .      .      .    A      .      .      .    PWin   HiveA   .      N      .      .
+//  r13  E      E      E      .      .    A      .    [JMaj]  Matrx  PRech  N     Pack    N    Tethr   N
+//  r14  .      .    EnEff    E      .    A    PDsch  PRebd   MoK     .    .      .    Recal    N    [AMaj]
 inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 {
 	//  id                        name                description                                                    sprite           col row cost tier              stat          gate
@@ -456,13 +556,18 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// 19: the Medical Route's entry, on its spine
 	{ ESkillId::MedExpert,       "Med Expert",       "An Infusion runs 5 seconds longer.",                          "flash_full",     7,  2,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
-	// 20-21: the Alien region, held until its rows are written
-	SKILL_RESERVED(HiveCapacity),
-	SKILL_RESERVED(HiveRegrowth),
+	// 20-21: the Alien region's root and its first road-mate, 2026-09-15
+	// (docs/SKILL_MAP.md).  Gated on EGate::AlienModule with the rest of
+	// the region, placed further down the table at ids 141-156.
+	{ ESkillId::HiveCapacity,    "Hive Capacity",    "Your Hivehand holds more hornets.",                            "d_hornet",       12, 10, 1,  ENodeTier::Minor,  EStat::None,  EGate::AlienModule },
+	{ ESkillId::HiveRegrowth,    "Hive Replenish",   "Your hornets replenish faster.",                               "d_hornet",       13, 11, 1,  ENodeTier::Medium, EStat::None,  EGate::AlienModule },
 
-	// 22-23: the Stealth region, held until its rows are written
-	SKILL_RESERVED(StealthReserved1),
-	SKILL_RESERVED(StealthReserved2),
+	// 22-23: the Stealth region's unaware-damage pair, 2026-09-15
+	// (docs/SKILL_MAP.md).  Ambush and Assassinate were one verb, merged the
+	// day they were proposed (docs/SKILL_TREE.md, Stealth).  Gated on
+	// EGate::NightVision with the rest of the region below.
+	{ ESkillId::Ambush,          "Ambush",           "Damage you deal to a hostile monster is multiplied by how unaware it is when the hit lands: x1.25 below Spotted, x1.5 below Noticed. Every weapon, applied before the hit fills its meter.", "d_skull", 12, 4, 1, ENodeTier::Medium, EStat::None, EGate::NightVision },
+	{ ESkillId::Phantom,         "Phantom",          "A Backstab on a monster below Noticed grants 2 seconds at x1.2 speed: every movement action -- running, Dashing, jumping -- is silent.", "flash_beam", 10, 2, 1, ENodeTier::Medium, EStat::None, EGate::NightVision },
 
 	// 24-32: the Melee Route's roads (docs/SKILL_MAP.md, Melee)
 	STAT_MELEE(StatMelee01, 4, 7),
@@ -516,8 +621,11 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// monster heal; server-side, in CCrowbar::Swing and CleaveArc.
 	{ ESkillId::Leech,           "Leech",            "Melee hits heal you a tenth of the damage they deal.",         "dmg_bio",        9,  0,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
-	// 49: Last Stand, the Medical major, held until it is built.  Its cell is (7,0).
-	SKILL_RESERVED(LastStand),
+	// 49: Last Stand, the Medical major, Medical's top cell.  Fires from
+	// CBasePlayer::TakeDamage (dlls/player.cpp); the doubled healing below
+	// 50 is CPlayerInfusion::Think (dlls/player_infusion.cpp).  Glass Cannon
+	// (105) arms the same effect permanently; see docs/SKILL_TREE.md, "The keystone".
+	{ ESkillId::LastStand,       "Last Stand",       "A hit that would kill you leaves you at 1 instead, you cannot be hurt for 3 seconds, and a Syringe fires on its own. Infusions heal double below 50. Then it needs a minute.", "dmg_heat", 7, 0, 1, ENodeTier::Major, EStat::None, EGate::None },
 
 	// 50-53: the Medical Route's roads (docs/SKILL_MAP.md, Medical)
 	STAT_HEAL(StatHeal01, 7, 4),
@@ -529,8 +637,10 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// DMG_ENERGYBEAM at the damage chokepoints, the Marksman shape.
 	{ ESkillId::EnergyDamage,    "Energy Damage",    "Energy hits 15% harder: the katana, the egon, the Discharge.", "d_egon",       1,  10, 1,  ENodeTier::Minor,  EStat::None,  EGate::None },
 
-	// 55: Egon Focus, held until it is built.  Its cell is (2,12).
-	SKILL_RESERVED(EgonFocus),
+	// 55: Egon Focus, between Energy Efficiency's and Insulation's Stat roads.
+	// Right click unlocks the SDK's dormant narrow beam: single target,
+	// cheaper on uranium, no splash.
+	{ ESkillId::EgonFocus,       "Egon Focus",       "Right click fires the egon's narrow beam: one target, cheaper on uranium, no splash.", "d_grenade", 2, 12, 1, ENodeTier::Medium, EStat::None, EGate::None },
 
 	// 56: Energy Efficiency, on the region's bottom row.  The interval between
 	// the egon's ammo ticks (server-side) and the katana's wave's uranium cost
@@ -544,9 +654,9 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// TakeDamage; shock included so it means something in Xen.
 	{ ESkillId::Insulation,      "Insulation",       "Energy and shock hurt you 30% less.",                         "dmg_rad",        0,  12, 1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
-	// 59: Overdraw, the Energy major, held until it is built.  Its cell is
-	// (4,14), on the Juggernaut seam beside the armour column's foot.
-	SKILL_RESERVED(EnergyMajor),
+	// 59: Overdraw, the Energy major, on the Juggernaut seam beside the
+	// armour column's foot.  Energy attacks drain armour for bonus damage.
+	{ ESkillId::EnergyMajor,     "Overdraw",         "Energy attacks draw on your armor too: half a point per uranium, never below 20, and while there is armor to draw they hit 50% harder.", "item_battery", 4, 14, 1, ENodeTier::Major, EStat::None, EGate::None },
 
 	// 60-63: the Energy Route's roads (docs/SKILL_MAP.md, Energy)
 	STAT_ENERGY(StatEnergy01, 0, 10),
@@ -614,6 +724,102 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	STAT_ARMOUR(StatArmour12, 5, 12),
 	STAT_ARMOUR(StatArmour13, 5, 13),
 	STAT_ARMOUR(StatArmour14, 5, 14),
+
+	// 105: Glass Cannon, the tree's one keystone (docs/SKILL_TREE.md, "The
+	// keystone"), on the Melee-Dash seam.  Max health becomes 50 -- the
+	// ceiling AFTER every other health bonus (ApplySkillHealthBonus,
+	// dlls/player_skills.cpp) -- and Last Stand is permanently armed
+	// (CBasePlayer::LastStandArmed).  No damage multiplier of any kind: the
+	// cannon is whatever the roads around it provide.  Drawn Major-sized
+	// with a RED frame by the client, the one keystone marker.
+	{ ESkillId::GlassCannon,     "Glass Cannon",     "Your maximum health is 50, whatever else you hold. Last Stand is always armed.", "d_skull", 0, 5, 1, ENodeTier::Major, EStat::None, EGate::None },
+
+	// 106: Melee's top-road Stat cell, deliberately left empty until Glass
+	// Cannon existed to un-island it (docs/SKILL_MAP.md).
+	STAT_MELEE(StatMelee12, 1, 5),
+
+	// ---- 107-125: the Shinobi region, 2026-09-15 (docs/SKILL_MAP.md,
+	// docs/SKILL_TREE.md "Shinobi -- the Dash Route").  Every row here is
+	// EGate::DashModule: a blank pad until the Dash Module is found
+	// (ADR-0012, "Hidden means impassable").  No effect is implemented yet --
+	// a hidden node cannot be bought either way.
+	{ ESkillId::DashReach,       "Dash Reach",       "Your Dash carries you further.",                              "train_forward2", 3, 2,  1, ENodeTier::Minor,  EStat::None, EGate::DashModule },
+	{ ESkillId::DashRecovery,    "Dash Recovery",    "Your Dash comes back sooner.",                                "train_back",     4, 4,  1, ENodeTier::Medium, EStat::None, EGate::DashModule },
+	{ ESkillId::SecondWind,      "Second Wind",      "You gain a second Dash charge, ready alongside the first.",  "train_forward1", 4, 3,  1, ENodeTier::Medium, EStat::None, EGate::DashModule },
+	{ ESkillId::Reprisal,        "Reprisal",         "A one-shot melee kill -- a single hit that drops an unhurt monster -- refills a Dash.", "d_skull", 0, 3, 1, ENodeTier::Medium, EStat::None, EGate::DashModule },
+	{ ESkillId::Phase,           "Phase",            "You take no damage for the instant you are Dashing.",        "suit_empty",     2, 1,  1, ENodeTier::Medium, EStat::None, EGate::DashModule },
+	{ ESkillId::AirDash,         "Air Dash",         "The Dash works in the air, and in the air goes where you aim, upward included.", "train_forward3", 0, 0, 1, ENodeTier::Major, EStat::None, EGate::DashModule },
+
+	// The region's roads: 13 Dash Recovery Stat nodes.
+	STAT_DASH(StatDash01, 1, 0),
+	STAT_DASH(StatDash02, 3, 0),
+	STAT_DASH(StatDash03, 4, 0),
+	STAT_DASH(StatDash04, 0, 1),
+	STAT_DASH(StatDash05, 4, 1),
+	STAT_DASH(StatDash06, 0, 2),
+	STAT_DASH(StatDash07, 1, 2),
+	STAT_DASH(StatDash08, 2, 2),
+	STAT_DASH(StatDash09, 4, 2),
+	STAT_DASH(StatDash10, 2, 3),
+	STAT_DASH(StatDash11, 0, 4),
+	STAT_DASH(StatDash12, 1, 4),
+	STAT_DASH(StatDash13, 3, 4),
+
+	// ---- 126-140: the Stealth region, 2026-09-15 (docs/SKILL_MAP.md,
+	// docs/SKILL_TREE.md "Stealth").  Ambush (22) and Phantom (23) are
+	// already placed above, at their frozen ids; every row here is
+	// EGate::NightVision, same as they are.
+	{ ESkillId::SoftStep,        "Soft Step",        "Crouched and walking, your body noise is halved again.",     "flash_empty",    10, 4, 1, ENodeTier::Minor,  EStat::None, EGate::NightVision },
+	{ ESkillId::Nightfall,       "Nightfall",        "Darkness conceals you twice as much as it used to.",         "dmg_cold",       12, 0, 1, ENodeTier::Medium, EStat::None, EGate::NightVision },
+	{ ESkillId::SlipAway,        "Slip Away",        "Breaking line of sight while a monster has Noticed but not Spotted you drops its Suspicion by a third at once.", "autoaim_c", 12, 3, 1, ENodeTier::Medium, EStat::None, EGate::NightVision },
+	{ ESkillId::CutTheHead,      "Cut the Head",     "Killing a squad leader drops every member's Suspicion to the notice floor.", "d_skull", 13, 2, 1, ENodeTier::Medium, EStat::None, EGate::NightVision },
+	{ ESkillId::SilentKill,      "Silent Kill",      "A kill on a monster below Spotted is unseen and unheard: no death witnesses, no Disturbance, no squad last-known-position. Clear a squad one by one.", "d_crossbow", 14, 0, 1, ENodeTier::Major, EStat::None, EGate::NightVision },
+
+	// The region's roads: 10 Concealment Stat nodes.
+	STAT_CONCEAL(StatConceal01, 10, 0),
+	STAT_CONCEAL(StatConceal02, 13, 0),
+	STAT_CONCEAL(StatConceal03, 10, 1),
+	STAT_CONCEAL(StatConceal04, 11, 1),
+	STAT_CONCEAL(StatConceal05, 12, 1),
+	STAT_CONCEAL(StatConceal06, 14, 1),
+	STAT_CONCEAL(StatConceal07, 12, 2),
+	STAT_CONCEAL(StatConceal08, 14, 2),
+	STAT_CONCEAL(StatConceal09, 11, 4),
+	STAT_CONCEAL(StatConceal10, 14, 4),
+
+	// ---- 141-156: the Alien region, 2026-09-15 (docs/SKILL_MAP.md,
+	// docs/SKILL_TREE.md "Alien").  Hive Capacity (20) and Hive Replenish
+	// (21) are already placed above, at their frozen ids; every row here is
+	// EGate::AlienModule, same as they are.
+	{ ESkillId::HiveAttackSpeed, "Hive Attack Speed", "Your Hivehand fires faster.",                                "d_hornet",       10, 12, 1, ENodeTier::Medium, EStat::None, EGate::AlienModule },
+	{ ESkillId::Pack,            "Pack",              "You can keep more ghosts summoned at once.",                 "d_snark",        11, 13, 1, ENodeTier::Medium, EStat::None, EGate::AlienModule },
+	{ ESkillId::Tether,          "Tether",            "Your ghosts last longer before they fade.",                  "dmg_bio",        13, 13, 1, ENodeTier::Medium, EStat::None, EGate::AlienModule },
+	{ ESkillId::Recall,          "Recall",            "Summoning a ghost again takes less time.",                   "train_back",     12, 14, 1, ENodeTier::Medium, EStat::None, EGate::AlienModule },
+	// name provisional: SKILL_TREE.md's Alien major has none yet
+	{ ESkillId::AlienMajor,      "Energy Volley",     "The Hivehand's volley deals energy damage, scaling with the Energy Route.", "dmg_shock", 14, 14, 1, ENodeTier::Major, EStat::None, EGate::AlienModule },
+
+	// The region's roads: 11 Hornet Replenish Stat nodes.
+	STAT_HORNET(StatHornet01, 10, 10),
+	STAT_HORNET(StatHornet02, 14, 10),
+	STAT_HORNET(StatHornet03, 10, 11),
+	STAT_HORNET(StatHornet04, 11, 11),
+	STAT_HORNET(StatHornet05, 12, 11),
+	STAT_HORNET(StatHornet06, 14, 11),
+	STAT_HORNET(StatHornet07, 12, 12),
+	STAT_HORNET(StatHornet08, 10, 13),
+	STAT_HORNET(StatHornet09, 12, 13),
+	STAT_HORNET(StatHornet10, 14, 13),
+	STAT_HORNET(StatHornet11, 13, 14),
+
+	// ---- 157-159: the Juggernaut's Matrix, 2026-09-15 (docs/SKILL_MAP.md,
+	// docs/SKILL_TREE.md "Juggernaut").  EGate::PulseModule, open by default
+	// (dlls/player_skills.cpp), so these are shown and buyable today like
+	// the rest of the Pulse's nodes -- the gate comes out entirely when the
+	// Pulse becomes a Module.
+	{ ESkillId::DefenseMatrix,   "Defense Matrix",   "Hold the Pulse key for a second: armor takes a far larger share of every hit, and you're slowed 20%. Drops on release, after 6 seconds, or at zero armor; 10 second cooldown.", "suit_full", 8, 13, 1, ENodeTier::Medium, EStat::None, EGate::PulseModule },
+	{ ESkillId::MatrixOnKill,    "Matrix on Kill",   "A kill while the Matrix is up restores some of your armor.", "item_battery",   8, 14, 1, ENodeTier::Medium, EStat::None, EGate::PulseModule },
+	// name provisional: SKILL_TREE.md's Juggernaut major has none yet
+	{ ESkillId::JuggernautMajor, "Decaying Armor",   "Activating the Matrix grants a burst of decaying armor, on top of what you're carrying.", "dmg_rad", 7, 13, 1, ENodeTier::Major, EStat::None, EGate::PulseModule },
 };
 
 #undef SKILL_RESERVED
@@ -623,6 +829,9 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 #undef STAT_ENERGY
 #undef STAT_HEALTH
 #undef STAT_ARMOUR
+#undef STAT_DASH
+#undef STAT_CONCEAL
+#undef STAT_HORNET
 
 // A row with a name is a node on the board; a row without one is a reserved id.
 constexpr bool SkillDefIsNode(const SkillDef& def)

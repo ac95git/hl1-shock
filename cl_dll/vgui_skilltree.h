@@ -27,12 +27,18 @@ public:
     CSkillTreeView();
 
     // Apply a server state sync: an unlocked mask (k_SkillMaskBytes long),
-    // the player's unspent Skill Points, and their banked Reset Tokens.
-    void UpdateState(const unsigned char* unlockedMask, int skillPoints, int resetTokens);
+    // the player's unspent Skill Points, their banked Reset Tokens, and the
+    // open-gates bitmask (one bit per EGate value; docs/SKILL_TREE.md,
+    // "Reveal gates").
+    void UpdateState(const unsigned char* unlockedMask, int skillPoints, int resetTokens, unsigned char openGates);
 
     // Drops the Reset button out of its armed state.  Called when the panel
     // closes so a confirmation can never survive being walked away from.
     void CancelResetConfirm() { m_flResetConfirmUntil = 0.0f; }
+
+    // Drops a held press so it cannot resume as a drag after the panel
+    // closes or the tab changes out from under it.
+    void CancelDrag() { m_bMouseDown = false; m_bDragging = false; }
 
     // Paint the skill tree into the given area.
     // ctx  � owning CInventoryPanel (friend; gives access to draw methods)
@@ -40,10 +46,18 @@ public:
                int x0, int y0, int areaW, int areaH,
                vgui::Font* smallFont, vgui::Font* titleFont);
 
-    // Input � returns true if consumed.
+    // Input -- returns true if consumed.
+    //
+    // A press only records where the gesture started; it does not act.
+    // Whether it turns out to be a click (node unlock / Reset) or a drag
+    // (the field panning) is decided at release, once we know whether the
+    // cursor moved past the click threshold in between (SKILL_PANEL.md
+    // "View").
     bool HandleMousePress(CInventoryPanel* ctx, int localX, int localY);
+    bool HandleMouseRelease(CInventoryPanel* ctx, int localX, int localY);
 
-    // Hover tracking for the tooltip/context bubble.
+    // Hover tracking for the tooltip/context bubble; also where a held
+    // press turns into a drag and moves the pan.
     void HandleMouseMove(int localX, int localY);
 
     // Tooltip text for the node under the cursor, or nullptr.
@@ -87,8 +101,26 @@ private:
     // an id and a name; anything else is a reserved id with no node.
     void RebuildNodeList();
 
-    // Populate m_nodeRects from the current layout.
+    // Populate m_nodeRects from the current layout, at the pan currently in
+    // m_panX/m_panY.  Also where the pan is first set: centred on the Suit
+    // the first time this view lays out, or recalled from s_savedPan (see
+    // the .cpp) if the panel was closed and reopened on the same map.
     void RebuildRects(int x0, int y0, int areaW, int areaH);
+
+    // Keeps the board's edges no further than one step past the field's
+    // edges, or centres a board smaller than the field. Called after every
+    // pan change, including the initial centering.
+    void ClampPan(int areaW, int areaH);
+
+    // Intersects 'r' with 'field'; returns false (leaving 'out' untouched) if
+    // they do not overlap at all, so the caller can skip a node that has
+    // panned entirely out of view instead of asking the engine to draw or
+    // scissor a degenerate rect.
+    static bool IntersectRect(const IRect& r, const IRect& field, IRect& out);
+
+    // The Reset switch's red-and-black hazard frame: alternating filled
+    // segments walking the perimeter. 'alpha' drives the blink once armed.
+    void DrawHazardFrame(CInventoryPanel* ctx, const IRect& r, int seg, int alpha) const;
 
     // Lazily load HUD sprites for each node (no-op if already loaded).
     void EnsureSprites();
@@ -99,12 +131,17 @@ private:
     // the client derives; the server validates unlocks independently.
     bool IsAvailable(int skillId) const;
 
+    // A node behind a closed gate: drawn as a blank pad, "No signal" in the
+    // tooltip, and never available (ADR-0012, "Hidden means impassable").
+    bool IsHidden(int skillId) const;
+
     // Skill ids present in the tree, in k_SkillDefs order.
     std::vector<int>         m_nodes;
     std::vector<IRect>       m_nodeRects;    // parallel to m_nodes, set in Paint()
     std::vector<NodeSprite>  m_nodeSprites;  // parallel to m_nodes, loaded lazily
 
     unsigned char            m_unlockedMask[k_SkillMaskBytes] = {};
+    unsigned char            m_openGates = 0; // one bit per EGate value, from gmsgSkillTree
     int                      m_iSkillPoints = 0;
     int                      m_iResetTokens = 0;
     int                      m_iHoverNode = -1;
@@ -126,6 +163,24 @@ private:
 
     bool ResetArmed() const { return m_flResetConfirmUntil > 0.0f; }
 
+    // ---- Pan: 1:1 always, drag to pan (SKILL_PANEL.md "View") ----
+    //
+    // The board is drawn at its designed size and never fitted, so it is
+    // wider than the field on any screen and the field pans across it
+    // instead. m_panX/m_panY is the screen offset of board cell (0,0)'s
+    // top-left corner from the field's origin.
+    int  m_panX = 0, m_panY = 0;
+    bool m_bPanInitialized = false; // set once RebuildRects has centred or recalled a pan
+
+    // A press just records where the gesture started; HandleMouseMove
+    // promotes it to a drag once the cursor has moved past the threshold,
+    // and HandleMouseRelease decides whether a click follows.
+    bool m_bMouseDown = false;
+    bool m_bDragging  = false;
+    int  m_dragStartMouseX = 0, m_dragStartMouseY = 0;
+    int  m_dragStartPanX   = 0, m_dragStartPanY   = 0;
+    static constexpr int k_DragClickThreshold = 4; // px
+
     // Cached layout geometry
     int m_lastX0 = 0, m_lastY0 = 0, m_lastW = 0, m_lastH = 0;
 
@@ -139,14 +194,11 @@ private:
     // invalidates the cached layout the way a resize does.
     int m_previewCols = 0, m_previewRows = 0;
 
-    // The tree is laid out to FIT the area rather than at fixed pixel steps.
-    // Seven columns at the full step is 728px against a tree area of
-    // panelW - 264, so a hardcoded step hangs off the sides of anything but a
-    // wide screen -- and RebuildRects clamps the centering offset at zero, so
-    // the overflow was silently clipped rather than visibly wrong.
-    //
-    // One uniform scale drives step and node size together, so the tree
-    // compresses in proportion instead of nodes colliding as gaps shrink.
+    // The board is drawn at 1:1 always (SKILL_PANEL.md "View") -- it is
+    // never fitted to the area, so m_scale is always 1 and m_colStep /
+    // m_rowStep always equal m_step. Kept as members (rather than replaced
+    // outright by m_step) because NodeW/NodeH and the icon padding below are
+    // still written in terms of a scale, and a fixed 1.0 costs nothing.
     float m_scale   = 1.0f;
     int   m_colStep = 112;
     int   m_rowStep = 112;
@@ -178,9 +230,5 @@ private:
     // by eye; 0 means this.
     static constexpr int k_Step = 112;
     int m_step = k_Step; // as last read from the cvar, part of the cached layout
-    // Nothing is printed on a node (every node costs one, docs/SKILL_TREE.md)
-    // and the icon scales with it, so the only floor is the one that keeps a
-    // Stat node from vanishing. Below it the tree clips instead of shrinking.
-    static constexpr float k_MinScale = 0.3f;
     static constexpr int k_ConnRadius = 3;  // half-width of connector lines
 };

@@ -225,7 +225,16 @@ void CPlayerInfusion::Think(CBasePlayer* pPlayer)
 	{
 		// The Healing Stat nodes scale the rate, not the duration: more per
 		// second, the same window.
-		m_flAccum += infusion_rate.value * PlayerHealingScale(pPlayer) * k_InfusionTickInterval;
+		float flTick = infusion_rate.value * PlayerHealingScale(pPlayer) * k_InfusionTickInterval;
+
+		// Last Stand and Glass Cannon (docs/SKILL_TREE.md, "The keystone")
+		// double an Infusion's healing below the low-health threshold -- at
+		// Glass Cannon's 50 max health that threshold is always true, which
+		// is the keystone's second life.
+		if (pPlayer->LastStandArmed() && pPlayer->pev->health < skill_last_stand_low_health.value)
+			flTick *= std::max(0.0f, skill_last_stand_heal_scale.value);
+
+		m_flAccum += flTick;
 
 		const int whole = (int)m_flAccum;
 		if (whole > 0)

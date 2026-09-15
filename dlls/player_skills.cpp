@@ -25,6 +25,7 @@ static TYPEDESCRIPTION g_SkillsSaveData[] =
     DEFINE_FIELD(CPlayerSkills, m_iPointsGranted, FIELD_INTEGER),
     DEFINE_FIELD(CPlayerSkills, m_iResetTokens,   FIELD_INTEGER),
     DEFINE_FIELD(CPlayerSkills, m_bInitialised,   FIELD_BOOLEAN),
+    DEFINE_FIELD(CPlayerSkills, m_iOpenGates,     FIELD_INTEGER),
 
     // The unlocked array is saved under its own name, not the member's.
     // CRestore::ReadField copies as many entries as the code declares, so a
@@ -77,6 +78,13 @@ void CPlayerSkills::EnsureInitialised()
     // clear (ADR-0012).
     HoldSuit();
 
+    // The Pulse is suit hardware today, not a found Module (docs/SKILL_TREE.md,
+    // Juggernaut), so its gate is open unconditionally -- every call, not just
+    // the first -- so a save written before m_iOpenGates existed (the bit
+    // clear, same as an old Suit flag above) still shows the Pulse's nodes.
+    // Take this out when the Pulse becomes a Module with its own reveal.
+    OpenGate(EGate::PulseModule);
+
     if (m_bInitialised)
         return;
 
@@ -91,6 +99,7 @@ void CPlayerSkills::Clear()
     m_iPointsGranted = 0;
     m_iResetTokens   = 0;
     m_bInitialised   = false;
+    m_iOpenGates     = 0;
 
     memset(m_bUnlocked, 0, sizeof(m_bUnlocked));
 }
@@ -176,6 +185,11 @@ bool CPlayerSkills::TryUnlock(ESkillId id)
     if (!def.name || !def.name[0]) return false;
     if (def.tier == ENodeTier::Suit) return false;
 
+    // A hidden node -- its gate closed -- is a blank pad and cannot be
+    // bought, whatever it is otherwise reachable through (ADR-0012,
+    // "Hidden means impassable").
+    if (IsNodeHidden(id)) return false;
+
     if (!Reachable(id)) return false;
     if (AvailablePoints() < def.cost) return false;
 
@@ -235,6 +249,12 @@ bool CPlayerSkills::UnlockAll()
         if (m_bUnlocked[i])
             continue;
 
+        // A hidden node stays hidden: skill_unlock_all is a debugging aid
+        // for the tree, not a way to see past a Module that has not been
+        // found.
+        if (IsNodeHidden(static_cast<ESkillId>(i)))
+            continue;
+
         m_bUnlocked[i] = true;
         changed = true;
     }
@@ -274,7 +294,14 @@ void ApplySkillHealthBonus(CBasePlayer* pPlayer)
     // baseline there is.  Rounded so max health stays a whole number on the HUD.
     const int   iStat   = pPlayer->m_skills.CountStat(EStat::MaxHealth);
     const float scale   = 1.0f + iStat * std::max(0.0f, skill_stat_max_health.value);
-    const float desired = (float)(int)((100.0f + bonus) * scale + 0.5f);
+    float desired = (float)(int)((100.0f + bonus) * scale + 0.5f);
+
+    // Glass Cannon (the keystone): the ceiling AFTER every other health bonus
+    // -- Fortitude and the hub's Max Health Stat nodes included -- never the
+    // floor, so a build with fewer of those still lands on 50.
+    if (pPlayer->m_skills.HasSkill(ESkillId::GlassCannon))
+        desired = std::min(desired, std::max(1.0f, skill_glass_cannon_max_health.value));
+
     const float delta   = desired - pPlayer->pev->max_health;
     if (delta == 0.0f)
         return;
@@ -311,6 +338,42 @@ int PlayerMaxArmor(CBasePlayer* pPlayer)
     const int   iStat = pPlayer->m_skills.CountStat(EStat::MaxArmour);
     const float scale = 1.0f + iStat * std::max(0.0f, skill_stat_max_armor.value);
     return (int)(base * scale + 0.5f);
+}
+
+// =====================================================================
+// OverdrawSpendArmor
+//   Overdraw (the Energy major): every point of uranium an energy attack
+//   spends also drains armour, at skill_overdraw_armor_per_uranium per
+//   unit, never below skill_overdraw_floor.  Called from the egon (per
+//   UseAmmo) and the katana wave (per WaveCost charge), after Energy
+//   Efficiency has already reduced uraniumSpent, so the drain always tracks
+//   what actually left the player.  Declared in game.h -- see there for why.
+// =====================================================================
+void OverdrawSpendArmor(CBasePlayer* pPlayer, int uraniumSpent)
+{
+    if (!pPlayer || uraniumSpent <= 0)
+        return;
+    if (!pPlayer->m_skills.HasSkill(ESkillId::EnergyMajor))
+        return;
+
+    const float floor = std::max(0.0f, skill_overdraw_floor.value);
+    if (pPlayer->pev->armorvalue <= floor)
+        return;
+
+    const float perUranium = std::max(0.0f, skill_overdraw_armor_per_uranium.value);
+    const float drain = std::min(uraniumSpent * perUranium, pPlayer->pev->armorvalue - floor);
+    if (drain <= 0.0f)
+        return;
+
+    pPlayer->pev->armorvalue -= drain;
+
+    // The Ricochet lesson: a Skill whose effect is a number changing
+    // quietly needs a readout, not just a code-derived guess.
+    if (debug_damage.value != 0)
+    {
+        ALERT(at_console, "overdraw: spent %d uranium, drained %.1f armour, armour now %.1f\n",
+            uraniumSpent, drain, pPlayer->pev->armorvalue);
+    }
 }
 
 // =====================================================================
@@ -366,6 +429,11 @@ float SkillScaleWeaponDamage(entvars_t* pevAttacker, float flDamage, int bitsDam
         const int iStat = sk.CountStat(EStat::EnergyDamage);
         if (iStat > 0)
             flDamage *= 1.0f + iStat * std::max(0.0f, skill_stat_energy_damage.value);
+
+        // Overdraw: armour as fuel, both ways.  While there is armour above
+        // the floor left to drain, energy attacks hit harder too.
+        if (sk.HasSkill(ESkillId::EnergyMajor) && pPlayer->pev->armorvalue > std::max(0.0f, skill_overdraw_floor.value))
+            flDamage *= std::max(0.0f, skill_overdraw_damage_scale.value);
     }
 
     // Demolitions, dealt.  Grenades, the satchel, the tripmine, the RPG and
@@ -420,11 +488,11 @@ float SkillHeadshotScale(entvars_t* pevAttacker)
 // SendSkillTreeToClient
 //
 // State only: one bit per unlocked Skill, then unspent Skill Points,
-// then banked Reset Tokens.  Position, cost, prerequisites and tier all
-// come from the shared table, and "available" is a display state the
-// client derives from what is sent here.  The server stays authoritative
-// where it matters -- TryUnlock and TryReset validate independently of
-// anything the client believes.
+// then banked Reset Tokens, then the open-gates bitmask.  Position, cost,
+// prerequisites and tier all come from the shared table, and "available"
+// is a display state the client derives from what is sent here.  The
+// server stays authoritative where it matters -- TryUnlock and TryReset
+// validate independently of anything the client believes.
 // =====================================================================
 void SendSkillTreeToClient(CBasePlayer* pPlayer)
 {
@@ -443,5 +511,10 @@ void SendSkillTreeToClient(CBasePlayer* pPlayer)
 
     WRITE_BYTE((unsigned char)std::min(sk.AvailablePoints(), 255));
     WRITE_BYTE((unsigned char)std::min(sk.ResetTokens(), 255));
+
+    // One byte: which gates are open, bit N == EGate value N.  Small enough
+    // that a byte covers every EGate today; widen this (and the message
+    // length below and in UserMessages.cpp) if a fifth Module needs bit 8.
+    WRITE_BYTE((unsigned char)(sk.OpenGatesMask() & 0xFF));
     MESSAGE_END();
 }

@@ -721,6 +721,52 @@ void ClientCommand(edict_t* pEntity)
 			SendSkillTreeToClient(player);
 		}
 	}
+	else if (FStrEq(pcmd, "skill_open_gates"))
+	{
+		// Cheat-gated tuning aid for the hidden regions: open a gate (or
+		// every gate) without finding its Module first, the way
+		// skill_addpoints skips hunting for pickups.  <n> is the EGate
+		// number (docs/SKILL_TREE.md, "Reveal gates"); "all" opens them all.
+		if (0 != g_psv_cheats->value && CMD_ARGC() >= 2)
+		{
+			const char* arg = CMD_ARGV(1);
+			if (FStrEq(arg, "all"))
+			{
+				for (int g = 1; g < static_cast<int>(EGate::_Count); ++g)
+					player->m_skills.OpenGate(static_cast<EGate>(g));
+				ClientPrint(pev, HUD_PRINTCONSOLE, "Opened every Skill Tree gate.\n");
+			}
+			else
+			{
+				const int n = atoi(arg);
+				player->m_skills.OpenGate(static_cast<EGate>(n));
+				ClientPrint(pev, HUD_PRINTCONSOLE, UTIL_VarArgs("Opened gate %d.\n", n));
+			}
+
+			SendSkillTreeToClient(player);
+		}
+	}
+	else if (FStrEq(pcmd, "skill_close_gates"))
+	{
+		if (0 != g_psv_cheats->value && CMD_ARGC() >= 2)
+		{
+			const char* arg = CMD_ARGV(1);
+			if (FStrEq(arg, "all"))
+			{
+				for (int g = 1; g < static_cast<int>(EGate::_Count); ++g)
+					player->m_skills.CloseGate(static_cast<EGate>(g));
+				ClientPrint(pev, HUD_PRINTCONSOLE, "Closed every Skill Tree gate.\n");
+			}
+			else
+			{
+				const int n = atoi(arg);
+				player->m_skills.CloseGate(static_cast<EGate>(n));
+				ClientPrint(pev, HUD_PRINTCONSOLE, UTIL_VarArgs("Closed gate %d.\n", n));
+			}
+
+			SendSkillTreeToClient(player);
+		}
+	}
 	else if (g_pGameRules->ClientCommand(player, pcmd))
 	{
 		// MenuSelect returns true only if the command is properly handled,  so don't print a warning

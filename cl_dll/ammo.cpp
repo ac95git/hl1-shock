@@ -584,7 +584,7 @@ bool CHudAmmo::MsgFunc_SkillTree(const char* pszName, int iSize, void* pbuf)
 	// definition table.  A size mismatch means the client and server
 	// disagree about k_MaxSkills, so drop the message rather than
 	// misread it.
-	if (iSize != k_SkillMaskBytes + 2)
+	if (iSize != k_SkillMaskBytes + 3)
 		return true;
 
 	unsigned char unlockedMask[k_SkillMaskBytes];
@@ -594,6 +594,11 @@ bool CHudAmmo::MsgFunc_SkillTree(const char* pszName, int iSize, void* pbuf)
 	int skillPoints = READ_BYTE();
 	int resetTokens = READ_BYTE();
 
+	// The open-gates bitmask: one bit per EGate value.  Sent after the two
+	// existing bytes, 2026-09-15, so a hidden region's nodes draw as blank
+	// pads until the client is told their Module has been found.
+	unsigned char openGates = (unsigned char)READ_BYTE();
+
 	// Two consumers, and they are independent on purpose: the panel draws the
 	// tree, the predicted player answers HasSkill() for weapon code that
 	// compiles into both DLLs.  Prediction must not depend on the VGUI panel
@@ -601,7 +606,7 @@ bool CHudAmmo::MsgFunc_SkillTree(const char* pszName, int iSize, void* pbuf)
 	HUD_SetPredictedSkills(unlockedMask);
 
 	if (gViewPort && gViewPort->m_pInventoryPanel)
-		gViewPort->m_pInventoryPanel->UpdateSkillTree(unlockedMask, skillPoints, resetTokens);
+		gViewPort->m_pInventoryPanel->UpdateSkillTree(unlockedMask, skillPoints, resetTokens, openGates);
 
 	return true;
 }

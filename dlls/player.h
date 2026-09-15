@@ -416,6 +416,25 @@ public:
 	// Whether the window is open now.  Read at the damage chokepoints.
 	bool SwapSurgeActive() const;
 
+	// ---- Last Stand, the Medical major, and Glass Cannon, the keystone that arms it ----
+	// A hit that would kill is caught in TakeDamage: the player is left at 1
+	// health, invincible until m_flLastStandUntil, a Syringe fires on its own,
+	// and nothing can trigger it again until m_flLastStandReadyTime.  Both
+	// saved as FIELD_TIME, like Cleave's and Swap Surge's, so a save mid-window
+	// or mid-cooldown resumes with the right time remaining.
+	float m_flLastStandUntil = 0;
+	float m_flLastStandReadyTime = 0;
+
+	// True if the player holds Last Stand outright, or Glass Cannon, which
+	// arms the same effect permanently with no damage multiplier of any kind
+	// (docs/SKILL_TREE.md, "The keystone").  Every Last Stand check -- the
+	// invincibility, the trigger, the doubled healing -- goes through this
+	// one spot so Glass Cannon never has to be tested separately.
+	bool LastStandArmed() const
+	{
+		return m_skills.HasSkill(ESkillId::LastStand) || m_skills.HasSkill(ESkillId::GlassCannon);
+	}
+
 	// Last Pickup Prompt sent, so it is only resent when it changes.
 	// Transient display state -- deliberately not saved; it is re-derived on
 	// the first frame after a restore.

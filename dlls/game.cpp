@@ -611,10 +611,26 @@ cvar_t skill_energy_damage_scale = {"skill_energy_damage_scale", "1.15"};
 cvar_t skill_stat_energy_damage = {"skill_stat_energy_damage", "0.05"};
 cvar_t skill_energy_efficiency_scale = {"skill_energy_efficiency_scale", "1.33"};
 cvar_t skill_insulation_scale = {"skill_insulation_scale", "0.7"};
+// Overdraw (the Energy major): energy attacks drain armour too, at this much
+// per uranium spent, after Energy Efficiency has already reduced that cost,
+// and never below the floor; while armour sits above the floor, energy
+// damage is multiplied.  First guesses.
+cvar_t skill_overdraw_armor_per_uranium = {"skill_overdraw_armor_per_uranium", "0.5"};
+cvar_t skill_overdraw_floor = {"skill_overdraw_floor", "20"};
+cvar_t skill_overdraw_damage_scale = {"skill_overdraw_damage_scale", "1.5"};
 // Ricochet (the Juggernaut Route): the chance per bullet hit, while the
 // player has armour, that it bounces back at the shooter.  A first guess;
 // ranks will raise it when the Route's region is laid out.
 cvar_t skill_ricochet_chance = {"skill_ricochet_chance", "0.2"};
+// Last Stand (the Medical major) and Glass Cannon (the keystone that arms it
+// permanently): the invincibility window, the cooldown before it can fire
+// again, the health threshold below which an Infusion heals doubled, and
+// that scale.  Glass Cannon's own ceiling is separate.  First guesses.
+cvar_t skill_last_stand_invuln = {"skill_last_stand_invuln", "3"};
+cvar_t skill_last_stand_cooldown = {"skill_last_stand_cooldown", "60"};
+cvar_t skill_last_stand_low_health = {"skill_last_stand_low_health", "50"};
+cvar_t skill_last_stand_heal_scale = {"skill_last_stand_heal_scale", "2"};
+cvar_t skill_glass_cannon_max_health = {"skill_glass_cannon_max_health", "50"};
 // Scales the reload delay. Read from both DLLs through skill_tuning.h, because
 // the delay it sets is m_flNextAttack, which the client predicts.
 cvar_t skill_reload_time_scale = {"skill_reload_time_scale", "0.8"};
@@ -850,7 +866,15 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_stat_energy_damage);
 	CVAR_REGISTER(&skill_energy_efficiency_scale);
 	CVAR_REGISTER(&skill_insulation_scale);
+	CVAR_REGISTER(&skill_overdraw_armor_per_uranium);
+	CVAR_REGISTER(&skill_overdraw_floor);
+	CVAR_REGISTER(&skill_overdraw_damage_scale);
 	CVAR_REGISTER(&skill_ricochet_chance);
+	CVAR_REGISTER(&skill_last_stand_invuln);
+	CVAR_REGISTER(&skill_last_stand_cooldown);
+	CVAR_REGISTER(&skill_last_stand_low_health);
+	CVAR_REGISTER(&skill_last_stand_heal_scale);
+	CVAR_REGISTER(&skill_glass_cannon_max_health);
 
 	CVAR_REGISTER(&pulse_window);
 	CVAR_REGISTER(&pulse_window_bonus);

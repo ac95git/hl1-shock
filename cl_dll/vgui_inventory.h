@@ -122,6 +122,11 @@ private:
     vgui::Font*   m_pSmallFont   = nullptr;
     vgui::Font*   m_pTitleFont   = nullptr;
 
+    // The Suit Variant the header string was last built for, so setText is
+    // only called on a real change rather than every paint.  -1 never
+    // matches a real variant, so the first paint always sets it.
+    int m_iHeaderSuitVariant = -1;
+
     // ---- Inventory state, as told by the server ----
     std::vector<InvEntryView> m_entries;
     int m_gridWidth      = INV_GRID_WIDTH;
@@ -171,8 +176,8 @@ public:
     int GridRowsToDraw() const { return m_gridRowsToDraw; }
 
     // Skill-tree state update (call from UserMessage handler)
-    void UpdateSkillTree(const unsigned char* unlockedMask, int skillPoints, int resetTokens)
-    { m_skillTreeView.UpdateState(unlockedMask, skillPoints, resetTokens); }
+    void UpdateSkillTree(const unsigned char* unlockedMask, int skillPoints, int resetTokens, unsigned char openGates)
+    { m_skillTreeView.UpdateState(unlockedMask, skillPoints, resetTokens, openGates); }
 
     void CloseContextMenu();
 

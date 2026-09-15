@@ -394,6 +394,12 @@ void CKatana::SecondaryAttack()
 
 	m_pPlayer->m_rgAmmo[m_iPrimaryAmmoType] -= iCost;
 
+#ifndef CLIENT_DLL
+	// Overdraw: the wave's charge also drains armour, at half the uranium it
+	// just spent -- iCost, so Energy Efficiency's discount is already in it.
+	OverdrawSpendArmor(m_pPlayer, iCost);
+#endif
+
 	PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usKatanaArc,
 		0.0, m_pPlayer->pev->origin, m_pPlayer->pev->angles, 0.0, 0.0, 0, 0, 0, 0);
 

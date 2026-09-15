@@ -126,6 +126,8 @@ FGD line. No new file, so no project change.
 | `skill_reset` | Spend one Reset Token, clearing every unlocked Skill |
 | `skill_addpoints <n>` | **Cheat-gated.** Grant Skill Points without a pickup |
 | `skill_addtokens <n>` | **Cheat-gated.** Grant Reset Tokens without a pickup |
+| `skill_open_gates <n\|all>` | **Cheat-gated.** Open one gate (`n` is the `EGate` number) or every gate, without finding its Module. Resyncs the client |
+| `skill_close_gates <n\|all>` | **Cheat-gated.** Close one gate or every gate, re-hiding its region. Resyncs the client |
 
 Neither cvar is capped, deliberately: the ceiling on each is how many pickups a map places, and a cap
 would let a found pickup silently do nothing.
@@ -181,7 +183,15 @@ Raising `skill_points_start` is the way to work on the tree UI without hunting f
 | `skill_stat_energy_damage` | 0.05 | Each Energy Damage Stat node adds this to one multiplier on player `DMG_ENERGYBEAM` damage |
 | `skill_energy_efficiency_scale` | 1.33 | Energy Efficiency multiplies the interval between the egon's ammo ticks and divides the katana's wave's uranium cost; above 1 is cheaper |
 | `skill_insulation_scale` | 0.7 | Insulation multiplies `DMG_ENERGYBEAM` and `DMG_SHOCK` the player takes |
+| `skill_overdraw_armor_per_uranium` | 0.5 | Overdraw drains this much armour per uranium an energy attack spends, after Energy Efficiency |
+| `skill_overdraw_floor` | 20 | Overdraw never drains armour below this |
+| `skill_overdraw_damage_scale` | 1.5 | Overdraw multiplies player `DMG_ENERGYBEAM` damage while armour is above the floor |
 | `skill_ricochet_chance` | 0.2 | Ricochet's chance per bullet hit, while the player has armour, to bounce it back at the shooter |
+| `skill_last_stand_invuln` | 3 | Seconds Last Stand (and Glass Cannon) make the player invincible after a killing hit is caught |
+| `skill_last_stand_cooldown` | 60 | Seconds before Last Stand can fire again |
+| `skill_last_stand_low_health` | 50 | Below this health, an Infusion's healing is doubled while Last Stand or Glass Cannon is held |
+| `skill_last_stand_heal_scale` | 2 | The multiplier applied below that threshold |
+| `skill_glass_cannon_max_health` | 50 | Glass Cannon's maximum health, the ceiling after every other health bonus |
 
 Two rules that are easy to break:
 
