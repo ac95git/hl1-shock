@@ -70,8 +70,9 @@ defaults to 0, so a player who explores nothing unlocks nothing (see pillar 4). 
 `item_resettoken` are placeable entities today. ~~The tree is deliberately sized so it is completable only
 by near-exhaustive exploration~~ — **reversed 2026-09-14**: under the matrix design in
 [SKILL_TREE.md](SKILL_TREE.md#the-matrix--settled-2026-09-14) the tree is deliberately *not* completable,
-and 50–70 findable points buy a third to a half of it. Reach is still what exploration buys; it now buys
-more of a build rather than the last of the tree.
+and ~~50–70 findable points buy a third to a half of it~~ **(renumbered 2026-09-15)** 100 findable points
+buy about 71% of its ~140 nodes, 40 of them on the critical path and 60 in optional spaces. Reach is still
+what exploration buys; it now buys more of a build rather than the last of the tree.
 
 What is still missing is the same thing in every case: **maps**. Every mechanism now exists and nothing
 places one, because vanilla Half-Life maps cannot be edited to hold them. Until a map does, all three
@@ -986,11 +987,21 @@ by the end while a player on the critical path affords perhaps 60–70% and must
 
 **Reversed 2026-09-14.** Under [the matrix](SKILL_TREE.md#the-matrix--settled-2026-09-14) every node costs
 one Skill Point, the roads of Stat nodes between Skills are the price, and the tree of 120–180 nodes is
-**deliberately not completable**: 50–70 findable points buy a third to a half of it, and which third is the
-build. A player who sweeps every optional space affords a deeper build, not the whole tree. Reset Tokens
+**deliberately not completable**: ~~50–70 findable points buy a third to a half of it~~, and which part is
+the build. A player who sweeps every optional space affords a deeper build, not the whole tree. Reset Tokens
 matter more for it, since a road taken is a road paid for. Roughly 5–10 Tokens across the campaign, with
 the first appearing around 20% in: enough that the tree is meant to be experimented with, not agonised
 over.
+
+**Renumbered 2026-09-15**, with [one start and open roads](SKILL_TREE.md#one-start-open-roads--settled-2026-09-15):
+**100 findable points** — 40 on the critical path, 60 in optional spaces, the 2:3 split MAP_BRIEF already
+asks of each map — against **about 140 nodes** on a 15×15 grid. A thorough player owns about 71% of the
+tree and five or six of the seven Majors; a critical-path player about 29% and one. The 71% was raised as
+a concern (most builds converge late) and accepted knowingly over a 200-node tree or 70 points. The tree
+also changed shape the same day: the suit at the centre is the one start, held from the first moment,
+Stat nodes open from any owned neighbour, and Skills keep their curated gates
+([ADR-0012](adr/0012-the-skill-tree-has-one-start-and-open-roads.md)). None of it is built yet; the
+code still has seven roots and curated edges everywhere.
 
 None of this is placeable yet — see "What's missing".
 

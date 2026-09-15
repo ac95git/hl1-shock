@@ -512,3 +512,40 @@ this entry is not a call to replace it; it is a call to settle its status before
 ### Done when
 Either README.md credits Half-Life: Extended for the animation under a licence that allows it, or
 `CROWBAR_CLEAVE` plays an animation made for this mod. Until one of those, this asset does not ship.
+
+## The Skill Tree — the circuit: substrate, traces and frames
+
+### Scope
+The drawing of the Skill Tree panel in `cl_dll/vgui_skilltree.cpp`: the background behind the nodes, the
+connectors between them, and the shape of each node. Settled as a direction on 2026-09-15
+([SKILL_TREE.md, the presentation](SKILL_TREE.md#the-presentation)); nothing here exists yet, so this
+entry is a brief rather than a complaint.
+
+### Current stand-in
+A translucent dark rectangle with a purple outline for the background; connectors as one-pixel
+`drawFilledRect` doglegs, grey when locked and orange when the prerequisite is held; nodes as filled
+rectangles of four sizes (32, 44, 54, 64 on a 96 step) with a top stripe whose height is the tier and a
+double outline for a Major. Every node is the same shape, so a Stat node and a Major differ only in size.
+
+### What it wants
+The tree is the suit's circuit, and the assets are the metaphor made literal:
+
+- **The substrate.** A tileable circuit-board texture, 256×256 or smaller, low contrast so the nodes
+  and traces stay legible over it, loaded as a TGA through VGUI1's `BitmapTGA` (the class-menu loader)
+  and tiled under the tree area. One colour wash per Route's region goes over it, faint, so a region
+  reads without a label: eight Route colours and a neutral for the hub, chosen together as a palette.
+- **Traces.** Connectors become copper traces: a thin trace between every pair of orthogonally adjacent
+  nodes (the open roads), a thick one for a Skill's curated gate. A trace is dim copper unlit, lit
+  copper when either end is held, and glows when it leads to an available node. Drawable with filled
+  rects; the colours and the glow are the art decision.
+- **Frames.** One frame sprite per tier, tinted by state exactly as the icons are today (white held, gold
+  available, grey locked): a square pad for a Stat node, a small chip for Minor, a larger chip for
+  Medium, a large chip with pins for a Major, and the processor for the suit at the centre. The keystone
+  is a Major-sized frame in red. Defined at all four resolution buckets like every HUD sprite
+  (`docs/SPRITE_WORKFLOW.md`), sized at or above the node at each bucket, since the engine shrinks but
+  will not magnify.
+- **Gated regions** draw as blank pads on the substrate: a hidden Route shows a footprint, not a hole.
+
+### Done when
+A player who has never opened the tree can tell a Stat node from a Skill from a Major by shape, can see
+which region is which by colour, and can follow a lit trace from the suit to what they own.

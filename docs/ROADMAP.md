@@ -1592,6 +1592,32 @@ and wants an ADR when the first Route lands.
   melee investment) still describes the early tree. It does not describe the endgame, which is meant to
   one-shot things that are not grunts.
 
+### Settled 2026-09-15 — one start, open roads, the count, the keystone, the circuit
+
+A grill held before the third Route, on the tree as a whole rather than on a Route. Every point below was
+put as a question with a recommendation; the shape is in
+[SKILL_TREE.md](SKILL_TREE.md#one-start-open-roads--settled-2026-09-15) and the reasoning for the first
+in [ADR-0012](adr/0012-the-skill-tree-has-one-start-and-open-roads.md).
+
+- **The matrix's "efficient pathing" did not exist.** With curated edges on every node and seven free
+  roots, the set of nodes needed for any Skill was fixed and a seam was never cheaper than a fresh root.
+  **Changed**: the suit at the centre is the only start, Stat nodes open from any owned orthogonal
+  neighbour, Skills and Majors keep curated gates. Path of Exile's rule, and simpler to state than the
+  one it replaces.
+- **Nine regions on 15×15.** Hub in the centre with the suit stats and the four old survivability
+  Skills; ungated Routes on the edges (Melee W, Medical N, Specialist E, Juggernaut S); gated or late
+  Routes in the corners (Dash NW, Stealth NE, Alien SE, Energy SW). Stealth is a corner because it may be
+  gated behind a Stealth Module later; the price is that Dash and Stealth do not touch.
+- **~140 nodes, 100 findable points**, 40 on the critical path and 60 in optional spaces. A thorough
+  player owns 71%; raised as a concern and accepted knowingly over 200 nodes or 70 points.
+- **One keystone, Glass Cannon**, on the Melee–Dash seam: max health 50, Last Stand permanently armed, no
+  damage multiplier. Keystones are nodes with a downside; more only after this one is played.
+- **The tree is drawn as the suit's circuit**: substrate tile, a colour wash per region, copper traces,
+  a frame sprite per tier, red for the keystone, blank pads for gated regions. Brief in
+  [ART_DEBT](ART_DEBT.md#the-skill-tree--the-circuit-substrate-traces-and-frames).
+- **Rejected in the same grill**: per-Major downsides (reopens seven settled designs); jewels, masteries
+  and per-point refunds from the model; a 200-node tree; region labels on the tree itself.
+
 ### What the Gargantua example actually needs
 
 Worth writing down because it is the acceptance test for the whole idea, and one fact about it is not what
@@ -2159,13 +2185,15 @@ Facts found while sizing a bigger tree, so they are not found twice.
 
 ### Open questions
 
-- How is a Route drawn? A region of the tree, a column, or nothing visible, with the build discovered by
-  hovering? Anonymization matters more the larger the tree is. **Partly answered 2026-09-14**: a Route is
-  a region, and the Stat nodes' shared per-stat icons are what make the region read without a label —
-  the road *looks* like melee, or energy. Whether anything beyond that marks a region is still open.
+- ~~How is a Route drawn?~~ **Answered 2026-09-15**: a region with a faint colour wash over a circuit
+  substrate, its name in the tooltip only; see the settled block above and the ART_DEBT brief.
 - **The Stat node's bonuses.** About eight stats, themed by Route, at first-guess sizes (+5% was the
-  example given). Which eight, and whether a stat is one flat percentage or scales with the Route's own
-  ranks, is the first question of the first Route built under the matrix.
+  example given). Four exist (melee, bullet, healing, energy damage); the hub adds Max Health and Max
+  Armour (2026-09-15). Still unchosen: the Juggernaut's, Dash's, Alien's and Stealth's road stats.
+- **The suit node in the table.** Cost 0 against a cost-one `static_assert`, held on spawn and after a
+  Reset, not counted by `SpentPoints`: a build question, not a design one.
+- **The other three hub corners.** Follow-Up takes the Melee–Juggernaut corner; the Juggernaut–Specialist,
+  Specialist–Medical and Medical–Melee corners are open for cross-Route Skills.
 - ~~**Which Route is built first.**~~ Melee, then Weapon Specialist, both on 2026-09-14. Of the five
   left, Energy and Medical need nothing new; the Juggernaut needs the `+pulse`/`-pulse` pair; the Dash
   Route and the Alien Route each need their Module first.
@@ -2327,7 +2355,11 @@ is designed, and may well change name first.
 | **Station** | A world entity that takes items in and gives items out. | Avoid *bench*, *workbench*, *terminal*, *fabricator*. *Terminal* especially — it will be wanted for Transmissions. |
 | **Decapitation** | A lethal head hit that removes the head: headless submodel, thrown skull, blood from the stump. | Distinct from *gibbing*, which is the whole body and already means something in this codebase. **Headless** names the resulting state. |
 | **Carbon Pickaxe** | The other custom weapon. | Named already; recorded here so it is used consistently. **Gauss Katana** graduated to CONTEXT.md on 2026-09-12 when the weapon was built. |
-| **Route** | A build path through the Skill Tree: the set of Skills whose bonuses multiply into one way of playing. Crosses columns. | Named 2026-09-13. Avoid *class*, *spec* and *tree* — the tree is the whole thing. |
+| **Route** | A build path through the Skill Tree: the set of Skills whose bonuses multiply into one way of playing. A region of the tree since 2026-09-15. | Named 2026-09-13. Avoid *class*, *spec* and *tree* — the tree is the whole thing. |
+| **Hub** | The centre region of the Skill Tree: the suit, the generic suit stats, and the cross-Route Skills in its corner cells. | Settled 2026-09-15. Avoid *core* (the alien ammo) and *centre* alone. |
+| **Seam** | The shared border of two Routes' regions, where a cross-Route build pays in the neighbour's stat. | Settled 2026-09-15. Avoid *bridge*, *link* (a link is an effect that reads another Route). |
+| **Keystone** | A Skill Tree node with a real downside. Glass Cannon is the first. | Settled 2026-09-15, Path of Exile's word kept on purpose. Avoid *curse*, *trade-off node*. |
+| **Trace** | A drawn connector in the Skill Tree: thin between neighbours, thick for a Skill's gate, lit when powered. | Presentation term, 2026-09-15. Avoid *edge* in player-facing text (kept in code and the debug overlay). |
 | ~~**Stat node**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#skills) on 2026-09-14, when the Melee Route built the first nine. | |
 | **Defense Matrix** | The Juggernaut Route's stance: the Pulse key held for a second raises it, armour takes a far larger share of every hit while it is up, the player is slowed. Drops on release, at 6 s, or at zero armour. | Settled 2026-09-13. **Not a Shield** — that word is the Pulse's field in CONTEXT.md. |
 | **Core** | The alien Module's ammunition: an ammo type, found in the world, finite. Powers the summon weapon and whatever other alien weapons the Module serves. | Settled 2026-09-13, replacing *green battery*, which collided with the HEV **Battery** Item Type and the Battery Capacity Skill. *Cell* was also out: it is the Grid's unit. |

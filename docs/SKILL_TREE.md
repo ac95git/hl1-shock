@@ -5,9 +5,12 @@ rejected shapes and what each node costs to build are in [ROADMAP.md, Pillar 4: 
 this document is the shape only. What exists in code today is in [PILLARS.md pillar 4](PILLARS.md#4-skill-trees).
 
 **How to read it.** A **Route** is a build path: a set of Skills whose bonuses multiply into one way of
-playing ([CONTEXT.md](../CONTEXT.md) vocabulary, proposed in ROADMAP.md). A Route crosses columns; the
-seven Routes are not seven columns. An arrow in a diagram means "you need this" and nothing else: the tree
-is AND-only, a node with two arrows into it needs both, and there are no OR gates and no lockouts.
+playing ([CONTEXT.md](../CONTEXT.md) vocabulary, proposed in ROADMAP.md). A Route is a region of the
+tree; the seven Routes are not seven columns. An arrow in a diagram means "you need this" and nothing
+else: a Skill with two arrows into it needs both, and there are no OR gates and no lockouts. **Since
+2026-09-15 the arrows are for Skills only**: a Stat node has no arrows and opens from any owned neighbour
+([one start, open roads](#one-start-open-roads--settled-2026-09-15)), so the per-Route diagrams below show
+the Skills' gates and leave the roads to the region map.
 
 **What is settled and what is a first cut.** Every Route's **root**, **major node**, node list and
 effects are settled, and so is every **cross-Route link**. The prerequisite chains *in the middle* of each
@@ -22,7 +25,12 @@ are assigned when a node is built, never reused, and **22 and 23 are spoken for*
   [the matrix](#the-matrix--settled-2026-09-14). A player who paths somewhere *for* a Stat node is the
   dilution this principle warned about; the Stat nodes exist to be walked through on the way to a Skill.
 - **Every node costs one Skill Point.** Price is distance: a strong Skill is expensive because of the
-  Stat nodes on the road to it, not because of a number on it. Nothing is printed on a node.
+  Stat nodes on the road to it, not because of a number on it. Nothing is printed on a node. **Amended
+  2026-09-15:** distance is measured from what the player already owns, not from a root, so the same
+  Skill is cheap for one build and dear for another.
+- **One start, and roads are open.** The suit at the centre is held from the first moment; a Stat node
+  opens from any owned orthogonal neighbour; Skills keep their curated gates. The player chooses *how* to
+  reach a Skill, not only whether ([ADR-0012](adr/0012-the-skill-tree-has-one-start-and-open-roads.md)).
 - **Nothing rewards standing still.** Both regenerations were cut; every node acts on an action.
 - **The normal movement rules stay.** No node changes ground speed or jump height. Reaching high places is
   a Module's job.
@@ -43,8 +51,10 @@ are assigned when a node is built, never reused, and **22 and 23 are spoken for*
 | [Medical](#medical) | 5 + 4 Stat | Med Expert (19) | Last Stand | — . **Building since 2026-09-14** |
 
 49 Skills, ranks counted once. About sixteen carry ranks, and each rank becomes a Stat node on the road
-under [the matrix](#the-matrix--settled-2026-09-14); the tree that results is in the region of 120–180
-nodes.
+under [the matrix](#the-matrix--settled-2026-09-14); the tree that results is **about 140 nodes** on the
+15×15 grid settled on 2026-09-15, against **100 findable Skill Points**. The "Root" column above names
+each Route's entry Skill, the first Skill on the way in from the hub; since 2026-09-15 none of them is a
+root in the old sense, because the tree has one start.
 
 ---
 
@@ -61,22 +71,25 @@ draw showed the panel could hold well over a hundred nodes.
   That is where the price lives, so **every node in the tree costs exactly one Skill Point** and the cost is
   no longer drawn on the node or anywhere else. The open question about where the cost display goes is
   closed: nowhere.
-- **Reachability does not change.** A node opens when its prerequisites are held — two at most, both
+- ~~**Reachability does not change.** A node opens when its prerequisites are held — two at most, both
   required — and the prerequisites are curated, edge by edge, as they are today. The matrix is not free
-  pathing between neighbours; it is a directed tree whose roads happen to be dense. The one AND gate today
-  (the Follow-Up) keeps working, and any Major that wants two roads to converge gets an AND for free.
-- **Roots stay where they are.** Each Route's root is always available and a player starts wherever they
-  like, as today.
+  pathing between neighbours; it is a directed tree whose roads happen to be dense.~~ **Superseded
+  2026-09-15** by [one start, open roads](#one-start-open-roads--settled-2026-09-15): Stat nodes open from
+  any owned neighbour, and only Skills keep curated gates. The one AND gate (the Follow-Up) keeps working,
+  and any Major that wants two roads to converge still gets an AND.
+- ~~**Roots stay where they are.** Each Route's root is always available and a player starts wherever they
+  like, as today.~~ **Superseded 2026-09-15**: the suit at the centre is the only start.
 - **Stat types are themed by Route**, about eight in all, so the road through a Route's region is made of
   that Route's stat. Crossing into another Route's region means taking nodes of *its* stat, which is the
   trade that makes efficient pathing mean something.
 - **Routes connect through curated roads.** Melee's region reaches Energy's through Stat nodes placed for
   the purpose, so the Gargantua build is a literal path on the tree. Which regions connect, and where, is
   curation, not adjacency.
-- **The tree is deliberately not completable.** Fifty to seventy Skill Points against 120–180 nodes buys a
-  third to a half of the tree. That is the third of the three options the economy note below listed, and it
-  reverses the stance PILLARS pillar 4 recorded ("completable only by near-exhaustive exploration"). Reset
-  Tokens matter more for it, not less.
+- **The tree is deliberately not completable.** ~~Fifty to seventy Skill Points against 120–180 nodes buys a
+  third to a half of the tree.~~ **Renumbered 2026-09-15**: 100 findable points against about 140 nodes,
+  so a thorough player owns about 71% of it and a critical-path player about 29%; see [the economy](#the-economy--resolved-2026-09-14).
+  It reverses the stance PILLARS pillar 4 recorded ("completable only by near-exhaustive exploration").
+  Reset Tokens matter more for it, not less.
 - **Ranks are gone as a drawing case.** "Energy Damage 1→2→3" is three energy Stat nodes on the road to the
   Energy major. The chained-ids-drawn-as-one idea in the ROADMAP infrastructure notes is withdrawn.
 
@@ -91,6 +104,128 @@ What it costs to build, before the first Stat node exists:
   `static_assert` catches the first (`SkillDefsOnePerCell`); the client cvar `skilltree_debug_edges`
   catches the second, drawing any prerequisite edge whose ends are not neighbours (diagonals count) thick
   and red with its span at the midpoint, and listing them to the console once.
+
+---
+
+## One start, open roads — settled 2026-09-15
+
+The grill that preceded the third Route, held before any further node was built. Four things were put as
+questions with a recommendation each, and the answers below are Andrei's. The reasoning for the first is
+[ADR-0012](adr/0012-the-skill-tree-has-one-start-and-open-roads.md).
+
+### The rule
+
+- **The suit is the start.** One node at the centre of the tree, held from the first moment of a game and
+  kept through a Reset. It is the only node that is not bought. There are no other roots.
+- **A Stat node opens from any owned orthogonal neighbour.** Roads have no curated edges; the grid is
+  their adjacency. Diagonals do not count.
+- **A Skill opens through its curated prerequisites**, two at most, both required, each in a cell adjacent
+  to it. Majors keep their two-road AND.
+- **A Reset clears everything but the suit.**
+
+### The regions
+
+A 15×15 grid, nine regions of 5×5. The centre is the **hub**; the four **edge** regions touch it and hold
+the Routes a player can use in the first hour; the four **corner** regions touch no part of the hub and
+hold the Routes gated on a Module or a late weapon, reached only through their two edge neighbours. A
+**seam** is the shared border of two rim regions, and it is where cross-Route builds pay their toll in the
+neighbour's stat.
+
+```
+        cols 0-4          cols 5-9           cols 10-14
+rows    DASH              MEDICAL            STEALTH
+0-4     corner            edge               corner
+        (Dash Module)                        (a Stealth Module, perhaps)
+
+rows    MELEE             HUB                WEAPON SPECIALIST
+5-9     edge              the suit at (7,7)  edge
+
+rows    ENERGY            JUGGERNAUT         ALIEN
+10-14   corner            edge               corner
+        (katana, egon)    (Pulse Module      (alien Module)
+                           for its Pulse nodes)
+```
+
+Why this ring and not another:
+
+- **Melee's two corner neighbours are Energy and Dash.** Melee has more cross-links than any Route
+  (Energy, Juggernaut, Dash, Medical, Stealth) and an edge region touches only two corners. Energy is the
+  Gargantua build and Dash is the ninja; they won. Juggernaut, Melee's third strong link, is reached
+  through the hub's corner cell, where Follow-Up already needs both.
+- **Stealth is a corner, opposite Melee**, on purpose: it may be gated behind a Stealth Module later, and
+  the corners are where gated Routes live. The cost is that Dash and Stealth do not touch — both are
+  corners — so the ninja's stealth half is reached through Medical's region or the hub, and the
+  never-noticed Backstab tier is far from the Melee region. Recorded as a known trade, not an oversight.
+- **Medical is the edge between Dash and Stealth.** It is ungated, so it belongs on an edge, and Leech
+  reaches Melee through the hub.
+
+The seams, clockwise from the top-left: Dash–Melee (the ninja's, and the keystone's), Dash–Medical,
+Medical–Stealth, Stealth–Specialist, Specialist–Alien, Alien–Juggernaut, Juggernaut–Energy (armour as
+fuel), Energy–Melee (the Gargantua build).
+
+### The hub
+
+The 5×5 centre. The suit sits at (7,7). Around it, **Max Health** and **Max Armour** Stat nodes, so
+leaving toward any Route costs two or three points of generic suit stats first; the four old
+survivability Skills — Fortitude (8), Armor Expert (9), Battery Capacity (13), Sure Footing (7) — live
+here as its Skills. The hub's four **corner cells** each touch two edge regions and are where a
+cross-Route Skill sits: Follow-Up (18), needing Melee Force and Pulse Recharge, goes in the south-west
+corner cell between Melee and Juggernaut. The other three corners are open for later cross-links.
+
+### The keystone
+
+A **keystone** is a node with a real downside, which no Major has. One for now, curated; more only after
+it has been played.
+
+| Node | Effect | Where |
+| --- | --- | --- |
+| **Glass Cannon** | Max health becomes 50. Last Stand is permanently armed: a hit that would kill spends an unused Syringe and starts the Infusion, and Infusion healing is doubled below 50 — which at 50 max is always. **No damage multiplier of any kind**; the cannon is whatever the roads around it provide | The Melee–Dash seam, top-left. Medical is on the far side of the tree, so this is the west side's only Last Stand |
+
+Drawn Major-sized with a red frame. Last Stand's own open question (does the killing blow land, or is the
+player held at 1?) is answered once, for both.
+
+### The economy, renumbered
+
+| | |
+| --- | --- |
+| Nodes | ~140 (nine regions at about 60% fill) |
+| Skill Points on the critical path | 40 |
+| Skill Points in optional spaces | 60 |
+| A critical-path player owns | ~29% of the tree |
+| A thorough player owns | ~71%, five or six of the seven Majors |
+
+The 71% was put as a concern — the 2026-09-14 stance was a third to a half, and at 71% most builds
+converge late — and **accepted knowingly**, over the alternatives of a 200-node tree or 70 points. Spec
+pressure lives in the first two thirds of a campaign. The 40/60 split matches MAP_BRIEF's per-map ratio
+(two points on the path, three in optional spaces), so twenty maps' worth of pickups is the campaign.
+
+### The presentation
+
+The tree is drawn as the suit's circuit. Settled as a direction; the assets are an
+[ART_DEBT entry](ART_DEBT.md#the-skill-tree--the-circuit-substrate-traces-and-frames).
+
+- **Substrate**: a tiled circuit-board texture under the whole tree, low contrast, loaded as a TGA through
+  VGUI1 the way the class-menu images are.
+- **Regions**: a faint colour wash per region, one colour per Route, so a region reads without a label.
+  The hub is neutral ground. Route names appear in the tooltip only.
+- **Traces**: connectors are copper traces. A thin trace joins every pair of orthogonally adjacent nodes;
+  a thick trace is a Skill's curated gate; a trace lights when the node at either end is held, and glows
+  when the node it leads to is available.
+- **Frames**: a frame sprite per tier — a pad for a Stat node, a small chip for Minor, a larger for
+  Medium, a large chip for a Major — tinted by state as the icons are today, so tiers differ in shape as
+  well as size. The keystone's frame is red. The suit's is the processor.
+- **Gated regions** draw as blank pads: a hidden Route shows a footprint, not a hole.
+- **Nothing is printed on a node.** The Skill Point readout and the Reset button stay as they are.
+
+### What it costs to build, before the third Route
+
+- `SkillPrereqMet` gains the Stat-tier adjacency clause, in the shared header, both DLLs.
+- The suit node: an id, a row exempt from the cost-one `static_assert`, held on spawn and after
+  `TryReset`, not counted by `SpentPoints`.
+- An island check: a `static_assert` that every Stat node has at least one neighbour.
+- The 52 built nodes re-placed into their regions; ids, effects and cvars untouched. `docs/skill_tree.csv`
+  is superseded by the region map above.
+- Each region reads from its hub-facing side outward, not top to bottom as the column layout did.
 
 ---
 
@@ -431,6 +566,7 @@ graph LR
 | **Reprisal reads melee kills** | A one-shot melee kill refills a Dash; the Backstab and Cleave are how you get one |
 | **Leech reads melee hits** | Medical × Melee: the sustain the glass cannon lacks |
 | **The never-noticed Backstab tier** | A Stealth node on Melee's mechanic; ids 22–23 |
+| **Glass Cannon** on the Melee–Dash seam | The keystone: 50 max health and Last Stand permanently armed, the Medical major's effect on the far side of the tree from Medical. Settled 2026-09-15 |
 
 ## Reveal gates
 
@@ -440,7 +576,8 @@ A node is hidden until the player holds the thing it modifies. Settled per Route
 | --- | --- |
 | The Pulse Module | Pulse Window, Recharge, Discharge, Rebound, the Defense Matrix and everything behind it |
 | The alien Module | The whole Alien Route, Hive nodes included |
-| The Dash Module | Every Dash node; Sure Footing stays visible |
+| The Dash Module | Every Dash node; Sure Footing stays visible (in the hub since 2026-09-15) |
+| A Stealth Module, perhaps | The Stealth region. Not decided; it is why Stealth sits in a corner |
 
 ## Cut and reserved
 
@@ -462,8 +599,10 @@ The seven Routes sum to 49 Skills with ranks counted once, and about sixteen car
 the old prices that was roughly 100 points against a **50–70 target**, and one of three things had to move:
 prices, the target, or completability. **All three moved at once** with [the matrix](#the-matrix--settled-2026-09-14):
 every node costs one, the target stays at 50–70 findable points, and the tree is deliberately not
-completable. What 50–70 points buys — which third of the tree — is the pricing pass now, and it is a
-question of where the roads run rather than what the nodes cost. Still to be judged against a map.
+completable. ~~What 50–70 points buys — which third of the tree — is the pricing pass now.~~ **Renumbered
+2026-09-15**: 100 findable points, 40 on the critical path and 60 in optional spaces, against about 140
+nodes; a thorough player owns about 71%. The numbers and the reason they were accepted are under
+[one start, open roads](#the-economy-renumbered). Still to be judged against a map.
 
 ## What is built first
 
