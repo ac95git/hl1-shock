@@ -116,10 +116,10 @@ a node, not a Skill.
 _Avoid_: passive, filler, minor (a tier name), travel node
 
 **Skill Tree**:
-The full set of Skills and Stat nodes and the prerequisites between them. A Skill may be gated on two
-nodes, and both are required; a Stat node is gated on adjacency alone. The suit at the centre is the one
-start, held from the first moment and kept through a Reset. Every other node costs one Skill Point, and
-the tree is deliberately not completable.
+The full set of Skills and Stat nodes on one grid. Any node opens from any owned node beside it, and
+empty cells are the only walls; there are no prerequisites (settled 2026-09-15, not yet built — the code
+still has them). The suit at the centre is the one start, held from the first moment and kept through a
+Reset. Every other node costs one Skill Point, and the tree is deliberately not completable.
 _Avoid_: upgrade tree, talent tree, perk tree; and board (a Grid word to avoid, and the tree is not one)
 
 ### The Infusion

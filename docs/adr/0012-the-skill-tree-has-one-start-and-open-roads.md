@@ -30,12 +30,12 @@ SKILL_TREE.md.
 **One start.** The centre of the tree is the HEV suit, a node the player holds from the start of the game
 and keeps through a Reset. There are no other roots.
 
-**Stat nodes open from any owned orthogonal neighbour.** A Stat node has no curated prerequisites at all;
-the grid is its adjacency. Roads are terrain, not edges.
+**Every node opens from any owned orthogonal neighbour.** No node has curated prerequisites; the grid is
+the adjacency. Roads are terrain, not edges. *(A first cut earlier the same day kept curated AND gates on
+Skills and Majors; it was dropped within the hour for one rule with no exceptions, Path of Exile's own.)*
 
-**Skills and Majors keep curated gates.** A Skill opens when its prerequisites are held — two at most,
-both required — exactly as today, and those prerequisites are nodes adjacent to it. A Major that wants two
-roads to converge still gets its AND.
+**Empty cells limit pathing.** Where the design wants a long road to a Major, it leaves cells empty. Price
+is position and nothing else.
 
 **The layout is nine regions on a 15×15 grid.** The centre region is the hub: the suit, the generic suit
 stats, the four old survivability Skills, and the cross-Route Skills in its corner cells. The four edge
@@ -45,10 +45,15 @@ SKILL_TREE.md.
 
 ## Consequences
 
-**The gating rule gains a second clause and stays in one place.** `SkillPrereqMet` in `skill_defs.h` is
-the one implementation the server validates against and the client draws from ([ADR-0008](0008-skill-definitions-are-shared-not-networked.md)).
-It becomes: a Stat-tier node is reachable when any node in an orthogonally adjacent cell is held; any other
-node is reachable when its listed prerequisites are held. Both DLLs compile it, so they cannot disagree.
+**The gating rule changes and stays in one place.** `SkillPrereqMet` in `skill_defs.h` is the one
+implementation the server validates against and the client draws from ([ADR-0008](0008-skill-definitions-are-shared-not-networked.md)).
+It becomes: a node is reachable when any node in an orthogonally adjacent cell is held. Both DLLs compile
+it, so they cannot disagree. `prereq` and `prereq2` leave `SkillDef`, and with them the connector edges
+and the `skilltree_debug_edges` overlay; traces between neighbours replace both.
+
+**Majors are cheaper than under the AND.** Cleave cost both roads, 14 points; it now costs the shortest
+road the empty cells allow, six to eight. Against 100 findable points a thorough player reaches about six
+Majors. Accepted with the rule.
 
 **The suit node is a node with no price.** It has an id, a cell and a row in the table, is held on spawn
 and after `TryReset`, and is the one row the cost-one `static_assert` must exempt. `SpentPoints` must not
@@ -59,10 +64,10 @@ ids, effects, cvars and icons; only their `gridCol`/`gridRow` and, for Stat node
 `prereq` change. `docs/skill_tree.csv`, the 16-column placement sheet, is superseded by the region map in
 SKILL_TREE.md.
 
-**A Stat node with no neighbour is a bug the compiler can catch.** With curated edges gone from the roads,
-the layout mistake becomes an island: a Stat node whose four neighbours are all empty. A `static_assert`
-beside `SkillDefsOnePerCell` should reject it. The `skilltree_debug_edges` overlay keeps its job for the
-Skills' curated edges, which must still join adjacent cells.
+**A node with no neighbour is a bug the compiler can catch.** With edges gone, the layout mistake becomes
+an island: a node whose four neighbours are all empty, or a cluster no road from the suit reaches. A
+`static_assert` beside `SkillDefsOnePerCell` should reject the first and, if it can be written in
+`constexpr`, the second.
 
 **Price becomes position.** What a Skill costs is now the shortest road from what the player already owns,
 so the same Skill is cheap for one build and dear for another. That is the point, and it is also why the

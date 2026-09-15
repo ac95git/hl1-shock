@@ -534,10 +534,10 @@ The tree is the suit's circuit, and the assets are the metaphor made literal:
   and traces stay legible over it, loaded as a TGA through VGUI1's `BitmapTGA` (the class-menu loader)
   and tiled under the tree area. One colour wash per Route's region goes over it, faint, so a region
   reads without a label: eight Route colours and a neutral for the hub, chosen together as a palette.
-- **Traces.** Connectors become copper traces: a thin trace between every pair of orthogonally adjacent
-  nodes (the open roads), a thick one for a Skill's curated gate. A trace is dim copper unlit, lit
-  copper when either end is held, and glows when it leads to an available node. Drawable with filled
-  rects; the colours and the glow are the art decision.
+- **Traces.** Connectors become copper traces, one between every pair of orthogonally adjacent nodes and
+  nowhere else (there are no gates to draw since 2026-09-15). A trace is dim copper unlit, lit copper
+  when either end is held, and glows when it leads from a held node to one that can be bought. Drawable
+  with filled rects; the colours and the glow are the art decision.
 - **Frames.** One frame sprite per tier, tinted by state exactly as the icons are today (white held, gold
   available, grey locked): a square pad for a Stat node, a small chip for Minor, a larger chip for
   Medium, a large chip with pins for a Major, and the processor for the suit at the centre. The keystone

@@ -7,10 +7,11 @@ this document is the shape only. What exists in code today is in [PILLARS.md pil
 **How to read it.** A **Route** is a build path: a set of Skills whose bonuses multiply into one way of
 playing ([CONTEXT.md](../CONTEXT.md) vocabulary, proposed in ROADMAP.md). A Route is a region of the
 tree; the seven Routes are not seven columns. An arrow in a diagram means "you need this" and nothing
-else: a Skill with two arrows into it needs both, and there are no OR gates and no lockouts. **Since
-2026-09-15 the arrows are for Skills only**: a Stat node has no arrows and opens from any owned neighbour
-([one start, open roads](#one-start-open-roads--settled-2026-09-15)), so the per-Route diagrams below show
-the Skills' gates and leave the roads to the region map.
+else — **and since 2026-09-15 there are no arrows in the tree at all**: every node opens from any owned
+orthogonal neighbour, and empty cells are the only walls ([one start, open roads](#one-start-open-roads--settled-2026-09-15)).
+The per-Route diagrams below are kept as the record of each Route's intended order, which the region map
+reproduces with distance and empty cells rather than gates; the region map is authoritative where they
+disagree.
 
 **What is settled and what is a first cut.** Every Route's **root**, **major node**, node list and
 effects are settled, and so is every **cross-Route link**. The prerequisite chains *in the middle* of each
@@ -28,8 +29,8 @@ are assigned when a node is built, never reused, and **22 and 23 are spoken for*
   Stat nodes on the road to it, not because of a number on it. Nothing is printed on a node. **Amended
   2026-09-15:** distance is measured from what the player already owns, not from a root, so the same
   Skill is cheap for one build and dear for another.
-- **One start, and roads are open.** The suit at the centre is held from the first moment; a Stat node
-  opens from any owned orthogonal neighbour; Skills keep their curated gates. The player chooses *how* to
+- **One start, and roads are open.** The suit at the centre is held from the first moment; every node
+  opens from any owned orthogonal neighbour; empty cells are the walls. The player chooses *how* to
   reach a Skill, not only whether ([ADR-0012](adr/0012-the-skill-tree-has-one-start-and-open-roads.md)).
 - **Nothing rewards standing still.** Both regenerations were cut; every node acts on an action.
 - **The normal movement rules stay.** No node changes ground speed or jump height. Reaching high places is
@@ -74,9 +75,8 @@ draw showed the panel could hold well over a hundred nodes.
 - ~~**Reachability does not change.** A node opens when its prerequisites are held — two at most, both
   required — and the prerequisites are curated, edge by edge, as they are today. The matrix is not free
   pathing between neighbours; it is a directed tree whose roads happen to be dense.~~ **Superseded
-  2026-09-15** by [one start, open roads](#one-start-open-roads--settled-2026-09-15): Stat nodes open from
-  any owned neighbour, and only Skills keep curated gates. The one AND gate (the Follow-Up) keeps working,
-  and any Major that wants two roads to converge still gets an AND.
+  2026-09-15** by [one start, open roads](#one-start-open-roads--settled-2026-09-15): every node opens
+  from any owned neighbour, no gates remain, and a Major that wants a long road gets it from empty cells.
 - ~~**Roots stay where they are.** Each Route's root is always available and a player starts wherever they
   like, as today.~~ **Superseded 2026-09-15**: the suit at the centre is the only start.
 - **Stat types are themed by Route**, about eight in all, so the road through a Route's region is made of
@@ -117,10 +117,12 @@ questions with a recommendation each, and the answers below are Andrei's. The re
 
 - **The suit is the start.** One node at the centre of the tree, held from the first moment of a game and
   kept through a Reset. It is the only node that is not bought. There are no other roots.
-- **A Stat node opens from any owned orthogonal neighbour.** Roads have no curated edges; the grid is
-  their adjacency. Diagonals do not count.
-- **A Skill opens through its curated prerequisites**, two at most, both required, each in a cell adjacent
-  to it. Majors keep their two-road AND.
+- **Every node opens from any owned orthogonal neighbour.** Stat node, Skill, Major, keystone alike.
+  There are no curated prerequisites left anywhere and no AND gates; the two prerequisite columns leave
+  the table. Diagonals do not count. *(Settled later the same day, after a first cut kept curated gates
+  on Skills: one rule, no exceptions.)*
+- **Empty cells are the walls.** Pathing is limited by where nothing is placed, not by gates. A Major is
+  dear because the empty cells around it force a long road, so the region map is the whole of the pricing.
 - **A Reset clears everything but the suit.**
 
 ### The regions
@@ -169,8 +171,14 @@ The 5×5 centre. The suit sits at (7,7). Around it, **Max Health** and **Max Arm
 leaving toward any Route costs two or three points of generic suit stats first; the four old
 survivability Skills — Fortitude (8), Armor Expert (9), Battery Capacity (13), Sure Footing (7) — live
 here as its Skills. The hub's four **corner cells** each touch two edge regions and are where a
-cross-Route Skill sits: Follow-Up (18), needing Melee Force and Pulse Recharge, goes in the south-west
-corner cell between Melee and Juggernaut. The other three corners are open for later cross-links.
+cross-Route Skill sits: Follow-Up (18), the melee payoff for a Pulse deflect, goes in the south-west
+corner cell between Melee and Juggernaut. **The other three corners stay open for now** (settled
+2026-09-15: Leech and Ricochet stay in their Routes; a corner is filled when a Skill worth it exists).
+
+The one other cross-Route node placed today is **the armour drain (59)**, the Energy Route's Major: it
+sits on the **Energy–Juggernaut seam**, the border between the south-west corner and the south edge, since
+it is the Energy × Juggernaut tie (armour as fuel). It stays the Energy Route's Major in that Route's
+table; its cell is on the Juggernaut-facing side of Energy's region.
 
 ### The keystone
 
@@ -181,8 +189,27 @@ it has been played.
 | --- | --- | --- |
 | **Glass Cannon** | Max health becomes 50. Last Stand is permanently armed: a hit that would kill spends an unused Syringe and starts the Infusion, and Infusion healing is doubled below 50 — which at 50 max is always. **No damage multiplier of any kind**; the cannon is whatever the roads around it provide | The Melee–Dash seam, top-left. Medical is on the far side of the tree, so this is the west side's only Last Stand |
 
-Drawn Major-sized with a red frame. Last Stand's own open question (does the killing blow land, or is the
-player held at 1?) is answered once, for both.
+Drawn Major-sized with a red frame.
+
+**Last Stand, settled 2026-09-15, for the Medical Major and Glass Cannon alike:** a hit that would kill
+leaves the player at **1 health** instead; the player is **invincible for 3 seconds**; an unused Syringe
+is spent and its Infusion starts, healing doubled below 50; then **a 60-second cooldown** before it can
+fire again. The invincibility is what lets the player break contact; the Infusion is the second life.
+Fires only when no Infusion is running ([ADR-0007](adr/0007-the-infusion-is-one-at-a-time.md)). Numbers
+are first guesses for cvars.
+
+### The road stats
+
+Settled 2026-09-15 for the four Routes that had none. Every Stat node of a stat adds the same amount,
+additive within the stat, as the four built ones do.
+
+| Region | Stat | Each node |
+| --- | --- | --- |
+| Hub | Max Health, Max Armour | sizes to be set when the hub is built; smaller than Fortitude's 25 and Battery Capacity's 50 |
+| Juggernaut | Max Armour, continuing the hub's armour side | as the hub's |
+| Dash | Dash Recovery | the Dash comes back sooner |
+| Alien | Hornet Replenish | hornets return faster |
+| Stealth | Concealment | monsters learn about the player 5% slower: a multiplier on the Suspicion rate in [PERCEPTION.md](PERCEPTION.md). Acts on being seen, never on standing still |
 
 ### The economy, renumbered
 
@@ -208,9 +235,9 @@ The tree is drawn as the suit's circuit. Settled as a direction; the assets are 
   VGUI1 the way the class-menu images are.
 - **Regions**: a faint colour wash per region, one colour per Route, so a region reads without a label.
   The hub is neutral ground. Route names appear in the tooltip only.
-- **Traces**: connectors are copper traces. A thin trace joins every pair of orthogonally adjacent nodes;
-  a thick trace is a Skill's curated gate; a trace lights when the node at either end is held, and glows
-  when the node it leads to is available.
+- **Traces**: connectors are copper traces, one between every pair of orthogonally adjacent nodes and
+  nowhere else. A trace is dim unlit, lit when the node at either end is held, and glows when it leads
+  from a held node to one that can be bought.
 - **Frames**: a frame sprite per tier — a pad for a Stat node, a small chip for Minor, a larger for
   Medium, a large chip for a Major — tinted by state as the icons are today, so tiers differ in shape as
   well as size. The keystone's frame is red. The suit's is the processor.
@@ -219,10 +246,13 @@ The tree is drawn as the suit's circuit. Settled as a direction; the assets are 
 
 ### What it costs to build, before the third Route
 
-- `SkillPrereqMet` gains the Stat-tier adjacency clause, in the shared header, both DLLs.
+- `SkillPrereqMet` becomes the adjacency test, in the shared header, both DLLs; `prereq` and `prereq2`
+  leave `SkillDef`, and the connector-edge drawing and `skilltree_debug_edges` go with them (traces are
+  drawn between neighbours instead).
 - The suit node: an id, a row exempt from the cost-one `static_assert`, held on spawn and after
   `TryReset`, not counted by `SpentPoints`.
-- An island check: a `static_assert` that every Stat node has at least one neighbour.
+- An island check: a `static_assert` that every node has at least one neighbour, and ideally that every
+  node is reachable from the suit.
 - The 52 built nodes re-placed into their regions; ids, effects and cvars untouched. `docs/skill_tree.csv`
   is superseded by the region map above.
 - Each region reads from its hub-facing side outward, not top to bottom as the column layout did.
@@ -312,7 +342,7 @@ deals energy damage, slash and wave (built 2026-09-14), and scales off both Mele
 | Egon Focus | 55 | Secondary fire unlocks the egon's narrow beam (dormant in the SDK) | Reserved. Details to be decided |
 | Quick Charge | 57 | The katana's charged wave charges faster | Reserved. Waits on the charge; first to cut |
 | Insulation | 58 | Energy **and shock** taken ×0.7 (`skill_insulation_scale`) in the player's `TakeDamage` | Built |
-| **Major** | 59 | **Energy attacks drain armour as well, for bonus damage. Always on, never below a floor** (~20) | Reserved. Name pending |
+| **Major** | 59 | **Energy attacks drain armour as well, for bonus damage. Always on, never below a floor** (~20) | Reserved. Name pending. **Placed 2026-09-15 on the Energy–Juggernaut seam** as the tree's Energy × Juggernaut node |
 
 The region as placed, columns 14–15, `E` an Energy Damage Stat node:
 
@@ -485,7 +515,7 @@ in it at all**. [ROADMAP](ROADMAP.md#medical).
 | Healing ×4 | 50–53 | +10% on an Infusion's rate and a medkit's heal each, additive within the stat. **Potency's ranks became these** | Built. **The roads** |
 | Overheal | 47 | An Infusion's ticks that would be lost on a full bar go above the maximum instead, up to `skill_overheal_cap` (50) over; the excess drains at `skill_overheal_decay` (2/s) once the Infusion ends. Read a little wider than "a Syringe used at full health": an Infusion that *reaches* full keeps going too, which is the same waste made a decision | Built |
 | Leech | 48 | Melee hits on a living monster heal a tenth of the swing's damage (`skill_leech_fraction`), every roster weapon, per victim in a Cleave. The chainsaw's lifesteal is its own base property | Built |
-| **Major** | 49 | **Last Stand**: a hit that would kill the player spends an unused Syringe automatically and starts the Infusion; all Infusion healing is doubled below 50 health | Reserved. **One question before it is built**: whether the killing blow still lands and the Infusion races it, or the player is held at 1 health for the Syringe to work. The text reads as the second; not said |
+| **Major** | 49 | **Last Stand**: a hit that would kill leaves the player at 1 health and invincible for 3 seconds; an unused Syringe is spent and its Infusion starts; Infusion healing is doubled below 50 health; 60 s cooldown | Reserved. ~~One question before it is built~~ **Answered 2026-09-15**: held at 1, see [the keystone](#the-keystone). Glass Cannon grants the same effect permanently |
 
 The region as placed, columns 12–13, `H` a Healing Stat node:
 

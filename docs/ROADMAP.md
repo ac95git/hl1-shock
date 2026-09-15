@@ -1601,9 +1601,17 @@ in [ADR-0012](adr/0012-the-skill-tree-has-one-start-and-open-roads.md).
 
 - **The matrix's "efficient pathing" did not exist.** With curated edges on every node and seven free
   roots, the set of nodes needed for any Skill was fixed and a seam was never cheaper than a fresh root.
-  **Changed**: the suit at the centre is the only start, Stat nodes open from any owned orthogonal
-  neighbour, Skills and Majors keep curated gates. Path of Exile's rule, and simpler to state than the
-  one it replaces.
+  **Changed**: the suit at the centre is the only start, and **every node opens from any owned orthogonal
+  neighbour** — no prerequisites, no AND gates; empty cells limit pathing and price the Majors. Path of
+  Exile's rule, and simpler to state than the one it replaces. (A first cut the same morning kept curated
+  gates on Skills; Andrei removed them entirely within the hour.)
+- **Last Stand answered**, for the Medical Major and Glass Cannon alike: held at 1 health, invincible for
+  3 s, the Syringe fires, 60 s cooldown.
+- **Road stats**: Juggernaut Max Armour (continuing the hub's), Dash Recovery, Alien Hornet Replenish,
+  Stealth Concealment (a multiplier on the Suspicion rate). The hub's are Max Health and Max Armour.
+- **Hub corners**: Follow-Up in the Melee–Juggernaut corner, the other three open for now; Leech and
+  Ricochet stay in their Routes. The Energy Major (the armour drain) is placed on the Energy–Juggernaut
+  seam as that pair's cross-Route node.
 - **Nine regions on 15×15.** Hub in the centre with the suit stats and the four old survivability
   Skills; ungated Routes on the edges (Melee W, Medical N, Specialist E, Juggernaut S); gated or late
   Routes in the corners (Dash NW, Stealth NE, Alien SE, Energy SW). Stealth is a corner because it may be
@@ -1616,7 +1624,8 @@ in [ADR-0012](adr/0012-the-skill-tree-has-one-start-and-open-roads.md).
   a frame sprite per tier, red for the keystone, blank pads for gated regions. Brief in
   [ART_DEBT](ART_DEBT.md#the-skill-tree--the-circuit-substrate-traces-and-frames).
 - **Rejected in the same grill**: per-Major downsides (reopens seven settled designs); jewels, masteries
-  and per-point refunds from the model; a 200-node tree; region labels on the tree itself.
+  and per-point refunds from the model; a 200-node tree; region labels on the tree itself; curated gates
+  of any kind; a damage multiplier on Glass Cannon; moving Leech and Ricochet into the hub.
 
 ### What the Gargantua example actually needs
 
@@ -2187,9 +2196,8 @@ Facts found while sizing a bigger tree, so they are not found twice.
 
 - ~~How is a Route drawn?~~ **Answered 2026-09-15**: a region with a faint colour wash over a circuit
   substrate, its name in the tooltip only; see the settled block above and the ART_DEBT brief.
-- **The Stat node's bonuses.** About eight stats, themed by Route, at first-guess sizes (+5% was the
-  example given). Four exist (melee, bullet, healing, energy damage); the hub adds Max Health and Max
-  Armour (2026-09-15). Still unchosen: the Juggernaut's, Dash's, Alien's and Stealth's road stats.
+- ~~**The Stat node's bonuses.**~~ **All chosen as of 2026-09-15** (see SKILL_TREE.md, the road stats);
+  only the hub's two sizes are still to be set, when the hub is built.
 - **The suit node in the table.** Cost 0 against a cost-one `static_assert`, held on spawn and after a
   Reset, not counted by `SpentPoints`: a build question, not a design one.
 - **The other three hub corners.** Follow-Up takes the Melee–Juggernaut corner; the Juggernaut–Specialist,
