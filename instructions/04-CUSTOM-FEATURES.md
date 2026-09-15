@@ -146,6 +146,8 @@ Raising `skill_points_start` is the way to work on the tree UI without hunting f
 | `skill_armor_ratio_scale` | 0.9 | Armor Expert multiplies `ARMOR_RATIO` — the share of a blow that gets **past** armor — so lower is better armor |
 | `skill_fall_damage_scale` | 0.5 | Sure Footing multiplies fall damage |
 | `skill_battery_bonus` | 50 | Extra max armor from Battery Capacity |
+| `skill_stat_max_health` | 0.05 | Each Max Health Stat node (the hub) adds this fraction to max health, on top of Fortitude |
+| `skill_stat_max_armor` | 0.05 | Each Max Armor Stat node (the hub and the Juggernaut's roads) adds this fraction to max armor, on top of Battery Capacity |
 | `skill_melee_reach_scale` | 1.25 | Melee Reach multiplies the 32-unit swing trace |
 | `skill_melee_force_scale` | 1.5 | Melee Force multiplies melee damage |
 | `skill_melee_speed_scale` | 0.7 | Melee Speed multiplies the swing delay, miss and hit |
@@ -246,15 +248,20 @@ keep in step, and no networking change. See
    - `name` is the display label
    - `description` is the hover text
    - `spriteName` is a HUD sprite from `sprites/hud.txt`; `nullptr` renders the node without an icon
-   - `gridCol` and `gridRow` place the node in the tree. No two rows may share a cell; a `static_assert`
-     refuses it.
-   - `cost` is **always 1**, and a `static_assert` holds every row to it. The price of a Skill is the road
-     of Stat nodes to it ([docs/SKILL_TREE.md](../docs/SKILL_TREE.md), *The matrix*); nothing is printed
-     on a node.
-   - `prereq` and `prereq2` each link to another `ESkillId`, or `ESkillId::None`. **Both are required** —
-     a Skill with `None` in both slots is a root. Roads are made by chaining Stat nodes on `prereq`.
+   - `gridCol` and `gridRow` place the node on the 15×15 board, at the cell
+     [docs/SKILL_MAP.md](../docs/SKILL_MAP.md) gives it. No two rows may share a cell, no node may be off
+     the board, every node needs an orthogonal neighbour, and every node must be reachable from the Suit;
+     four `static_assert`s refuse each.
+   - `cost` is **always 1**, and a `static_assert` holds every row to it; the Suit alone costs 0. The
+     price of a Skill is the road of nodes to it ([docs/SKILL_TREE.md](../docs/SKILL_TREE.md)); nothing is
+     printed on a node.
+   - **There are no prerequisites.** A node opens from any owned orthogonal neighbour
+     ([ADR-0012](../docs/adr/0012-the-skill-tree-has-one-start-and-open-roads.md)); empty cells are the
+     walls, so *where* a row sits is the whole of what gates it. `SkillReachable` in the shared header is
+     the one implementation, used by the server's `TryUnlock` and the client's `IsAvailable`.
    - `tier` controls the visual size of the node: `Stat` for a Stat node, `Minor` / `Medium` / `Major` for
-     a Skill.
+     a Skill, `Suit` for the one start.
+   - `gate` is `EGate::None`, or the Module the node is hidden behind until found.
    - `stat` is `EStat::None` for a Skill. A **Stat node** is a row whose `stat` names what it grants and
      whose effect is the same for every node of that stat; use the `STAT_MELEE`-style macro for its
      kind rather than writing the row out, so every node of a stat has one name, text and icon.

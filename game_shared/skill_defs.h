@@ -1,14 +1,21 @@
-﻿//=========================================================
+//=========================================================
 // skill_defs.h
 //
 // The single definition of every Skill: what it is called, what
-// it does, where it sits in the Skill Tree, what it costs and
-// what gates it.  Compiled into BOTH the server and the client --
+// it does, where it sits on the Skill Tree's board, and what it
+// costs.  Compiled into BOTH the server and the client --
 // see docs/adr/0008-skill-definitions-are-shared-not-networked.md.
 //
 // Static Skill data is shared rather than networked.  Only
 // per-player state -- which Skills are unlocked, and how many
 // Skill Points are unspent -- travels over the wire.
+//
+// Since 2026-09-15 the tree has ONE START and OPEN ROADS
+// (docs/adr/0012-the-skill-tree-has-one-start-and-open-roads.md):
+// the suit at the centre is held from the first moment, and any
+// node opens from any owned orthogonal neighbour.  There are no
+// prerequisites; empty cells are the walls.  The board is
+// docs/SKILL_MAP.md, cell by cell.
 //
 // Vocabulary here follows CONTEXT.md: Skill, Skill Point, Skill Tree.
 // Header-only so neither project file needs to change.
@@ -22,17 +29,36 @@
 // ENodeTier
 //
 // The visual weight of a node in the client's Skill Tree.
-// Presentation only -- nothing in the rules reads it, nothing
-// saves it and nothing sends it, which is why the values could be
-// renumbered when Stat was added below Minor on 2026-09-14.
+// Presentation only -- nothing in the rules reads it except the
+// cost-one assert's exemption for the Suit.  Nothing saves it and
+// nothing sends it, which is why the values could be renumbered
+// when Stat was added below Minor on 2026-09-14 and Suit above
+// Major on 2026-09-15.
 // ---------------------------------------------------------
 enum class ENodeTier : uint8_t
 {
 	Stat   = 0, // smallest -- a Stat node: one flat bonus, the roads between Skills (docs/SKILL_TREE.md)
-	Minor  = 1, // small node  -- cheap/root Skills
-	Medium = 2, // medium node -- mid-tree Skills
-	Major  = 3, // large node  -- powerful end-tree Skills
-	_Count = 4,
+	Minor  = 1, // small chip  -- the hub's rim Skills and each Route's entry
+	Medium = 2, // medium chip -- mid-region Skills
+	Major  = 3, // large chip  -- a region's Major, and the four big Skills kept large by decision
+	Suit   = 4, // the processor -- the one start, held from spawn, never bought
+	_Count = 5,
+};
+
+// ---------------------------------------------------------
+// EGate
+//
+// What a node waits on before it is shown.  A gated node is drawn as a
+// blank pad and cannot be bought until its Module is found; the
+// server owns which gates are open.  None means always shown.
+// ---------------------------------------------------------
+enum class EGate : uint8_t
+{
+	None        = 0,
+	PulseModule = 1, // the Pulse's nodes.  Open until the Pulse becomes a Module: the Pulse is suit hardware today
+	DashModule  = 2, // the Shinobi region
+	AlienModule = 3, // the Alien region
+	NightVision = 4, // the Stealth region
 };
 
 // ---------------------------------------------------------
@@ -52,19 +78,19 @@ enum class ESkillId : int
 	// Named for the crowbar until 2026-09-14; the enumerators and display
 	// names changed for the melee roster, the ids did not.
 	MeleeReach          = 1,  // swings connect from further      (was CrowbarRange)
-	MeleeForce          = 2,  // hits land harder                 (was CrowbarDamage)
+	MeleeForce          = 2,  // hits land harder; on the hub's west rim since 2026-09-15
 	MeleeSpeed          = 11, // swings come faster               (was CrowbarSpeed, reserved 2026-08 to 2026-09-14)
-	FollowUp            = 18, // the hit after a deflect lands far harder (was CrowbarFollowUp)
+	FollowUp            = 18, // the hit after a deflect lands far harder; the hub's south-west corner
 	Backstab            = 33, // the rear-arc multiplier climbs
 	Cleave              = 34, // the major: the first hit after a cooldown hits everything in its arc, harder
 
 	// ---- Armaments ----
 	FastReload          = 3,  // reload delay -20%
-	ExtraDamage         = 4,  // all weapon damage +10%
+	ExtraDamage         = 4,  // all weapon damage +10%  (Weapon Mastery)
 
-	// ---- Survivability ----
-	FallResistance      = 7,  // fall damage -50%
-	MoreHealth          = 8,  // max health +25
+	// ---- Survivability: the hub's Skills ----
+	FallResistance      = 7,  // fall damage -50%   (Sure Footing)
+	MoreHealth          = 8,  // max health +25     (Fortitude, the hub's north rim)
 	ArmorEfficiency     = 9,  // armor absorbs 10% more damage
 
 	// ---- Cut, 2026-09-13.  Ids reserved forever; see docs/SKILL_TREE.md ----
@@ -88,22 +114,19 @@ enum class ESkillId : int
 	PulseDischarge      = 16, // negated hits vent at the crosshair
 	PulseRebound        = 17, // a deflect skips the Recharge, once per charge
 
-	BatteryCapacity     = 13, // +50 max battery
+	BatteryCapacity     = 13, // +50 max battery (the hub's south rim)
 
 	// ---- The Infusion ----
 	MedExpert           = 19, // longer Infusion from a Health Syringe
 
-	// ---- Reserved: the alien column ----
-	// Held for a branch that stays hidden until the player carries an alien
-	// weapon, so its existence is not spoiled by reading the tree. Half-Life
-	// has only two alien weapons, and the Hivehand carries both knobs worth
-	// having -- how many hornets it holds, and how fast they come back.
-	// See docs/PILLARS.md pillar 4.
+	// ---- Reserved: the Alien region ----
+	// Held for a region that stays hidden until the player carries the alien
+	// Module, so its existence is not spoiled by reading the tree.
 	HiveCapacity        = 20, // Hivehand holds more hornets
 	HiveRegrowth        = 21, // hornets replenish faster
 
-	// ---- Reserved: the stealth column ----
-	// The never-noticed Backstab tier is its first node.  See docs/SKILL_TREE.md.
+	// ---- Reserved: the Stealth region ----
+	// Ambush (22) and Phantom (23) since 2026-09-15; see docs/SKILL_TREE.md.
 	StealthReserved1    = 22,
 	StealthReserved2    = 23,
 
@@ -125,7 +148,7 @@ enum class ESkillId : int
 	// ---- The Weapon Specialist Route (docs/SKILL_TREE.md) ----
 	// Fast Reload (3) and Weapon Mastery (4) belong to it too; their ids
 	// predate it.  Built node by node from 2026-09-14.
-	Marksman            = 35, // bullets hit harder; the root
+	Marksman            = 35, // bullets hit harder; the hub's east rim since 2026-09-15
 	QuickDraw           = 36, // weapons come up faster
 	Demolitions         = 37, // explosives dealt up, explosives taken down
 	Headhunter          = 38, // head hits land harder
@@ -140,8 +163,8 @@ enum class ESkillId : int
 	StatBullet07        = 46,
 
 	// ---- The Medical Route (docs/SKILL_TREE.md) ----
-	// Med Expert (19) is its root; the id predates it.  Building node by
-	// node from 2026-09-14.  No passive healing anywhere in it.
+	// Med Expert (19) is its entry; the id predates it.  No passive healing
+	// anywhere in it.
 	Overheal            = 47, // a Syringe at full health heals above the maximum, decaying back
 	Leech               = 48, // melee hits heal a fraction of the damage dealt
 	LastStand           = 49, // the major: a killing hit spends a Syringe; Infusions doubled below 50
@@ -153,13 +176,13 @@ enum class ESkillId : int
 
 	// ---- The Energy Route (docs/SKILL_TREE.md) ----
 	// Energy is DMG_ENERGYBEAM and nothing else: the katana, the egon, the
-	// Discharge.  Building node by node from 2026-09-14.
-	EnergyDamage        = 54, // energy hits harder; the root
+	// Discharge.
+	EnergyDamage        = 54, // energy hits harder; the entry
 	EgonFocus           = 55, // secondary fire unlocks the egon's narrow beam
 	EnergyEfficiency    = 56, // uranium drains slower; was Egon Efficiency until the katana's wave spent uranium too
-	QuickCharge         = 57, // the katana's charged wave charges faster
+	QuickCharge         = 57, // CUT 2026-09-15: the wave has no charge to quicken.  Reserved forever
 	Insulation          = 58, // less energy and shock damage taken
-	EnergyMajor         = 59, // the major: energy attacks drain armour for bonus damage; name pending
+	EnergyMajor         = 59, // Overdraw, the major: energy attacks drain armour for bonus damage
 	// The Route's Stat nodes, its roads: Energy Damage's ranks became these.
 	StatEnergy01        = 60,
 	StatEnergy02        = 61,
@@ -167,13 +190,61 @@ enum class ESkillId : int
 	StatEnergy04        = 63,
 
 	// ---- The Juggernaut Route (docs/SKILL_TREE.md) ----
-	// Fortitude (8), Armor Expert (9), Battery Capacity (13) and the four
-	// Pulse Skills are its older nodes.  Its region is not laid out yet
-	// (the Matrix needs a press-and-release Pulse pair first); Ricochet
-	// hangs off Armor Expert where it stands.
+	// Fortitude (8), Armor Expert (9), Battery Capacity (13) are the hub's
+	// now; the four Pulse Skills are the region's far side.
 	Ricochet            = 64, // a chance per bullet to bounce it back at the attacker
 
-	_Count              = 65, // keep last
+	// ---- The suit: the one start (ADR-0012), 2026-09-15 ----
+	Suit                = 65, // held from spawn and through a Reset, never bought
+
+	// ---- The board's extra roads, 2026-09-15 (docs/SKILL_MAP.md) ----
+	// The 15x15 board has more Stat cells per region than the 2026-09-14
+	// columns did.  Numbered as they were placed, never by position.
+	StatMelee10         = 66,
+	StatMelee11         = 67,
+	StatBullet08        = 68,
+	StatBullet09        = 69,
+	StatBullet10        = 70,
+	StatBullet11        = 71,
+	StatBullet12        = 72,
+	StatBullet13        = 73,
+	StatHeal05          = 74,
+	StatHeal06          = 75,
+	StatHeal07          = 76,
+	StatHeal08          = 77,
+	StatHeal09          = 78,
+	StatHeal10          = 79,
+	StatEnergy05        = 80,
+	StatEnergy06        = 81,
+	StatEnergy07        = 82,
+	StatEnergy08        = 83,
+	StatEnergy09        = 84,
+	StatEnergy10        = 85,
+
+	// ---- The hub's Stat nodes: the generic suit stats around the processor ----
+	StatHealth01        = 86,
+	StatHealth02        = 87,
+	StatHealth03        = 88,
+	StatArmour01        = 89,
+	StatArmour02        = 90,
+	StatArmour03        = 91,
+	StatArmour04        = 92,
+	StatMeleeHub        = 93, // the hub's one melee cell, west of the suit
+	StatBulletHub       = 94, // the hub's one bullet cell, east of the suit
+
+	// ---- The Juggernaut region's roads: Max Armour continuing the hub's ----
+	StatArmour05        = 95,
+	StatArmour06        = 96,
+	StatArmour07        = 97,
+	StatArmour08        = 98,
+	StatArmour09        = 99,
+	StatArmour10        = 100,
+	StatArmour11        = 101,
+	StatArmour12        = 102,
+	StatArmour13        = 103,
+	StatArmour14        = 104,
+
+	_Count              = 105, // keep last
 };
 
 // ---------------------------------------------------------
@@ -182,18 +253,23 @@ enum class ESkillId : int
 // What a Stat node grants.  A Skill has EStat::None; a Stat node
 // has one of these and nothing else, and every node of the same
 // stat adds the same amount (a cvar in game.cpp), so the effect
-// is a count of unlocked nodes of that stat.  Only the stats a
-// built Route uses are here -- the planned set, one per Route, is
-// in docs/SKILL_TREE.md, and adding one is adding it to this enum
-// and to the place its effect is computed.
+// is a count of unlocked nodes of that stat.  The full set, one
+// per region plus the hub's two, is in docs/SKILL_TREE.md ("The
+// road stats"); adding one is adding it here and to the place its
+// effect is computed.
 // ---------------------------------------------------------
 enum class EStat : uint8_t
 {
-	None         = 0,
-	MeleeDamage  = 1, // melee hits land harder, +skill_stat_melee_damage each
-	BulletDamage = 2, // bullets hit harder, +skill_stat_bullet_damage each
-	Healing      = 3, // Infusions and medkits heal more, +skill_stat_healing each
-	EnergyDamage = 4, // energy hits harder, +skill_stat_energy_damage each
+	None            = 0,
+	MeleeDamage     = 1, // melee hits land harder, +skill_stat_melee_damage each
+	BulletDamage    = 2, // bullets hit harder, +skill_stat_bullet_damage each
+	Healing         = 3, // Infusions and medkits heal more, +skill_stat_healing each
+	EnergyDamage    = 4, // energy hits harder, +skill_stat_energy_damage each
+	MaxHealth       = 5, // the hub: max health +skill_stat_max_health each, as a fraction
+	MaxArmour       = 6, // the hub and the Juggernaut: max armour +skill_stat_max_armor each, as a fraction
+	DashRecovery    = 7, // Shinobi: the Dash comes back sooner.  No effect yet: the Dash Module is not built
+	Concealment     = 8, // Stealth: monsters learn about the player slower.  No effect yet
+	HornetReplenish = 9, // Alien: hornets come back faster.  No effect yet
 };
 
 // How many ids have a row in k_SkillDefs.  Bounds every walk over the
@@ -230,14 +306,21 @@ static_assert(k_MaxSkills <= k_SkillIdCeiling,
 // cannot disagree about the message length.
 inline constexpr int k_SkillMaskBytes = (k_SkillIdCeiling + 7) / 8;
 
+// The board is 15x15 (docs/SKILL_MAP.md).  Cells are checked against
+// this so a typo cannot place a node off the board; the reachability
+// flood fill below is sized by it too.
+inline constexpr int k_BoardCols = 15;
+inline constexpr int k_BoardRows = 15;
+
 // ---------------------------------------------------------
 // SkillDef
 //
 // Everything about a Skill that is the same for every player.
 //
-// Two prerequisites, and both are required -- a line drawn in the
-// tree always means "you need this".  ESkillId::None in either
-// slot means "no gate there"; None in both makes the Skill a root.
+// No prerequisites: a node opens from any owned orthogonal
+// neighbour (ADR-0012).  Where a node sits is therefore the whole
+// of what gates it, which is why the cell is in this table and the
+// table is the board.
 // ---------------------------------------------------------
 struct SkillDef
 {
@@ -245,257 +328,292 @@ struct SkillDef
 	const char* name;        // display name
 	const char* description; // hover text
 	const char* spriteName;  // HUD sprite name; nullptr renders without an icon
-	int         gridCol;     // column in the Skill Tree
-	int         gridRow;     // row    in the Skill Tree
-	int         cost;        // Skill Points to unlock
-	ESkillId    prereq;      // both prerequisites are required
-	ESkillId    prereq2;
-	ENodeTier   tier;        // visual weight only
+	int         gridCol;     // column on the board, 0..k_BoardCols-1
+	int         gridRow;     // row    on the board, 0..k_BoardRows-1
+	int         cost;        // Skill Points to unlock: 1, or 0 for the Suit alone
+	ENodeTier   tier;        // visual weight; Suit marks the start
 	EStat       stat;        // None for a Skill; what a Stat node grants
+	EGate       gate;        // None, or the Module the node is hidden behind
 };
 
-// A reserved id: it exists, nothing in the tree points at it, and it is not
+// A reserved id: it exists, nothing on the board holds it, and it is not
 // buyable.  Used for Skills cut pending other work and for ones held for a
-// branch that has not opened yet.  RebuildNodeList and SpentPoints both key
+// region that has not opened yet.  RebuildNodeList and SpentPoints both key
 // off the null name, so a Skill moved to this state disappears from the tree
 // and refunds itself on the next load.
 #define SKILL_RESERVED(idName) \
-	{ ESkillId::idName, nullptr, nullptr, nullptr, 0, 0, 0, ESkillId::None, ESkillId::None, ENodeTier::Minor, EStat::None }
+	{ ESkillId::idName, nullptr, nullptr, nullptr, 0, 0, 0, ENodeTier::Minor, EStat::None, EGate::None }
 
-// A Melee Damage Stat node: the road material of the Melee Route.  Same
-// name, text, icon and stat on every one; only the cell and the road differ.
-#define STAT_MELEE(idName, col, row, prereqName) \
+// The Stat node macros: one per stat, so every node of a stat has one name,
+// text and icon and only the cell differs.
+
+#define STAT_MELEE(idName, col, row) \
 	{ ESkillId::idName, "Melee Damage", "Melee hits land 5% harder. Every Melee Damage node adds another 5%.", \
-	  "d_crowbar", col, row, 1, ESkillId::prereqName, ESkillId::None, ENodeTier::Stat, EStat::MeleeDamage }
+	  "d_crowbar", col, row, 1, ENodeTier::Stat, EStat::MeleeDamage, EGate::None }
 
-// A Bullet Damage Stat node: the road material of the Weapon Specialist Route.
-#define STAT_BULLET(idName, col, row, prereqName) \
+#define STAT_BULLET(idName, col, row) \
 	{ ESkillId::idName, "Bullet Damage", "Bullets hit 5% harder. Every Bullet Damage node adds another 5%.", \
-	  "d_9mmAR", col, row, 1, ESkillId::prereqName, ESkillId::None, ENodeTier::Stat, EStat::BulletDamage }
+	  "d_9mmAR", col, row, 1, ENodeTier::Stat, EStat::BulletDamage, EGate::None }
 
-// A Healing Stat node: the road material of the Medical Route.  Potency's
-// ranks, in the shaped design, are these.
-#define STAT_HEAL(idName, col, row, prereqName) \
+#define STAT_HEAL(idName, col, row) \
 	{ ESkillId::idName, "Healing", "Infusions and medkits heal 10% more. Every Healing node adds another 10%.", \
-	  "cross", col, row, 1, ESkillId::prereqName, ESkillId::None, ENodeTier::Stat, EStat::Healing }
+	  "cross", col, row, 1, ENodeTier::Stat, EStat::Healing, EGate::None }
 
-// An Energy Damage Stat node: the road material of the Energy Route.
-#define STAT_ENERGY(idName, col, row, prereqName) \
+#define STAT_ENERGY(idName, col, row) \
 	{ ESkillId::idName, "Energy Damage", "Energy hits 5% harder. Every Energy Damage node adds another 5%.", \
-	  "dmg_shock", col, row, 1, ESkillId::prereqName, ESkillId::None, ENodeTier::Stat, EStat::EnergyDamage }
+	  "dmg_shock", col, row, 1, ENodeTier::Stat, EStat::EnergyDamage, EGate::None }
+
+#define STAT_HEALTH(idName, col, row) \
+	{ ESkillId::idName, "Max Health", "Your maximum health is 5% higher. Every Max Health node adds another 5%.", \
+	  "item_healthkit", col, row, 1, ENodeTier::Stat, EStat::MaxHealth, EGate::None }
+
+#define STAT_ARMOUR(idName, col, row) \
+	{ ESkillId::idName, "Max Armor", "Your suit holds 5% more armor. Every Max Armor node adds another 5%.", \
+	  "item_battery", col, row, 1, ENodeTier::Stat, EStat::MaxArmour, EGate::None }
 
 // Indexed by ESkillId, so entry [n] is always the Skill with id n.
 //
-// Every node costs ONE point: under the matrix (docs/SKILL_TREE.md) the price
-// of a Skill is the road of Stat nodes to it, and a static_assert below holds
-// every row to that.
+// Every node costs ONE point except the Suit, which costs nothing and is
+// never bought: under the board (docs/SKILL_TREE.md) the price of a Skill
+// is the road of nodes to it, and a static_assert below holds every row
+// to that.
 //
-// The Melee Route occupies columns 0-3 and the Weapon Specialist Route
-// columns 9-11; between them are the pre-Routes columns, each waiting for
-// its Route to give it roads.  Follow-Up sits at the seam because it is
-// gated on both Melee Force and Pulse Recharge, and a cross-link wants its
-// two parents adjacent.
+// The board, from docs/SKILL_MAP.md.  Nine 5x5 regions: the hub in the
+// centre, Melee W, Medical N, Weapon Specialist E, Juggernaut S on the
+// edges, Shinobi NW, Stealth NE, Alien SE, Energy SW in the corners.
+// Cells whose Skill is not built are empty; the hidden regions (Shinobi,
+// Stealth, Alien) and the Juggernaut's Matrix nodes are placed when their
+// rows are written.  One cell is deliberately left empty until Glass
+// Cannon exists: Melee's (1,5), which would be an island without it.
 //
-//     MELEE ROUTE                  PULSE      (fork)  SUIT     SURVIVAL (fork)     WEAPON SPECIALIST              MEDICAL             ENERGY
-//     col0     col1     col2       col3       col4    col5     col6     col7     col8       col9      col10     col11     col12     col13     col14      col15
-//
-// r0  S01      Reach    S02        .          Window          Capacity Fortitude            Demol     B01       Headhunt  MedExpert H01       EnergyDmg  E01
-// r1  Speed    .        Force      Follow-Up  Recharge                 ArmorExp FallResist  B02       Marksman  B03       H02       Leech     E02        EgonEff
-// r2  S03      .        S04        .          Discharge Rebound        Ricochet             Reload    .         QuickDraw Overheal  H03       Insulation E03
-// r3  S05      .        S06                                                                B04       .         B05       LastStand H04       E04        EgonFocus
-// r4  S07      .        Backstab                                                           .         Mastery   B06                           QuickChg   Major
-// r5  S08      Cleave   S09                                                                .         SwapSurge B07
-//
-// Melee: Reach is the root.  The left road (S01, Speed, S03, S05, S07, S08)
-// and the right road (S02, Force, S04, S06, Backstab, S09) meet at Cleave,
-// the Melee major, which needs both S08 and S09.  Speed costs 3 points from
-// nothing, Force 3, Backstab 6, Cleave 14.
-//
-// Weapon Specialist: Marksman is the root, in the middle so its four
-// children are each one Stat node away, as SKILL_TREE.md draws them.  B01
-// above it feeds Demolitions and Headhunter; B02 and B03 beside it start
-// the two roads down, through Fast Reload and Quick Draw, that meet at
-// Mastery (the "everything" node after the typed ones, no longer the toll
-// gate in front of them).  Swap Surge, the major, needs Mastery and the
-// Quick Draw road's end.  Fast Reload and Quick Draw cost 3 from nothing,
-// Demolitions and Headhunter 3, Mastery 8, Swap Surge 11.
-//
-// Medical: Med Expert is the root, the smallest Route and two columns wide.
-// The right road (H01, Leech, H03, H04) and the left (H02, Overheal) meet
-// at Last Stand.  Leech costs 2, Overheal 2, Last Stand 8.  Nodes not yet
-// built are SKILL_RESERVED with their ids held.
-//
-// Energy: Energy Damage is the root.  The right road (E01, Energy Efficiency,
-// E03, Egon Focus) and the left (E02, Insulation, E04, Quick Charge) meet
-// at the major.  Where Melee's region reaches Energy's -- the Gargantua
-// build as a literal path -- is still to be curated; the two are at
-// opposite ends of the tree today.  Nodes not yet built are SKILL_RESERVED.
+//       c0     c1     c2     c3     c4   c5     c6     c7     c8     c9   c10    c11    c12    c13    c14
+//  r0   .      .      .      .      .    Overh  H      .      H    Leech  .      .      .      .      .
+//  r1   .      .      .      .      .    H      .      .      .      H    .      .      .      .      .
+//  r2   .      .      .      .      .    H      H    MedEx    H      H    .      .      .      .      .
+//  r3   .      .      .      .      .    .      .      H      .      .    .      .      .      .      .
+//  r4   .      .      .      .      .    .      .      H      .      .    .      .      .      .      .
+//  r5   .      .      .      S      .    .      .    Fort     .      .    B      B    Headh    B    Demol
+//  r6   S      .    Speed    S      S    Sure   H      H      H      .    .      .      B      .      B
+//  r7   S    Bkstb    S    Reach    S    Force  M    (SUIT)   B    Marks  B    QDraw    B      B    Mstry
+//  r8   S      .      .      .      .    A      A      A      A    ArmEx  .      .      B      .      B
+//  r9  [Clev]  S      S      S      .    F-Up   .    Batt     .      .    B      B    FastR    B    [Swap]
+//  r10  E    EnDmg    .      .      E    A      .      A      .      A    .      .      .      .      .
+//  r11  E      .      E      E      E    A      A      A      A    Ricoc  .      .      .      .      .
+//  r12 Insul   .      .      .      .    A      .      .      .    PWin   .      .      .      .      .
+//  r13  E      E      E      .      .    A      .      .      .    PRech  .      .      .      .      .
+//  r14  .      .    EnEff    E      .    A    PDsch  PRebd    .      .    .      .      .      .      .
 inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 {
-	//  id                        name                description                                                    sprite           col row cost prereq                     prereq2                  tier              stat
-	{ ESkillId::None,            "None",             "",                                                            nullptr,          0,  0,  0,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor,  EStat::None },
+	//  id                        name                description                                                    sprite           col row cost tier              stat          gate
+	{ ESkillId::None,            "None",             "",                                                            nullptr,          0,  0,  0,  ENodeTier::Minor,  EStat::None,  EGate::None },
 
-	// 1-2: the Melee Route's root and the right road's Skill
-	{ ESkillId::MeleeReach,      "Melee Reach",      "Your melee swings connect from 25% further away.",            "d_tripmine",     1,  0,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor,  EStat::None },
-	{ ESkillId::MeleeForce,      "Melee Force",      "Melee hits land 50% harder.",                                 "d_skull",        2,  1,  1,  ESkillId::StatMelee02,     ESkillId::None,          ENodeTier::Medium, EStat::None },
+	// 1-2: Melee's entry on the road in from the hub, and the hub's west rim Minor
+	{ ESkillId::MeleeReach,      "Melee Reach",      "Your melee swings connect from 25% further away.",            "d_tripmine",     3,  7,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
+	{ ESkillId::MeleeForce,      "Melee Force",      "Melee hits land 50% harder.",                                 "d_skull",        5,  7,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
 
-	// 3-4: the Weapon Specialist's two older Skills, in its region since
-	// 2026-09-14.  Fast Reload heads the left road down from Marksman;
-	// Mastery is where the two roads meet, after the typed nodes rather than
-	// in front of them, and it needs both roads' ends.
-	{ ESkillId::FastReload,      "Fast Reload",      "Every magazine you feed goes in 20% quicker. Shotgun shells too.", "d_9mmhandgun", 9,  2,  1,  ESkillId::StatBullet02,    ESkillId::None,          ENodeTier::Medium, EStat::None },
-	{ ESkillId::ExtraDamage,     "Weapon Mastery",   "Every weapon you carry deals 10% more damage.",               "d_shotgun",      10, 4,  1,  ESkillId::StatBullet04,    ESkillId::StatBullet05,  ENodeTier::Major,  EStat::None },
+	// 3-4: the Weapon Specialist's two older Skills.  Mastery keeps the
+	// Major-sized frame by decision (docs/SKILL_MAP.md, Sizes).
+	{ ESkillId::FastReload,      "Fast Reload",      "Every magazine you feed goes in 20% quicker. Shotgun shells too.", "d_9mmhandgun", 12, 9,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
+	{ ESkillId::ExtraDamage,     "Weapon Mastery",   "Every weapon you carry deals 10% more damage.",               "d_shotgun",      14, 7,  1,  ENodeTier::Major,  EStat::None,  EGate::None },
 
 	// 5-6: cut (movement rules)
 	SKILL_RESERVED(HighJump),
 	SKILL_RESERVED(SprintSpeed),
 
-	// 7-9: survivability, cols 7-8 (8-9 until the Weapon Specialist took 9-11)
-	{ ESkillId::FallResistance,  "Sure Footing",     "Falls deal half as much damage.",                             "item_longjump",  8,  1,  1,  ESkillId::MoreHealth,      ESkillId::None,          ENodeTier::Minor,  EStat::None },
-	{ ESkillId::MoreHealth,      "Fortitude",        "+25 maximum health.",                                         "item_healthkit", 7,  0,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor,  EStat::None },
-	{ ESkillId::ArmorEfficiency, "Armor Expert",     "A tenth less damage gets past your armor.",                   "suit_full",      7,  1,  1,  ESkillId::MoreHealth,      ESkillId::None,          ENodeTier::Medium, EStat::None },
+	// 7-9: the hub's Skills.  Fortitude is the north rim Minor, Sure Footing
+	// the west rim toward Shinobi, Armor Expert the east rim toward Juggernaut.
+	{ ESkillId::FallResistance,  "Sure Footing",     "Falls deal half as much damage.",                             "item_longjump",  5,  6,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
+	{ ESkillId::MoreHealth,      "Fortitude",        "+25 maximum health.",                                         "item_healthkit", 7,  5,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
+	{ ESkillId::ArmorEfficiency, "Armor Expert",     "A tenth less damage gets past your armor.",                   "suit_full",      9,  8,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
 	// 10: cut (rewarded idling)
 	SKILL_RESERVED(HealthRegen),
 
-	// 11: the left road's Skill. Back from reserve with the Melee Route, which
-	// dropped the rapid-swing halving that had kept it out.
-	{ ESkillId::MeleeSpeed,      "Melee Speed",      "Melee swings come 30% faster.",                               "d_357",          0,  1,  1,  ESkillId::StatMelee01,     ESkillId::None,          ENodeTier::Medium, EStat::None },
+	// 11: Melee Speed, off the top road
+	{ ESkillId::MeleeSpeed,      "Melee Speed",      "Melee swings come 30% faster.",                               "d_357",          2,  6,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
-	// 12: the Pulse, col 4
-	{ ESkillId::PulseWindow,     "Pulse Window",     "The Shield stands 0.15s longer.",                             "autoaim_c",      4,  0,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor,  EStat::None },
+	// 12: the Pulse, in the Juggernaut's far corner.  Gated on the Pulse
+	// Module, which is open until that Module exists.
+	{ ESkillId::PulseWindow,     "Pulse Window",     "The Shield stands 0.15s longer.",                             "autoaim_c",      9,  12, 1,  ENodeTier::Minor,  EStat::None,  EGate::PulseModule },
 
-	// 13: the suit, col 6.  One node until the Juggernaut Route fills the column.
-	{ ESkillId::BatteryCapacity, "Battery Capacity", "The suit holds 50 more armor.",                               "item_battery",   6,  0,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor,  EStat::None },
+	// 13: the hub's south rim Minor
+	{ ESkillId::BatteryCapacity, "Battery Capacity", "The suit holds 50 more armor.",                               "item_battery",   7,  9,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
 
 	// 14: cut (rewarded idling)
 	SKILL_RESERVED(BatteryRegen),
 
-	// 15-17: the Pulse continued, cols 4-5
-	{ ESkillId::PulseRecharge,   "Pulse Recharge",   "The wait between Pulses is a third shorter.",                 "flash_empty",    4,  1,  1,  ESkillId::PulseWindow,     ESkillId::None,          ENodeTier::Medium, EStat::None },
-	{ ESkillId::PulseDischarge,  "Pulse Discharge",  "Negated hits vent energy at your crosshair.",                 "d_egon",         4,  2,  1,  ESkillId::PulseRecharge,   ESkillId::None,          ENodeTier::Major,  EStat::None },
-	{ ESkillId::PulseRebound,    "Pulse Rebound",    "A deflect skips the Recharge. Once, until you sit through a normal one.", "flash_beam", 5, 2, 1, ESkillId::PulseRecharge, ESkillId::None,     ENodeTier::Major,  EStat::None },
+	// 15-17: the Pulse continued.  Discharge and Rebound keep the Major-sized
+	// frame by decision.
+	{ ESkillId::PulseRecharge,   "Pulse Recharge",   "The wait between Pulses is a third shorter.",                 "flash_empty",    9,  13, 1,  ENodeTier::Medium, EStat::None,  EGate::PulseModule },
+	{ ESkillId::PulseDischarge,  "Pulse Discharge",  "Negated hits vent energy at your crosshair.",                 "d_egon",         6,  14, 1,  ENodeTier::Major,  EStat::None,  EGate::PulseModule },
+	{ ESkillId::PulseRebound,    "Pulse Rebound",    "A deflect skips the Recharge. Once, until you sit through a normal one.", "flash_beam", 7, 14, 1, ENodeTier::Major, EStat::None,  EGate::PulseModule },
 
-	// 18: the Melee x Juggernaut link, at the seam. Gated on both: it is a
-	// melee payoff for a Pulse deflect, and does nothing for a player who
-	// never deflects.
-	{ ESkillId::FollowUp,        "Follow-Up",        "After a deflect, your next melee hit lands far harder.",       "d_gauss",        3,  1,  1,  ESkillId::MeleeForce,      ESkillId::PulseRecharge, ENodeTier::Major,  EStat::None },
+	// 18: the Melee x Juggernaut link, in the hub's south-west corner cell.
+	// A melee payoff for a Pulse deflect; it does nothing for a player who
+	// never deflects.  Major-sized by decision.
+	{ ESkillId::FollowUp,        "Follow-Up",        "After a deflect, your next melee hit lands far harder.",       "d_gauss",        5,  9,  1,  ENodeTier::Major,  EStat::None,  EGate::None },
 
-	// 19: the Medical Route's root, col 12 since 2026-09-14. A root again: it
-	// was gated on Regeneration, which is cut.
-	{ ESkillId::MedExpert,       "Med Expert",       "An Infusion runs 5 seconds longer.",                          "flash_full",     12, 0,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Medium, EStat::None },
+	// 19: the Medical Route's entry, on its spine
+	{ ESkillId::MedExpert,       "Med Expert",       "An Infusion runs 5 seconds longer.",                          "flash_full",     7,  2,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
-	// 20-21: the alien column, held until it opens
+	// 20-21: the Alien region, held until its rows are written
 	SKILL_RESERVED(HiveCapacity),
 	SKILL_RESERVED(HiveRegrowth),
 
-	// 22-23: the stealth column, held
+	// 22-23: the Stealth region, held until its rows are written
 	SKILL_RESERVED(StealthReserved1),
 	SKILL_RESERVED(StealthReserved2),
 
-	// 24-32: the Melee Route's roads.  Left road down column 0 from Reach
-	// through Speed; right road down column 2 from Reach through Force and
-	// Backstab.  S08 and S09 are the two ends Cleave will need.
-	STAT_MELEE(StatMelee01, 0, 0, MeleeReach),
-	STAT_MELEE(StatMelee02, 2, 0, MeleeReach),
-	STAT_MELEE(StatMelee03, 0, 2, MeleeSpeed),
-	STAT_MELEE(StatMelee04, 2, 2, MeleeForce),
-	STAT_MELEE(StatMelee05, 0, 3, StatMelee03),
-	STAT_MELEE(StatMelee06, 2, 3, StatMelee04),
-	STAT_MELEE(StatMelee07, 0, 4, StatMelee05),
-	STAT_MELEE(StatMelee08, 0, 5, StatMelee07),
-	STAT_MELEE(StatMelee09, 2, 5, Backstab),
+	// 24-32: the Melee Route's roads (docs/SKILL_MAP.md, Melee)
+	STAT_MELEE(StatMelee01, 4, 7),
+	STAT_MELEE(StatMelee02, 2, 7),
+	STAT_MELEE(StatMelee03, 0, 7),
+	STAT_MELEE(StatMelee04, 0, 8),
+	STAT_MELEE(StatMelee05, 3, 6),
+	STAT_MELEE(StatMelee06, 4, 6),
+	STAT_MELEE(StatMelee07, 0, 6),
+	STAT_MELEE(StatMelee08, 3, 5),
+	STAT_MELEE(StatMelee09, 1, 9),
 
-	// 33: the Backstab node, end of the right road before Cleave
-	{ ESkillId::Backstab,        "Backstab",         "Hits from behind land half again as hard as a plain Backstab.", "d_crossbow",    2,  4,  1,  ESkillId::StatMelee06,     ESkillId::None,          ENodeTier::Medium, EStat::None },
+	// 33: Backstab, mid-road
+	{ ESkillId::Backstab,        "Backstab",         "Hits from behind land half again as hard as a plain Backstab.", "d_crossbow",    1,  7,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
-	// 34: Cleave, the Melee major, where the two roads meet
-	{ ESkillId::Cleave,          "Cleave",           "When Cleave is ready, your next melee hit strikes everything in front of you, and harder. Then it needs a moment.", "d_handgrenade", 1, 5, 1, ESkillId::StatMelee08, ESkillId::StatMelee09, ENodeTier::Major, EStat::None },
+	// 34: Cleave, the Melee major, in the region's south-west corner
+	{ ESkillId::Cleave,          "Cleave",           "When Cleave is ready, your next melee hit strikes everything in front of you, and harder. Then it needs a moment.", "d_handgrenade", 0, 9, 1, ENodeTier::Major, EStat::None, EGate::None },
 
-	// 35: Marksman, the Weapon Specialist's root, in the middle of its region
-	{ ESkillId::Marksman,        "Marksman",         "Bullets hit 15% harder.",                                     "d_bolt",         10, 1,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor,  EStat::None },
+	// 35: Marksman, the hub's east rim Minor
+	{ ESkillId::Marksman,        "Marksman",         "Bullets hit 15% harder.",                                     "d_bolt",         9,  7,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
 
-	// 36: Quick Draw heads the right road down from Marksman.  Predicted:
-	// DefaultDeploy runs on both sides, so the scale comes through
-	// skill_tuning.h, the Fast Reload shape.
-	{ ESkillId::QuickDraw,       "Quick Draw",       "Weapons come up 40% faster.",                                 "d_357",          11, 2,  1,  ESkillId::StatBullet03,    ESkillId::None,          ENodeTier::Medium, EStat::None },
+	// 36: Quick Draw on the entry road.  Predicted: DefaultDeploy runs on
+	// both sides, so the scale comes through skill_tuning.h.
+	{ ESkillId::QuickDraw,       "Quick Draw",       "Weapons come up 40% faster.",                                 "d_357",          11, 7,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
-	// 37-38: the typed pair above Marksman, off B01.  Demolitions is dealt
-	// and taken: the resistance covers the player's own grenades, which is
-	// how "Mastery makes your own explosives hurt you more" is answered.
+	// 37-38: the typed pair on the region's top row.  Demolitions is dealt
+	// and taken: the resistance covers the player's own grenades.
 	// Headhunter is the head hitgroup multiplier, player hits only.
-	{ ESkillId::Demolitions,     "Demolitions",      "Your explosives deal 25% more, and explosions hurt you half as much.", "d_rpg_rocket", 9, 0, 1, ESkillId::StatBullet01, ESkillId::None,          ENodeTier::Medium, EStat::None },
-	{ ESkillId::Headhunter,      "Headhunter",       "Your hits to the head land half again as hard.",              "d_skull",        11, 0,  1,  ESkillId::StatBullet01,    ESkillId::None,          ENodeTier::Medium, EStat::None },
+	{ ESkillId::Demolitions,     "Demolitions",      "Your explosives deal 25% more, and explosions hurt you half as much.", "d_rpg_rocket", 14, 5, 1, ENodeTier::Medium, EStat::None, EGate::None },
+	{ ESkillId::Headhunter,      "Headhunter",       "Your hits to the head land half again as hard.",              "d_skull",        12, 5,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
-	// 39: Swap Surge, the Route's major, needing Mastery and the right
-	// road's end.  The window opens on every DefaultDeploy, on a cooldown, so
-	// the specialist juggles weapons and every swap is a hit.
-	{ ESkillId::SwapSurge,       "Swap Surge",       "For two seconds after you swap weapons, everything you deal lands 50% harder. Then it needs a moment.", "d_hornet", 10, 5, 1, ESkillId::ExtraDamage, ESkillId::StatBullet07, ENodeTier::Major, EStat::None },
+	// 39: Swap Surge, the Route's major, in the region's far bottom corner.
+	// The window opens on every DefaultDeploy, on a cooldown, so the
+	// specialist juggles weapons and every swap is a hit.
+	{ ESkillId::SwapSurge,       "Swap Surge",       "For two seconds after you swap weapons, everything you deal lands 50% harder. Then it needs a moment.", "d_hornet", 14, 9, 1, ENodeTier::Major, EStat::None, EGate::None },
 
-	// 40-46: the Weapon Specialist's roads.  B01 above Marksman for
-	// Demolitions and Headhunter; B02 left and B03 right for the two roads
-	// down; B04 continues the left road past Fast Reload to Mastery; B05-B07
-	// carry the right road past Quick Draw to Mastery and on to Swap Surge.
-	STAT_BULLET(StatBullet01, 10, 0, Marksman),
-	STAT_BULLET(StatBullet02, 9,  1, Marksman),
-	STAT_BULLET(StatBullet03, 11, 1, Marksman),
-	STAT_BULLET(StatBullet04, 9,  3, FastReload),
-	STAT_BULLET(StatBullet05, 11, 3, QuickDraw),
-	STAT_BULLET(StatBullet06, 11, 4, StatBullet05),
-	STAT_BULLET(StatBullet07, 11, 5, StatBullet06),
+	// 40-46: the Weapon Specialist's roads (docs/SKILL_MAP.md, Specialist)
+	STAT_BULLET(StatBullet01, 10, 7),
+	STAT_BULLET(StatBullet02, 12, 7),
+	STAT_BULLET(StatBullet03, 13, 7),
+	STAT_BULLET(StatBullet04, 12, 6),
+	STAT_BULLET(StatBullet05, 12, 8),
+	STAT_BULLET(StatBullet06, 14, 6),
+	STAT_BULLET(StatBullet07, 14, 8),
 
-	// 47: Overheal, the left road's Skill.  Server-side, in the Infusion's
-	// tick (player_infusion.cpp); the excess drains after.
-	{ ESkillId::Overheal,        "Overheal",         "An Infusion keeps healing past your maximum, up to 50 over. The extra drains away once it ends.", "item_syringe", 12, 2, 1, ESkillId::StatHeal02, ESkillId::None, ENodeTier::Medium, EStat::None },
+	// 47: Overheal, Medical's north-west corner.  Server-side, in the
+	// Infusion's tick (player_infusion.cpp); the excess drains after.
+	{ ESkillId::Overheal,        "Overheal",         "An Infusion keeps healing past your maximum, up to 50 over. The extra drains away once it ends.", "item_syringe", 5, 0, 1, ENodeTier::Medium, EStat::None, EGate::None },
 
-	// 48: Leech, off the right road.  Melee hits on a living monster heal;
-	// server-side, in CCrowbar::Swing and CleaveArc.
-	{ ESkillId::Leech,           "Leech",            "Melee hits heal you a tenth of the damage they deal.",         "dmg_bio",        13, 1,  1,  ESkillId::StatHeal01,      ESkillId::None,          ENodeTier::Medium, EStat::None },
+	// 48: Leech, Medical's north-east corner.  Melee hits on a living
+	// monster heal; server-side, in CCrowbar::Swing and CleaveArc.
+	{ ESkillId::Leech,           "Leech",            "Melee hits heal you a tenth of the damage they deal.",         "dmg_bio",        9,  0,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
-	// 49: Last Stand, the Medical major, held until it is built
+	// 49: Last Stand, the Medical major, held until it is built.  Its cell is (7,0).
 	SKILL_RESERVED(LastStand),
 
-	// 50-53: the Medical Route's roads.  H01 right of Med Expert starts the
-	// right road through Leech; H02 below it starts the left road to
-	// Overheal; H03 and H04 carry the right road down to Last Stand.
-	STAT_HEAL(StatHeal01, 13, 0, MedExpert),
-	STAT_HEAL(StatHeal02, 12, 1, MedExpert),
-	STAT_HEAL(StatHeal03, 13, 2, Leech),
-	STAT_HEAL(StatHeal04, 13, 3, StatHeal03),
+	// 50-53: the Medical Route's roads (docs/SKILL_MAP.md, Medical)
+	STAT_HEAL(StatHeal01, 7, 4),
+	STAT_HEAL(StatHeal02, 7, 3),
+	STAT_HEAL(StatHeal03, 6, 2),
+	STAT_HEAL(StatHeal04, 8, 2),
 
-	// 54: Energy Damage, the Energy Route's root.  DMG_ENERGYBEAM at the
-	// damage chokepoints, the Marksman shape.
-	{ ESkillId::EnergyDamage,    "Energy Damage",    "Energy hits 15% harder: the katana, the egon, the Discharge.", "d_egon",       14, 0,  1,  ESkillId::None,            ESkillId::None,          ENodeTier::Minor,  EStat::None },
+	// 54: Energy Damage, the Energy Route's entry, under Melee's bottom road.
+	// DMG_ENERGYBEAM at the damage chokepoints, the Marksman shape.
+	{ ESkillId::EnergyDamage,    "Energy Damage",    "Energy hits 15% harder: the katana, the egon, the Discharge.", "d_egon",       1,  10, 1,  ENodeTier::Minor,  EStat::None,  EGate::None },
 
-	// 55: Egon Focus, held: its details are to be decided
+	// 55: Egon Focus, held until it is built.  Its cell is (2,12).
 	SKILL_RESERVED(EgonFocus),
 
-	// 56: Energy Efficiency, the right road's Skill.  The interval between the
-	// egon's ammo ticks (server-side) and the katana's wave's uranium cost
-	// (both DLLs, the cost check being predicted).  Was Egon Efficiency until
-	// the wave spent uranium, 2026-09-14.
-	{ ESkillId::EnergyEfficiency, "Energy Efficiency", "The egon and the katana's wave spend uranium a quarter slower.", "d_satchel",   15, 1,  1,  ESkillId::StatEnergy01,    ESkillId::None,          ENodeTier::Medium, EStat::None },
+	// 56: Energy Efficiency, on the region's bottom row.  The interval between
+	// the egon's ammo ticks (server-side) and the katana's wave's uranium cost
+	// (both DLLs, the cost check being predicted).
+	{ ESkillId::EnergyEfficiency, "Energy Efficiency", "The egon and the katana's wave spend uranium a quarter slower.", "d_satchel",   2,  14, 1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
-	// 57: Quick Charge, held: the katana's charge is not built
+	// 57: Quick Charge, cut 2026-09-15
 	SKILL_RESERVED(QuickCharge),
 
-	// 58: Insulation, the left road's Skill.  Server-side, in the player's
+	// 58: Insulation, on the region's west edge.  Server-side, in the player's
 	// TakeDamage; shock included so it means something in Xen.
-	{ ESkillId::Insulation,      "Insulation",       "Energy and shock hurt you 30% less.",                         "dmg_rad",        14, 2,  1,  ESkillId::StatEnergy02,    ESkillId::None,          ENodeTier::Medium, EStat::None },
+	{ ESkillId::Insulation,      "Insulation",       "Energy and shock hurt you 30% less.",                         "dmg_rad",        0,  12, 1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
-	// 59: the Energy major, held
+	// 59: Overdraw, the Energy major, held until it is built.  Its cell is
+	// (4,14), on the Juggernaut seam beside the armour column's foot.
 	SKILL_RESERVED(EnergyMajor),
 
-	// 60-63: the Energy Route's roads
-	STAT_ENERGY(StatEnergy01, 15, 0, EnergyDamage),
-	STAT_ENERGY(StatEnergy02, 14, 1, EnergyDamage),
-	STAT_ENERGY(StatEnergy03, 15, 2, EnergyEfficiency),
-	STAT_ENERGY(StatEnergy04, 14, 3, Insulation),
+	// 60-63: the Energy Route's roads (docs/SKILL_MAP.md, Energy)
+	STAT_ENERGY(StatEnergy01, 0, 10),
+	STAT_ENERGY(StatEnergy02, 0, 11),
+	STAT_ENERGY(StatEnergy03, 0, 13),
+	STAT_ENERGY(StatEnergy04, 1, 13),
 
-	// 64: Ricochet, the Juggernaut's, off Armor Expert in the Survivability
-	// column until the Route's region is laid out.  Server-side, in the
-	// player's TakeDamage: bullets only, armour required.
-	{ ESkillId::Ricochet,        "Ricochet",         "One bullet in five bounces off your armor and back at whoever fired it.", "d_tracktrain", 7, 2, 1, ESkillId::ArmorEfficiency, ESkillId::None, ENodeTier::Medium, EStat::None },
+	// 64: Ricochet, the Juggernaut's east side, one step from the Alien door.
+	// Server-side, in the player's TakeDamage: bullets only, armour required.
+	{ ESkillId::Ricochet,        "Ricochet",         "One bullet in five bounces off your armor and back at whoever fired it.", "d_tracktrain", 9, 11, 1, ENodeTier::Medium, EStat::None, EGate::None },
+
+	// 65: the suit.  Cost 0, held from spawn, kept through a Reset, never
+	// bought (ADR-0012).  The one row the cost-one assert exempts.
+	{ ESkillId::Suit,            "HEV Suit",         "The suit. Every road on this board starts here.",             "suit_full",      7,  7,  0,  ENodeTier::Suit,   EStat::None,  EGate::None },
+
+	// 66-67: Melee's bottom road past Cleave, toward the Energy doors
+	STAT_MELEE(StatMelee10, 2, 9),
+	STAT_MELEE(StatMelee11, 3, 9),
+
+	// 68-73: the Weapon Specialist's top and bottom rows
+	STAT_BULLET(StatBullet08, 10, 5),
+	STAT_BULLET(StatBullet09, 11, 5),
+	STAT_BULLET(StatBullet10, 13, 5),
+	STAT_BULLET(StatBullet11, 10, 9),
+	STAT_BULLET(StatBullet12, 11, 9),
+	STAT_BULLET(StatBullet13, 13, 9),
+
+	// 74-79: Medical's two side columns and its top row
+	STAT_HEAL(StatHeal05, 5, 2),
+	STAT_HEAL(StatHeal06, 9, 2),
+	STAT_HEAL(StatHeal07, 5, 1),
+	STAT_HEAL(StatHeal08, 9, 1),
+	STAT_HEAL(StatHeal09, 6, 0),
+	STAT_HEAL(StatHeal10, 8, 0),
+
+	// 80-85: Energy's middle row and the Juggernaut-side door cells
+	STAT_ENERGY(StatEnergy05, 2, 13),
+	STAT_ENERGY(StatEnergy06, 2, 11),
+	STAT_ENERGY(StatEnergy07, 3, 11),
+	STAT_ENERGY(StatEnergy08, 4, 11),
+	STAT_ENERGY(StatEnergy09, 4, 10),
+	STAT_ENERGY(StatEnergy10, 3, 14),
+
+	// 86-92: the hub.  Health on the north diagonal row, armour on the south.
+	STAT_HEALTH(StatHealth01, 6, 6),
+	STAT_HEALTH(StatHealth02, 7, 6),
+	STAT_HEALTH(StatHealth03, 8, 6),
+	STAT_ARMOUR(StatArmour01, 5, 8),
+	STAT_ARMOUR(StatArmour02, 6, 8),
+	STAT_ARMOUR(StatArmour03, 7, 8),
+	STAT_ARMOUR(StatArmour04, 8, 8),
+
+	// 93-94: the hub's one melee cell and one bullet cell, each facing its Route
+	STAT_MELEE(StatMeleeHub, 6, 7),
+	STAT_BULLET(StatBulletHub, 8, 7),
+
+	// 95-104: the Juggernaut's armour column and its top rows (docs/SKILL_MAP.md, Juggernaut)
+	STAT_ARMOUR(StatArmour05, 7, 10),
+	STAT_ARMOUR(StatArmour06, 5, 10),
+	STAT_ARMOUR(StatArmour07, 9, 10),
+	STAT_ARMOUR(StatArmour08, 5, 11),
+	STAT_ARMOUR(StatArmour09, 6, 11),
+	STAT_ARMOUR(StatArmour10, 7, 11),
+	STAT_ARMOUR(StatArmour11, 8, 11),
+	STAT_ARMOUR(StatArmour12, 5, 12),
+	STAT_ARMOUR(StatArmour13, 5, 13),
+	STAT_ARMOUR(StatArmour14, 5, 14),
 };
 
 #undef SKILL_RESERVED
@@ -503,36 +621,81 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 #undef STAT_BULLET
 #undef STAT_HEAL
 #undef STAT_ENERGY
+#undef STAT_HEALTH
+#undef STAT_ARMOUR
 
-// Every node costs one.  The price of a Skill is the road to it, and a row
-// that says otherwise is a row that would be drawn with no cost on it and
-// charge something else -- so it is a compile error rather than a surprise.
+// A row with a name is a node on the board; a row without one is a reserved id.
+constexpr bool SkillDefIsNode(const SkillDef& def)
+{
+	return def.name != nullptr && def.name[0] != '\0';
+}
+
+// Every node costs one, except the Suit, which costs nothing and is never
+// bought.  The price of a Skill is the road to it, and a row that says
+// otherwise is a row that would be drawn with no cost on it and charge
+// something else -- so it is a compile error rather than a surprise.
 constexpr bool SkillDefsCostOne()
 {
 	for (int i = 1; i < k_MaxSkills; ++i)
 	{
 		const SkillDef& def = k_SkillDefs[i];
-		if (def.name && def.name[0] && def.cost != 1)
+		if (!SkillDefIsNode(def))
+			continue;
+		if (def.tier == ENodeTier::Suit ? def.cost != 0 : def.cost != 1)
 			return false;
 	}
 	return true;
 }
 
-static_assert(SkillDefsCostOne(), "every node in the Skill Tree costs one point; see docs/SKILL_TREE.md");
+static_assert(SkillDefsCostOne(), "every node in the Skill Tree costs one point, and the Suit costs none; see docs/SKILL_TREE.md");
 
-// No two rows in one cell.  With 180 hand-placed rows this is the mistake
+// Exactly one Suit, and it is ESkillId::Suit.
+constexpr bool SkillDefsOneSuit()
+{
+	int suits = 0;
+	for (int i = 1; i < k_MaxSkills; ++i)
+	{
+		if (SkillDefIsNode(k_SkillDefs[i]) && k_SkillDefs[i].tier == ENodeTier::Suit)
+		{
+			if (k_SkillDefs[i].id != ESkillId::Suit)
+				return false;
+			++suits;
+		}
+	}
+	return suits == 1;
+}
+
+static_assert(SkillDefsOneSuit(), "the board has one start, ESkillId::Suit, and it is the only ENodeTier::Suit row");
+
+// Every node is on the board.
+constexpr bool SkillDefsOnBoard()
+{
+	for (int i = 1; i < k_MaxSkills; ++i)
+	{
+		const SkillDef& def = k_SkillDefs[i];
+		if (!SkillDefIsNode(def))
+			continue;
+		if (def.gridCol < 0 || def.gridCol >= k_BoardCols || def.gridRow < 0 || def.gridRow >= k_BoardRows)
+			return false;
+	}
+	return true;
+}
+
+static_assert(SkillDefsOnBoard(), "a Skill Tree row is placed off the 15x15 board");
+
+// No two rows in one cell.  With 150 hand-placed rows this is the mistake
 // that will be made, and it draws as one node hiding another.
 constexpr bool SkillDefsOnePerCell()
 {
 	for (int i = 1; i < k_MaxSkills; ++i)
 	{
 		const SkillDef& a = k_SkillDefs[i];
-		if (!a.name || !a.name[0])
+		if (!SkillDefIsNode(a))
 			continue;
 		for (int j = i + 1; j < k_MaxSkills; ++j)
 		{
 			const SkillDef& b = k_SkillDefs[j];
-			if (!b.name || !b.name[0])
+			if (!SkillDefIsNode(b))
 				continue;
 			if (a.gridCol == b.gridCol && a.gridRow == b.gridRow)
 				return false;
@@ -559,6 +722,98 @@ constexpr bool SkillDefsAreIdOrdered()
 
 static_assert(SkillDefsAreIdOrdered(),
 	"k_SkillDefs must be ordered by id: entry [n] is the Skill with id n");
+
+// ---------------------------------------------------------
+// The board as cells
+//
+// SkillIdAtCell is the one lookup the rule below and the client's
+// drawing both use, so "what is next to this" is defined once.
+// ---------------------------------------------------------
+constexpr int SkillIdAtCell(int col, int row)
+{
+	if (col < 0 || col >= k_BoardCols || row < 0 || row >= k_BoardRows)
+		return 0;
+	for (int i = 1; i < k_MaxSkills; ++i)
+	{
+		const SkillDef& def = k_SkillDefs[i];
+		if (SkillDefIsNode(def) && def.gridCol == col && def.gridRow == row)
+			return i;
+	}
+	return 0;
+}
+
+// The four orthogonal neighbours of a cell, in a fixed order.
+inline constexpr int k_NeighbourDCol[4] = { -1, 1, 0, 0 };
+inline constexpr int k_NeighbourDRow[4] = { 0, 0, -1, 1 };
+
+// Every node has at least one orthogonal neighbour on the board.  With no
+// edges, the layout mistake is an island: a cell nothing touches, which
+// could never be bought.  Hidden nodes count as neighbours: this is about
+// the layout, not the state.
+constexpr bool SkillDefsNoIslands()
+{
+	for (int i = 1; i < k_MaxSkills; ++i)
+	{
+		const SkillDef& def = k_SkillDefs[i];
+		if (!SkillDefIsNode(def))
+			continue;
+		bool touched = false;
+		for (int d = 0; d < 4 && !touched; ++d)
+			touched = SkillIdAtCell(def.gridCol + k_NeighbourDCol[d], def.gridRow + k_NeighbourDRow[d]) != 0;
+		if (!touched)
+			return false;
+	}
+	return true;
+}
+
+static_assert(SkillDefsNoIslands(), "a Skill Tree node has no orthogonal neighbour and could never be bought");
+
+// Every node is reachable from the Suit by walking orthogonal neighbours: a
+// flood fill over the board at compile time.  An island of two touching
+// nodes passes the check above and fails this one.
+constexpr bool SkillDefsAllReachableFromSuit()
+{
+	bool seen[k_BoardCols][k_BoardRows] = {};
+	int  stackCol[k_MaxSkills] = {};
+	int  stackRow[k_MaxSkills] = {};
+	int  top = 0;
+
+	const SkillDef& suit = k_SkillDefs[static_cast<int>(ESkillId::Suit)];
+	seen[suit.gridCol][suit.gridRow] = true;
+	stackCol[top] = suit.gridCol;
+	stackRow[top] = suit.gridRow;
+	++top;
+
+	while (top > 0)
+	{
+		--top;
+		const int col = stackCol[top];
+		const int row = stackRow[top];
+		for (int d = 0; d < 4; ++d)
+		{
+			const int nc = col + k_NeighbourDCol[d];
+			const int nr = row + k_NeighbourDRow[d];
+			if (nc < 0 || nc >= k_BoardCols || nr < 0 || nr >= k_BoardRows)
+				continue;
+			if (seen[nc][nr] || SkillIdAtCell(nc, nr) == 0)
+				continue;
+			seen[nc][nr] = true;
+			stackCol[top] = nc;
+			stackRow[top] = nr;
+			++top;
+		}
+	}
+
+	for (int i = 1; i < k_MaxSkills; ++i)
+	{
+		const SkillDef& def = k_SkillDefs[i];
+		if (SkillDefIsNode(def) && !seen[def.gridCol][def.gridRow])
+			return false;
+	}
+	return true;
+}
+
+static_assert(SkillDefsAllReachableFromSuit(), "a Skill Tree node cannot be reached from the Suit");
 
 // Returns nullptr for None or any out-of-range id.
 inline const SkillDef* GetSkillDef(int id)
@@ -600,27 +855,30 @@ inline void SkillMaskSet(unsigned char* mask, int id, bool value)
 }
 
 // ---------------------------------------------------------
-// SkillPrereqMet
+// SkillReachable
 //
 // The one implementation of the gating rule, shared by the server
 // (which asks about its own unlocked array) and the client (which
 // asks about the mask it was sent).  'has' is any callable taking
-// an ESkillId and returning bool.
+// an int id and returning bool.
 //
-// Both prerequisites are required.  A None prerequisite is not a
-// gate, so a Skill with None in both slots is a root.
+// A node is reachable when any node in an orthogonally adjacent
+// cell is held (ADR-0012).  The Suit is never reachable: it is held,
+// not bought.  Whether a node is HIDDEN (its gate closed) is a
+// separate question the caller asks; a hidden node is never sold.
 // ---------------------------------------------------------
 template <typename HasSkillFn>
-inline bool SkillPrereqMet(int id, HasSkillFn has)
+inline bool SkillReachable(int id, HasSkillFn has)
 {
 	const SkillDef* def = GetSkillDef(id);
-	if (!def)
+	if (!def || !SkillDefIsNode(*def) || def->tier == ENodeTier::Suit)
 		return false;
 
-	if (def->prereq != ESkillId::None && !has(def->prereq))
-		return false;
-	if (def->prereq2 != ESkillId::None && !has(def->prereq2))
-		return false;
-
-	return true;
+	for (int d = 0; d < 4; ++d)
+	{
+		const int other = SkillIdAtCell(def->gridCol + k_NeighbourDCol[d], def->gridRow + k_NeighbourDRow[d]);
+		if (other != 0 && has(other))
+			return true;
+	}
+	return false;
 }

@@ -116,9 +116,9 @@ static void WrapToWidth(vgui::Font* font, const char* text, int maxW,
 // =====================================================================
 // CSkillTreeView
 //
-// Names, descriptions, sprites, positions, costs, prerequisites and
-// tiers all come from k_SkillDefs, which the client and server share.
-// The server sends state and nothing else.
+// Names, descriptions, sprites, positions and tiers all come from
+// k_SkillDefs, which the client and server share.  The server sends
+// state and nothing else.
 // =====================================================================
 CSkillTreeView::CSkillTreeView()
     : m_iSkillPoints(0)
@@ -168,7 +168,11 @@ void CSkillTreeView::UpdateState(const unsigned char* unlockedMask, int skillPoi
 }
 
 // =====================================================================
-// IsAvailable - prereqs met, not held, and affordable
+// IsAvailable - a held neighbour, not held, and affordable
+//
+// The board has no prerequisites: any owned orthogonal neighbour opens a
+// node (ADR-0012), through the same SkillReachable the server validates
+// with.  The Suit is held and never available.
 // =====================================================================
 bool CSkillTreeView::IsAvailable(int skillId) const
 {
@@ -176,7 +180,7 @@ bool CSkillTreeView::IsAvailable(int skillId) const
     if (!def || IsUnlocked(skillId))
         return false;
 
-    if (!SkillPrereqMet(skillId, [this](ESkillId prereq) { return IsUnlocked(static_cast<int>(prereq)); }))
+    if (!SkillReachable(skillId, [this](int other) { return IsUnlocked(other); }))
         return false;
 
     return m_iSkillPoints >= def->cost;
@@ -314,10 +318,9 @@ void CSkillTreeView::RebuildRects(int x0, int y0, int areaW, int areaH)
 // =====================================================================
 // BuildTooltip
 //
-// The bubble is the only place a Skill's identity lives -- the nodes carry
-// an icon and a cost and nothing else -- so it also has to explain why a
-// locked node is locked. With two prerequisites and connectors arriving
-// from two directions, "Requires:" is what makes the tree navigable.
+// Name and effect only (docs/SKILL_PANEL.md): the bubble is the one place
+// a Skill's identity lives, and nothing else is said in it -- no Route
+// line, no totals, no requirements, since the board has none.
 // =====================================================================
 void CSkillTreeView::BuildTooltip(int skillId, vgui::Font* titleFont, vgui::Font* smallFont,
                                   int maxW, TooltipLayout& out) const
@@ -344,36 +347,6 @@ void CSkillTreeView::BuildTooltip(int skillId, vgui::Font* titleFont, vgui::Font
     for (const auto& line : body)
         out.lines.push_back({ line, 205, 205, 205 });
 
-    // ---- Requires ----
-    const ESkillId prereqs[2] = { def->prereq, def->prereq2 };
-    bool anyPrereq = (prereqs[0] != ESkillId::None) || (prereqs[1] != ESkillId::None);
-
-    if (anyPrereq && !IsUnlocked(skillId))
-    {
-        out.lines.push_back({ "", 0, 0, 0 });
-        out.lines.push_back({ "Requires:", 150, 150, 150 });
-
-        for (int slot = 0; slot < 2; ++slot)
-        {
-            if (prereqs[slot] == ESkillId::None)
-                continue;
-
-            const SkillDef* p = GetSkillDef(prereqs[slot]);
-            if (!p || !p->name)
-                continue;
-
-            const bool met = IsUnlocked(static_cast<int>(prereqs[slot]));
-            std::string text = std::string(met ? "  " : "  ") + p->name;
-
-            // Met is stated but muted; what is still missing is what the
-            // player needs to read.
-            if (met)
-                out.lines.push_back({ text, 110, 140, 110 });
-            else
-                out.lines.push_back({ text, 255, 150, 80 });
-        }
-    }
-
     // ---- Geometry: shrink to the widest line actually produced ----
     int widest = TextWidth(titleFont, out.title);
     for (const auto& line : out.lines)
@@ -383,21 +356,6 @@ void CSkillTreeView::BuildTooltip(int skillId, vgui::Font* titleFont, vgui::Font
 
     out.bodyTop = kPad + out.titleH + kTitleGap;
     out.h = out.bodyTop + (int)out.lines.size() * out.lineH + kPad;
-}
-
-// =====================================================================
-// GridCellsAdjacent
-//
-// The one rule the skilltree_debug_edges overlay tests every prerequisite
-// edge against: two cells are neighbours, diagonals included, if they
-// differ by at most one column AND at most one row. Kept as the single
-// place that defines "adjacent" so the overlay and the console listing it
-// prints can never disagree with each other (docs/SKILL_TREE.md, "The
-// matrix").
-// =====================================================================
-static bool GridCellsAdjacent(int col1, int row1, int col2, int row2)
-{
-    return std::abs(col1 - col2) <= 1 && std::abs(row1 - row2) <= 1;
 }
 
 // =====================================================================
@@ -479,13 +437,7 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
         {
             for (int row = 0; row < m_gridRows; ++row)
             {
-                bool occupied = false;
-                for (int i = 0; i < (int)m_nodes.size() && !occupied; ++i)
-                {
-                    const SkillDef& def = k_SkillDefs[m_nodes[i]];
-                    occupied = (def.gridCol == col && def.gridRow == row);
-                }
-                if (occupied)
+                if (SkillIdAtCell(col, row) != 0)
                     continue;
 
                 const int gx = m_gridX0 + col * m_colStep + (m_colStep - gw) / 2;
@@ -496,235 +448,11 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
         }
     }
 
-    // ---- Connector lines between nodes and their prerequisites ----
+    // ---- Nodes ----
     //
-    // One edge per prerequisite, so a Skill gated on two branches draws
-    // two lines.  Every line means the same thing: you need this.
-    // dCol/dRow and nonAdjacent are filled in here rather than recomputed at
-    // draw time, so the overlay and the console listing read the same
-    // numbers for the same edge.
-    struct ConnEdge { int from; int to; int dCol; int dRow; bool nonAdjacent; };
-    std::vector<ConnEdge> edges;
-    edges.reserve(m_nodes.size() * 2);
-
-    for (int i = 0; i < (int)m_nodes.size(); ++i)
-    {
-        const SkillDef& def = k_SkillDefs[m_nodes[i]];
-        const ESkillId prereqs[2] = { def.prereq, def.prereq2 };
-
-        for (int slot = 0; slot < 2; ++slot)
-        {
-            if (prereqs[slot] == ESkillId::None)
-                continue;
-
-            int prereqIdx = -1;
-            for (int j = 0; j < (int)m_nodes.size(); ++j)
-                if (m_nodes[j] == static_cast<int>(prereqs[slot])) { prereqIdx = j; break; }
-            if (prereqIdx < 0) continue;
-
-            const SkillDef& prereqDef = k_SkillDefs[m_nodes[prereqIdx]];
-            const int dCol = def.gridCol - prereqDef.gridCol;
-            const int dRow = def.gridRow - prereqDef.gridRow;
-            const bool adjacent = GridCellsAdjacent(prereqDef.gridCol, prereqDef.gridRow, def.gridCol, def.gridRow);
-
-            edges.push_back({ prereqIdx, i, dCol, dRow, !adjacent });
-        }
-    }
-
-    // ---- skilltree_debug_edges: console listing ----
-    //
-    // Printed once when the overlay turns on, and again only if the count of
-    // flagged edges changes -- never every frame, or the console is useless.
-    const bool bDebugEdges = CVAR_GET_FLOAT("skilltree_debug_edges") != 0.0f;
-    if (bDebugEdges)
-    {
-        int nonAdjCount = 0;
-        for (const ConnEdge& edge : edges)
-            if (edge.nonAdjacent)
-                ++nonAdjCount;
-
-        if (!m_bDebugEdgesOn || nonAdjCount != m_iDebugEdgesLastCount)
-        {
-            gEngfuncs.Con_Printf("skilltree: %d non-adjacent edge%s\n",
-                nonAdjCount, nonAdjCount == 1 ? "" : "s");
-            for (const ConnEdge& edge : edges)
-            {
-                if (!edge.nonAdjacent)
-                    continue;
-                const char* fromName = k_SkillDefs[m_nodes[edge.from]].name;
-                const char* toName   = k_SkillDefs[m_nodes[edge.to]].name;
-                gEngfuncs.Con_Printf("skilltree: edge %s -> %s spans (%d,%d)\n",
-                    fromName ? fromName : "?", toName ? toName : "?", edge.dCol, edge.dRow);
-            }
-            m_iDebugEdgesLastCount = nonAdjCount;
-        }
-        m_bDebugEdgesOn = true;
-    }
-    else
-    {
-        m_bDebugEdgesOn = false;
-    }
-
-    // Text for any flagged edge's midpoint marker, collected during the
-    // sprite pass below and flushed with the rest of the text -- see
-    // docs/TECH_DEBT.md, "VGUI Draw Order: All Sprites, Then All Text".
-    struct DebugEdgeLabel { int x, y; char text[16]; };
-    std::vector<DebugEdgeLabel> debugEdgeLabels;
-    if (bDebugEdges)
-        debugEdgeLabels.reserve(edges.size());
-
-    for (int e = 0; e < (int)edges.size(); ++e)
-    {
-        const int prereqIdx = edges[e].from;
-        const int childIdx  = edges[e].to;
-
-        const IRect& ra = m_nodeRects[prereqIdx];
-        const IRect& rb = m_nodeRects[childIdx];
-
-        int acx = ra.x + ra.w / 2;
-        int acy = ra.y + ra.h / 2;
-        int bcx = rb.x + rb.w / 2;
-        int bcy = rb.y + rb.h / 2;
-        int dx = bcx - acx;
-        int dy = bcy - acy;
-
-        // Compute sibling order so edges leaving one prerequisite fan out cleanly.
-        std::vector<int> siblings;
-        siblings.reserve(edges.size());
-        for (int j = 0; j < (int)edges.size(); ++j)
-        {
-            if (edges[j].from == prereqIdx)
-                siblings.push_back(j);
-        }
-
-        // C++98-safe sort by child center X, then center Y.
-        for (int a = 0; a < (int)siblings.size(); ++a)
-        {
-            for (int b = a + 1; b < (int)siblings.size(); ++b)
-            {
-                const IRect& ra2 = m_nodeRects[edges[siblings[a]].to];
-                const IRect& rb2 = m_nodeRects[edges[siblings[b]].to];
-                int ax2 = ra2.x + ra2.w / 2;
-                int bx2 = rb2.x + rb2.w / 2;
-                int ay2 = ra2.y + ra2.h / 2;
-                int by2 = rb2.y + rb2.h / 2;
-
-                bool swapNeeded = (bx2 < ax2) || (bx2 == ax2 && by2 < ay2);
-                if (swapNeeded)
-                {
-                    int tmp = siblings[a];
-                    siblings[a] = siblings[b];
-                    siblings[b] = tmp;
-                }
-            }
-        }
-
-        int siblingIndex = 0;
-        for (int j = 0; j < (int)siblings.size(); ++j)
-        {
-            if (siblings[j] == e)
-            {
-                siblingIndex = j;
-                break;
-            }
-        }
-
-        int siblingOffset = (int)((siblingIndex * 2 - ((int)siblings.size() - 1)) * 4);
-
-        // Choose anchor edges by dominant direction so stacked nodes connect top-to-bottom.
-        int ax = acx, ay = acy;
-        int bx = bcx, by = bcy;
-        bool verticalDominant = std::abs(dy) > std::abs(dx);
-        if (verticalDominant)
-        {
-            bool bDown = dy >= 0;
-            ay = bDown ? (ra.y + ra.h) : ra.y;
-            by = bDown ? rb.y : (rb.y + rb.h);
-        }
-        else
-        {
-            bool bRight = dx >= 0;
-            ax = bRight ? (ra.x + ra.w) : ra.x;
-            bx = bRight ? rb.x : (rb.x + rb.w);
-        }
-
-        bool pathUnlocked = IsUnlocked(m_nodes[prereqIdx]);
-        if (pathUnlocked)
-            ctx->drawSetColor(255, 170, 0, 40);
-        else
-            ctx->drawSetColor(80, 80, 80, 120);
-
-        // Fan-out near the prerequisite so sibling connectors do not stack on top of each other.
-        // Add a final vertical segment before the child node for clean 90-degree approach.
-        if (verticalDominant)
-        {
-            int trunkX = ax + siblingOffset;
-            int approachY = by - (by > ay ? 12 : -12);  // offset 12px above/below child
-
-            ctx->drawFilledRect(std::min(ax, trunkX) - 1, ay - 1, std::max(ax, trunkX) + 1, ay + 1);
-            ctx->drawFilledRect(trunkX - 1, std::min(ay, approachY) - 1, trunkX + 1, std::max(ay, approachY) + 1);
-            ctx->drawFilledRect(std::min(trunkX, bx) - 1, approachY - 1, std::max(trunkX, bx) + 1, approachY + 1);
-            ctx->drawFilledRect(bx - 1, std::min(approachY, by) - 1, bx + 1, std::max(approachY, by) + 1);
-        }
-        else
-        {
-            int trunkY = ay + siblingOffset;
-            int approachX = bx - (bx > ax ? 12 : -12);  // offset 12px left/right of child
-
-            ctx->drawFilledRect(ax - 1, std::min(ay, trunkY) - 1, ax + 1, std::max(ay, trunkY) + 1);
-            ctx->drawFilledRect(std::min(ax, approachX) - 1, trunkY - 1, std::max(ax, approachX) + 1, trunkY + 1);
-            ctx->drawFilledRect(approachX - 1, std::min(trunkY, by) - 1, approachX + 1, std::max(trunkY, by) + 1);
-            ctx->drawFilledRect(std::min(approachX, bx) - 1, by - 1, std::max(approachX, bx) + 1, by + 1);
-        }
-
-        // ---- skilltree_debug_edges overlay ----
-        //
-        // A non-adjacent edge is drawn again on top of its normal path, red
-        // and three times as thick, so it reads as wrong even next to a
-        // dozen ordinary connectors. The redraw uses the same dogleg the
-        // normal pass just used (trunk/approach recomputed here rather than
-        // shared, to keep this block self-contained and easy to delete).
-        if (bDebugEdges && edges[e].nonAdjacent)
-        {
-            const int hw = 3;
-            ctx->drawSetColor(255, 40, 40, 40);
-
-            if (verticalDominant)
-            {
-                int trunkX = ax + siblingOffset;
-                int approachY = by - (by > ay ? 12 : -12);
-
-                ctx->drawFilledRect(std::min(ax, trunkX) - hw, ay - hw, std::max(ax, trunkX) + hw, ay + hw);
-                ctx->drawFilledRect(trunkX - hw, std::min(ay, approachY) - hw, trunkX + hw, std::max(ay, approachY) + hw);
-                ctx->drawFilledRect(std::min(trunkX, bx) - hw, approachY - hw, std::max(trunkX, bx) + hw, approachY + hw);
-                ctx->drawFilledRect(bx - hw, std::min(approachY, by) - hw, bx + hw, std::max(approachY, by) + hw);
-            }
-            else
-            {
-                int trunkY = ay + siblingOffset;
-                int approachX = bx - (bx > ax ? 12 : -12);
-
-                ctx->drawFilledRect(ax - hw, std::min(ay, trunkY) - hw, ax + hw, std::max(ay, trunkY) + hw);
-                ctx->drawFilledRect(std::min(ax, approachX) - hw, trunkY - hw, std::max(ax, approachX) + hw, trunkY + hw);
-                ctx->drawFilledRect(approachX - hw, std::min(trunkY, by) - hw, approachX + hw, std::max(trunkY, by) + hw);
-                ctx->drawFilledRect(std::min(approachX, bx) - hw, by - hw, std::max(approachX, bx) + hw, by + hw);
-            }
-
-            // Marker at the true geometric midpoint (node centre to node
-            // centre, not the dogleg's own bend), plus its "(dc,dr)" label
-            // queued for the text pass.
-            const int midX = (acx + bcx) / 2;
-            const int midY = (acy + bcy) / 2;
-            FillRGBA(midX - 4, midY - 4, 8, 8, 255, 40, 40, 230);
-
-            DebugEdgeLabel label;
-            label.x = midX + 6;
-            label.y = midY - 6;
-            snprintf(label.text, sizeof(label.text), "(%d,%d)", edges[e].dCol, edges[e].dRow);
-            debugEdgeLabels.push_back(label);
-        }
-    }
-
+    // No connectors are drawn between nodes any more: the board has no
+    // edges, only neighbours (ADR-0012).  The traces between adjacent nodes
+    // arrive with the circuit drawing (docs/SKILL_PANEL.md).
     for (int i = 0; i < (int)m_nodes.size(); ++i)
     {
         const int skillId = m_nodes[i];
@@ -876,18 +604,6 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
         ctx->drawSetTextPos(m_resetBtnRect.x + std::max(2, (m_resetBtnRect.w - labelW) / 2),
                             m_resetBtnRect.y + std::max(0, (m_resetBtnRect.h - labelH) / 2));
         ctx->drawPrintText(resetLabel, resetLen);
-    }
-
-    // ---- skilltree_debug_edges labels, deferred from the connector pass ----
-    if (smallFont && !debugEdgeLabels.empty())
-    {
-        ctx->drawSetTextFont(smallFont);
-        ctx->drawSetTextColor(255, 80, 80, 0);
-        for (const DebugEdgeLabel& label : debugEdgeLabels)
-        {
-            ctx->drawSetTextPos(label.x, label.y);
-            ctx->drawPrintText(label.text, (int)strlen(label.text));
-        }
     }
 
     // ---- Tooltip text, over everything ----

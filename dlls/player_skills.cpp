@@ -71,6 +71,12 @@ bool SkillsRestore(CPlayerSkills& skills, CRestore& restore)
 // =====================================================================
 void CPlayerSkills::EnsureInitialised()
 {
+    // The Suit is held from the first moment and costs nothing, so it is
+    // asserted here rather than bought: outside the one-time guard, because
+    // a save written before the Suit existed has the flag set and the bit
+    // clear (ADR-0012).
+    HoldSuit();
+
     if (m_bInitialised)
         return;
 
@@ -96,7 +102,9 @@ bool CPlayerSkills::AnyUnlocked() const
 {
     for (int i = 1; i < k_MaxSkills; ++i)
     {
-        if (m_bUnlocked[i])
+        // The Suit is always held and is not something a Reset undoes, so
+        // it must not make an empty tree look like one worth a Token.
+        if (m_bUnlocked[i] && k_SkillDefs[i].tier != ENodeTier::Suit)
             return true;
     }
     return false;
@@ -141,14 +149,14 @@ int CPlayerSkills::AvailablePoints() const
 }
 
 // =====================================================================
-// CPlayerSkills::PrereqMet
-//   Defers to the shared rule so the client cannot disagree about what
-//   gates a Skill.
+// CPlayerSkills::Reachable
+//   Defers to the shared rule -- any owned orthogonal neighbour -- so the
+//   client cannot disagree about what opens a node.
 // =====================================================================
-bool CPlayerSkills::PrereqMet(ESkillId id) const
+bool CPlayerSkills::Reachable(ESkillId id) const
 {
-    return SkillPrereqMet(static_cast<int>(id),
-        [this](ESkillId prereq) { return HasSkill(prereq); });
+    return SkillReachable(static_cast<int>(id),
+        [this](int other) { return HasSkill(static_cast<ESkillId>(other)); });
 }
 
 // =====================================================================
@@ -162,11 +170,13 @@ bool CPlayerSkills::TryUnlock(ESkillId id)
     if (i <= 0 || i >= k_MaxSkills) return false;
     if (m_bUnlocked[i]) return false;
 
-    // A Skill with no row is a reserved id, not something buyable.
+    // A Skill with no row is a reserved id, not something buyable; the Suit
+    // is held, never bought.
     const SkillDef& def = k_SkillDefs[i];
     if (!def.name || !def.name[0]) return false;
+    if (def.tier == ENodeTier::Suit) return false;
 
-    if (!PrereqMet(id)) return false;
+    if (!Reachable(id)) return false;
     if (AvailablePoints() < def.cost) return false;
 
     // Nothing is decremented: spending is derived from what is unlocked.
@@ -187,6 +197,7 @@ bool CPlayerSkills::TryReset()
 
     --m_iResetTokens;
     memset(m_bUnlocked, 0, sizeof(m_bUnlocked));
+    HoldSuit();
     return true;
 }
 
@@ -257,8 +268,13 @@ void ApplySkillHealthBonus(CBasePlayer* pPlayer)
         ? std::max(0.0f, skill_health_bonus.value)
         : 0.0f;
 
-    // 100 is what CBasePlayer::Spawn sets, and the only baseline there is.
-    const float desired = 100.0f + bonus;
+    // The hub's Max Health Stat nodes: a fraction each, on top of Fortitude's
+    // flat bonus, so the rim Minor and its road multiply as every other Route's
+    // entry and roads do.  100 is what CBasePlayer::Spawn sets, and the only
+    // baseline there is.  Rounded so max health stays a whole number on the HUD.
+    const int   iStat   = pPlayer->m_skills.CountStat(EStat::MaxHealth);
+    const float scale   = 1.0f + iStat * std::max(0.0f, skill_stat_max_health.value);
+    const float desired = (float)(int)((100.0f + bonus) * scale + 0.5f);
     const float delta   = desired - pPlayer->pev->max_health;
     if (delta == 0.0f)
         return;
@@ -286,10 +302,15 @@ int PlayerMaxArmor(CBasePlayer* pPlayer)
     if (!pPlayer)
         return MAX_NORMAL_BATTERY;
 
-    if (!pPlayer->m_skills.HasSkill(ESkillId::BatteryCapacity))
-        return MAX_NORMAL_BATTERY;
+    const int base = pPlayer->m_skills.HasSkill(ESkillId::BatteryCapacity)
+        ? MAX_NORMAL_BATTERY + std::max(0, (int)skill_battery_bonus.value)
+        : MAX_NORMAL_BATTERY;
 
-    return MAX_NORMAL_BATTERY + std::max(0, (int)skill_battery_bonus.value);
+    // The Max Armour Stat nodes -- the hub's south side and the Juggernaut's
+    // roads -- a fraction each on top of Battery Capacity's flat bonus.
+    const int   iStat = pPlayer->m_skills.CountStat(EStat::MaxArmour);
+    const float scale = 1.0f + iStat * std::max(0.0f, skill_stat_max_armor.value);
+    return (int)(base * scale + 0.5f);
 }
 
 // =====================================================================

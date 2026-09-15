@@ -139,13 +139,6 @@ private:
     // invalidates the cached layout the way a resize does.
     int m_previewCols = 0, m_previewRows = 0;
 
-    // skilltree_debug_edges: whether the overlay was on last Paint, and the
-    // non-adjacent edge count it last printed to the console -- together
-    // these gate the console listing to "once, and again only if the count
-    // changes" instead of every frame.
-    bool m_bDebugEdgesOn = false;
-    int  m_iDebugEdgesLastCount = -1;
-
     // The tree is laid out to FIT the area rather than at fixed pixel steps.
     // Seven columns at the full step is 728px against a tree area of
     // panelW - 264, so a hardcoded step hangs off the sides of anything but a
@@ -155,8 +148,8 @@ private:
     // One uniform scale drives step and node size together, so the tree
     // compresses in proportion instead of nodes colliding as gaps shrink.
     float m_scale   = 1.0f;
-    int   m_colStep = 96;
-    int   m_rowStep = 96;
+    int   m_colStep = 112;
+    int   m_rowStep = 112;
 
     int NodeW(ENodeTier tier) const;
     int NodeH(ENodeTier tier) const;
@@ -168,22 +161,22 @@ private:
     // was sized FROM the largest sprite, which is why the tree needed
     // scaling down to fit anything narrower than ~1600px.
     //
-    // Square, since nothing is printed on a node under the matrix design
-    // (docs/SKILL_TREE.md).
-    static constexpr int k_TierNodeW[(int)ENodeTier::_Count] = { 32, 44, 54, 64 };
-    static constexpr int k_TierNodeH[(int)ENodeTier::_Count] = { 32, 44, 54, 64 };
+    // Square, since nothing is printed on a node under the board design
+    // (docs/SKILL_TREE.md).  The sizes are docs/SKILL_MAP.md's "Sizes":
+    // Stat pad, Minor, Medium, Major, and the Suit's processor.
+    static constexpr int k_TierNodeW[(int)ENodeTier::_Count] = { 36, 50, 62, 74, 92 };
+    static constexpr int k_TierNodeH[(int)ENodeTier::_Count] = { 36, 50, 62, 74, 92 };
     // Gap between the icon and the node's border, at full scale.
     static constexpr int k_IconPad = 4;
     // Accent stripe height per tier
-    static constexpr int k_TierStripeH[(int)ENodeTier::_Count] = { 1, 2, 3, 4 };
+    static constexpr int k_TierStripeH[(int)ENodeTier::_Count] = { 1, 2, 3, 4, 4 };
     // Border thickness per tier (1=single outline, 2=double outline inset 1px)
-    static constexpr int k_TierBorderW[(int)ENodeTier::_Count] = { 1, 1, 1, 2 };
+    static constexpr int k_TierBorderW[(int)ENodeTier::_Count] = { 1, 1, 1, 2, 2 };
 
-    // The grid step, both axes. At 64 the Majors touched (2026-09-14, from
-    // a capture); 96 leaves a Stat node's width between two Majors, and a
-    // 180-node grid at 15x12 still fits a 1450-wide tree area at ~0.9.
-    // skilltree_step overrides it for judging by eye; 0 means this.
-    static constexpr int k_Step = 96;
+    // The grid step, both axes: 112 for the 15x15 board at 1:1
+    // (docs/SKILL_MAP.md, Sizes).  skilltree_step overrides it for judging
+    // by eye; 0 means this.
+    static constexpr int k_Step = 112;
     int m_step = k_Step; // as last read from the cvar, part of the cached layout
     // Nothing is printed on a node (every node costs one, docs/SKILL_TREE.md)
     // and the icon scales with it, so the only floor is the one that keeps a

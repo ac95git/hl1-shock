@@ -510,6 +510,8 @@ cvar_t skill_melee_speed_scale = {"skill_melee_speed_scale", "0.7"};
 // five of them at 0.05 are x1.25.  Additive within the stat, multiplied with
 // the Skills.
 cvar_t skill_stat_melee_damage = {"skill_stat_melee_damage", "0.05"};
+cvar_t skill_stat_max_health = {"skill_stat_max_health", "0.05"};   // the hub's Max Health nodes, a fraction each
+cvar_t skill_stat_max_armor = {"skill_stat_max_armor", "0.05"};     // the hub's and the Juggernaut's Max Armour nodes
 // The Backstab node multiplies the Backstab's own multiplier
 // (backstab_damage_scale, 3): 1.5 takes it to 4.5x.
 cvar_t skill_backstab_bonus_scale = {"skill_backstab_bonus_scale", "1.5"};
@@ -813,6 +815,8 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_melee_force_scale);
 	CVAR_REGISTER(&skill_melee_speed_scale);
 	CVAR_REGISTER(&skill_stat_melee_damage);
+	CVAR_REGISTER(&skill_stat_max_health);
+	CVAR_REGISTER(&skill_stat_max_armor);
 	CVAR_REGISTER(&skill_backstab_bonus_scale);
 	CVAR_REGISTER(&cleave_cooldown);
 	CVAR_REGISTER(&cleave_arc_dot);

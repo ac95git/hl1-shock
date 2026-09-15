@@ -80,8 +80,14 @@ struct CPlayerSkills
 
     int ResetTokens() const { return m_iResetTokens; }
 
-    // Returns true if every prerequisite for 'id' is satisfied.
-    bool PrereqMet(ESkillId id) const;
+    // Returns true if a node in a cell orthogonally adjacent to 'id' is held
+    // (ADR-0012: the tree has no prerequisites, only neighbours).
+    bool Reachable(ESkillId id) const;
+
+    // The Suit is the one start: held from the first moment, kept through a
+    // Reset, never bought.  Idempotent; called wherever the array is set up
+    // or cleared so no code path can leave a player without it.
+    void HoldSuit() { m_bUnlocked[static_cast<int>(ESkillId::Suit)] = true; }
 
     // ---- Mutations ----
 
@@ -119,6 +125,7 @@ struct CPlayerSkills
     {
         for (int i = 1; i < k_MaxSkills; ++i)
             m_bUnlocked[i] = SkillMaskGet(mask, i);
+        HoldSuit();
     }
 };
 

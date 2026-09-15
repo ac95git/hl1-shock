@@ -65,6 +65,8 @@ extern cvar_t skill_melee_reach_scale;
 extern cvar_t skill_melee_force_scale;
 extern cvar_t skill_melee_speed_scale;
 extern cvar_t skill_stat_melee_damage;
+extern cvar_t skill_stat_max_health;
+extern cvar_t skill_stat_max_armor;
 extern cvar_t skill_backstab_bonus_scale;
 extern cvar_t cleave_cooldown;
 extern cvar_t cleave_arc_dot;
