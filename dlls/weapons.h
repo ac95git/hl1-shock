@@ -544,7 +544,13 @@ enum crowbar_e
 	CROWBAR_ATTACK2MISS,
 	CROWBAR_ATTACK2HIT,
 	CROWBAR_ATTACK3MISS,
-	CROWBAR_ATTACK3HIT
+	CROWBAR_ATTACK3HIT,
+	CROWBAR_IDLE2,
+	CROWBAR_IDLE3,
+	// The mod's own, appended after the stock eleven in v_crowbar.mdl and
+	// v_katana.mdl alike (E:\CustomAssets\scripts\crowbar_cleave.py): the
+	// Cleave's forehand swipe.
+	CROWBAR_CLEAVE
 };
 
 class CCrowbar : public CBasePlayerWeapon
@@ -618,13 +624,21 @@ protected:
 	virtual float SwingDelayScale() { return 1.0f; }
 
 	// The animations of the two empowered swings, per roster weapon: a
-	// sequence index into the viewmodel, or -1 for the stock swing.  Nothing
-	// overrides them yet.  When a model has one, note that the swing animation
-	// is predicted and neither readiness reaches the client, so a real
-	// override also needs Cleave-ready and Follow-Up-primed sent to the
-	// client.  The Follow-Up's wins when a swing is both.
-	virtual int CleaveSequence() { return -1; }
+	// sequence index into the viewmodel, or -1 for the stock swing.  The
+	// swing animation is predicted, so a sequence here is only as good as the
+	// readiness the client can see: Cleave-ready rides in clientdata (fuser4,
+	// dlls/client.cpp -> cl_dll/hl/hl_weapons.cpp) and the crowbar hands have
+	// their swipe; the Follow-Up's primed state does not reach the client
+	// yet, and no model has a swing for it.  The Follow-Up's wins when a
+	// swing is both.  A roster weapon on other hands overrides with its own
+	// index, or -1 until it has one.
+	virtual int CleaveSequence() { return CROWBAR_CLEAVE; }
 	virtual int FollowUpSequence() { return -1; }
+	// The recovery after a Cleave swing, hit or miss, so the swipe is seen
+	// whole: cleave_swing_time (skill_tuning.h) times Melee Speed, and not
+	// the weapon's own SwingDelayScale, since the animation is one length on
+	// every model that carries it.  0 or unset falls back to the stock delay.
+	float CleaveRecovery(float flSpeed, float flStock);
 
 	// The look of the Cleave's air shock, per roster weapon; carried in the
 	// event and read by EV_Cleave (cl_dll/ev_hldm.cpp).  0 is white air,

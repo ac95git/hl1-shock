@@ -323,6 +323,28 @@ void CBasePlayer::Spawn()
 
 /*
 =====================
+CBasePlayer::CleaveReady / CleaveSpend
+
+The client's side of Cleave readiness, which the swing animation depends on
+(CCrowbar::Swing picks CleaveSequence when the click cleaves, and the swing is
+predicted).  The server decides -- dlls/player.cpp reads the cooldown's time --
+and sends the answer as clientdata fuser4; this is that answer, plus the one
+change the client makes itself: the swing that spent it.  The Skill test is
+the same one the server makes, on the mask gmsgSkillTree already sends.
+=====================
+*/
+bool CBasePlayer::CleaveReady() const
+{
+	return m_skills.HasSkill(ESkillId::Cleave) && m_bCleaveReadySynced;
+}
+
+void CBasePlayer::CleaveSpend()
+{
+	m_bCleaveReadySynced = false;
+}
+
+/*
+=====================
 UTIL_TraceLine
 
 Don't actually trace, but act like the trace didn't hit anything.
@@ -710,6 +732,8 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 	player.m_flNextAttack = from->client.m_flNextAttack;
 	player.m_flNextAmmoBurn = from->client.fuser2;
 	player.m_flAmmoStartCharge = from->client.fuser3;
+	// Cleave-ready, the server's word (dlls/client.cpp UpdateClientData).
+	player.m_bCleaveReadySynced = from->client.fuser4 > 0.5f;
 
 	//Stores all our ammo info, so the client side weapons can use them.
 	player.ammo_9mm = (int)from->client.vuser1[0];
@@ -783,6 +807,9 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 	to->client.m_flNextAttack = player.m_flNextAttack;
 	to->client.fuser2 = player.m_flNextAmmoBurn;
 	to->client.fuser3 = player.m_flAmmoStartCharge;
+	// A predicted Cleave swing clears it, and a re-run of the same commands
+	// has to start from the cleared value or it would cleave twice.
+	to->client.fuser4 = player.m_bCleaveReadySynced ? 1.0f : 0.0f;
 	to->client.maxspeed = player.pev->maxspeed;
 
 	//HL Weapons

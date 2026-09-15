@@ -2036,6 +2036,14 @@ void UpdateClientData(const edict_t* ent, int sendweapons, struct clientdata_s* 
 			cd->m_flNextAttack = pl->m_flNextAttack;
 			cd->fuser2 = pl->m_flNextAmmoBurn;
 			cd->fuser3 = pl->m_flAmmoStartCharge;
+			// Cleave-ready, so the predicted swing can pick the Cleave
+			// animation (CCrowbar::Swing).  A flag rather than the time: the
+			// two clocks need not agree, and the client only has to know
+			// whether the next click cleaves.  The engine networks this
+			// field only as network/delta.lst says: Valve's entry for fuser4
+			// was 2 bits at x128 and dropped a 1.0 on the floor; it is now
+			// 4 bits at x1.  Change one, change the other.
+			cd->fuser4 = pl->CleaveReady() ? 1.0f : 0.0f;
 			cd->vuser1.x = pl->ammo_9mm;
 			cd->vuser1.y = pl->ammo_357;
 			cd->vuser1.z = pl->ammo_argrens;

@@ -526,6 +526,17 @@ cvar_t cleave_arc_dot = {"cleave_arc_dot", "0.77"};
 // How far from the player's eyes the arc reaches.  80 read as too short.
 cvar_t cleave_radius = {"cleave_radius", "160"};
 cvar_t cleave_damage_scale = {"cleave_damage_scale", "1.5"};
+// The recovery after a Cleave swing, hit or miss, in seconds, scaled by
+// Melee Speed only: the swipe animation is one length on every model that
+// carries it, so the weapon's own swing scale does not apply.  Read from
+// both DLLs through skill_tuning.h; 0 means the stock delays.  Set to the
+// animation's length so it is seen whole: 1.2 s is HL Extended's
+// attack_swing_miss3 (36 frames at 30 fps, the swipe itself over in the
+// first third), the sequence in the slot since 2026-09-15; the script-made
+// swipe before it was 0.65.  A first guess: if the long recovery reads as
+// waiting, shorten it and let the next click cut the return, as the stock
+// swings' clicks do.
+cvar_t cleave_swing_time = {"cleave_swing_time", "1.2"};
 
 // The Gauss Katana.  The slash is burst and the wave is DPS (decided
 // 2026-09-14 against the gauss's two clicks, which it replaces): the left
@@ -807,6 +818,7 @@ void GameDLLInit()
 	CVAR_REGISTER(&cleave_arc_dot);
 	CVAR_REGISTER(&cleave_radius);
 	CVAR_REGISTER(&cleave_damage_scale);
+	CVAR_REGISTER(&cleave_swing_time);
 	CVAR_REGISTER(&katana_swing_time_scale);
 	CVAR_REGISTER(&katana_wave_swing_time_scale);
 	CVAR_REGISTER(&katana_wave_damage);

@@ -70,6 +70,7 @@ extern cvar_t cleave_cooldown;
 extern cvar_t cleave_arc_dot;
 extern cvar_t cleave_radius;
 extern cvar_t cleave_damage_scale;
+extern cvar_t cleave_swing_time;
 extern cvar_t katana_swing_time_scale;
 extern cvar_t katana_wave_swing_time_scale;
 extern cvar_t katana_wave_damage;

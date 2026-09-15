@@ -59,9 +59,11 @@ constexpr int kMaxSamples = 64;
 constexpr int kAttachPoint = 1; // $attachment 1: the blade's point
 constexpr int kAttachGuard = 2; // $attachment 2: where the blade leaves the guard
 // The crowbar's attack sequences, which the katana keeps in order
-// (dlls/weapons.h: CROWBAR_ATTACK1HIT .. CROWBAR_ATTACK3HIT).
+// (dlls/weapons.h: CROWBAR_ATTACK1HIT .. CROWBAR_ATTACK3HIT), and the
+// Cleave's swipe appended after the idles (CROWBAR_CLEAVE, 11).
 constexpr int kFirstAttack = 3;
 constexpr int kLastAttack = 8;
+constexpr int kCleave = 11;
 const char* const kSprite = "sprites/laserbeam.spr"; // the crescent's (EV_KatanaArcThink)
 
 struct Sample
@@ -155,7 +157,7 @@ void KatanaTrail_ViewModelDrawn(cl_entity_s* view, const Vector& eye, const Vect
 	// animtime when a sequence starts and holds the last frame after
 	// (numframes - 1) / fps seconds, the same estimate the renderer draws by.
 	const int seq = view->curstate.sequence;
-	bool swinging = seq >= kFirstAttack && seq <= kLastAttack && seq < hdr->numseq;
+	bool swinging = ((seq >= kFirstAttack && seq <= kLastAttack) || seq == kCleave) && seq < hdr->numseq;
 	if (swinging)
 	{
 		const auto* seqdesc = reinterpret_cast<const mstudioseqdesc_t*>(reinterpret_cast<const byte*>(hdr) + hdr->seqindex) + seq;

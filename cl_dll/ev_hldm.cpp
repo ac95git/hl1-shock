@@ -1119,6 +1119,16 @@ void EV_Crowbar(event_args_t* args)
 
 	if (EV_IsLocal(idx))
 	{
+		// iparam1 is the swing's own sequence when it has one -- a Cleave
+		// swing sends CROWBAR_CLEAVE (CCrowbar::Swing) -- and 0 for the stock
+		// three in turn.  The miss is only ever animated from here; a hit
+		// sends the same sequence again from Swing, which restarts nothing
+		// visible since it is the same frame at the same instant.
+		if (args->iparam1 > 0)
+		{
+			gEngfuncs.pEventAPI->EV_WeaponAnimation(args->iparam1, 0);
+			return;
+		}
 		switch ((g_iSwing++) % 3)
 		{
 		case 0:

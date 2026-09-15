@@ -319,6 +319,18 @@ void CCrowbar::PrimaryAttack()
 }
 
 
+float CCrowbar::CleaveRecovery(float flSpeed, float flStock)
+{
+	// The swipe is one length on every model that carries it, so the weapon's
+	// own swing scale stays out of it; Melee Speed still applies, as it does
+	// to every swing.  Both sides: this sets a predicted delay.
+	const float flTime = g_tuneCleaveSwingTime.Value();
+	if (flTime <= 0.0f)
+		return flStock;
+	return flTime * flSpeed;
+}
+
+
 void CCrowbar::Smack()
 {
 	DecalGunshot(&m_trHit, BULLET_PLAYER_CROWBAR);
@@ -375,26 +387,38 @@ bool CCrowbar::Swing(bool fFirst)
 	}
 #endif
 
+	// Which swing this is.  Cleave-ready is known on both sides -- the server
+	// from the cooldown's time, the client from the flag clientdata carries
+	// (CBasePlayer::CleaveReady on each) -- so the predicted animation picks
+	// the Cleave sequence on the same frame.  The Follow-Up's primed state is
+	// still server-only, so on the client it stays false and the stock
+	// animation plays, which is what its hook falls back to anyway.
+	//
+	// Cleave, the Melee major. While it is ready the swing IS the arc: spent
+	// on the swing whether or not anything is there, so the player has to
+	// see the difference without a live target (the swipe, the sweep and the
+	// sound), and so a swarm is hit the moment it enters the arc rather than
+	// once one of them lines up with the crowbar.
+	// Never on a secondary swing: Cleave is the melee verb's major.
+	const bool bCleaveSwing = fFirst && !IsSecondarySwing() && m_pPlayer->CleaveReady();
+	bool bFollowUpSwing = false;
+
 	if (fFirst)
 	{
+		// iparam1: the swing's own sequence, so the miss animation -- which
+		// only the event plays -- is the Cleave's on a Cleave swing.
 		PLAYBACK_EVENT_FULL(FEV_NOTHOST, m_pPlayer->edict(), m_usCrowbar,
-			0.0, g_vecZero, g_vecZero, 0, 0, 0,
+			0.0, g_vecZero, g_vecZero, 0, 0,
+			(bCleaveSwing && CleaveSequence() >= 0) ? CleaveSequence() : 0,
 			0.0, 0, 0.0);
 	}
 
-	// Which swing this is. Server-only facts -- neither readiness reaches the
-	// client -- so on the client both stay false and the stock animation
-	// plays, which is what the sequence hooks below fall back to anyway.
-	bool bCleaveSwing = false;
-	bool bFollowUpSwing = false;
-#ifndef CLIENT_DLL
-	// Cleave, the Melee major. While it is ready the swing IS the arc: spent
-	// on the swing whether or not anything is there, so the player has to
-	// see the difference without a live target (the sweep and the sound),
-	// and so a swarm is hit the moment it enters the arc rather than once
-	// one of them lines up with the crowbar.
-	// Never on a secondary swing: Cleave is the melee verb's major.
-	bCleaveSwing = fFirst && !IsSecondarySwing() && m_pPlayer->CleaveReady();
+#ifdef CLIENT_DLL
+	// The client's share of the spend: clear the synced flag so a re-run of
+	// these commands does not cleave again before the server's word arrives.
+	if (bCleaveSwing)
+		m_pPlayer->CleaveSpend();
+#else
 	bFollowUpSwing = PulseFollowUpPrimed(m_pPlayer);
 
 	if (bCleaveSwing)
@@ -438,7 +462,7 @@ bool CCrowbar::Swing(bool fFirst)
 		if (fFirst)
 		{
 			// miss
-			m_flNextPrimaryAttack = GetNextAttackDelay(0.5 * SwingDelayScale() * flSpeed);
+			m_flNextPrimaryAttack = GetNextAttackDelay(bCleaveSwing ? CleaveRecovery(flSpeed, 0.5 * SwingDelayScale() * flSpeed) : 0.5 * SwingDelayScale() * flSpeed);
 
 			// player "shoot" animation
 			m_pPlayer->SetAnimation(PLAYER_ATTACK1);
@@ -543,7 +567,7 @@ bool CCrowbar::Swing(bool fFirst)
 
 #endif
 
-		m_flNextPrimaryAttack = GetNextAttackDelay(0.25 * SwingDelayScale() * flSpeed);
+		m_flNextPrimaryAttack = GetNextAttackDelay(bCleaveSwing ? CleaveRecovery(flSpeed, 0.25 * SwingDelayScale() * flSpeed) : 0.25 * SwingDelayScale() * flSpeed);
 
 #ifndef CLIENT_DLL
 		// play thwack, smack, or dong sound

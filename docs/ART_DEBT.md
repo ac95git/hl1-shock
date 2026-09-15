@@ -4,6 +4,10 @@ Placeholder assets currently standing in for art this mod does not have yet. Eve
 it is borrowed stock Half-Life content chosen because it was available, not because it is right. Each
 entry names what is wrong with the stand-in, so the replacement is judged against something.
 
+Also here: assets **imported from other mods**, which are not wrong but are not ours. Each of those
+entries names the source and the two ways out — credit it and keep it, or replace it — so that neither
+is forgotten at release. The first is *The Cleave swing — imported from Half-Life: Extended*.
+
 Distinct from [TECH_DEBT.md](TECH_DEBT.md): that register is about code that needs fixing. This one is
 about assets that need making.
 
@@ -445,16 +449,18 @@ Every Skill in the tree has its own icon, and a player can tell two Skills apart
 | The Cleave ready cue | `buttons/blip2.wav` at pitch 130, quiet | A button |
 | The Follow-Up primed icon | `d_gauss`, gold | The Follow-Up's own tree placeholder, itself a gauss gun |
 | The Follow-Up attack sound | `zombie/claw_strike1.wav` at pitch 90 | A zombie's swipe, on top of the crowbar's own body-hit sound |
-| The two swing animations | None: the stock swing plays | The hooks exist (`CleaveSequence`, `FollowUpSequence`, −1 for stock) and nothing overrides them |
+| The Cleave swing animation | Half-Life: Extended's `attack_swing_miss3`, retargeted onto Valve's bones, at `CROWBAR_CLEAVE` on both viewmodels since 2026-09-15 | Not a stand-in — it reads right and Andrei accepted it in game — but imported, not made. Its own entry is below: *The Cleave swing — imported from Half-Life: Extended* |
+| The Follow-Up swing animation | None: the stock swing plays | The hook exists (`FollowUpSequence`, −1 for stock) and nothing overrides it; the primed state does not reach the client either |
 
 ### What to look for
 - **One visual language for "the big swing"**, shared by the sweep and the two icons, so the region on
   the ground, the mark at the screen edge and the node in the tree read as one thing. The sweep should
   say *weight* — a crowbar going through the air — rather than light.
-- **A Cleave swing animation per roster weapon**, and a Follow-Up one, on each viewmodel. The Follow-Up's
-  wins when a swing is both. Before either can play, Cleave-ready and Follow-Up-primed have to reach the
-  client, because the swing animation is predicted; that is code, not art, and it is the first thing to
-  do when the first animation exists.
+- **A Follow-Up swing animation** on each viewmodel; the Follow-Up's wins when a swing is both. Before it
+  can play, Follow-Up-primed has to reach the client the way Cleave-ready now does (clientdata `fuser4`,
+  `dlls/client.cpp` → `cl_dll/hl/hl_weapons.cpp`), because the swing animation is predicted; that is
+  code, not art. The Cleave's swipe is done for the crowbar hands; a roster weapon on other hands will
+  want its own and overrides `CleaveSequence` with it.
 - **Two sounds that are not the crowbar's own**: the Cleave's swing, and the Follow-Up's hit, which today
   lands in the same instant as the body-hit sound and has to be told from it — the Backstab cue's lesson.
 - The ready cue should sit with the Pulse's Recharge cue, which is the precedent: quiet, short, and not a
@@ -463,3 +469,46 @@ Every Skill in the tree has its own icon, and a player can tell two Skills apart
 ### Done when
 A player who has never read a tooltip can tell a Cleave swing from a plain one with the sound off, can
 tell it is ready without looking at the screen edge, and sees a Follow-Up coming.
+
+## The Cleave swing — imported from Half-Life: Extended
+
+### Scope
+`cleave.smd` in `E:\CustomAssets\models\src\v_crowbar\v_crowbar_anims\` and
+`...\v_katana\v_crowbar_anims\` (one file, copied), compiled as sequence 11 (`CROWBAR_CLEAVE`) into
+`models/v_crowbar.mdl` and `models/v_katana.mdl`; `cleave_swing_time` in `dlls/game.cpp` is set to its
+length.
+
+### What it is
+`attack_swing_miss3` from **Half-Life: Extended**'s crowbar viewmodel (the mod installed on this
+machine as `Half-Life/hl_extended`; the decompile is at
+`E:\CustomAssets\models\decompiled\crowbar_hl_exetended\v_crowbar\`), one of the three extra swing
+animations that mod adds after Valve's eleven. Its 45-bone rig carries Valve's eleven bones first,
+under other names and with identical rest values, so `utils/mdltool/smd_retarget.py` moved it onto
+our hands as a rename and a prune of the fingers and the left arm — the numbers are the original
+animator's, untouched. 36 frames at 30 fps: a low horizontal swipe right to left over the first ten
+frames with the bar flat across the view and the fork leading, then a long return where the bar comes
+up, stands and settles. Installed 2026-09-15 after five cuts of the mod's own script-authored swipe
+(`E:\CustomAssets\scripts\crowbar_cleave.py`, kept for its measurements) did not get the bar's attitude
+right; Andrei accepted it in game the same day.
+
+### Why it is here
+It is another mod's work. Its licence has not been checked and its author is not named anywhere in
+this repo. Nothing about it is wrong as art — it is the first Cleave swing that read as a swipe — so
+this entry is not a call to replace it; it is a call to settle its status before anything ships.
+
+### The two ways out
+1. **Keep it and credit it.** Find Half-Life: Extended's licence and author credit (its `liblist.gam`
+   and readme in `Half-Life/hl_extended`; its ModDB page), confirm reuse is allowed, and add an
+   attribution line to README.md's contributors and licensing section naming the mod, the animation and
+   the author. Then delete this entry. The same check covers anything else taken from that install —
+   ROADMAP.md's NPC roster looks at its alien grunt and headcrab models, so one credit line may end up
+   carrying several assets.
+2. **Replace it with the mod's own.** The slot, the rig contract and the drop-in steps are in
+   MODEL_WORKFLOW.md (*Dropping in a hand-made or borrowed animation*), and *What the Cleave swipe
+   taught* is the brief for whoever animates it: a horizontal swipe with the fork leading, the bar
+   broadside to the view, joints inside Valve's 81° except where the weight of the swing wants more.
+   This animation is the reference to match; `bar_lean.py` and the strain table are how to compare.
+
+### Done when
+Either README.md credits Half-Life: Extended for the animation under a licence that allows it, or
+`CROWBAR_CLEAVE` plays an animation made for this mod. Until one of those, this asset does not ship.

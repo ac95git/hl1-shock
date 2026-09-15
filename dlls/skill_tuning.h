@@ -63,6 +63,11 @@ inline CSkillTuning g_tuneDrawTime = {"skill_draw_time_scale", 1.0f, nullptr};
 inline CSkillTuning g_tuneKatanaSwing = {"katana_swing_time_scale", 1.0f, nullptr};
 inline CSkillTuning g_tuneKatanaWaveSwing = {"katana_wave_swing_time_scale", 1.0f, nullptr};
 
+// The recovery after a Cleave swing, in seconds, so the swipe animation plays
+// whole (CCrowbar::CleaveRecovery).  Predicted like every swing delay.
+// Neutral is 0, which the swing reads as "the stock delay".
+inline CSkillTuning g_tuneCleaveSwingTime = {"cleave_swing_time", 0.0f, nullptr};
+
 // The katana's wave spends uranium, and whether the right click swings at all
 // depends on having it, so the check runs on both sides.  The cost, then the
 // Skill that divides it.  Neutral for the cost is free, which on a failed

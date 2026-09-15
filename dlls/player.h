@@ -386,9 +386,19 @@ public:
 	// Whether the "ready" status icon is on screen.  Transient: a HUD reset
 	// wipes the icon and clears this so CleaveThink re-sends it.
 	bool m_bCleaveIconSent = false;
+	// Client only: the server's word on readiness, as clientdata fuser4
+	// (UpdateClientData -> HUD_WeaponsPostThink; the field's encoding is in
+	// network/delta.lst and had to be widened for it), cleared by the
+	// predicted swing that spends it and carried through re-prediction, so
+	// the swing animation picks the Cleave sequence on the same frame the
+	// server does.  Unused on the server, where CleaveReady reads the time.
+	bool m_bCleaveReadySynced = false;
 
+	// Both sides: the server from m_flCleaveReadyTime, the client from the
+	// synced flag (cl_dll/hl/hl_weapons.cpp).
 	bool CleaveReady() const;
-	// Starts the cooldown.  Called by the swing that cleaved.
+	// Starts the cooldown.  Called by the swing that cleaved; on the client
+	// it clears the synced flag until the server says ready again.
 	void CleaveSpend();
 	// Keeps the ready icon in step with the Skill and the cooldown.  Every
 	// PreThink; sends only on change.

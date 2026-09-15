@@ -56,7 +56,21 @@ leaves out and `mdlinfo.py --extract-bmp` can supply.
   then import the other.
 - **Sequence order is a contract with the code.** Weapons address sequences by index (`CROWBAR_DRAW` is
   the second sequence, and so on). A model that replaces or reuses a weapon's animations keeps its QC's
-  sequence list in the same order, with nothing inserted.
+  sequence list in the same order, with nothing inserted. A sequence of the mod's own goes **after** the
+  stock ones: the Cleave's swipe is index 11 (`CROWBAR_CLEAVE`) in `v_crowbar.qc` and `v_katana.qc`,
+  behind the eleven the crowbar shipped with.
+- **An animation SMD is the skeleton alone, one `time` block per frame, every bone every frame**, with
+  the rest pose the anims share as frame 0 (the stock attacks all start and end on the same pose; take
+  it from any of them, not from the reference SMD, whose root sits elsewhere). Bone rotations are the
+  SMD's local Euler triples, composed as `smd_pose.py` does; the engine interpolates between frames, so
+  30 fps keyframes are plenty. `crowbar_cleave.py` is the worked example: it never poses a bone by hand
+  but designs the swing as a path in game space — where the hand goes, which way the crowbar points —
+  and solves the three arm bones to follow it each frame, then eases back to rest in bone space so the
+  last frame is the rest pose exactly.
+- **A swing has three things to say, and a still shows two of them.** Where the hand is, which way
+  the bar points, and which way the bar is *rolled* about its own shaft. The Cleave swipe's five cuts
+  (2026-09-15) each got one of them wrong in turn; the section *What the Cleave swipe taught*, below,
+  is the record, and it is where to start before authoring or judging any viewmodel swing.
 - **UVs must lie in 0..1.** Source models routinely carry UVs whole tiles outside it (the Dystopia
   katana's v ran -2.4..-2.1). Blender repeats the texture so the preview looks right; studiomdl multiplies
   u,v by the texture size as they are, the game samples off the texture, and the surface comes out black.
@@ -108,6 +122,7 @@ Repo, under `utils/mdltool/` (Python 3 with Pillow):
 | `mdlinfo.py MODEL.mdl [...] [--bones-only] [--extract=DIR] [--extract-bmp=DIR]` | Reads a `.mdl` header: bones with parents, textures with sizes and flags, bodyparts and submodels with vertex counts, sequence names. Extracts textures as PNG (to look at) or 8-bit BMP (to compile with). No decompile needed; this is how the stock viewmodels were surveyed. |
 | `smd_goldsrc.py IN.smd OUT.smd [--wrap-uv]` | Source-style vertex lines → GoldSrc single-bone lines. Run on every Blender export. `--wrap-uv` shifts each triangle's UVs by whole tiles into 0..1, for Source-derived meshes (see the UV trap below). |
 | `mdlflags.py MODEL.mdl [TEXTURE +flag -flag ...]` | Lists or patches per-texture render flags in a compiled `.mdl`: flatshade, chrome, fullbright, nomips, alpha, additive, masked. The only way to set fullbright or additive on a model this pipeline compiles. |
+| `smd_retarget.py SRC_ANIM.smd TARGET_REF.smd OUT.smd [--map "Src=Dst" ...] [--rest SRC_IDLE.smd]` | Moves an animation onto a skeleton that carries the same bones under other names: matched by index (or `--map` by name), unmatched source bones dropped, unmatched target bones held at rest. Checks first that the two rests agree for every matched bone and refuses if they do not, since the numbers are copied, not solved. Written for HL Extended's crowbar animations, whose 45-bone rig has Valve's 11 bones first, with `Clavicle`/`UpperArm`/`Forearm` for `R Arm`/`R Arm1`/`R Arm2` and identical rest values. |
 | `smd_pose.py REF.smd ANIM.smd FRAME OUT.smd` | Applies one animation frame to a reference SMD, bone for bone as the engine does, and writes a static SMD. The way to preview a model in a pose without trusting an addon's animation import. |
 
 Working directory, `E:\CustomAssets\scripts\`:
@@ -121,6 +136,8 @@ Working directory, `E:\CustomAssets\scripts\`:
 | `hev_gloves.py model DECOMPILED_DIR SRC_DIR` / `sheet DECOMPILED_DIR OUT.png` | The mod's own HEV glove textures, generated per model from that model's own glove BMPs (the shared `GLOVE*`/`rubbergloveCHROME` set, the crossbow family's `xbow_sleeve`, the MP5's `PLAYER_ForeArm`/`Cuff`, the shotgun's `HAND_ForeArm`): luminance kept, orange plates recoloured, thin grooves and the hand-back screen turned into an accent light, chrome map tinted. Three variants, cyan/red/purple. Writes cyan under the stock names, red and purple with suffixes, a `skins.qc` fragment, and `preview_<variant>/` folders for `render_smd.py`. |
 | `qc_skins.py MODEL.qc SKINS.qc [--state COLD.bmp=HOT.bmp]` | Inserts (or replaces) the generated `$texturegroup` into a QC, before the first `$sequence`. Three skin families, cyan first, so skin 0 is what a model shows with no code at all; with `--state`, six, each glove family cold then hot. |
 | `katana_hot.py` | The katana's hot blade texture: the gold metal of `katana_02.bmp` turned gauss orange grading to white-hot along the metal's own shading; everything else untouched. |
+| `crowbar_cleave.py [--frames 20] [--return-from 9] [--render [--katana] [--render-frames 0,1,...]] [--fork-weight W] [--fork-facing x,y,z] [--rest-weights 9 numbers] [--force]` | The Cleave's forehand swipe as a path solved onto the arm — the script's cut, superseded by a hand-made SMD but kept for its measurements. Keys in game space — hand azimuth, radius and height about the shoulder, bar azimuth and elevation — through Catmull-Rom per frame; the shoulder, elbow and wrist solved by Levenberg–Marquardt to put the hand and the crowbar's tip on target and the fork nudged toward the sweep, each frame from the last and pulled softly toward rest; the return eased in bone space to land on rest exactly. Prints the tip's path with an edge check at 16:9 and 4:3 and the fork's on-screen facing per frame; with `--render` poses the reference at the key frames through `smd_pose.py` and renders them from the viewmodel camera. Writes `cleave.smd` into both models' anim folders **only if the file there is its own** (`--force` overrides). Recompile both QCs after it. Its `load()`, `fk()` and `ik()` are what `bar_lean.py` and the strain and orientation surveys import. |
+| `bar_lean.py [ANIM ...]` | The swipe-or-thrust readout for a crowbar-hands animation, stock or new: per frame, the bar's on-screen length as a share of its true length (how broadside it is), its screen angle, and the tip's direction of travel. A bar along its own travel is a thrust; attack2's sweep, ~95% and ~90° against a tip moving at ~140°, is the reference. |
 | `katana_swing_lead.py [ANIM ...]` | The measurement behind the sori's direction: poses the katana reference at every frame of the crowbar's attack animations with `smd_pose.py`'s math, tracks the point and the two long edges of the blade, and prints which edge leads the point's motion, frame by frame and summed. Run it before trusting a guess about which side of any borrowed blade is the edge. |
 | `katana_world.py [--scale] [--tex] [--sori]` | `w_katana.mdl` from the Dystopia world prop without Blender: one bone at the origin, the katana rotated to lie on its flat, centred, floor at z 0, scaled 1.2 (0.82 matched the viewmodel blade and read too small on the floor), the blade bowed by `katana_bend.py` in the floor plane, UVs wrapped, one-frame idle, QC, studiomdl, render. The pattern for any single-bone world model from a Source prop. |
 | `syringe_world.py [--scale] [--no-icon]` | `w_syringe.mdl` with **no source mesh at all**: the geometry is tubes, cones and discs emitted straight into the SMD (284 triangles, winding checked per triangle against its normals), the one 128×128 texture is painted by Pillow with the liquid, stopper and graduations on the barrel, then QC, studiomdl, the orbit render, and the Inventory Icon rendered and encoded to `sprites/inv/item_syringe.spr`. The first prop authored from numbers; its primitives were then factored into `smdprims.py`. |
@@ -163,6 +180,87 @@ game, the camera is wrong, not the model. Then judge the new model at the same f
 draw. Silhouette and grip read from the viewmodel camera; the orbit view is for checking the mesh is
 where the numbers say it is.
 
+## What the Cleave swipe taught
+
+The mod's first animation of its own, 2026-09-15: a forehand horizontal swipe for the crowbar hands
+(`CROWBAR_CLEAVE`, sequence 11 on `v_crowbar.mdl` and `v_katana.mdl`), authored by
+`crowbar_cleave.py` — a designed path in game space solved onto the shoulder, elbow and wrist — and
+judged by Andrei in HLMV from the player's eye over five cuts. The script's cut is a stand-in: it got
+the positioning right by the second cut and never quite got the bar's attitude right, and a hand-made
+SMD is replacing it (see *Dropping in a hand-made animation*, below). What it taught, in the order it
+was learned:
+
+- **Design in game space and render from the eye.** A viewmodel swing is a path — where the hand
+  goes, which way the weapon points, frame by frame, camera at the origin looking down +X — and the
+  bones are solved to follow it. The tip-path table is not enough to judge it; render the key frames
+  from the viewmodel camera (`render_smd.py`) next to the stock swings through the same pipeline. If
+  the stock crowbar does not look like the game, the camera is wrong, not the animation.
+- **The rest pose is any attack's frame 0.** The stock attacks all start and end on one pose; take it
+  from an animation SMD, not the reference SMD, whose root sits elsewhere. An animation SMD is the
+  skeleton alone, one `time` block per frame, every bone every frame; the engine interpolates, so 30 fps
+  keys are plenty. The stock rig facts: shoulder at game (−3.7, −6.7, −4.6), arm 22.7 long, crowbar tip
+  20.6 from the hand bone.
+- **A "level" swing is not a horizontal one on screen** (cut 1, "a punt"). The arm, from attack3's
+  peak: nearly straight (hand 20–21 units from the shoulder), the hand about 11 below the eye; a hand
+  more than 0.75× its forward distance below the eye is under the bottom edge. A bar pointing down the
+  view with a bent elbow foreshortens into a thrust. `bar_lean.py` prints the two numbers that tell a
+  swipe from a thrust: the bar's on-screen length as a share of its true length, and its screen angle
+  against the tip's direction of travel. attack2's sweep is the reference: ~95% and ~90° against a tip
+  moving at ~140°.
+- **The bar's azimuth stays on the hand's line of sight from the eye** (cut 2). That is what makes it
+  vertical on screen and broadside to the sweep, and it is what attack2 does through its whole sweep.
+  Swinging it round to "lean" into the follow-through was the invention that broke the next thing.
+- **The roll about the shaft is the third thing, and it says which way the swing goes** (cut 2's
+  fault, found by Andrei's arrows: "the crowbar starts to point down"). The crowbar's fork has to face
+  the direction of travel through the sweep. Position alone — hand and tip on target — leaves the roll
+  to fall where the rest pull puts it. *Raising the bar's world elevation in reply to "pointing down"
+  was a guess and made it worse* (cut 3): when a HLMV complaint is a direction word, ask which camera
+  and get screenshots with arrows before changing a number.
+- **The roll is not the wrist's to add** (cut 4, "the tilt is way too crazy"). Forcing the fork left
+  with a strong solver term twisted the elbow and wrist past 90°; the stock swings never pass 81° of
+  true rotation from rest. Freeing the forearm's twist axis and clamping the wrist only moved the
+  same 100° from one joint to the other: the twist was demanded by the keys, not chosen by the
+  solver. Judge strain by a joint's geodesic rotation from rest, not by its Euler angles, which hide
+  a twist across two axes.
+- **The fork's facing is set by the bar's direction and how far the arm has swung** (cut 5). The
+  fork is perpendicular to the shaft and faces forward at rest, so it turns with the arm. Surveyed
+  with no roll term at all, solving from rest: a bar standing at 75–80° of elevation on the line of
+  sight has the fork facing screen-left at the centre and the exit with the elbow and wrist inside
+  45° of rest; at 45° of elevation (attack2's) it faces the floor by the exit whatever the azimuth; at
+  the entry no orientation faces it left, so it trails there, as attack3's does in its wind-up, and
+  comes round by the centre. Survey the design space before adding a solver term.
+- **Measure the fork off the geometry.** The shaft is a 26-unit cylinder with vertices only at its
+  two ends, so an axis fitted to "the straight part" sees six vertices at one end, comes out 13° off,
+  and flips which side the fork is on; the first roll term held the fork the wrong way for a whole
+  cut because of it. Fit the axis to every chrome vertex and take the fork from the vertex furthest
+  off it (4.7 units, on the hand's +x).
+- **Reading the stock swings as numbers is the calibration for all of the above.** `stock_params` and
+  the strain table (both throwaway, easy to recreate from `smd_pose.py`'s math) gave attack2's and
+  attack3's hand azimuth, radius and height, bar azimuth and elevation, fork facing, and joint rotation
+  per frame; every rule here is a stock number the cut violated.
+
+### Dropping in a hand-made or borrowed animation
+
+A sequence made outside the script goes in the same slot. Done 2026-09-15 with HL Extended's
+`attack_swing_miss3`, which is what ships as the Cleave swing now:
+
+1. Same rig: the 11 bones of `crowbar_reference.smd`, same names and order, every bone every frame.
+   An animation from another mod's crowbar is usually on Valve's bones under other names —
+   `smd_retarget.py` renames and prunes it, and refuses if the rests differ. Frame 0 need not be the
+   rest pose: the viewmodel blends into a new sequence over 0.2 s, and HL Extended's starts mid-swing.
+   The last frame should be rest. Any frame count; 30 fps is the QC's.
+2. Save it as `cleave.smd` in **both** `models/src/v_crowbar/v_crowbar_anims/` and
+   `models/src/v_katana/v_crowbar_anims/` — one file, the katana rides the same hands.
+   `crowbar_cleave.py` refuses to overwrite a `cleave.smd` that is not its own (it stamps a
+   `// generated by crowbar_cleave.py` line); `--force` if the script's cut is wanted back.
+3. `studiomdl` both QCs; `mdlflags.py v_katana.mdl katana_02_hot.bmp +fullbright +additive`; copy both
+   `.mdl`s to the repo's `models/` and to `topmod/models/`.
+4. Set `cleave_swing_time` (dlls/game.cpp; 1.2 s for the 36-frame HL Extended swing) to the new
+   length so the swing is seen whole, and rebuild both DLLs; the katana's trail and the sequence
+   index need nothing.
+5. `bar_lean.py cleave` and a strain check against attack2/attack3 are the numbers to look at before
+   HLMV, if the animation was made by hand and not measured.
+
 ## Adding a viewmodel on stock hands
 
 1. Decide which stock weapon's hands and animations it borrows. That fixes the rig and the sequence
@@ -177,8 +275,16 @@ where the numbers say it is.
 
 ## Not yet covered
 
-- **Animations of its own.** Everything so far borrows a stock sequence set. Retargeting the Dystopia
-  animations onto the 11-bone rig, or authoring new ones, is unexplored.
+- **Animations of its own: one attempted, from a path, and superseded by hand.** The Cleave's swipe
+  (`crowbar_cleave.py`) was the first: a designed path solved onto the arm, five cuts judged in HLMV,
+  each right about one more thing (*What the Cleave swipe taught*, above). It got the positioning and
+  never quite the bar's attitude, and a hand-made SMD is taking its slot. What the path method is
+  good for is measuring — the stock swings as numbers, the strain of a pose, where the fork faces —
+  and checking a hand-made animation against them; authoring the feel of a swing by numbers was the
+  slow way. **Retargeting between rigs that share Valve's bones is done** (`smd_retarget.py`, HL
+  Extended's crowbar swing onto ours, a rename). Retargeting onto a rig with *different* rest values
+  — the Dystopia 45-bone katana rig — blending two stock sequences, and anything organic are still
+  unexplored; so is exporting an animation from Blender through Source Tools.
 - **Uniform hands across the vanilla set: done, and selected per player.** Fourteen stock viewmodels (all
   but the hivehand, which has no glove, and the chumtoad, which the game never uses) plus the katana
   compile with three glove skins from `gloves_rollout.py`; the compiled files are in the repo's `models/`

@@ -332,11 +332,31 @@ through, so "melee" is true by construction rather than by a damage-type list:
   (`PM_STUDIO_IGNORE`) and did not keep the player out, because a player's physent is a plain box rather
   than a studio model; judging the hit is what works. On ready: the status icon at the left edge (through
   `gmsgStatusIcon` like the Infusion's, from `CBasePlayer::CleaveThink`, re-sent after a HUD reset) and a
-  quiet cue when it comes back from a cooldown. **All placeholders** ([ART_DEBT.md](ART_DEBT.md)).
-  `CCrowbar::CleaveSequence()` and `FollowUpSequence()` are the hooks for a per-weapon swing animation,
-  returning −1 (the stock swing) until a model has one; the Follow-Up's wins when a swing is both. A real
-  override also needs both readiness states sent to the client, since the swing animation is predicted.
-  `debug_damage` prints one `cleave ->` line per victim, with its Backstab and Follow-Up flags.
+  quiet cue when it comes back from a cooldown. **All placeholders** ([ART_DEBT.md](ART_DEBT.md)) except
+  the swing itself, which is half done. **The Cleave swing has its own sequence, since 2026-09-15**:
+  `CROWBAR_CLEAVE`, appended as sequence 11 to `v_crowbar.mdl` and `v_katana.mdl` alike, so the katana
+  swings it too. In the slot is **HL Extended's `attack_swing_miss3`**, retargeted onto Valve's
+  eleven bones by `utils/mdltool/smd_retarget.py` (its rig carries them under other names with the
+  same rest values, so the retarget is a rename and a prune): a low horizontal swipe right to left
+  over the first ten frames with the bar flat across the view and the fork leading, then a long return
+  where the bar comes up, stands and settles — 36 frames at 30 fps, 1.2 s. It replaced the mod's own
+  script-authored swipe (`E:\CustomAssets\scripts\crowbar_cleave.py`) after five cuts judged in HLMV
+  got the positioning right and never quite the bar's attitude; the lessons are in
+  [MODEL_WORKFLOW.md](MODEL_WORKFLOW.md), *What the Cleave swipe taught*. The animation is imported,
+  not made: [ART_DEBT.md](ART_DEBT.md) has its own entry (*The Cleave swing — imported from Half-Life:
+  Extended*) with the two ways out, credit it or replace it, and it does not ship until one is taken.
+  **Cleave-ready reaches the client** for it — a flag in clientdata `fuser4`
+  (`UpdateClientData` → `HUD_WeaponsPostThink`, cleared by the predicted swing that spends it; the
+  field's entry in `network/delta.lst` had to be widened, since Valve's 2 bits at ×128 carried nothing
+  above 0.008 and the flag arrived as 0, which is why the first install played the stock swing) — because
+  the swing animation is predicted and the miss animation is played only by the crowbar's own event,
+  which now carries the sequence in `iparam1`. **A Cleave swing recovers in `cleave_swing_time`** (1.2 s,
+  the animation's length; a first guess, since the swipe itself is over in the first third and the
+  next click could be allowed to cut the return) times Melee Speed, hit or miss, and not the weapon's
+  own swing scale, so the swipe is seen whole on both models; 0 means the stock delays. `CCrowbar::CleaveSequence()` returns it
+  and `FollowUpSequence()` still returns −1: the Follow-Up has no animation and its primed state is
+  still server-only; the Follow-Up's wins when a swing is both. `debug_damage` prints one `cleave ->`
+  line per victim, with its Backstab and Follow-Up flags.
 - **The Follow-Up shows itself too.** A primed Follow-Up puts its own icon at the screen edge for the
   window it is primed (`CPlayerPulse::SyncFollowUpIcon`, the Follow-Up's tree icon as a placeholder), and
   the swing that spends it plays `CCrowbar::FollowUpSound()`, a placeholder per roster weapon. On a plain

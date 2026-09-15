@@ -2,8 +2,13 @@
 // none == no conditional encode routine
 // gamedll routine_name : before transmitting data, invoke the named function from the game .dll to reset fields as needed
 // clientdll routine_name : same as above, except the routine is called via the client.dll
+//
+// clientdata_t.fuser4 carries Cleave-ready, 0 or 1 (dlls/client.cpp UpdateClientData ->
+// cl_dll/hl/hl_weapons.cpp).  Valve's entry was 2 bits at x128, which carries nothing above
+// 0.008: a 1.0 arrived as 0 and the predicted swing never picked the Cleave animation
+// (found 2026-09-15).  It is 4 bits at x1 now.
 
-clientdata_t none                    
+clientdata_t none
 {
 	DEFINE_DELTA( flTimeStepSound, DT_INTEGER, 10, 1.0 ),
 	DEFINE_DELTA( origin[0], DT_SIGNED | DT_FLOAT, 21, 128.0 ),
@@ -66,7 +71,7 @@ clientdata_t none
 	DEFINE_DELTA( fuser1, DT_SIGNED | DT_FLOAT, 22, 128.0 ),
 	DEFINE_DELTA( fuser2, DT_SIGNED | DT_FLOAT, 10, 128.0 ),
 	DEFINE_DELTA( fuser3, DT_SIGNED | DT_FLOAT, 10, 128.0 ),
-	DEFINE_DELTA( fuser4, DT_SIGNED | DT_FLOAT, 2, 128.0 )
+	DEFINE_DELTA( fuser4, DT_FLOAT, 4, 1.0 )
 }
 
 entity_state_t gamedll Entity_Encode
