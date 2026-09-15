@@ -1610,8 +1610,14 @@ in [ADR-0012](adr/0012-the-skill-tree-has-one-start-and-open-roads.md).
 - **Road stats**: Juggernaut Max Armour (continuing the hub's), Dash Recovery, Alien Hornet Replenish,
   Stealth Concealment (a multiplier on the Suspicion rate). The hub's are Max Health and Max Armour.
 - **Hub corners**: Follow-Up in the Melee–Juggernaut corner, the other three open for now; Leech and
-  Ricochet stay in their Routes. The Energy Major (the armour drain) is placed on the Energy–Juggernaut
+  Ricochet stay in their Routes. The Energy Major, **named Overdraw**, is placed on the Energy–Juggernaut
   seam as that pair's cross-Route node.
+- **Hidden means impassable**: a blank pad cannot be bought, so a gated region is a wall until its Module.
+  Seam nodes sit on the ungated side; the Pulse nodes on the far side of the Juggernaut's region.
+- **The hub's stats face their Routes**: +5% max health north (Medical), +5% max armour south
+  (Juggernaut), +5% bullet damage east (Specialist), +5% melee damage west (Melee), with a Minor of higher
+  value on each side of the rim (first-cut reading: Fortitude, Battery Capacity, Marksman, Melee Force).
+- **The Dash Route is named Shinobi.**
 - **Nine regions on 15×15.** Hub in the centre with the suit stats and the four old survivability
   Skills; ungated Routes on the edges (Melee W, Medical N, Specialist E, Juggernaut S); gated or late
   Routes in the corners (Dash NW, Stealth NE, Alien SE, Energy SW). Stealth is a corner because it may be
@@ -2205,8 +2211,7 @@ Facts found while sizing a bigger tree, so they are not found twice.
 - ~~**Which Route is built first.**~~ Melee, then Weapon Specialist, both on 2026-09-14. Of the five
   left, Energy and Medical need nothing new; the Juggernaut needs the `+pulse`/`-pulse` pair; the Dash
   Route and the Alien Route each need their Module first.
-- The Dash Route's name. *Agility* stays with the suit; the Route needs its own word. *Ninja* is the
-  candidate.
+- ~~The Dash Route's name.~~ **Shinobi**, 2026-09-15.
 - ~~Does the Dash Route keep bullet time?~~ Dropped, 2026-09-13.
 - ~~Where does the Pulse's timing branch live?~~ Inside the Juggernaut, 2026-09-13.
 
@@ -2358,6 +2363,8 @@ is designed, and may well change name first.
 | --- | --- | --- |
 | **Module** | A mechanic the player does not start with, found partway through the game and kept for good — never swapped. | Deliberately echoes "the longjump module", which is the model. Graduates to CONTEXT.md when the first one is built. |
 | **Dash**, **Hook** | Two of the three Modules; the Pulse is the third. Dash replaces the long jump. | Plain, and hard to improve on. |
+| **Shinobi** | The Route built on the Dash Module. | Named 2026-09-15; *Ninja* was the candidate, *Agility* stays with the suit. |
+| **Overdraw** | The Energy Route's Major: energy attacks drain armour as well, for bonus damage. | Named 2026-09-15. |
 | **Evolution** | A durable alteration to a weapon that keeps the weapon's identity — silencer, second barrel, extended magazine. | Avoid *attachment* and *mod*; the first implies removable hardware, the second collides with "the mod". |
 | **Transmission** | A recorded log found in a level and played back. | Avoid *log*, *tape*, *audio diary*, *datapad*. |
 | **Station** | A world entity that takes items in and gives items out. | Avoid *bench*, *workbench*, *terminal*, *fabricator*. *Terminal* especially — it will be wanted for Transmissions. |

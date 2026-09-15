@@ -45,10 +45,10 @@ are assigned when a node is built, never reused, and **22 and 23 are spoken for*
 | --- | --- | --- | --- | --- |
 | [Juggernaut](#juggernaut) | 11 | Fortitude (8) | +100 decaying armour on Matrix activation | The Pulse Module for its Pulse nodes |
 | [Alien](#alien) | 7 | Hive Capacity (20) | The volley is energy damage | The alien Module; the whole Route is hidden until it |
-| [Energy](#energy) | 6 + 4 Stat | Energy Damage (54) | Energy attacks drain armour for bonus damage | — . **Building since 2026-09-14** |
+| [Energy](#energy) | 6 + 4 Stat | Energy Damage (54) | Overdraw: energy attacks drain armour for bonus damage | — . **Building since 2026-09-14** |
 | [Melee](#melee) | 6 + 9 Stat | Melee Reach (1) | Cleave | — . **Built 2026-09-14** |
 | [Weapon Specialist](#weapon-specialist) | 7 + 7 Stat | Marksman (35) | Swap Surge (39) | — . **Built 2026-09-14** |
-| [The Dash Route](#the-dash-route) | 7 | Sure Footing (7) | Air Dash | The Dash Module for its Dash nodes |
+| [Shinobi](#shinobi--the-dash-route) | 7 | Sure Footing (7), in the hub since 2026-09-15 | Air Dash | The Dash Module for its Dash nodes |
 | [Medical](#medical) | 5 + 4 Stat | Med Expert (19) | Last Stand | — . **Building since 2026-09-14** |
 
 49 Skills, ranks counted once. About sixteen carry ranks, and each rank becomes a Stat node on the road
@@ -124,6 +124,11 @@ questions with a recommendation each, and the answers below are Andrei's. The re
 - **Empty cells are the walls.** Pathing is limited by where nothing is placed, not by gates. A Major is
   dear because the empty cells around it force a long road, so the region map is the whole of the pricing.
 - **A Reset clears everything but the suit.**
+- **Hidden means impassable.** A node behind a reveal gate is drawn as a blank pad and cannot be bought,
+  so a gated region is a wall until its Module is found and nobody buys blind. Two placement rules
+  follow: every seam node sits on the ungated side (Glass Cannon is in Melee's cells, not Shinobi's), and
+  the Juggernaut's Pulse nodes sit on the far side of its region so its Max Armour roads stay open before
+  the Pulse Module.
 
 ### The regions
 
@@ -167,10 +172,15 @@ fuel), Energy–Melee (the Gargantua build).
 
 ### The hub
 
-The 5×5 centre. The suit sits at (7,7). Around it, **Max Health** and **Max Armour** Stat nodes, so
-leaving toward any Route costs two or three points of generic suit stats first; the four old
-survivability Skills — Fortitude (8), Armor Expert (9), Battery Capacity (13), Sure Footing (7) — live
-here as its Skills. The hub's four **corner cells** each touch two edge regions and are where a
+The 5×5 centre. The suit sits at (7,7). **Settled 2026-09-15, second round:** the hub's Stat nodes are
+**four stats, each facing the edge Route it belongs to** — +5% max health toward Medical (north), +5%
+max armour toward Juggernaut (south), +5% bullet damage toward Weapon Specialist (east), +5% melee damage
+toward Melee (west) — so leaving toward a Route costs two or three points that already lean its way. Health
+and armour are percentages, not flat amounts. On the hub's outer ring, each side carries **a Minor Skill
+that grants a higher value of the same subject**; the reading that fits the existing Skills, put here as a
+first cut: Fortitude (8) north, Battery Capacity (13) south, Marksman (35) east, Melee Force (2) west,
+each stepping out of its Route's region onto the hub's rim as that Route's entry. Armor Expert (9) and
+Sure Footing (7) live in the hub too. The hub's four **corner cells** each touch two edge regions and are where a
 cross-Route Skill sits: Follow-Up (18), the melee payoff for a Pulse deflect, goes in the south-west
 corner cell between Melee and Juggernaut. **The other three corners stay open for now** (settled
 2026-09-15: Leech and Ricochet stay in their Routes; a corner is filled when a Skill worth it exists).
@@ -205,9 +215,9 @@ additive within the stat, as the four built ones do.
 
 | Region | Stat | Each node |
 | --- | --- | --- |
-| Hub | Max Health, Max Armour | sizes to be set when the hub is built; smaller than Fortitude's 25 and Battery Capacity's 50 |
-| Juggernaut | Max Armour, continuing the hub's armour side | as the hub's |
-| Dash | Dash Recovery | the Dash comes back sooner |
+| Hub | Max Health, Max Armour, Bullet Damage, Melee Damage, one per side | +5% each; see [the hub](#the-hub) |
+| Juggernaut | Max Armour, continuing the hub's armour side | +5% each |
+| Shinobi | Dash Recovery | the Dash comes back sooner |
 | Alien | Hornet Replenish | hornets return faster |
 | Stealth | Concealment | monsters learn about the player 5% slower: a multiplier on the Suspicion rate in [PERCEPTION.md](PERCEPTION.md). Acts on being seen, never on standing still |
 
@@ -342,7 +352,7 @@ deals energy damage, slash and wave (built 2026-09-14), and scales off both Mele
 | Egon Focus | 55 | Secondary fire unlocks the egon's narrow beam (dormant in the SDK) | Reserved. Details to be decided |
 | Quick Charge | 57 | The katana's charged wave charges faster | Reserved. Waits on the charge; first to cut |
 | Insulation | 58 | Energy **and shock** taken ×0.7 (`skill_insulation_scale`) in the player's `TakeDamage` | Built |
-| **Major** | 59 | **Energy attacks drain armour as well, for bonus damage. Always on, never below a floor** (~20) | Reserved. Name pending. **Placed 2026-09-15 on the Energy–Juggernaut seam** as the tree's Energy × Juggernaut node |
+| **Major: Overdraw** | 59 | **Energy attacks drain armour as well, for bonus damage. Always on, never below a floor** (~20) | Reserved. Named 2026-09-15. **Placed the same day on the Energy–Juggernaut seam** as the tree's Energy × Juggernaut node |
 
 The region as placed, columns 14–15, `E` an Energy Damage Stat node:
 
@@ -472,9 +482,9 @@ create, not a promise they make.
 
 ---
 
-## The Dash Route
+## Shinobi — the Dash Route
 
-Name pending; *Ninja* is the candidate. Built on the **Dash Module**: a tap of shift, a burst in the
+Named **Shinobi** on 2026-09-15 (*Ninja* was the candidate; *Agility* stays with the suit). Built on the **Dash Module**: a tap of shift, a burst in the
 direction of movement, ground only until the major node; charges and a cooldown; walk is rebound.
 [ROADMAP](ROADMAP.md#the-dash-route-name-pending).
 
@@ -606,8 +616,12 @@ A node is hidden until the player holds the thing it modifies. Settled per Route
 | --- | --- |
 | The Pulse Module | Pulse Window, Recharge, Discharge, Rebound, the Defense Matrix and everything behind it |
 | The alien Module | The whole Alien Route, Hive nodes included |
-| The Dash Module | Every Dash node; Sure Footing stays visible (in the hub since 2026-09-15) |
+| The Dash Module | Every Shinobi node; Sure Footing stays visible (in the hub since 2026-09-15) |
 | A Stealth Module, perhaps | The Stealth region. Not decided; it is why Stealth sits in a corner |
+
+A hidden node is a blank pad and **cannot be bought**, so a gated region is impassable until it opens
+(settled 2026-09-15). Seam nodes therefore sit on the ungated side, and the Juggernaut's Pulse nodes on
+the far side of its region.
 
 ## Cut and reserved
 
