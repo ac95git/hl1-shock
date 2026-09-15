@@ -58,6 +58,7 @@ Out of scope: engine-level changes — graphics upgrades, physics, and anything 
 - `utils/` — map/model compilers. `utils/sprtool/` — .spr tooling and the scripts that generate the mod's icons. `utils/mdltool/` — .mdl inspection and SMD converters; model sources live in `E:\CustomAssets`, not here. `projects/vs2019/projects.sln` — main solution.
 - `maps/` — the mod's map sources (`.map`, Valve 220), source of truth for `topmod/maps/`; the `.bsp` is built from them with the VHLT tools in J.A.C.K.'s folder, see [docs/PROVING_MAP.md](docs/PROVING_MAP.md). `utils/maptool/` — the one-shot greybox generator that started `proving.map`; not re-run once the map is hand-edited.
 - `models/` — the mod's compiled `.mdl` files, source of truth for `topmod/models/`; copied by hand like `sprites/`. Their sources are in `E:\CustomAssets`, see [docs/MODEL_WORKFLOW.md](docs/MODEL_WORKFLOW.md).
+- `sound/` — the mod's sounds, source of truth for `topmod/sound/`; copied by hand like `sprites/`. Loose `.wav`, mono 16-bit PCM. Imported sounds say where they came from in [docs/ART_DEBT.md](docs/ART_DEBT.md) — `player/recharged.wav` is from Team Fortress 2.
 - `events/` — the mod's own event scripts (empty by design; the engine only needs the file to exist), source of truth for `topmod/events/`.
 - `sprites/` — the mod's HUD sprites and its `hud.txt`, source of truth for `topmod/sprites/`. `hud.txt` is generated from `hud_additions.txt` by `utils/sprtool/make_hud_txt.py`; copy both to the install after every change, like the FGD.
 

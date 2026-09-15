@@ -55,14 +55,18 @@ static constexpr int k_PulseDischargeDamage = DMG_ENERGYBEAM;
 // something swung at the player.
 static constexpr int k_PulseMeleeDamage = DMG_SLASH | DMG_CLUB;
 
-// Placeholder assets -- all stock Half-Life, pending the mod's own.
+// Placeholder assets -- stock Half-Life, pending the mod's own, except the
+// Recharge cue.
 //
 // The Pulse and its deflects borrow the crowbar's vocabulary deliberately: the
 // Shield going up is a swing, and something being turned away is an impact.
 // They started out as electro4 and electro6, which landed a fraction of a
 // second apart in the same timbre and made the deflect impossible to hear.
+//
+// The Recharge cue is imported from Team Fortress 2 (its sound/player/
+// recharged.wav), downmixed to mono; it ships in the repo's sound/.
 static const char* const k_PulseSoundFire    = "weapons/cbar_miss1.wav";
-static const char* const k_PulseSoundReady   = "items/suitchargeok1.wav";
+static const char* const k_PulseSoundReady   = "player/recharged.wav";
 static const char* const k_PulseSoundDenied  = "items/suitchargeno1.wav";
 static const char* const k_PulseSpriteShield = "sprites/shockwave.spr";
 

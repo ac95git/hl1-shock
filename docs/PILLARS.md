@@ -132,7 +132,8 @@ look — plus `hud_pulse_tint`, which is client-side and `FCVAR_ARCHIVE` because
 rather than a tuning knob.
 
 **Feedback** — nested rings plus a `TE_DLIGHT` flash, and sounds on Pulse, on each deflect, on a denied
-press, and on Recharge completing. All stock placeholder assets. The Pulse is `weapons/cbar_miss1.wav` and
+press, and on Recharge completing. Stock placeholder assets, except the Recharge cue, `player/recharged.wav`,
+imported from Team Fortress 2 (2026-09-15). The Pulse is `weapons/cbar_miss1.wav` and
 a deflect is `weapons/cbar_hit1/2.wav`, randomised and pitched: a swing and an impact, because the first
 attempt used two electrical samples and the deflect landed a fraction of a second after the Pulse's own in
 the same timbre and was simply not heard. The set is placeholder but the *property* is not — see

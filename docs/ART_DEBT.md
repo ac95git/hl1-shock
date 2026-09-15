@@ -186,7 +186,7 @@ others. If it is cut instead, this entry goes with it.
 | --- | --- | --- |
 | Pulse — Shield goes up | `weapons/cbar_miss1.wav` | crowbar swing |
 | Deflect | `weapons/cbar_hit1/2.wav`, randomised + pitched | crowbar hitting a wall |
-| Recharge complete | `items/suitchargeok1.wav` | wall charger |
+| Recharge complete | `player/recharged.wav` | **imported from Team Fortress 2** (2026-09-15), its `sound/player/recharged.wav` downmixed to mono; ships in the repo's `sound/`. Replaced the wall charger's `items/suitchargeok1.wav` |
 | Pressed while Recharging | `items/suitchargeno1.wav` | wall charger, denied |
 
 These were arrived at by elimination rather than design. The first attempt used `weapons/electro4.wav` and
