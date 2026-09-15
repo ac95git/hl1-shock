@@ -125,6 +125,26 @@ void CCrowbar::LeechHeal(float flDamage)
 		m_pPlayer->TakeHealth(flHeal, DMG_GENERIC);
 }
 
+bool CCrowbar::ReprisalUnhurt(CBaseMonster* pVictim)
+{
+	// "Had not been hurt": at its full health, read before the hit lands.  A
+	// monster whose spawn never set max_health reads as unhurt, which errs
+	// toward the refill.
+	return pVictim && pVictim->IsAlive() && pVictim->pev->health >= pVictim->pev->max_health;
+}
+
+void CCrowbar::ReprisalRefill(CBaseMonster* pVictim, bool bWasUnhurt)
+{
+	// Reprisal (Shinobi): a single melee hit that kills a monster nothing had
+	// hurt refills a Dash.  A Backstab kill counts, a Cleave opener counts
+	// once per victim, finishing a wounded grunt does not.
+	if (!bWasUnhurt || !pVictim || pVictim->IsAlive())
+		return;
+	if (!m_pPlayer->m_skills.HasSkill(ESkillId::Reprisal))
+		return;
+	m_pPlayer->DashRefill();
+}
+
 int CCrowbar::HitDamageType(CBaseEntity* pVictim)
 {
 	// A monster takes the weapon's type; that is where a type means
@@ -239,6 +259,8 @@ int CCrowbar::CleaveArc(const Vector& vecSrc, float flDamage, bool bBackstabNode
 			bBackstab && bBackstabNode ? "  xNode" : "",
 			bFollowUp ? "  xFollowUp" : "");
 
+		const bool bUnhurt = ReprisalUnhurt(pMonster);
+
 		ClearMultiDamage();
 		pEntity->TraceAttack(m_pPlayer->pev, flHit, vecTo, &tr, HitDamageType(pEntity));
 		ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
@@ -247,6 +269,8 @@ int CCrowbar::CleaveArc(const Vector& vecSrc, float flDamage, bool bBackstabNode
 		// Leech, per living victim: a Cleave through a crowd heals for each.
 		if (pMonster)
 			LeechHeal(flHit);
+
+		ReprisalRefill(pMonster, bUnhurt);
 
 		// After the damage, so a headcrab the hit killed is still thrown.
 		if (bFollowUp)
@@ -553,12 +577,16 @@ bool CCrowbar::Swing(bool fFirst)
 					flDamage);
 			}
 
+			const bool bUnhurt = ReprisalUnhurt(pVictim);
+
 			pEntity->TraceAttack(m_pPlayer->pev, flDamage, gpGlobals->v_forward, &tr, HitDamageType(pEntity));
 			ApplyMultiDamage(m_pPlayer->pev, m_pPlayer->pev);
 
 			// Leech: a hit on a living monster heals. Crates do not bleed.
 			if (pVictim)
 				LeechHeal(flDamage);
+
+			ReprisalRefill(pVictim, bUnhurt);
 
 			// After the damage, so a headcrab the hit killed is still thrown.
 			if (bFollowUp)

@@ -501,12 +501,12 @@ direction of movement, ground only until the major node; charges and a cooldown;
 | Node | Id | Effect | Ranks | State |
 | --- | --- | --- | --- | --- |
 | Sure Footing | 7 | Falls deal half damage | — | Exists. **Root** |
-| Dash Reach | new | The Dash goes further | ranks | New |
-| Dash Recovery | new | The Dash comes back sooner | ranks | New |
-| Second Wind | new | A second Dash charge | — | New |
-| Reprisal | new | A one-shot melee kill (a single hit that kills an unhurt monster) refills a Dash | — | New. Name provisional |
+| Dash Reach | 107 | The Dash goes further | — | Built 2026-09-15: burst length ×1.5 |
+| Dash Recovery | 108 | The Dash comes back sooner | — | Built 2026-09-15: −25% recharge; its 13 Stat nodes −5% each |
+| Second Wind | 109 | A second Dash charge | — | Built 2026-09-15 |
+| Reprisal | 110 | A one-shot melee kill (a single hit that kills an unhurt monster) refills a Dash | — | Built 2026-09-15: "unhurt" is full health before the hit |
 | Phase | new | No damage taken during the Dash itself | — | New. First to cut if too strong |
-| **Major** | new | **Air Dash**: the Dash works in the air, and in the air goes where the player aims, upward included | — | New |
+| **Major** | 112 | **Air Dash**: the Dash works in the air, and in the air goes where the player aims, upward included | — | Built 2026-09-15: no gravity during it, stops dead, any ready charge |
 
 ```mermaid
 graph TD

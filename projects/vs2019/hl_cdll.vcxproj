@@ -195,6 +195,7 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClCompile Include="..\..\dlls\glock.cpp" />
     <ClCompile Include="..\..\cl_dll\hud_pickupprompt.cpp" />
     <ClCompile Include="..\..\cl_dll\hud_conceal.cpp" />
+    <ClCompile Include="..\..\cl_dll\hud_dash.cpp" />
     <ClCompile Include="..\..\cl_dll\hud_pulse.cpp" />
     <ClCompile Include="..\..\cl_dll\katana_trail.cpp" />
     <ClCompile Include="..\..\game_shared\filesystem_utils.cpp" />

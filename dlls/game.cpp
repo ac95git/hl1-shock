@@ -631,6 +631,18 @@ cvar_t skill_last_stand_cooldown = {"skill_last_stand_cooldown", "60"};
 cvar_t skill_last_stand_low_health = {"skill_last_stand_low_health", "50"};
 cvar_t skill_last_stand_heal_scale = {"skill_last_stand_heal_scale", "2"};
 cvar_t skill_glass_cannon_max_health = {"skill_glass_cannon_max_health", "50"};
+// The Dash (docs/PILLARS.md, pillar 3) and the Shinobi Route that grows it.
+// The burst's speed in units per second and its length in seconds, the time
+// one charge takes to come back; Dash Reach scales the length, Dash Recovery
+// and each Dash Recovery Stat node take a fraction off the recharge.  First
+// guesses: 800 for 0.15 is about 120 units.  The recharge is long on purpose:
+// the base Dash is a rare escape, and the Route is what makes it a habit.
+cvar_t dash_speed = {"dash_speed", "800"};
+cvar_t dash_time = {"dash_time", "0.15"};
+cvar_t dash_recharge = {"dash_recharge", "7"};
+cvar_t skill_dash_reach_scale = {"skill_dash_reach_scale", "1.5"};
+cvar_t skill_dash_recovery = {"skill_dash_recovery", "0.25"};
+cvar_t skill_stat_dash_recovery = {"skill_stat_dash_recovery", "0.05"};
 // Scales the reload delay. Read from both DLLs through skill_tuning.h, because
 // the delay it sets is m_flNextAttack, which the client predicts.
 cvar_t skill_reload_time_scale = {"skill_reload_time_scale", "0.8"};
@@ -875,6 +887,12 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_last_stand_low_health);
 	CVAR_REGISTER(&skill_last_stand_heal_scale);
 	CVAR_REGISTER(&skill_glass_cannon_max_health);
+	CVAR_REGISTER(&dash_speed);
+	CVAR_REGISTER(&dash_time);
+	CVAR_REGISTER(&dash_recharge);
+	CVAR_REGISTER(&skill_dash_reach_scale);
+	CVAR_REGISTER(&skill_dash_recovery);
+	CVAR_REGISTER(&skill_stat_dash_recovery);
 
 	CVAR_REGISTER(&pulse_window);
 	CVAR_REGISTER(&pulse_window_bonus);

@@ -1548,8 +1548,8 @@ since the reasoning it replaces is written down and the new reasoning should be 
   Walk is rebound.
 - **Is the Hook a weapon or a verb?** Opposing Force's grapple occupies a weapon slot. A Module as defined
   above is a verb, which argues for its own key — to be read against the reference code.
-- **Vanilla maps place `item_longjump`.** Keeping the classname means stock maps hand out Dash with no
-  edits; renaming it means they hand out nothing.
+- ~~**Vanilla maps place `item_longjump`.**~~ **Answered 2026-09-15:** it keeps its classname and gives
+  both the long jump and the Dash.
 - ~~**Acquisition** — walk-over like the long jump, or the Pickup Prompt the suit moved to?~~
   **Answered 2026-09-13: walk-over.** Every pickup is, since
   [ADR-0011](adr/0011-pickups-are-walk-over.md); the suit itself moved back.
@@ -2060,11 +2060,25 @@ special), a Backstab kill (Melee-only), any melee kill.
 
 ##### Still open
 
-- **The Route's name.**
-- Every number: the burst's speed and length, the cooldown, the air dash's lift.
-- **Walk's new default key.**
-- `item_longjump` in stock maps: keeping the classname hands out the Dash with no map edits, renaming it
-  hands out nothing. Still the Modules entry's question.
+- ~~**The Route's name.**~~ **Shinobi**, 2026-09-15.
+- ~~The burst's speed and length, the cooldown.~~ **Built 2026-09-15** as cvars, see
+  [PILLARS](PILLARS.md#the-dash--built-2026-09-15-untested-in-game).
+- **The Air Dash, settled 2026-09-15:**
+  - **It stops dead.** Gravity is off during the burst, and at the end speed drops to run speed with no
+    upward carry. One straight up reaches about 120 units, the burst's length.
+  - **Any ready charge can be spent in the air**, one after another, including a charge Reprisal refilled.
+    Height is capped by charges, not by a once-per-jump rule.
+  - **Downward is allowed and takes fall damage.** A dive into the floor lands as a fall at that speed, so
+    Sure Footing matters. **To review:** straight down at the full 800 lands for about 60 (about 30 with
+    Sure Footing), which proved brutal on first look, 2026-09-15. Candidates: a separate, slower air speed; a
+    cap on the fall speed an Air Dash leaves behind; or no fall damage from a dive after all.
+  - **Direction:** along the crosshair only; the movement keys do nothing in the air (revised 2026-09-15 —
+    the key rotation was built and dropped). The ground Dash keeps following the movement keys.
+- ~~**Walk's new default key.**~~ **ALT**, 2026-09-15. The mod ships no `default.cfg`, so it lives only in
+  the install's `config.cfg` for now.
+- ~~`item_longjump` in stock maps.~~ **Kept, and it gives both**, 2026-09-15: the long jump stays and the
+  Dash comes with it.
+- Phase has no effect yet. Reprisal and the Air Dash were built 2026-09-15, on the rules below.
 - ~~Acquisition: walk-over like the long jump, or the Pickup Prompt.~~ **Walk-over**, like every pickup
   since [ADR-0011](adr/0011-pickups-are-walk-over.md).
 

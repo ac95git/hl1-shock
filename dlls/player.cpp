@@ -2078,6 +2078,9 @@ void CBasePlayer::PreThink()
 	// The Cleave's ready icon, following the Skill and the cooldown.
 	CleaveThink();
 
+	// Dash charges coming back, and the numbers the movement code reads.
+	DashThink();
+
 	if (g_pGameRules && g_pGameRules->FAllowFlashlight())
 		m_iHideHUD &= ~HIDEHUD_FLASHLIGHT;
 	else
@@ -2857,6 +2860,10 @@ void CBasePlayer::UpdatePlayerSound()
 
 void CBasePlayer::PostThink()
 {
+	// First, before anything can skip it: the movement has run, and a burst
+	// it started has to cost its charge whatever else happens this frame.
+	DashAfterMove();
+
 	if (g_fGameOver)
 		goto pt_end; // intermission or finale
 
@@ -3202,6 +3209,11 @@ void CBasePlayer::Spawn()
 	g_engfuncs.pfnSetPhysicsKeyValue(edict(), "hl", "1");
 	g_engfuncs.pfnSetPhysicsKeyValue(edict(), "bj", UTIL_dtos1(sv_allowbunnyhopping.value != 0 ? 1 : 0));
 
+	// No burst running and no charges; DashThink rewrites the Dash's keys.
+	pev->fuser1 = 0;
+	m_flDashCharge = 0;
+	DashForgetSent();
+
 	m_iFOV = 0;		   // init field of view.
 	m_iClientFOV = -1; // make sure fov reset is sent
 	m_ClientSndRoomtype = -1;
@@ -3398,6 +3410,146 @@ void CBasePlayer::CleaveThink()
 	MESSAGE_END();
 }
 
+//=========================================================
+// The Dash.  The burst is in pm_shared.cpp; this is the charges and the
+// numbers the movement code and the HUD read out of physinfo.
+//=========================================================
+
+bool CBasePlayer::HasDash() const
+{
+	return m_skills.IsGateOpen(EGate::DashModule);
+}
+
+int CBasePlayer::DashMaxCharges() const
+{
+	return m_skills.HasSkill(ESkillId::SecondWind) ? 2 : 1;
+}
+
+float CBasePlayer::DashRechargeTime() const
+{
+	// Fractions off the base, summed: the medium node and every Stat node
+	// take their share from the same whole.  The floor keeps a full road of
+	// Stat nodes from reaching a Dash that never has to wait.
+	float flCut = m_skills.CountStat(EStat::DashRecovery) * std::max(0.0f, skill_stat_dash_recovery.value);
+	if (m_skills.HasSkill(ESkillId::DashRecovery))
+		flCut += std::max(0.0f, skill_dash_recovery.value);
+
+	const float flScale = std::max(0.2f, 1.0f - flCut);
+	return std::max(0.1f, dash_recharge.value) * flScale;
+}
+
+void CBasePlayer::DashFill()
+{
+	m_flDashCharge = HasDash() ? static_cast<float>(DashMaxCharges()) : 0.0f;
+}
+
+void CBasePlayer::DashRefill()
+{
+	if (!HasDash())
+		return;
+
+	m_flDashCharge = std::min(static_cast<float>(DashMaxCharges()), m_flDashCharge + 1.0f);
+
+	// Now, so a player who kills in mid-air can dash again on the next command.
+	DashSync();
+}
+
+void CBasePlayer::DashForgetSent()
+{
+	m_iDashSentAir = -1;
+	m_iDashSentReady = -1;
+	m_iDashSentMax = -1;
+	m_iDashSentSpeed = -1;
+	m_iDashSentTime = -1;
+	m_iDashSentRecharge = -1;
+}
+
+void CBasePlayer::DashThink()
+{
+	const float flDelta = std::clamp(gpGlobals->time - m_flDashLastThink, 0.0f, 0.25f);
+	m_flDashLastThink = gpGlobals->time;
+
+	if (HasDash())
+	{
+		const float flMax = static_cast<float>(DashMaxCharges());
+		m_flDashCharge = std::min(flMax, m_flDashCharge + flDelta / DashRechargeTime());
+	}
+	else
+	{
+		m_flDashCharge = 0;
+	}
+
+	// The size of the timer, not its sign: an Air Dash counts down negative.
+	m_flDashTimerBefore = fabs(pev->fuser1);
+
+	DashSync();
+}
+
+void CBasePlayer::DashAfterMove()
+{
+	const float flAfter = fabs(pev->fuser1);
+	if (flAfter <= m_flDashTimerBefore)
+		return;
+
+	m_flDashTimerBefore = flAfter;
+	m_flDashCharge = std::max(0.0f, m_flDashCharge - 1.0f);
+
+	// Now rather than at the next PreThink, so the client data sent after
+	// this command already says the charge is gone.
+	DashSync();
+}
+
+void CBasePlayer::DashSync()
+{
+	const bool bHas = HasDash();
+
+	const int iMax = bHas ? DashMaxCharges() : 0;
+	const int iReady = bHas ? static_cast<int>(m_flDashCharge + 0.001f) : 0;
+	const int iSpeed = static_cast<int>(std::max(0.0f, dash_speed.value));
+
+	float flTime = std::max(0.0f, dash_time.value);
+	if (m_skills.HasSkill(ESkillId::DashReach))
+		flTime *= std::max(0.0f, skill_dash_reach_scale.value);
+	const int iTime = static_cast<int>(flTime * 1000.0f);
+
+	const int iRecharge = static_cast<int>(DashRechargeTime() * 100.0f);
+
+	edict_t* pEdict = edict();
+
+	if (iReady != m_iDashSentReady)
+	{
+		g_engfuncs.pfnSetPhysicsKeyValue(pEdict, DASH_KEY_READY, UTIL_dtos1(iReady));
+		m_iDashSentReady = iReady;
+	}
+	if (iMax != m_iDashSentMax)
+	{
+		g_engfuncs.pfnSetPhysicsKeyValue(pEdict, DASH_KEY_MAX, UTIL_dtos1(iMax));
+		m_iDashSentMax = iMax;
+	}
+	if (iSpeed != m_iDashSentSpeed)
+	{
+		g_engfuncs.pfnSetPhysicsKeyValue(pEdict, DASH_KEY_SPEED, UTIL_dtos1(iSpeed));
+		m_iDashSentSpeed = iSpeed;
+	}
+	if (iTime != m_iDashSentTime)
+	{
+		g_engfuncs.pfnSetPhysicsKeyValue(pEdict, DASH_KEY_TIME, UTIL_dtos1(iTime));
+		m_iDashSentTime = iTime;
+	}
+	if (iRecharge != m_iDashSentRecharge)
+	{
+		g_engfuncs.pfnSetPhysicsKeyValue(pEdict, DASH_KEY_RECHARGE, UTIL_VarArgs("%.2f", iRecharge / 100.0f));
+		m_iDashSentRecharge = iRecharge;
+	}
+
+	const int iAir = bHas && m_skills.HasSkill(ESkillId::AirDash) ? 1 : 0;
+	if (iAir != m_iDashSentAir)
+	{
+		g_engfuncs.pfnSetPhysicsKeyValue(pEdict, DASH_KEY_AIR, UTIL_dtos1(iAir));
+		m_iDashSentAir = iAir;
+	}
+}
+
 //
 // Marks everything as new so the player will resend this to the hud.
 //
@@ -3479,11 +3631,19 @@ bool CBasePlayer::Restore(CRestore& restore)
 	if (m_fLongJump)
 	{
 		g_engfuncs.pfnSetPhysicsKeyValue(edict(), "slj", "1");
+
+		// A save from before the Dash, whose player had already found the
+		// module: it hands out the Dash now, so open its gate here too.
+		m_skills.OpenGate(EGate::DashModule);
 	}
 	else
 	{
 		g_engfuncs.pfnSetPhysicsKeyValue(edict(), "slj", "0");
 	}
+
+	// Physinfo is not saved; resend the Dash's keys, with every charge ready.
+	DashFill();
+	DashForgetSent();
 
 	RenewItems();
 
@@ -3878,6 +4038,13 @@ void CBasePlayer::ImpulseCommands()
 	// is cleared at the end of this function so the press is edge-triggered.
 	case 150:
 		m_pulse.TryPulse(this);
+		break;
+
+	// The Dash.  Nothing to do here: the movement code has already read the
+	// same impulse and run the burst (pm_shared.cpp PM_CheckDash), and
+	// DashAfterMove has spent its charge.  Named so it never falls through
+	// to the cheat impulses.
+	case DASH_IMPULSE:
 		break;
 
 	case 99:

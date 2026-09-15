@@ -416,6 +416,43 @@ public:
 	// Whether the window is open now.  Read at the damage chokepoints.
 	bool SwapSurgeActive() const;
 
+	// ---- The Dash ----
+	// The burst runs in the movement code (pm_shared.cpp PM_CheckDash) off
+	// pev->fuser1; the server owns only the charges and hands the movement
+	// code its numbers through physinfo.  Having the Dash is the Shinobi gate
+	// being open, which item_longjump opens alongside the long jump.
+	//
+	// Charges are one float, in charges: whole charges are ready, the
+	// fraction is the one coming back.  Not saved -- a restored player comes
+	// back full, which is the worst a reload can hand out.
+	float m_flDashCharge = 0;
+	float m_flDashLastThink = 0;
+	// pev->fuser1 before this command's movement ran; a larger value after it
+	// means the movement code started a burst, and a charge is spent.
+	float m_flDashTimerBefore = 0;
+	// What physinfo was last told, so it is rewritten only on change.  -1
+	// forces a resend.
+	int m_iDashSentReady = -1;
+	int m_iDashSentMax = -1;
+	int m_iDashSentSpeed = -1;
+	int m_iDashSentTime = -1;
+	int m_iDashSentRecharge = -1; // centiseconds
+	int m_iDashSentAir = -1;
+
+	bool HasDash() const;
+	int DashMaxCharges() const;
+	float DashRechargeTime() const;
+	// Every charge ready.  On pickup and restore.
+	void DashFill();
+	// One charge back, up to the ceiling.  Reprisal's kill.
+	void DashRefill();
+	// PreThink: refill, remember fuser1, sync physinfo.
+	void DashThink();
+	// PostThink: spend a charge for a burst the movement code started.
+	void DashAfterMove();
+	void DashSync();
+	void DashForgetSent();
+
 	// ---- Last Stand, the Medical major, and Glass Cannon, the keystone that arms it ----
 	// A hit that would kill is caught in TakeDamage: the player is left at 1
 	// health, invincible until m_flLastStandUntil, a Syringe fires on its own,

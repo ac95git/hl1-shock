@@ -586,6 +586,12 @@ void PM_UpdateStepSound()
 	if ((pmove->flags & FL_FROZEN) != 0)
 		return;
 
+	// No footsteps under a ground Dash (fuser1 positive, see PM_DashBurst):
+	// at the burst's speed the feet barely touch, and the Dash has its own
+	// sound.  Monsters still hear the speed through body noise.
+	if (pmove->fuser1 > 0)
+		return;
+
 	PM_CatagorizeTextureType();
 
 	speed = Length(pmove->velocity);
@@ -3029,6 +3035,128 @@ void PM_ReduceTimers()
 
 /*
 =============
+The Dash
+
+A burst on DASH_IMPULSE.  On the ground it goes along the movement keys,
+flattened; in the air, with the Air Dash, along the crosshair.  pmove->fuser1
+holds the milliseconds of burst left -- positive for a ground Dash, negative
+for an Air Dash, so the two end on their own rules without a second networked
+field.
+
+While a ground Dash runs, friction is skipped so its speed holds; it ends when
+its time is up or the player leaves the ground, so a Dash off a ledge or into
+a jump does not carry.  An Air Dash runs with gravity off, so it is a straight
+line, and ends when its time is up or it lands.  Both stop dead: horizontal
+speed drops back to the run speed, and an Air Dash keeps no vertical speed
+either, so its reach is the burst's length and nothing more.
+
+The server owns the charges (CBasePlayer::DashThink) and writes the numbers
+into physinfo; this only reads them, so both sides of the prediction agree.
+=============
+*/
+bool PM_DashActive()
+{
+	return pmove->fuser1 != 0;
+}
+
+bool PM_AirDashActive()
+{
+	return pmove->fuser1 < 0;
+}
+
+void PM_DashBurst()
+{
+	if (pmove->fuser1 == 0)
+		return;
+
+	const bool bAir = pmove->fuser1 < 0;
+	const float flLeft = fabs(pmove->fuser1) - pmove->cmd.msec;
+
+	const bool bCanRun = flLeft > 0 && pmove->movetype == MOVETYPE_WALK && 0 == pmove->dead && pmove->waterlevel < 2;
+	const bool bOnGround = pmove->onground != -1;
+
+	// A ground Dash ends when the ground does; an Air Dash when it finds some.
+	if (bCanRun && bAir != bOnGround)
+	{
+		pmove->fuser1 = bAir ? -flLeft : flLeft;
+		return;
+	}
+
+	pmove->fuser1 = 0;
+
+	const float flSpeed = sqrt(pmove->velocity[0] * pmove->velocity[0] + pmove->velocity[1] * pmove->velocity[1]);
+	if (flSpeed > pmove->maxspeed && flSpeed > 0)
+	{
+		const float flScale = pmove->maxspeed / flSpeed;
+		pmove->velocity[0] *= flScale;
+		pmove->velocity[1] *= flScale;
+	}
+
+	if (bAir)
+		pmove->velocity[2] = 0;
+}
+
+void PM_CheckDash()
+{
+	if (pmove->cmd.impulse != DASH_IMPULSE)
+		return;
+
+	if (PM_DashActive() || 0 != pmove->dead)
+		return;
+
+	if ((pmove->flags & (FL_FROZEN | FL_ONTRAIN)) != 0)
+		return;
+
+	const bool bAir = pmove->onground == -1;
+	if (bAir && atoi(pmove->PM_Info_ValueForKey(pmove->physinfo, DASH_KEY_AIR)) != 1)
+		return;
+
+	if (atoi(pmove->PM_Info_ValueForKey(pmove->physinfo, DASH_KEY_READY)) < 1)
+		return;
+
+	const float flSpeed = atof(pmove->PM_Info_ValueForKey(pmove->physinfo, DASH_KEY_SPEED));
+	const int iTime = atoi(pmove->PM_Info_ValueForKey(pmove->physinfo, DASH_KEY_TIME));
+	if (flSpeed <= 0 || iTime <= 0)
+		return;
+
+	if (bAir)
+	{
+		// Along the crosshair, upward and downward included.  The movement
+		// keys do nothing here: in the air the aim is the whole input.
+		for (int i = 0; i < 3; i++)
+			pmove->velocity[i] = pmove->forward[i] * flSpeed;
+		pmove->fuser1 = -iTime;
+	}
+	else
+	{
+		// Where the movement keys point, flattened, so sideways and backwards
+		// dashes exist.  With no key held it goes where the player is facing.
+		Vector forward = pmove->forward;
+		Vector right = pmove->right;
+		forward[2] = 0;
+		right[2] = 0;
+		VectorNormalize(forward);
+		VectorNormalize(right);
+
+		Vector dir;
+		for (int i = 0; i < 3; i++)
+			dir[i] = forward[i] * pmove->cmd.forwardmove + right[i] * pmove->cmd.sidemove;
+		dir[2] = 0;
+
+		if (VectorNormalize(dir) < 1.0f)
+			dir = forward;
+
+		pmove->velocity[0] = dir[0] * flSpeed;
+		pmove->velocity[1] = dir[1] * flSpeed;
+		pmove->fuser1 = iTime;
+	}
+
+	// CHAN_ITEM, not CHAN_BODY, so a footstep cannot cut it off.
+	pmove->PM_PlaySound(CHAN_ITEM, DASH_SOUND, 1.0, ATTN_NORM, 0, 115);
+}
+
+/*
+=============
 PlayerMove
 
 Returns with origin, angles, and velocity modified in place.
@@ -3054,6 +3182,10 @@ void PM_PlayerMove(qboolean server)
 	pmove->frametime = pmove->cmd.msec * 0.001;
 
 	PM_ReduceTimers();
+
+	// Before anything moves, so a burst that ended gives its speed back
+	// before this frame's friction and acceleration see it.
+	PM_DashBurst();
 
 	// Convert view angles to vectors
 	AngleVectors(pmove->angles, &pmove->forward, &pmove->right, &pmove->up);
@@ -3171,7 +3303,8 @@ void PM_PlayerMove(qboolean server)
 		break;
 
 	case MOVETYPE_WALK:
-		if (!PM_InWater())
+		// An Air Dash is a straight line: no gravity while it runs.
+		if (!PM_InWater() && !PM_AirDashActive())
 		{
 			PM_AddCorrectGravity();
 		}
@@ -3224,6 +3357,13 @@ void PM_PlayerMove(qboolean server)
 
 		// Not underwater
 		{
+			// Before the jump, so a Dash and a jump on the same frame dash:
+			// the jump then lifts off and PM_DashBurst ends the burst.
+			if (!pLadder)
+			{
+				PM_CheckDash();
+			}
+
 			// Was jump button pressed?
 			if ((pmove->cmd.buttons & IN_JUMP) != 0)
 			{
@@ -3239,10 +3379,14 @@ void PM_PlayerMove(qboolean server)
 
 			// Fricion is handled before we add in any base velocity. That way, if we are on a conveyor,
 			//  we don't slow when standing still, relative to the conveyor.
+			// A Dash burst skips it: the burst's speed is meant to hold.
 			if (pmove->onground != -1)
 			{
 				pmove->velocity[2] = 0.0;
-				PM_Friction();
+				if (!PM_DashActive())
+				{
+					PM_Friction();
+				}
 			}
 
 			// Make sure velocity is valid.
@@ -3270,7 +3414,7 @@ void PM_PlayerMove(qboolean server)
 			PM_CheckVelocity();
 
 			// Add any remaining gravitational component.
-			if (!PM_InWater())
+			if (!PM_InWater() && !PM_AirDashActive())
 			{
 				PM_FixupGravityVelocity();
 			}

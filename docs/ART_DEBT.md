@@ -217,6 +217,29 @@ correctly. If a candidate set fails this, it does not matter how good it sounds 
 Nothing in the Pulse's audio comes from another weapon, and a deflect is unmistakable over the Pulse that
 preceded it.
 
+## The Dash — sound
+
+### Scope
+`DASH_SOUND` in `pm_shared/pm_shared.h`, played by `PM_CheckDash` in `pm_shared/pm_shared.cpp` on every
+Dash, ground and air, and precached in `ClientPrecache`.
+
+### Current stand-in
+`zombie/claw_miss2.wav` at pitch 115 — the zombie's swipe missing. Chosen for its shape, a short whoosh,
+and because the crowbar's miss is already the Pulse's.
+
+### What's wrong with it
+- It is a monster's attack sound. A player who has fought zombies hears a swipe beside them, not their own
+  suit moving.
+- One sample, no variation: a Route built on dashing will play it constantly.
+
+### What to look for
+- A short burst of air and servo — the suit throwing the player, not a blade.
+- Distinct from the Pulse's Shield sound, since both are pressed mid-fight and both are whooshes today.
+- Two or three variants, or one that survives repetition.
+
+### Done when
+The Dash has a sound of its own that no weapon or monster also makes.
+
 ## Progression pickups — pickup sound
 
 ### Scope

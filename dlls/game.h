@@ -119,6 +119,14 @@ extern cvar_t skill_last_stand_low_health;
 extern cvar_t skill_last_stand_heal_scale;
 extern cvar_t skill_glass_cannon_max_health;
 
+// The Dash and the Shinobi Route.  First guesses.
+extern cvar_t dash_speed;
+extern cvar_t dash_time;
+extern cvar_t dash_recharge;
+extern cvar_t skill_dash_reach_scale;
+extern cvar_t skill_dash_recovery;
+extern cvar_t skill_stat_dash_recovery;
+
 // The Pulse.  Every one of these is a starting guess to be judged in play.
 extern cvar_t pulse_window;
 extern cvar_t pulse_window_bonus;

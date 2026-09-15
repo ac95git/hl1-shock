@@ -260,6 +260,8 @@ void DLLEXPORT HUD_TxferPredictionData(struct entity_state_s* ps, const struct e
 	// Fire prevention
 	pcd->iuser4 = ppcd->iuser4;
 
+	// The Dash's burst (pm_shared.cpp PM_Dash)
+	pcd->fuser1 = ppcd->fuser1;
 	pcd->fuser2 = ppcd->fuser2;
 	pcd->fuser3 = ppcd->fuser3;
 	// Cleave-ready (dlls/client.cpp UpdateClientData)

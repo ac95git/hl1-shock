@@ -107,6 +107,14 @@ bool CHudConceal::MsgFunc_Conceal(const char* pszName, int iSize, void* pbuf)
 	return true;
 }
 
+int CHudConceal::RightEdge() const
+{
+	const int x = gHUD.m_Pulse.RightEdge() + m_iSuitWidth / 2;
+	if (!m_prc)
+		return x;
+	return x + (m_prc->right - m_prc->left);
+}
+
 bool CHudConceal::Draw(float flTime)
 {
 	// Same hide flags as the suit readouts beside it.  HIDEHUD_HEALTH is only

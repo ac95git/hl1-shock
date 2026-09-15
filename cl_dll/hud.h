@@ -534,6 +534,11 @@ public:
 	bool Draw(float flTime) override;
 	bool MsgFunc_Conceal(const char* pszName, int iSize, void* pbuf);
 
+	// Right edge of the Concealment icon, for the Dash readout after it.
+	// The slot is kept whether or not the icon is drawing this frame, so the
+	// Dash does not jump sideways when hud_conceal is off or the suit is new.
+	int RightEdge() const;
+
 private:
 	int m_iState = 0;		  // EConcealState, mirrored from the server
 	float m_flStateStart = 0; // client time the current state began
@@ -547,6 +552,30 @@ private:
 
 	// The suit icon's size, which this lines up against -- the placeholder is
 	// a different size from the readouts it sits beside.
+	int m_iSuitWidth = 0;
+	int m_iSuitHeight = 0;
+};
+
+//
+//-----------------------------------------------------
+//
+// The Dash charges: one bar per charge after the Concealment icon, full when
+// ready, filling while it comes back.  Everything is read from physinfo,
+// which the server already keeps current for the movement code, so there is
+// no message.  See cl_dll/hud_dash.cpp and CBasePlayer::DashSync.
+//
+class CHudDash : public CHudBase
+{
+public:
+	bool Init() override;
+	bool VidInit() override;
+	void Reset() override;
+	bool Draw(float flTime) override;
+
+private:
+	int m_iLastReady = -1;	   // charges ready last frame; -1 before the first
+	float m_flRefillStart = 0; // client time the charge coming back started
+
 	int m_iSuitWidth = 0;
 	int m_iSuitHeight = 0;
 };
@@ -709,6 +738,7 @@ public:
 	CHudPickupPrompt m_PickupPrompt;
 	CHudPulse m_Pulse;
 	CHudConceal m_Conceal;
+	CHudDash m_Dash;
 
 	void Init();
 	void VidInit();

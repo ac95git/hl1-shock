@@ -518,6 +518,8 @@ void CHud::Init()
 	// No ordering dependency: the Concealment icon lays itself out from
 	// m_Pulse.RightEdge() at draw time, not from anything Init sets up.
 	m_Conceal.Init();
+	// Lays itself out from m_Conceal.RightEdge() at draw time, like the above.
+	m_Dash.Init();
 	GetClientVoiceMgr()->Init(&g_VoiceStatusHelper, (vgui::Panel**)&gViewPort);
 
 	m_Menu.Init();
@@ -735,6 +737,7 @@ void CHud::VidInit()
 	m_StatusIcons.VidInit();
 	m_PickupPrompt.VidInit();
 	m_Pulse.VidInit();
+	m_Dash.VidInit();
 
 	// VidInit is called BY NAME, not by walking m_pHudList the way Draw and
 	// Reset are -- so a new HUD element must be added here as well as to

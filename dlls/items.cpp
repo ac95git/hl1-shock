@@ -644,6 +644,13 @@ class CItemLongJump : public CItem
 
 			g_engfuncs.pfnSetPhysicsKeyValue(pPlayer->edict(), "slj", "1");
 
+			// The Dash comes with it, and the long jump stays (settled
+			// 2026-09-15): found, the Module opens the Shinobi region and
+			// arrives with every charge ready.
+			pPlayer->m_skills.OpenGate(EGate::DashModule);
+			pPlayer->DashFill();
+			SendSkillTreeToClient(pPlayer);
+
 			AnnouncePickup(pPlayer, false);
 
 			EMIT_SOUND_SUIT(pPlayer->edict(), "!HEV_A1"); // Play the longjump sound UNDONE: Kelly? correct sound?

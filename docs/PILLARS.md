@@ -26,7 +26,7 @@ This file records **what exists today**. Intended work that has not been built l
 | --- | --- | --- | --- |
 | 1 | [Exploration](#1-exploration) | **Not started** | Its rewards exist — Row Grants, Skill Points, Reset Tokens are all findable entities, and `topmap`, the default test map, places them — but no map yet has spaces to explore *for* them. |
 | 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar. Melee Skills land, and the Backstab gives melee its first positional decision. Numbers untuned. |
-| 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. |
+| 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. The Dash, the first Module, is built on SHIFT and untested in game. |
 | 4 | [Skill trees](#4-skill-trees) | **Playable** | 52 nodes, **all with effects**: the Melee and Weapon Specialist Routes built whole on the matrix (Stat nodes as their roads, every node one point, a major at the end of each), the Medical and Energy Routes built to all but their open nodes, Ricochet ahead of the Juggernaut, and the Dash and Alien columns waiting for their Modules. Points and Reset Tokens are earned and spent, the tree fits any screen, and nothing in it lies about what it does. Numbers untuned; `topmap`, the default test map, places Skill Points, and the economy is a non-issue. |
 | 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work over a server-owned model. Row Grants are now placeable; Boxes are the remaining gap. |
 | 6 | [Stealth](#6-stealth) | **Partial** | Concealment and Suspicion are live: monsters no longer acquire the player on sight, they fill a meter at a rate set by angle, distance, stance and light, and the player is warned by `CHudConceal`. Quiet movement is deliberate. Nothing after acquisition has changed — once acquired, a monster stays acquired. |
@@ -593,8 +593,43 @@ consequences it produces are recorded under [pillar 4](#4-skill-trees), with the
 
 **Status: Playable**
 
-**Planned:** [Modules](ROADMAP.md#pillar-3-modules) — the Pulse, Dash (replacing the long jump) and Hook — plus the item
+**Planned:** the rest of the [Modules](ROADMAP.md#pillar-3-modules) — the Pulse as a Module, and the Hook — plus the item
 side of [Stations](ROADMAP.md#stations).
+
+### The Dash — built 2026-09-15, untested in game
+
+The first Module after the long jump it rides on. **Tap SHIFT** (`impulse 151`, `DASH_IMPULSE` in
+`pm_shared/pm_shared.h`) for a burst along the direction the movement keys point — sideways and backwards
+included, forward when no key is held — **from the ground only**. Walk moved to **ALT**.
+
+- **Found with the long jump.** `item_longjump` still gives the long jump and now also opens
+  `EGate::DashModule` — the Shinobi region — with every charge ready. Having the Dash *is* that gate being
+  open, so `skill_open_gates 2` grants it for testing, and a save whose player already had the long jump
+  opens it on load.
+- **Predicted.** The burst runs in `pm_shared.cpp` (`PM_CheckDash`, `PM_DashBurst`) off `pmove->fuser1`,
+  the milliseconds left, carried in clientdata and through `HUD_TxferPredictionData`. Friction is skipped
+  while it runs; when it ends, or the player leaves the ground, horizontal speed drops back to run speed —
+  so a Dash off a ledge or into a jump does not carry, which is the Air Dash's job.
+- **Charges on the server.** `CBasePlayer::DashThink` refills one float of charges and writes physinfo
+  keys (`dsc` ready, `dsn` ceiling, `dsv` speed, `dst` ms, `dsr` recharge); `DashAfterMove` spends a
+  charge when fuser1 rose across the move. Not saved — a load comes back full.
+- **Numbers**, all cvars and first guesses: `dash_speed` 800, `dash_time` 0.15 (about 120 units),
+  `dash_recharge` 7 per charge.
+- **Sound:** a placeholder whoosh on every Dash (`DASH_SOUND`, [ART_DEBT](ART_DEBT.md)). A ground Dash
+  plays no footsteps while the burst runs; monsters still hear the speed, since body noise follows velocity
+  (Phantom is the node that silences it).
+- **The Shinobi Skills with an effect:** Dash Reach (`skill_dash_reach_scale` ×1.5 burst length), Dash
+  Recovery (−`skill_dash_recovery` 0.25 of the recharge), each Dash Recovery Stat node
+  (−`skill_stat_dash_recovery` 0.05), summed and floored at ×0.2; Second Wind (two charges); **Reprisal** —
+  a melee hit that kills a monster at full health gives a charge back (`CCrowbar::ReprisalRefill`, at both
+  hit sites, once per victim of a Cleave); **Air Dash** — below. Phase still has none.
+- **The Air Dash.** With the major held (physinfo `dsa`), the Dash also starts in the air, along the
+  crosshair — up and down included — and the movement keys do nothing in the air. Gravity is off
+  while it runs, it ends when its time is up or it lands, and it **stops dead**: no speed carries on, so
+  one reaches about 120 units. Any ready charge can be spent in the air, back to back. A dive into the
+  floor lands as a fall, and takes fall damage. `fuser1` counts down negative for an Air Dash, so the two
+  kinds end on their own rules with no second networked field.
+- **Readout:** `CHudDash`, one bar per charge after the Concealment icon, read straight from physinfo.
 
 The framework landed with inventory iteration 1, and the **Health Syringe** is the first item in the mod
 that Half-Life does not have.

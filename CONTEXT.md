@@ -171,6 +171,17 @@ next swing that connects, so missing costs nothing; a Cleave swing spends it on 
 once. Any weapon on the melee roster carries it, and it shows at the screen edge while primed.
 _Avoid_: riposte, counter, punish, parry attack
 
+### The Dash
+
+**Dash**:
+The Dash Module's burst along the direction the player is moving, on a tap of shift, from the ground only.
+Found with the long jump module, which it does not replace. Built 2026-09-15.
+_Avoid_: dodge, roll, sprint, blink, long jump (a different verb that still exists)
+
+**Charge**:
+One Dash's worth of readiness. A Dash spends one; they come back one at a time.
+_Avoid_: stack, stamina; cooldown for the charges themselves (Recharge is the Pulse's word)
+
 ### The Suit
 
 **Suit Variant**:

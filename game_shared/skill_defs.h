@@ -349,7 +349,7 @@ enum class EStat : uint8_t
 	EnergyDamage    = 4, // energy hits harder, +skill_stat_energy_damage each
 	MaxHealth       = 5, // the hub: max health +skill_stat_max_health each, as a fraction
 	MaxArmour       = 6, // the hub and the Juggernaut: max armour +skill_stat_max_armor each, as a fraction
-	DashRecovery    = 7, // Shinobi: the Dash comes back sooner.  No effect yet: the Dash Module is not built
+	DashRecovery    = 7, // Shinobi: the Dash comes back sooner, -skill_stat_dash_recovery of its recharge each
 	Concealment     = 8, // Stealth: monsters learn about the player slower.  No effect yet
 	HornetReplenish = 9, // Alien: hornets come back faster.  No effect yet
 };

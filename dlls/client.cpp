@@ -1120,6 +1120,7 @@ void ClientPrecache()
 
 	// PRECACHE_SOUND("player/pl_jumpland2.wav");		// UNDONE: play 2x step sound
 
+	PRECACHE_SOUND(DASH_SOUND); // the Dash, played from pm_shared.cpp
 	PRECACHE_SOUND("player/pl_fallpain2.wav");
 	PRECACHE_SOUND("player/pl_fallpain3.wav");
 
@@ -2050,6 +2051,10 @@ void UpdateClientData(const edict_t* ent, int sendweapons, struct clientdata_s* 
 	cd->flDuckTime = pev->flDuckTime;
 	cd->flSwimTime = pev->flSwimTime;
 	cd->waterjumptime = pev->teleport_time;
+	// The Dash's burst, in milliseconds left (pm_shared.cpp PM_Dash).  The
+	// movement code owns it on both sides; delta.lst sends fuser1 as 22 bits
+	// at x128, far more than a burst needs.
+	cd->fuser1 = pev->fuser1;
 
 	strcpy(cd->physinfo, ENGINE_GETPHYSINFO(ent));
 

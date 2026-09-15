@@ -610,6 +610,10 @@ protected:
 	// on a living monster.  Every roster weapon, not only the chainsaw to
 	// come, whose lifesteal will be its own base property on top.
 	void LeechHeal(float flDamage);
+	// Reprisal (the Shinobi Route): a hit that kills a monster at full health
+	// refills a Dash.  Unhurt is read before the damage, the refill after it.
+	static bool ReprisalUnhurt(CBaseMonster* pVictim);
+	void ReprisalRefill(CBaseMonster* pVictim, bool bWasUnhurt);
 	// The swing's damage before anything per-victim: base, the weapon's share
 	// for this swing, Melee Force, the Melee Damage Stat nodes, and Cleave's
 	// scale on a Cleave swing.
