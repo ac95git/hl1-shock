@@ -541,7 +541,8 @@ mean two systems making the same gun faster.
 
 **Shape: Shaped. Three of its five goals are built** — the glove textures, their rollout across every
 viewmodel, and the Suit Variant that picks between them. What is built is in [PILLARS.md](PILLARS.md);
-what is left is goals 4 and 5 below.
+what is left is goals 4 and 5 below. **The codenames got their first job on 2026-09-15**: the Inventory
+Panel's header reads `HEV MK IV  //  <codename>` for the suit worn ([SKILL_PANEL.md](SKILL_PANEL.md)).
 
 Every `v_*.mdl` in Half-Life bakes its own hands into the model. There is no shared hand mesh, so
 consistency means touching every viewmodel the mod ships — the vanilla set, the Carbon Pickaxe, the Gauss
@@ -1633,6 +1634,11 @@ in [ADR-0012](adr/0012-the-skill-tree-has-one-start-and-open-roads.md).
 - **Energy's two loose ends closed**: Egon Focus is the SDK's narrow beam on right click, as it is; Quick
   Charge (57) is cut, the wave having no charge. Glass Cannon's 50 is the ceiling after every health bonus;
   the hub's rim Minors are Fortitude, Battery Capacity, Marksman and Melee Force.
+- **The panel's theme settled**, in [SKILL_PANEL.md](SKILL_PANEL.md): header `HEV MK IV // <codename>`
+  following the Suit Variant; tab stays "Upgrades"; a gauge strip (segment counter, token pips) and a
+  hazard-striped Reset switch fixed over the field; the board at 1:1 with drag to pan, opening on the
+  suit; the region palette grounded in the game's objects; monochrome glyph icons in the HUD style;
+  tooltip name and effect only; hidden pads say `No signal`; one unlock sound.
 - **Rejected while shaping Stealth**: Assassinate as a separate node (one verb with Ambush); Executioner
   (an unnoticed Backstab kills outright — hands out the one-shot the stacking is meant to earn); Sabotage
   (disabling turrets from behind); Follow Through and Shroud as the seventh node; a "never noticed" saved

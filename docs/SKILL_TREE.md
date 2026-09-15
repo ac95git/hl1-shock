@@ -239,8 +239,11 @@ pressure lives in the first two thirds of a campaign. The 40/60 split matches MA
 
 ### The presentation
 
-The tree is drawn as the suit's circuit. Settled as a direction; the assets are an
-[ART_DEBT entry](ART_DEBT.md#the-skill-tree--the-circuit-substrate-traces-and-frames).
+The tree is drawn as the suit's circuit. Settled as a direction here, and **in full the same day in
+[SKILL_PANEL.md](SKILL_PANEL.md)** — the header, the gauge strip, the Reset switch, the 1:1 drag-to-pan
+view, the palette, the frames, the glyph icons, the tooltip (name and effect only), the hidden pads'
+`No signal`, one unlock sound. That file is authoritative where the bullets below are shorter. The assets
+are an [ART_DEBT entry](ART_DEBT.md#the-skill-tree--the-circuit-substrate-traces-and-frames).
 
 - **Substrate**: a tiled circuit-board texture under the whole tree, low contrast, loaded as a TGA through
   VGUI1 the way the class-menu images are.

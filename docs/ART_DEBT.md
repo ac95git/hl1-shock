@@ -404,7 +404,11 @@ and the art are the same decision.
 
 ### What to look for
 One distinct icon per Skill, grouped so a branch reads as a branch — a shared motif or palette per column,
-with the individual Skill distinguishable inside it.
+with the individual Skill distinguishable inside it. **Settled 2026-09-15** ([SKILL_PANEL.md](SKILL_PANEL.md)):
+**monochrome glyphs in the HUD sprite style**, white-on-black additive, tinted by state together with the
+node's frame, one motif per Route — blade, crosshair, cross, shield, bolt, hive, wind, eye — with the
+Skill's own detail inside it; a Stat node's glyph is its stat's, shared along the road. Full-colour icons
+were rejected: on a colour wash they are noise, and the tint has to carry the state.
 
 ### The size constraint, which is no longer one
 **Since 2026-09-14 the tree fits each icon into its node** through `SPR_DrawFitted` (`cl_dll/spr_fit.h`,
@@ -533,7 +537,14 @@ The tree is the suit's circuit, and the assets are the metaphor made literal:
 - **The substrate.** A tileable circuit-board texture, 256×256 or smaller, low contrast so the nodes
   and traces stay legible over it, loaded as a TGA through VGUI1's `BitmapTGA` (the class-menu loader)
   and tiled under the tree area. One colour wash per Route's region goes over it, faint, so a region
-  reads without a label: eight Route colours and a neutral for the hub, chosen together as a palette.
+  reads without a label. **The palette, settled 2026-09-15**: Melee rust orange, Weapon Specialist steel
+  blue-grey, Medical white-green, Juggernaut HEV amber, Energy electric cyan, Alien Xen green, Shinobi
+  violet, Stealth deep indigo, the hub bare copper — each grounded in an object of the game's, and faint
+  enough that the suit's cyan / red / purple chrome never fights them.
+- **The gauge strip and the Reset switch** ([SKILL_PANEL.md](SKILL_PANEL.md)): a boxed two-digit segment
+  display for the Skill Points in the HUD's digit style, token pips, and a red-and-black hazard-striped
+  frame for the Reset. Drawable with rects and the HUD's number sprites; a digit sprite of their own if
+  the HUD's do not fit the box.
 - **Traces.** Connectors become copper traces, one between every pair of orthogonally adjacent nodes and
   nowhere else (there are no gates to draw since 2026-09-15). A trace is dim copper unlit, lit copper
   when either end is held, and glows when it leads from a held node to one that can be bought. Drawable
