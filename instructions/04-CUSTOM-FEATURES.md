@@ -256,7 +256,11 @@ keep in step, and no networking change. See
 3. Set the fields:
    - `id` must match the new `ESkillId`
    - `name` is the display label
-   - `description` is the hover text
+   - `description` is the hover text, in the terse notation settled 2026-09-15: a signed number or an
+     `x` multiplier with the stat it acts on (`+25 max HP`, `-20% reload time`, `x1.5 head hits`), `HP`
+     and `AP` for health and armour, `s` for seconds, and one short sentence with the numbers inline
+     where a formula does not fit (`After a weapon swap, x1.5 damage for 2 s; 6 s cooldown.`). No
+     "you", no "every node adds": the road shows that
    - `spriteName` is a HUD sprite from `sprites/hud.txt`; `nullptr` renders the node without an icon
    - `gridCol` and `gridRow` place the node on the 15×15 board, at the cell
      [docs/SKILL_MAP.md](../docs/SKILL_MAP.md) gives it. No two rows may share a cell, no node may be off

@@ -430,42 +430,42 @@ struct SkillDef
 // text and icon and only the cell differs.
 
 #define STAT_MELEE(idName, col, row) \
-	{ ESkillId::idName, "Melee Damage", "Melee hits land 5% harder. Every Melee Damage node adds another 5%.", \
+	{ ESkillId::idName, "Melee Damage", "+5% melee damage", \
 	  "d_crowbar", col, row, 1, ENodeTier::Stat, EStat::MeleeDamage, EGate::None }
 
 #define STAT_BULLET(idName, col, row) \
-	{ ESkillId::idName, "Bullet Damage", "Bullets hit 5% harder. Every Bullet Damage node adds another 5%.", \
+	{ ESkillId::idName, "Bullet Damage", "+5% bullet damage", \
 	  "d_9mmAR", col, row, 1, ENodeTier::Stat, EStat::BulletDamage, EGate::None }
 
 #define STAT_HEAL(idName, col, row) \
-	{ ESkillId::idName, "Healing", "Infusions and medkits heal 10% more. Every Healing node adds another 10%.", \
+	{ ESkillId::idName, "Healing", "+10% healing", \
 	  "cross", col, row, 1, ENodeTier::Stat, EStat::Healing, EGate::None }
 
 #define STAT_ENERGY(idName, col, row) \
-	{ ESkillId::idName, "Energy Damage", "Energy hits 5% harder. Every Energy Damage node adds another 5%.", \
+	{ ESkillId::idName, "Energy Damage", "+5% energy damage", \
 	  "dmg_shock", col, row, 1, ENodeTier::Stat, EStat::EnergyDamage, EGate::None }
 
 #define STAT_HEALTH(idName, col, row) \
-	{ ESkillId::idName, "Max Health", "Your maximum health is 5% higher. Every Max Health node adds another 5%.", \
+	{ ESkillId::idName, "Max Health", "+5% max HP", \
 	  "item_healthkit", col, row, 1, ENodeTier::Stat, EStat::MaxHealth, EGate::None }
 
 #define STAT_ARMOUR(idName, col, row) \
-	{ ESkillId::idName, "Max Armor", "Your suit holds 5% more armor. Every Max Armor node adds another 5%.", \
+	{ ESkillId::idName, "Max Armor", "+5% max AP", \
 	  "item_battery", col, row, 1, ENodeTier::Stat, EStat::MaxArmour, EGate::None }
 
 // The three hidden regions' Stat macros, 2026-09-15.  Gated like every other
 // node in their region (docs/adr/0012): hidden until the player holds the
 // Module, per "Hidden means impassable".
 #define STAT_DASH(idName, col, row) \
-	{ ESkillId::idName, "Dash Recovery", "The Dash comes back sooner. Every Dash Recovery node adds more.", \
+	{ ESkillId::idName, "Dash Recovery", "-5% Dash recovery time", \
 	  "item_longjump", col, row, 1, ENodeTier::Stat, EStat::DashRecovery, EGate::DashModule }
 
 #define STAT_CONCEAL(idName, col, row) \
-	{ ESkillId::idName, "Concealment", "Monsters learn about you 5% slower. Every Concealment node adds another 5%.", \
+	{ ESkillId::idName, "Concealment", "-5% Suspicion gain", \
 	  "dmg_gas", col, row, 1, ENodeTier::Stat, EStat::Concealment, EGate::NightVision }
 
 #define STAT_HORNET(idName, col, row) \
-	{ ESkillId::idName, "Hornet Replenish", "Hornets return faster. Every Hornet Replenish node adds more.", \
+	{ ESkillId::idName, "Hornet Replenish", "+5% hornet replenish rate", \
 	  "d_hornet", col, row, 1, ENodeTier::Stat, EStat::HornetReplenish, EGate::AlienModule }
 
 // Indexed by ESkillId, so entry [n] is always the Skill with id n.
@@ -508,13 +508,13 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	{ ESkillId::None,            "None",             "",                                                            nullptr,          0,  0,  0,  ENodeTier::Minor,  EStat::None,  EGate::None },
 
 	// 1-2: Melee's entry on the road in from the hub, and the hub's west rim Minor
-	{ ESkillId::MeleeReach,      "Melee Reach",      "Your melee swings connect from 25% further away.",            "d_tripmine",     3,  7,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
-	{ ESkillId::MeleeForce,      "Melee Force",      "Melee hits land 50% harder.",                                 "d_skull",        5,  7,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
+	{ ESkillId::MeleeReach,      "Melee Reach",      "+25% melee reach",            "d_tripmine",     3,  7,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
+	{ ESkillId::MeleeForce,      "Melee Force",      "+50% melee damage",                                 "d_skull",        5,  7,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
 
 	// 3-4: the Weapon Specialist's two older Skills.  Mastery keeps the
 	// Major-sized frame by decision (docs/SKILL_MAP.md, Sizes).
-	{ ESkillId::FastReload,      "Fast Reload",      "Every magazine you feed goes in 20% quicker. Shotgun shells too.", "d_9mmhandgun", 12, 9,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
-	{ ESkillId::ExtraDamage,     "Weapon Mastery",   "Every weapon you carry deals 10% more damage.",               "d_shotgun",      14, 7,  1,  ENodeTier::Major,  EStat::None,  EGate::None },
+	{ ESkillId::FastReload,      "Fast Reload",      "-20% reload time, shotgun included", "d_9mmhandgun", 12, 9,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
+	{ ESkillId::ExtraDamage,     "Weapon Mastery",   "+10% all damage",               "d_shotgun",      14, 7,  1,  ENodeTier::Major,  EStat::None,  EGate::None },
 
 	// 5-6: cut (movement rules)
 	SKILL_RESERVED(HighJump),
@@ -522,52 +522,52 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 
 	// 7-9: the hub's Skills.  Fortitude is the north rim Minor, Sure Footing
 	// the west rim toward Shinobi, Armor Expert the east rim toward Juggernaut.
-	{ ESkillId::FallResistance,  "Sure Footing",     "Falls deal half as much damage.",                             "item_longjump",  5,  6,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
-	{ ESkillId::MoreHealth,      "Fortitude",        "+25 maximum health.",                                         "item_healthkit", 7,  5,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
-	{ ESkillId::ArmorEfficiency, "Armor Expert",     "A tenth less damage gets past your armor.",                   "suit_full",      9,  8,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
+	{ ESkillId::FallResistance,  "Sure Footing",     "-50% fall damage",                             "item_longjump",  5,  6,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
+	{ ESkillId::MoreHealth,      "Fortitude",        "+25 max HP",                                         "item_healthkit", 7,  5,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
+	{ ESkillId::ArmorEfficiency, "Armor Expert",     "-10% damage through armor",                   "suit_full",      9,  8,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
 	// 10: cut (rewarded idling)
 	SKILL_RESERVED(HealthRegen),
 
 	// 11: Melee Speed, off the top road
-	{ ESkillId::MeleeSpeed,      "Melee Speed",      "Melee swings come 30% faster.",                               "d_357",          2,  6,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
+	{ ESkillId::MeleeSpeed,      "Melee Speed",      "-30% melee swing time",                               "d_357",          2,  6,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
 	// 12: the Pulse, in the Juggernaut's far corner.  Gated on the Pulse
 	// Module, which is open until that Module exists.
-	{ ESkillId::PulseWindow,     "Pulse Window",     "The Shield stands 0.15s longer.",                             "autoaim_c",      9,  12, 1,  ENodeTier::Minor,  EStat::None,  EGate::PulseModule },
+	{ ESkillId::PulseWindow,     "Pulse Window",     "+0.15 s Shield window",                             "autoaim_c",      9,  12, 1,  ENodeTier::Minor,  EStat::None,  EGate::PulseModule },
 
 	// 13: the hub's south rim Minor
-	{ ESkillId::BatteryCapacity, "Battery Capacity", "The suit holds 50 more armor.",                               "item_battery",   7,  9,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
+	{ ESkillId::BatteryCapacity, "Battery Capacity", "+50 max AP",                               "item_battery",   7,  9,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
 
 	// 14: cut (rewarded idling)
 	SKILL_RESERVED(BatteryRegen),
 
 	// 15-17: the Pulse continued.  Discharge and Rebound keep the Major-sized
 	// frame by decision.
-	{ ESkillId::PulseRecharge,   "Pulse Recharge",   "The wait between Pulses is a third shorter.",                 "flash_empty",    9,  13, 1,  ENodeTier::Medium, EStat::None,  EGate::PulseModule },
-	{ ESkillId::PulseDischarge,  "Pulse Discharge",  "Negated hits vent energy at your crosshair.",                 "d_egon",         6,  14, 1,  ENodeTier::Major,  EStat::None,  EGate::PulseModule },
-	{ ESkillId::PulseRebound,    "Pulse Rebound",    "A deflect skips the Recharge. Once, until you sit through a normal one.", "flash_beam", 7, 14, 1, ENodeTier::Major, EStat::None,  EGate::PulseModule },
+	{ ESkillId::PulseRecharge,   "Pulse Recharge",   "-33% Pulse recharge",                 "flash_empty",    9,  13, 1,  ENodeTier::Medium, EStat::None,  EGate::PulseModule },
+	{ ESkillId::PulseDischarge,  "Pulse Discharge",  "Negated hits vent as energy at the crosshair.",                 "d_egon",         6,  14, 1,  ENodeTier::Major,  EStat::None,  EGate::PulseModule },
+	{ ESkillId::PulseRebound,    "Pulse Rebound",    "A deflect skips the Recharge, once per normal Recharge.", "flash_beam", 7, 14, 1, ENodeTier::Major, EStat::None,  EGate::PulseModule },
 
 	// 18: the Melee x Juggernaut link, in the hub's south-west corner cell.
 	// A melee payoff for a Pulse deflect; it does nothing for a player who
 	// never deflects.  Major-sized by decision.
-	{ ESkillId::FollowUp,        "Follow-Up",        "After a deflect, your next melee hit lands far harder.",       "d_gauss",        5,  9,  1,  ENodeTier::Major,  EStat::None,  EGate::None },
+	{ ESkillId::FollowUp,        "Follow-Up",        "x3 melee damage on the hit after a deflect",       "d_gauss",        5,  9,  1,  ENodeTier::Major,  EStat::None,  EGate::None },
 
 	// 19: the Medical Route's entry, on its spine
-	{ ESkillId::MedExpert,       "Med Expert",       "An Infusion runs 5 seconds longer.",                          "flash_full",     7,  2,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
+	{ ESkillId::MedExpert,       "Med Expert",       "+5 s Infusion",                          "flash_full",     7,  2,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
 	// 20-21: the Alien region's root and its first road-mate, 2026-09-15
 	// (docs/SKILL_MAP.md).  Gated on EGate::AlienModule with the rest of
 	// the region, placed further down the table at ids 141-156.
-	{ ESkillId::HiveCapacity,    "Hive Capacity",    "Your Hivehand holds more hornets.",                            "d_hornet",       12, 10, 1,  ENodeTier::Minor,  EStat::None,  EGate::AlienModule },
-	{ ESkillId::HiveRegrowth,    "Hive Replenish",   "Your hornets replenish faster.",                               "d_hornet",       13, 11, 1,  ENodeTier::Medium, EStat::None,  EGate::AlienModule },
+	{ ESkillId::HiveCapacity,    "Hive Capacity",    "Bigger hornet capacity.",                            "d_hornet",       12, 10, 1,  ENodeTier::Minor,  EStat::None,  EGate::AlienModule },
+	{ ESkillId::HiveRegrowth,    "Hive Replenish",   "+50% hornet replenish rate",                               "d_hornet",       13, 11, 1,  ENodeTier::Medium, EStat::None,  EGate::AlienModule },
 
 	// 22-23: the Stealth region's unaware-damage pair, 2026-09-15
 	// (docs/SKILL_MAP.md).  Ambush and Assassinate were one verb, merged the
 	// day they were proposed (docs/SKILL_TREE.md, Stealth).  Gated on
 	// EGate::NightVision with the rest of the region below.
-	{ ESkillId::Ambush,          "Ambush",           "Damage you deal to a hostile monster is multiplied by how unaware it is when the hit lands: x1.25 below Spotted, x1.5 below Noticed. Every weapon, applied before the hit fills its meter.", "d_skull", 12, 4, 1, ENodeTier::Medium, EStat::None, EGate::NightVision },
-	{ ESkillId::Phantom,         "Phantom",          "A Backstab on a monster below Noticed grants 2 seconds at x1.2 speed: every movement action -- running, Dashing, jumping -- is silent.", "flash_beam", 10, 2, 1, ENodeTier::Medium, EStat::None, EGate::NightVision },
+	{ ESkillId::Ambush,          "Ambush",           "Hits on a monster that has not Spotted you x1.25, not Noticed you x1.5.", "d_skull", 12, 4, 1, ENodeTier::Medium, EStat::None, EGate::NightVision },
+	{ ESkillId::Phantom,         "Phantom",          "A Backstab on an unaware monster: 2 s at x1.2 speed, all movement silent.", "flash_beam", 10, 2, 1, ENodeTier::Medium, EStat::None, EGate::NightVision },
 
 	// 24-32: the Melee Route's roads (docs/SKILL_MAP.md, Melee)
 	STAT_MELEE(StatMelee01, 4, 7),
@@ -581,28 +581,28 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	STAT_MELEE(StatMelee09, 1, 9),
 
 	// 33: Backstab, mid-road
-	{ ESkillId::Backstab,        "Backstab",         "Hits from behind land half again as hard as a plain Backstab.", "d_crossbow",    1,  7,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
+	{ ESkillId::Backstab,        "Backstab",         "x1.5 Backstab damage", "d_crossbow",    1,  7,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
 	// 34: Cleave, the Melee major, in the region's south-west corner
-	{ ESkillId::Cleave,          "Cleave",           "When Cleave is ready, your next melee hit strikes everything in front of you, and harder. Then it needs a moment.", "d_handgrenade", 0, 9, 1, ENodeTier::Major, EStat::None, EGate::None },
+	{ ESkillId::Cleave,          "Cleave",           "When ready, a melee swing hits everything in front at x1.5; 4 s cooldown.", "d_handgrenade", 0, 9, 1, ENodeTier::Major, EStat::None, EGate::None },
 
 	// 35: Marksman, the hub's east rim Minor
-	{ ESkillId::Marksman,        "Marksman",         "Bullets hit 15% harder.",                                     "d_bolt",         9,  7,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
+	{ ESkillId::Marksman,        "Marksman",         "+15% bullet damage",                                     "d_bolt",         9,  7,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
 
 	// 36: Quick Draw on the entry road.  Predicted: DefaultDeploy runs on
 	// both sides, so the scale comes through skill_tuning.h.
-	{ ESkillId::QuickDraw,       "Quick Draw",       "Weapons come up 40% faster.",                                 "d_357",          11, 7,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
+	{ ESkillId::QuickDraw,       "Quick Draw",       "-40% weapon draw time",                                 "d_357",          11, 7,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
 	// 37-38: the typed pair on the region's top row.  Demolitions is dealt
 	// and taken: the resistance covers the player's own grenades.
 	// Headhunter is the head hitgroup multiplier, player hits only.
-	{ ESkillId::Demolitions,     "Demolitions",      "Your explosives deal 25% more, and explosions hurt you half as much.", "d_rpg_rocket", 14, 5, 1, ENodeTier::Medium, EStat::None, EGate::None },
-	{ ESkillId::Headhunter,      "Headhunter",       "Your hits to the head land half again as hard.",              "d_skull",        12, 5,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
+	{ ESkillId::Demolitions,     "Demolitions",      "+25% explosive damage dealt, -50% explosive damage taken", "d_rpg_rocket", 14, 5, 1, ENodeTier::Medium, EStat::None, EGate::None },
+	{ ESkillId::Headhunter,      "Headhunter",       "x1.5 head hits",              "d_skull",        12, 5,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
 	// 39: Swap Surge, the Route's major, in the region's far bottom corner.
 	// The window opens on every DefaultDeploy, on a cooldown, so the
 	// specialist juggles weapons and every swap is a hit.
-	{ ESkillId::SwapSurge,       "Swap Surge",       "For two seconds after you swap weapons, everything you deal lands 50% harder. Then it needs a moment.", "d_hornet", 14, 9, 1, ENodeTier::Major, EStat::None, EGate::None },
+	{ ESkillId::SwapSurge,       "Swap Surge",       "After a weapon swap, x1.5 damage for 2 s; 6 s cooldown.", "d_hornet", 14, 9, 1, ENodeTier::Major, EStat::None, EGate::None },
 
 	// 40-46: the Weapon Specialist's roads (docs/SKILL_MAP.md, Specialist)
 	STAT_BULLET(StatBullet01, 10, 7),
@@ -615,17 +615,17 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 
 	// 47: Overheal, Medical's north-west corner.  Server-side, in the
 	// Infusion's tick (player_infusion.cpp); the excess drains after.
-	{ ESkillId::Overheal,        "Overheal",         "An Infusion keeps healing past your maximum, up to 50 over. The extra drains away once it ends.", "item_syringe", 5, 0, 1, ENodeTier::Medium, EStat::None, EGate::None },
+	{ ESkillId::Overheal,        "Overheal",         "Infusions heal up to 50 HP over max; the excess drains after.", "item_syringe", 5, 0, 1, ENodeTier::Medium, EStat::None, EGate::None },
 
 	// 48: Leech, Medical's north-east corner.  Melee hits on a living
 	// monster heal; server-side, in CCrowbar::Swing and CleaveArc.
-	{ ESkillId::Leech,           "Leech",            "Melee hits heal you a tenth of the damage they deal.",         "dmg_bio",        9,  0,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
+	{ ESkillId::Leech,           "Leech",            "Melee hits heal 10% of their damage.",         "dmg_bio",        9,  0,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
 	// 49: Last Stand, the Medical major, Medical's top cell.  Fires from
 	// CBasePlayer::TakeDamage (dlls/player.cpp); the doubled healing below
 	// 50 is CPlayerInfusion::Think (dlls/player_infusion.cpp).  Glass Cannon
 	// (105) arms the same effect permanently; see docs/SKILL_TREE.md, "The keystone".
-	{ ESkillId::LastStand,       "Last Stand",       "A hit that would kill you leaves you at 1 instead, you cannot be hurt for 3 seconds, and a Syringe fires on its own. Infusions heal double below 50. Then it needs a minute.", "dmg_heat", 7, 0, 1, ENodeTier::Major, EStat::None, EGate::None },
+	{ ESkillId::LastStand,       "Last Stand",       "A lethal hit leaves 1 HP, 3 s invulnerable, and fires a Syringe; Infusions x2 below 50 HP; 60 s cooldown.", "dmg_heat", 7, 0, 1, ENodeTier::Major, EStat::None, EGate::None },
 
 	// 50-53: the Medical Route's roads (docs/SKILL_MAP.md, Medical)
 	STAT_HEAL(StatHeal01, 7, 4),
@@ -635,28 +635,28 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 
 	// 54: Energy Damage, the Energy Route's entry, under Melee's bottom road.
 	// DMG_ENERGYBEAM at the damage chokepoints, the Marksman shape.
-	{ ESkillId::EnergyDamage,    "Energy Damage",    "Energy hits 15% harder: the katana, the egon, the Discharge.", "d_egon",       1,  10, 1,  ENodeTier::Minor,  EStat::None,  EGate::None },
+	{ ESkillId::EnergyDamage,    "Energy Damage",    "+15% energy damage", "d_egon",       1,  10, 1,  ENodeTier::Minor,  EStat::None,  EGate::None },
 
 	// 55: Egon Focus, between Energy Efficiency's and Insulation's Stat roads.
 	// Right click unlocks the SDK's dormant narrow beam: single target,
 	// cheaper on uranium, no splash.
-	{ ESkillId::EgonFocus,       "Egon Focus",       "Right click fires the egon's narrow beam: one target, cheaper on uranium, no splash.", "d_grenade", 2, 12, 1, ENodeTier::Medium, EStat::None, EGate::None },
+	{ ESkillId::EgonFocus,       "Egon Focus",       "Right click: narrow egon beam, single target, cheaper uranium.", "d_grenade", 2, 12, 1, ENodeTier::Medium, EStat::None, EGate::None },
 
 	// 56: Energy Efficiency, on the region's bottom row.  The interval between
 	// the egon's ammo ticks (server-side) and the katana's wave's uranium cost
 	// (both DLLs, the cost check being predicted).
-	{ ESkillId::EnergyEfficiency, "Energy Efficiency", "The egon and the katana's wave spend uranium a quarter slower.", "d_satchel",   2,  14, 1,  ENodeTier::Medium, EStat::None,  EGate::None },
+	{ ESkillId::EnergyEfficiency, "Energy Efficiency", "-25% uranium use", "d_satchel",   2,  14, 1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
 	// 57: Quick Charge, cut 2026-09-15
 	SKILL_RESERVED(QuickCharge),
 
 	// 58: Insulation, on the region's west edge.  Server-side, in the player's
 	// TakeDamage; shock included so it means something in Xen.
-	{ ESkillId::Insulation,      "Insulation",       "Energy and shock hurt you 30% less.",                         "dmg_rad",        0,  12, 1,  ENodeTier::Medium, EStat::None,  EGate::None },
+	{ ESkillId::Insulation,      "Insulation",       "-30% energy and shock taken",                         "dmg_rad",        0,  12, 1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
 	// 59: Overdraw, the Energy major, on the Juggernaut seam beside the
 	// armour column's foot.  Energy attacks drain armour for bonus damage.
-	{ ESkillId::EnergyMajor,     "Overdraw",         "Energy attacks draw on your armor too: half a point per uranium, never below 20, and while there is armor to draw they hit 50% harder.", "item_battery", 4, 14, 1, ENodeTier::Major, EStat::None, EGate::None },
+	{ ESkillId::EnergyMajor,     "Overdraw",         "Energy attacks drain 0.5 AP per uranium down to 20 AP; x1.5 energy damage above 20 AP.", "item_battery", 4, 14, 1, ENodeTier::Major, EStat::None, EGate::None },
 
 	// 60-63: the Energy Route's roads (docs/SKILL_MAP.md, Energy)
 	STAT_ENERGY(StatEnergy01, 0, 10),
@@ -666,11 +666,11 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 
 	// 64: Ricochet, the Juggernaut's east side, one step from the Alien door.
 	// Server-side, in the player's TakeDamage: bullets only, armour required.
-	{ ESkillId::Ricochet,        "Ricochet",         "One bullet in five bounces off your armor and back at whoever fired it.", "d_tracktrain", 9, 11, 1, ENodeTier::Medium, EStat::None, EGate::None },
+	{ ESkillId::Ricochet,        "Ricochet",         "20% of bullets bounce back at the shooter; needs AP.", "d_tracktrain", 9, 11, 1, ENodeTier::Medium, EStat::None, EGate::None },
 
 	// 65: the suit.  Cost 0, held from spawn, kept through a Reset, never
 	// bought (ADR-0012).  The one row the cost-one assert exempts.
-	{ ESkillId::Suit,            "HEV Suit",         "The suit. Every road on this board starts here.",             "suit_full",      7,  7,  0,  ENodeTier::Suit,   EStat::None,  EGate::None },
+	{ ESkillId::Suit,            "HEV Suit",         "Every road starts here.",             "suit_full",      7,  7,  0,  ENodeTier::Suit,   EStat::None,  EGate::None },
 
 	// 66-67: Melee's bottom road past Cleave, toward the Energy doors
 	STAT_MELEE(StatMelee10, 2, 9),
@@ -732,7 +732,7 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// (CBasePlayer::LastStandArmed).  No damage multiplier of any kind: the
 	// cannon is whatever the roads around it provide.  Drawn Major-sized
 	// with a RED frame by the client, the one keystone marker.
-	{ ESkillId::GlassCannon,     "Glass Cannon",     "Your maximum health is 50, whatever else you hold. Last Stand is always armed.", "d_skull", 0, 5, 1, ENodeTier::Major, EStat::None, EGate::None },
+	{ ESkillId::GlassCannon,     "Glass Cannon",     "Max HP fixed at 50. Last Stand always armed.", "d_skull", 0, 5, 1, ENodeTier::Major, EStat::None, EGate::None },
 
 	// 106: Melee's top-road Stat cell, deliberately left empty until Glass
 	// Cannon existed to un-island it (docs/SKILL_MAP.md).
@@ -743,12 +743,12 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// EGate::DashModule: a blank pad until the Dash Module is found
 	// (ADR-0012, "Hidden means impassable").  No effect is implemented yet --
 	// a hidden node cannot be bought either way.
-	{ ESkillId::DashReach,       "Dash Reach",       "Your Dash carries you further.",                              "train_forward2", 3, 2,  1, ENodeTier::Minor,  EStat::None, EGate::DashModule },
-	{ ESkillId::DashRecovery,    "Dash Recovery",    "Your Dash comes back sooner.",                                "train_back",     4, 4,  1, ENodeTier::Medium, EStat::None, EGate::DashModule },
-	{ ESkillId::SecondWind,      "Second Wind",      "You gain a second Dash charge, ready alongside the first.",  "train_forward1", 4, 3,  1, ENodeTier::Medium, EStat::None, EGate::DashModule },
-	{ ESkillId::Reprisal,        "Reprisal",         "A one-shot melee kill -- a single hit that drops an unhurt monster -- refills a Dash.", "d_skull", 0, 3, 1, ENodeTier::Medium, EStat::None, EGate::DashModule },
-	{ ESkillId::Phase,           "Phase",            "You take no damage for the instant you are Dashing.",        "suit_empty",     2, 1,  1, ENodeTier::Medium, EStat::None, EGate::DashModule },
-	{ ESkillId::AirDash,         "Air Dash",         "The Dash works in the air, and in the air goes where you aim, upward included.", "train_forward3", 0, 0, 1, ENodeTier::Major, EStat::None, EGate::DashModule },
+	{ ESkillId::DashReach,       "Dash Reach",       "Longer Dash.",                              "train_forward2", 3, 2,  1, ENodeTier::Minor,  EStat::None, EGate::DashModule },
+	{ ESkillId::DashRecovery,    "Dash Recovery",    "-25% Dash recovery time",                                "train_back",     4, 4,  1, ENodeTier::Medium, EStat::None, EGate::DashModule },
+	{ ESkillId::SecondWind,      "Second Wind",      "+1 Dash charge",  "train_forward1", 4, 3,  1, ENodeTier::Medium, EStat::None, EGate::DashModule },
+	{ ESkillId::Reprisal,        "Reprisal",         "A one-hit melee kill refills a Dash.", "d_skull", 0, 3, 1, ENodeTier::Medium, EStat::None, EGate::DashModule },
+	{ ESkillId::Phase,           "Phase",            "No damage while Dashing.",        "suit_empty",     2, 1,  1, ENodeTier::Medium, EStat::None, EGate::DashModule },
+	{ ESkillId::AirDash,         "Air Dash",         "Dash in the air, along the aim, up included.", "train_forward3", 0, 0, 1, ENodeTier::Major, EStat::None, EGate::DashModule },
 
 	// The region's roads: 13 Dash Recovery Stat nodes.
 	STAT_DASH(StatDash01, 1, 0),
@@ -769,11 +769,11 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// docs/SKILL_TREE.md "Stealth").  Ambush (22) and Phantom (23) are
 	// already placed above, at their frozen ids; every row here is
 	// EGate::NightVision, same as they are.
-	{ ESkillId::SoftStep,        "Soft Step",        "Crouched and walking, your body noise is halved again.",     "flash_empty",    10, 4, 1, ENodeTier::Minor,  EStat::None, EGate::NightVision },
-	{ ESkillId::Nightfall,       "Nightfall",        "Darkness conceals you twice as much as it used to.",         "dmg_cold",       12, 0, 1, ENodeTier::Medium, EStat::None, EGate::NightVision },
-	{ ESkillId::SlipAway,        "Slip Away",        "Breaking line of sight while a monster has Noticed but not Spotted you drops its Suspicion by a third at once.", "autoaim_c", 12, 3, 1, ENodeTier::Medium, EStat::None, EGate::NightVision },
-	{ ESkillId::CutTheHead,      "Cut the Head",     "Killing a squad leader drops every member's Suspicion to the notice floor.", "d_skull", 13, 2, 1, ENodeTier::Medium, EStat::None, EGate::NightVision },
-	{ ESkillId::SilentKill,      "Silent Kill",      "A kill on a monster below Spotted is unseen and unheard: no death witnesses, no Disturbance, no squad last-known-position. Clear a squad one by one.", "d_crossbow", 14, 0, 1, ENodeTier::Major, EStat::None, EGate::NightVision },
+	{ ESkillId::SoftStep,        "Soft Step",        "-50% body noise crouched or walking",     "flash_empty",    10, 4, 1, ENodeTier::Minor,  EStat::None, EGate::NightVision },
+	{ ESkillId::Nightfall,       "Nightfall",        "x2 concealment from darkness",         "dmg_cold",       12, 0, 1, ENodeTier::Medium, EStat::None, EGate::NightVision },
+	{ ESkillId::SlipAway,        "Slip Away",        "Breaking line of sight while Noticed drops Suspicion by a third.", "autoaim_c", 12, 3, 1, ENodeTier::Medium, EStat::None, EGate::NightVision },
+	{ ESkillId::CutTheHead,      "Cut the Head",     "Killing a squad leader drops the squad's Suspicion to the notice floor.", "d_skull", 13, 2, 1, ENodeTier::Medium, EStat::None, EGate::NightVision },
+	{ ESkillId::SilentKill,      "Silent Kill",      "A kill below Spotted leaves no witness, no Disturbance, no squad alert.", "d_crossbow", 14, 0, 1, ENodeTier::Major, EStat::None, EGate::NightVision },
 
 	// The region's roads: 10 Concealment Stat nodes.
 	STAT_CONCEAL(StatConceal01, 10, 0),
@@ -791,12 +791,12 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// docs/SKILL_TREE.md "Alien").  Hive Capacity (20) and Hive Replenish
 	// (21) are already placed above, at their frozen ids; every row here is
 	// EGate::AlienModule, same as they are.
-	{ ESkillId::HiveAttackSpeed, "Hive Attack Speed", "Your Hivehand fires faster.",                                "d_hornet",       10, 12, 1, ENodeTier::Medium, EStat::None, EGate::AlienModule },
-	{ ESkillId::Pack,            "Pack",              "You can keep more ghosts summoned at once.",                 "d_snark",        11, 13, 1, ENodeTier::Medium, EStat::None, EGate::AlienModule },
-	{ ESkillId::Tether,          "Tether",            "Your ghosts last longer before they fade.",                  "dmg_bio",        13, 13, 1, ENodeTier::Medium, EStat::None, EGate::AlienModule },
-	{ ESkillId::Recall,          "Recall",            "Summoning a ghost again takes less time.",                   "train_back",     12, 14, 1, ENodeTier::Medium, EStat::None, EGate::AlienModule },
+	{ ESkillId::HiveAttackSpeed, "Hive Attack Speed", "Faster Hivehand fire.",                                "d_hornet",       10, 12, 1, ENodeTier::Medium, EStat::None, EGate::AlienModule },
+	{ ESkillId::Pack,            "Pack",              "More ghosts at once.",                 "d_snark",        11, 13, 1, ENodeTier::Medium, EStat::None, EGate::AlienModule },
+	{ ESkillId::Tether,          "Tether",            "Ghosts last longer.",                  "dmg_bio",        13, 13, 1, ENodeTier::Medium, EStat::None, EGate::AlienModule },
+	{ ESkillId::Recall,          "Recall",            "Shorter summon cooldown.",                   "train_back",     12, 14, 1, ENodeTier::Medium, EStat::None, EGate::AlienModule },
 	// name provisional: SKILL_TREE.md's Alien major has none yet
-	{ ESkillId::AlienMajor,      "Energy Volley",     "The Hivehand's volley deals energy damage, scaling with the Energy Route.", "dmg_shock", 14, 14, 1, ENodeTier::Major, EStat::None, EGate::AlienModule },
+	{ ESkillId::AlienMajor,      "Energy Volley",     "The Hivehand's volley is energy damage.", "dmg_shock", 14, 14, 1, ENodeTier::Major, EStat::None, EGate::AlienModule },
 
 	// The region's roads: 11 Hornet Replenish Stat nodes.
 	STAT_HORNET(StatHornet01, 10, 10),
@@ -816,10 +816,10 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// (dlls/player_skills.cpp), so these are shown and buyable today like
 	// the rest of the Pulse's nodes -- the gate comes out entirely when the
 	// Pulse becomes a Module.
-	{ ESkillId::DefenseMatrix,   "Defense Matrix",   "Hold the Pulse key for a second: armor takes a far larger share of every hit, and you're slowed 20%. Drops on release, after 6 seconds, or at zero armor; 10 second cooldown.", "suit_full", 8, 13, 1, ENodeTier::Medium, EStat::None, EGate::PulseModule },
-	{ ESkillId::MatrixOnKill,    "Matrix on Kill",   "A kill while the Matrix is up restores some of your armor.", "item_battery",   8, 14, 1, ENodeTier::Medium, EStat::None, EGate::PulseModule },
+	{ ESkillId::DefenseMatrix,   "Defense Matrix",   "Hold Pulse 1 s: armor takes far more of each hit, -20% speed; ends on release, 6 s or 0 AP; 10 s cooldown.", "suit_full", 8, 13, 1, ENodeTier::Medium, EStat::None, EGate::PulseModule },
+	{ ESkillId::MatrixOnKill,    "Matrix on Kill",   "A kill during the Matrix restores AP.", "item_battery",   8, 14, 1, ENodeTier::Medium, EStat::None, EGate::PulseModule },
 	// name provisional: SKILL_TREE.md's Juggernaut major has none yet
-	{ ESkillId::JuggernautMajor, "Decaying Armor",   "Activating the Matrix grants a burst of decaying armor, on top of what you're carrying.", "dmg_rad", 7, 13, 1, ENodeTier::Major, EStat::None, EGate::PulseModule },
+	{ ESkillId::JuggernautMajor, "Decaying Armor",   "Activating the Matrix grants +100 decaying AP.", "dmg_rad", 7, 13, 1, ENodeTier::Major, EStat::None, EGate::PulseModule },
 };
 
 #undef SKILL_RESERVED
