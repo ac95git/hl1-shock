@@ -810,11 +810,18 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
         m_flResetConfirmUntil = 0.0f;
 
     const bool bCanReset = (m_iResetTokens > 0);
-    m_resetBtnRect = { x0 + areaW - k_ResetBtnW - 8, y0 + 3, k_ResetBtnW, k_ResetBtnH };
 
-    const int gaugeH = 22;
-    const IRect gaugeRect = { x0 + 6, y0 + 3,
+    // The switch is as wide as its widest label wants, so "CONFIRM  -1 TOKEN"
+    // fits when it arms, and as tall as the font plus a margin.
+    const int chromeLineH = smallFont ? smallFont->getTall() : 10;
+    const int resetW = std::max(TextWidth(smallFont, "RESET"), TextWidth(smallFont, "CONFIRM  -1 TOKEN")) + k_ResetBtnPadX * 2;
+    const int resetH = std::max(k_ResetBtnMinH, chromeLineH + 8);
+    m_resetBtnRect = { x0 + areaW - resetW - 8, y0 + 3, resetW, resetH };
+
+    const int gaugeH = std::max(22, resetH);
+    m_gaugeRect = { x0 + 6, y0 + 3,
         std::max(0, m_resetBtnRect.x - 10 - (x0 + 6)), gaugeH };
+    const IRect& gaugeRect = m_gaugeRect;
 
     // Load sprites (no-op after first successful load)
     EnsureSprites();
@@ -835,8 +842,11 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
 
     // Rebuild rects if geometry changed -- also where the pan is clamped,
     // and, the first time, centred on the Suit or recalled for this map.
-    if (m_lastW != areaW || m_lastH != areaH || m_lastX0 != x0 || m_lastY0 != y0)
+    if (m_bRectsDirty || m_lastW != areaW || m_lastH != areaH || m_lastX0 != x0 || m_lastY0 != y0)
+    {
         RebuildRects(x0, y0, areaW, areaH);
+        m_bRectsDirty = false;
+    }
 
     const IRect field{ x0, y0, areaW, areaH };
 
@@ -1025,10 +1035,15 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
         }
 
         // Boxed two-digit segment counter, the HUD's own digit sprites,
-        // tinted with the suit colour rather than the old gold.
+        // tinted with the suit colour rather than the old gold.  The HUD's
+        // digits are sized for the screen corner, not for a strip beside a
+        // label, so each is fitted to the label's height (the engine shrinks,
+        // never magnifies, so a small bucket simply stays small).
         const Rect& digitRc = gHUD.GetSpriteRect(gHUD.m_HUD_number_0);
-        const int digitW = digitRc.right - digitRc.left;
-        const int digitH = digitRc.bottom - digitRc.top;
+        const int sprW = std::max(1, digitRc.right - digitRc.left);
+        const int sprH = std::max(1, digitRc.bottom - digitRc.top);
+        const int digitH = lineH + 2;
+        const int digitW = std::max(4, sprW * digitH / sprH);
         const int boxPad = 3;
         const int boxW = digitW * 2 + boxPad * 2;
         const int boxH = digitH + boxPad * 2;
@@ -1043,10 +1058,12 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
         const int ones = displayPts % 10;
         int dx = gx + boxPad, dy = boxY + boxPad;
         SPR_Set(gHUD.GetSprite(gHUD.m_HUD_number_0 + tens), sr, sg, sb);
-        SPR_DrawAdditive(0, dx, dy, &gHUD.GetSpriteRect(gHUD.m_HUD_number_0 + tens));
+        SPR_DrawFitted(gHUD.GetSprite(gHUD.m_HUD_number_0 + tens), gHUD.GetSpriteRect(gHUD.m_HUD_number_0 + tens),
+                       dx, dy, digitW, digitH, SPR_BLEND_ONE, SPR_BLEND_ONE);
         dx += digitW;
         SPR_Set(gHUD.GetSprite(gHUD.m_HUD_number_0 + ones), sr, sg, sb);
-        SPR_DrawAdditive(0, dx, dy, &gHUD.GetSpriteRect(gHUD.m_HUD_number_0 + ones));
+        SPR_DrawFitted(gHUD.GetSprite(gHUD.m_HUD_number_0 + ones), gHUD.GetSpriteRect(gHUD.m_HUD_number_0 + ones),
+                       dx, dy, digitW, digitH, SPR_BLEND_ONE, SPR_BLEND_ONE);
 
         gx += boxW + 14;
 
@@ -1111,7 +1128,7 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
 
         if (smallFont)
         {
-            const char* label = bArmed ? "CONFIRM  -1 TOKEN" : "RESET TREE";
+            const char* label = bArmed ? "CONFIRM  -1 TOKEN" : "RESET";
             int labelW = 0, labelH = 0;
             smallFont->getTextSize(label, labelW, labelH);
 
@@ -1253,6 +1270,17 @@ void CSkillTreeView::DrawHazardFrame(CInventoryPanel* ctx, const IRect& r, int s
 bool CSkillTreeView::HandleMousePress(CInventoryPanel* ctx, int localX, int localY)
 {
     (void)ctx;
+
+    // A press on the switch or the strip is a click on chrome, never the
+    // start of a drag: the release handles it, and the board does not move
+    // under a finger that landed on a button.
+    if (OverChrome(localX, localY))
+    {
+        m_bMouseDown = false;
+        m_bDragging  = false;
+        return true;
+    }
+
     m_bMouseDown = true;
     m_bDragging  = false;
     m_dragStartMouseX = localX;
@@ -1358,12 +1386,18 @@ void CSkillTreeView::HandleMouseMove(int localX, int localY)
             m_panY = m_dragStartPanY + dy;
             ClampPan(m_lastW, m_lastH);
             RememberPan(m_panX, m_panY);
+            m_bRectsDirty = true; // the next paint lays the nodes out at the new pan
             m_iHoverNode = -1;
             return;
         }
     }
 
     m_iHoverNode = -1;
+
+    // The chrome wins: a node panned under the switch or the strip is not
+    // hovered through them.
+    if (OverChrome(localX, localY))
+        return;
 
     if (m_nodeRects.size() != m_nodes.size())
         return;

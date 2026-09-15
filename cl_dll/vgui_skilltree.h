@@ -192,11 +192,22 @@ private:
     // the single-click, no-confirm treatment a node unlock gets.  The second
     // click has a different label in a different colour, so a double-click
     // aimed at the first cannot carry through to the second.
+    // Both chrome rects are sized from the font each paint -- the switch to
+    // its widest label, the strip to the switch -- and both take precedence
+    // over the board for hover and click: a node panned underneath one never
+    // shows its tooltip through it.
     IRect m_resetBtnRect = {};
+    IRect m_gaugeRect = {};
     float m_flResetConfirmUntil = 0.0f;   // client time the armed state expires
     static constexpr float k_ResetConfirmTime = 3.0f;
-    static constexpr int   k_ResetBtnW = 116;
-    static constexpr int   k_ResetBtnH = 16;
+    static constexpr int   k_ResetBtnMinH = 16;
+    static constexpr int   k_ResetBtnPadX = 12;
+
+    bool OverChrome(int localX, int localY) const
+    {
+        auto in = [&](const IRect& r) { return r.w > 0 && localX >= r.x && localX < r.x + r.w && localY >= r.y && localY < r.y + r.h; };
+        return in(m_resetBtnRect) || in(m_gaugeRect);
+    }
 
     bool ResetArmed() const { return m_flResetConfirmUntil > 0.0f; }
 
@@ -208,6 +219,9 @@ private:
     // top-left corner from the field's origin.
     int  m_panX = 0, m_panY = 0;
     bool m_bPanInitialized = false; // set once RebuildRects has centred or recalled a pan
+    // A pan change is a layout change: set by the drag, cleared by the next
+    // RebuildRects, which otherwise only runs when the field itself moves.
+    bool m_bRectsDirty = false;
 
     // A press just records where the gesture started; HandleMouseMove
     // promotes it to a drag once the cursor has moved past the threshold,
