@@ -24,10 +24,10 @@ This file records **what exists today**. Intended work that has not been built l
 
 | # | Pillar | Status | One-line state |
 | --- | --- | --- | --- |
-| 1 | [Exploration](#1-exploration) | **Not started** | Its rewards exist — Row Grants, Skill Points, Reset Tokens are all findable entities — but no map places one, so nothing is explored *for* yet. |
+| 1 | [Exploration](#1-exploration) | **Not started** | Its rewards exist — Row Grants, Skill Points, Reset Tokens are all findable entities, and `topmap`, the default test map, places them — but no map yet has spaces to explore *for* them. |
 | 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar. Melee Skills land, and the Backstab gives melee its first positional decision. Numbers untuned. |
 | 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. |
-| 4 | [Skill trees](#4-skill-trees) | **Playable** | 52 nodes, **all with effects**: the Melee and Weapon Specialist Routes built whole on the matrix (Stat nodes as their roads, every node one point, a major at the end of each), the Medical and Energy Routes built to all but their open nodes, Ricochet ahead of the Juggernaut, and the Dash and Alien columns waiting for their Modules. Points and Reset Tokens are earned and spent, the tree fits any screen, and nothing in it lies about what it does. Numbers untuned; no map places a Skill Point yet. |
+| 4 | [Skill trees](#4-skill-trees) | **Playable** | 52 nodes, **all with effects**: the Melee and Weapon Specialist Routes built whole on the matrix (Stat nodes as their roads, every node one point, a major at the end of each), the Medical and Energy Routes built to all but their open nodes, Ricochet ahead of the Juggernaut, and the Dash and Alien columns waiting for their Modules. Points and Reset Tokens are earned and spent, the tree fits any screen, and nothing in it lies about what it does. Numbers untuned; `topmap`, the default test map, places Skill Points, and the economy is a non-issue. |
 | 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work over a server-owned model. Row Grants are now placeable; Boxes are the remaining gap. |
 | 6 | [Stealth](#6-stealth) | **Partial** | Concealment and Suspicion are live: monsters no longer acquire the player on sight, they fill a meter at a rate set by angle, distance, stance and light, and the player is warned by `CHudConceal`. Quiet movement is deliberate. Nothing after acquisition has changed — once acquired, a monster stays acquired. |
 
@@ -74,10 +74,13 @@ and ~~50–70 findable points buy a third to a half of it~~ **(renumbered 2026-0
 buy about 71% of its ~140 nodes, 40 of them on the critical path and 60 in optional spaces. Reach is still
 what exploration buys; it now buys more of a build rather than the last of the tree.
 
-What is still missing is the same thing in every case: **maps**. Every mechanism now exists and nothing
-places one, because vanilla Half-Life maps cannot be edited to hold them. Until a map does, all three
-loops are reachable only through `inv_addrows`, `skill_addpoints` and `skill_addtokens`. There is no
-longer any *code* between this pillar and being judged — see [MAP_BRIEF.md](MAP_BRIEF.md).
+~~What is still missing is the same thing in every case: **maps**. Every mechanism now exists and nothing
+places one, because vanilla Half-Life maps cannot be edited to hold them.~~ **Corrected 2026-09-15**:
+`topmap`, the default test map, places all three rewards, so every loop is reachable in play there as well
+as through `inv_addrows`, `skill_addpoints` and `skill_addtokens`. The proving map
+([PROVING_MAP.md](PROVING_MAP.md)) is tested and closed, and the Skill Point economy is a non-issue, so
+nothing here waits on a map to judge the numbers. What the pillar still lacks is level design with
+something to explore.
 
 ### Acceptance criteria (draft)
 
@@ -931,8 +934,9 @@ designing first, and no server or wire change is involved.
 The shared definition table ([ADR-0008](adr/0008-skill-definitions-are-shared-not-networked.md)), two
 prerequisites, the points/Tokens economy, the curation pass and the UI pass are all in. What remains:
 
-**Tuning, and maps.** Every effect exists; not one number has been judged against a full playthrough, and
-no map places a Skill Point, so the economy is still theoretical. Nothing else here is blocked on code.
+**Tuning.** Every effect exists; not one number has been judged against a full playthrough. ~~No map places
+a Skill Point, so the economy is still theoretical.~~ The economy is a non-issue as of 2026-09-15, and
+`topmap`, the default test map, places Skill Points. Nothing else here is blocked on code.
 
 Notes from the effects work worth keeping:
 
@@ -984,6 +988,9 @@ player's maximum, because a HUD bar scaled against a fixed 100 shows full at 100
 resends even when the armour value itself has not changed.
 
 ### The economy
+
+**A non-issue, settled 2026-09-15.** The numbers below stand as set. They are not an open question, no
+map is waited on to judge them, and no feature is held for them.
 
 Both cvars default to **0**: every Skill Point and every Reset Token is found in the world. Neither is
 capped — the ceiling on each is how many pickups a map places, and a cap would let a found pickup silently

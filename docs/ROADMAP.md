@@ -96,7 +96,15 @@ uses of the same timer is the work, and it is small.
 
 ## Maps
 
-**Shape: Idea. The most-shared blocker in the mod.**
+**Shape: No longer a blocker, as of 2026-09-15.** Two decisions closed what this entry used to argue:
+
+- **The Skill Point economy is a non-issue.** The numbers in [SKILL_TREE.md](SKILL_TREE.md#the-economy-renumbered)
+  stand as set; nothing waits on judging them against a map, and no feature should be held for it.
+- **The proving map is tested and closed.** It served its purpose as a showcase of coworking in mapping
+  ([PROVING_MAP.md](PROVING_MAP.md)). **`topmap` is the default test map**, and it already places Skill
+  Points, Reset Tokens, Row Grants and Syringes, so every pickup below is reachable in play there.
+
+The rest of this entry is the reasoning as it stood before, kept for the record.
 
 Not a feature, but it belongs here because six completed systems are unreachable without it. Everything in
 this list is **finished code with no way to encounter it in play**:
@@ -1528,7 +1536,8 @@ since the reasoning it replaces is written down and the new reasoning should be 
   2026-09-13** under the [Juggernaut Route](#juggernaut--resilient): there is no pool. Armour is the pool,
   the Matrix raises armour's share while held, nothing refills by waiting, and the armour readout tints.
 - **How "inefficient to split" is priced.** The 35-point tree and a 60–70% critical-path budget are the
-  lever; a proving map is what tells whether the pricing does it. Both branches now sit in one Route, so
+  lever; ~~a proving map is what tells whether the pricing does it~~ (the economy is a non-issue as of
+  2026-09-15, see [Maps](#maps)). Both branches now sit in one Route, so
   "splitting" is within the Juggernaut rather than across Routes.
 - **Pulse Skills before the Module is found.** A player could spend points on a branch for a verb they do
   not have. The [alien column](PILLARS.md#wanted-the-alien-column) already wants "hidden until the player
@@ -2216,8 +2225,9 @@ Facts found while sizing a bigger tree, so they are not found twice.
   Melee 6, Medical 5: **49 Skills with ranks counted once**, and about sixteen carry two or three ranks.
   Under the matrix each rank is a Stat node and each Skill has Stat nodes on the road to it, so the tree
   lands somewhere in 120–180 nodes. ~~At today's prices that is roughly 100 points against a 50–70 target,
-  and one of them moves.~~ Both moved: every node costs one and the tree is not completable. **What 50–70
-  points buys is the pricing pass now**, and it is a question of where the roads run. Against a map.
+  and one of them moves.~~ Both moved: every node costs one and the tree is not completable. ~~**What 50–70
+  points buys is the pricing pass now**, and it is a question of where the roads run. Against a map.~~
+  **A non-issue as of 2026-09-15**: the 100-point numbers stand, and no map is waited on to judge them.
 - ~~**The id ceiling moves once more, to 256.**~~ **Built 2026-09-14.** `k_SkillIdCeiling` was 96, sized
   for a tree of about fifty; 180 nodes needs 256 (32 mask bytes on the wire, length-checked on both sides
   from the same constant). The saved field is `m_bUnlocked256` now, so a 96-entry save resets rather than
@@ -2302,10 +2312,12 @@ Secret areas, vents, shortcuts, elevators and trains. Structurally this is level
 Half-Life already ships `func_train`, `func_tracktrain`, `func_door`, `func_plat`, `func_button` and
 `func_breakable`, all working, all used by the base campaign.
 
-The reason it belongs in this document rather than a level editor is that pillar 1's reward loop is
+~~The reason it belongs in this document rather than a level editor is that pillar 1's reward loop is
 designed and unbuilt: PILLARS states the target as a tree completable only by near-exhaustive exploration,
 with roughly one Skill Point per optional space and 5–10 Reset Tokens across the campaign, the first around
-20% in. Those numbers are a level-design brief. Nobody has written a map against them.
+20% in. Those numbers are a level-design brief. Nobody has written a map against them.~~ The Skill Point
+economy is a non-issue as of 2026-09-15 (see [Maps](#maps)), so these areas are level design for its own
+sake, not a test of the numbers.
 
 ### Interactable props
 

@@ -7,8 +7,10 @@ Six systems are complete code that no level exercises. [PILLARS.md](PILLARS.md) 
 its six pillars and cannot, because tuning needs a level to tune against. [ROADMAP.md](ROADMAP.md#maps)
 files this as the mod's most-shared blocker. This document is the brief that entry asks for.
 
-**Last updated:** 2026-08-31 (branch `hl-shock`) — the one code dependency is resolved; this brief is
-now entirely map work.
+**Last updated:** 2026-09-15 (branch `hl-shock`) — **closed.** The Skill Point economy is a non-issue,
+so the question this brief was written to answer is no longer asked. The proving map was built and tested
+as a showcase of coworking in mapping ([PROVING_MAP.md](PROVING_MAP.md)), and **`topmap` is the default
+test map.** The toolchain, FGD and Tier 1 sections below still hold; Tier 2 is kept as the record.
 
 ## Correcting the record first
 
@@ -177,8 +179,8 @@ Everything in the spec above is now placeable.
 
 Recorded so the omissions read as choices:
 
-- **Whether `topmap` survives.** It is a sandbox and a useful one; the proving map is a second map, not a
-  replacement.
+- ~~**Whether `topmap` survives.** It is a sandbox and a useful one; the proving map is a second map, not a
+  replacement.~~ **Answered 2026-09-15: it does, as the default test map.**
 - **Any of ROADMAP's eight open questions.** The map is designed to keep the two that touch level design
   (Modules, stealth) genuinely open, and the other six do not bear on it.
 - **Art.** ART_DEBT's entries are unaffected by this and will not be improved by it — with one exception

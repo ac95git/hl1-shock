@@ -4,9 +4,13 @@ The level that answers [MAP_BRIEF.md](MAP_BRIEF.md#tier-2--the-proving-map). The
 must *contain*; this document says what it *is* — the rooms, the order, what goes where — and the order to
 build it in for a mapper who has not built a level before.
 
-**Status:** designed 2026-09-13; the greybox is generated and compiles sealed, not yet played. Working
-filename `proving` (a `.jmf` in J.A.C.K., exported to `maps/proving.map` in the repo, compiled to
-`topmod/maps/proving.bsp`). The name is provisional.
+**Status: tested and closed, 2026-09-15.** It served its purpose as a showcase of coworking on a map:
+the agent generated the greybox from a written spec, Andrei edited it in J.A.C.K., and the loop in
+[MAP_WORKFLOW.md](MAP_WORKFLOW.md) was proven end to end. It was never going to be the economy test below:
+the Skill Point economy is not an open question ([PILLARS pillar 4](PILLARS.md#the-economy)), so
+[the test](#the-test-when-it-is-built) will not be run. **`topmap` is the default test map.** The design
+below is kept as a record of the rooms and the mapping numbers, not as a plan. Files: `maps/proving.map`
+in the repo, compiled to `topmod/maps/proving.bsp`.
 
 **The greybox came from a script, once.** `utils/maptool/greybox_proving.py` wrote `maps/proving.map`
 on 2026-09-13 from the room list below, as axis-aligned boxes: every interior volume gets six wall slabs,

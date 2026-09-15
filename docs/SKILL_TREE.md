@@ -706,7 +706,8 @@ every node costs one, the target stays at 50–70 findable points, and the tree 
 completable. ~~What 50–70 points buys — which third of the tree — is the pricing pass now.~~ **Renumbered
 2026-09-15**: 100 findable points, 40 on the critical path and 60 in optional spaces, against about 140
 nodes; a thorough player owns about 71%. The numbers and the reason they were accepted are under
-[one start, open roads](#the-economy-renumbered). Still to be judged against a map.
+[one start, open roads](#the-economy-renumbered). ~~Still to be judged against a map.~~ **A non-issue as of
+2026-09-15**: the numbers stand and nothing waits on a map for them.
 
 ## What is built first
 
