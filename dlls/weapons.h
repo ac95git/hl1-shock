@@ -317,7 +317,11 @@ public:
 	virtual bool PlayEmptySound();
 	virtual void ResetEmptySound();
 
-	virtual void SendWeaponAnim(int iAnim, int body = 0);
+	// framerate scales the view model's playback rate (client-side only; the
+	// server copy ignores it). Quick Draw/Fast Reload pass the reciprocal of
+	// their timer scale here so the anim finishes across the shortened window
+	// instead of finishing late.
+	virtual void SendWeaponAnim(int iAnim, int body = 0, float framerate = 1.0f);
 
 	bool CanDeploy() override;
 	virtual bool IsUseable();
@@ -333,6 +337,11 @@ public:
 	// Quick Draw's multiplier on the draw delay, or 1.0 without the Skill.
 	// Both copies of DefaultDeploy apply it.
 	float DrawTimeScale();
+
+	// Reciprocal of a ReloadTimeScale()/DrawTimeScale() result, for SendWeaponAnim's
+	// framerate: a 0.6 timer scale should play the anim at 1/0.6 speed. Floored so a
+	// stray zero (or negative) tuning cvar can't produce an infinite/NaN framerate.
+	static float AnimSpeedupFor(float timeScale) { return 1.0f / (timeScale > 0.05f ? timeScale : 0.05f); }
 
 	void ItemPostFrame() override; // called each frame by the player PostThink
 	// called by CBasePlayerWeapons ItemPostFrame()

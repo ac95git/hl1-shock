@@ -21,6 +21,7 @@
 #include "StudioModelRenderer.h"
 #include "GameStudioModelRenderer.h"
 #include "katana_trail.h"
+#include "com_weapons.h"
 extern cvar_t* tfc_newmodels;
 
 extern extra_player_info_t g_PlayerExtraInfo[MAX_PLAYERS_HUD + 1];
@@ -1162,6 +1163,12 @@ bool CStudioModelRenderer::StudioDrawModel(int flags)
 	m_pStudioHeader = (studiohdr_t*)IEngineStudio.Mod_Extradata(m_pRenderModel);
 	IEngineStudio.StudioSetHeader(m_pStudioHeader);
 	IEngineStudio.SetRenderModel(m_pRenderModel);
+
+	// Quick Draw / Fast Reload play the stock animation faster
+	// (SendWeaponAnim's framerate).  Applied here, before the bones are set up,
+	// because the engine rebuilds the view model's state each frame.
+	if (m_pCurrentEntity == gEngfuncs.GetViewModel())
+		m_pCurrentEntity->curstate.framerate = HUD_GetWeaponAnimFramerate(m_pCurrentEntity->curstate.sequence);
 
 	StudioSetUpTransform(false);
 

@@ -168,11 +168,13 @@ bool CBasePlayerWeapon::DefaultDeploy(const char* szViewModel, const char* szWea
 
 	gEngfuncs.CL_LoadModel(szViewModel, &m_pPlayer->pev->viewmodel);
 
-	SendWeaponAnim(iAnim, body);
+	// Quick Draw, the same scale the server's copy applies (dlls/weapons.cpp).
+	// The anim's playback rate is the reciprocal, so it finishes across the
+	// shortened timer instead of finishing late.
+	const float flDraw = DrawTimeScale();
+	SendWeaponAnim(iAnim, body, AnimSpeedupFor(flDraw));
 
 	g_irunninggausspred = false;
-	// Quick Draw, the same scale the server's copy applies (dlls/weapons.cpp).
-	const float flDraw = DrawTimeScale();
 	m_pPlayer->m_flNextAttack = 0.5 * flDraw;
 	m_flTimeWeaponIdle = 1.0 * flDraw;
 	return true;
@@ -216,11 +218,11 @@ CBasePlayerWeapon::SendWeaponAnim
 Animate weapon model
 =====================
 */
-void CBasePlayerWeapon::SendWeaponAnim(int iAnim, int body)
+void CBasePlayerWeapon::SendWeaponAnim(int iAnim, int body, float framerate)
 {
 	m_pPlayer->pev->weaponanim = iAnim;
 
-	HUD_SendWeaponAnim(iAnim, body, false);
+	HUD_SendWeaponAnim(iAnim, body, false, framerate);
 }
 
 /*

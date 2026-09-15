@@ -21,7 +21,8 @@ int UTIL_SharedRandomLong(unsigned int seed, int low, int high);
 void HUD_SetPredictedSkills(const unsigned char* unlockedMask);
 
 int HUD_GetWeaponAnim();
-void HUD_SendWeaponAnim(int iAnim, int body, bool force);
+float HUD_GetWeaponAnimFramerate(int sequence);
+void HUD_SendWeaponAnim(int iAnim, int body, bool force, float framerate = 1.0f);
 void HUD_PlaySound(const char* sound, float volume);
 void HUD_PlaybackEvent(int flags, const struct edict_s* pInvoker, unsigned short eventindex, float delay, const float* origin, const float* angles, float fparam1, float fparam2, int iparam1, int iparam2, int bparam1, int bparam2);
 void HUD_SetMaxSpeed(const struct edict_s* ed, float speed);

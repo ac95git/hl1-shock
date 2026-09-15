@@ -409,12 +409,23 @@ through, so "melee" is true by construction rather than by a damage-type list:
   funnels through, so the glock, MP5, python, crossbow and RPG all get it without a per-weapon list. The
   shotgun feeds shells one at a time and never calls `DefaultReload`, so since 2026-09-14 its own reload
   state machine calls the same scale on every timing of the sequence: the start, each shell, and the pump
-  after the last one. The stock animations play under the shorter timer; per-tier animations are
-  [ART_DEBT.md](ART_DEBT.md) work.
+  after the last one.
 - **Quick Draw** (id 36, 2026-09-14) scales the draw delay by `skill_draw_time_scale` (0.6) through
   `CBasePlayerWeapon::DrawTimeScale`, in **both** copies of `DefaultDeploy` (`dlls/weapons.cpp` and
-  `cl_dll/hl/hl_weapons.cpp`), since the delay it sets is predicted. The same animation caveat as Fast
-  Reload.
+  `cl_dll/hl/hl_weapons.cpp`), since the delay it sets is predicted.
+
+  Since 2026-09-15 the stock draw/reload animations play sped up to match, instead of running under a
+  shortened timer at their normal rate. `SendWeaponAnim` took a third argument, `framerate` (default 1.0,
+  `dlls/weapons.h`), and every call site that scales a timer by `DrawTimeScale()`/`ReloadTimeScale()`
+  passes the reciprocal (`AnimSpeedupFor`, also `dlls/weapons.h`) — the shotgun's hand-rolled reload
+  included. The client is the only side that acts on it: `HUD_SendWeaponAnim`
+  (`cl_dll/com_weapons.cpp`) holds it, and `StudioDrawModel` applies it to the view model's
+  `curstate.framerate` before the bones are set up. It is applied at draw time because writing it once
+  did nothing: the engine rebuilds the view model's state every frame. The rate is tied to the
+  sequence it was set for, and anything else on the view model plays at 1.0. That matters because fire
+  and melee swing animations start from client events (`EV_WeaponAnimation`, `cl_dll/ev_hldm.cpp`), never
+  pass through `HUD_SendWeaponAnim`, and would otherwise inherit the last draw's rate. Bespoke per-tier animations, rather than a sped-up
+  stock one, remain unbuilt and would be [ART_DEBT.md](ART_DEBT.md) work if pursued.
 
   This is the first Skill that changes a **predicted** value, and it is the proof the prediction fix
   works. `m_flNextAttack` is owned by the client frame to frame, so the two sides shortening the reload

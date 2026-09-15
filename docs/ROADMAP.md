@@ -77,7 +77,7 @@ What that leaves:
 | Sprint speed (`SprintSpeed`, id 6) | cut from the tree for good, 2026-09-13 | nothing — cut by design, see the [Routes](#pillar-4-routes) |
 | High jump (`HighJump`, id 5) | cut from the tree for good, 2026-09-13 | nothing — cut by design, see the [Routes](#pillar-4-routes) |
 | ~~Crowbar swing speed (`CrowbarSpeed`, id 11)~~ | **built 2026-09-14** as Melee Speed, with the Melee Route | nothing — the halving rule was dropped and the Skill is in the tree |
-| Draw speed | [Weapon handling](#weapon-handling) | nothing — unblocked |
+| ~~Draw speed~~ | **built 2026-09-14** as Quick Draw, with the animation sped up to match **2026-09-15** | nothing |
 
 **The movement four are a genuinely different problem.** `pm_shared/` runs from `playermove_t`, not from
 `CBasePlayer`, so it cannot reach `m_skills` at all — the fix above does not extend to it.
@@ -91,9 +91,6 @@ Module or a movement Skill. Noticed 2026-09-12 while shaping Modules; not yet tr
 `CCrowbar::Swing` reads `m_flNextPrimaryAttack` to decide whether a swing is a first swing (full damage) or
 a follow-up (half), so shortening the interval silently makes every swing a follow-up. Separating those two
 uses of the same timer is the work, and it is small.
-
-**Draw speed is unblocked and unstarted.** `CBasePlayerWeapon::DefaultDeploy` is the same kind of shared
-chokepoint `DefaultReload` turned out to be, and Fast Reload is the worked example to copy.
 
 ---
 

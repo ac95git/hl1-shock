@@ -94,12 +94,13 @@ bool CBasePlayerWeapon::DefaultReload(int iClipSize, int iAnim, float fDelay, in
 	// instead of by a list somebody has to maintain. The shotgun is the one
 	// exception and feeds shells in one at a time through its own state
 	// machine -- see ReloadTimeScale() below and shotgun.cpp.
-	fDelay *= ReloadTimeScale();
+	const float flReload = ReloadTimeScale();
+	fDelay *= flReload;
 
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + fDelay;
 
 	//!!UNDONE -- reload sound goes here !!!
-	SendWeaponAnim(iAnim, body);
+	SendWeaponAnim(iAnim, body, AnimSpeedupFor(flReload));
 
 	m_fInReload = true;
 

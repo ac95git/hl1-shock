@@ -74,6 +74,7 @@ void COM_Log(const char* pszFile, const char* fmt, ...)
 // remember the current animation for the view model, in case we get out of sync with
 //  server.
 static int g_currentanim;
+static float g_currentanimFramerate = 1.0f;
 
 /*
 =====================
@@ -82,7 +83,7 @@ HUD_SendWeaponAnim
 Change weapon model animation
 =====================
 */
-void HUD_SendWeaponAnim(int iAnim, int body, bool force)
+void HUD_SendWeaponAnim(int iAnim, int body, bool force, float framerate)
 {
 	// Don't actually change it.
 	if (!g_runfuncs && !force)
@@ -92,6 +93,18 @@ void HUD_SendWeaponAnim(int iAnim, int body, bool force)
 
 	// Tell animation system new info
 	gEngfuncs.pfnWeaponAnim(iAnim, body);
+
+	// Held here, not written to the view model: the engine rebuilds that
+	// entity's state every frame, so the renderer applies it at draw time.
+	g_currentanimFramerate = framerate;
+}
+
+// Fire and swing animations start from events (EV_WeaponAnimation) and never
+// pass through here, so the rate is tied to the sequence it was set for:
+// anything else the view model is playing runs at 1.0.
+float HUD_GetWeaponAnimFramerate(int sequence)
+{
+	return sequence == g_currentanim ? g_currentanimFramerate : 1.0f;
 }
 
 /*

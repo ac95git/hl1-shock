@@ -730,8 +730,12 @@ bool CBasePlayerWeapon::UpdateClientData(CBasePlayer* pPlayer)
 }
 
 
-void CBasePlayerWeapon::SendWeaponAnim(int iAnim, int body)
+void CBasePlayerWeapon::SendWeaponAnim(int iAnim, int body, float framerate)
 {
+	// The server has no view model to render; framerate only matters to the
+	// client's predicted copy of this function (cl_dll/hl/hl_weapons.cpp).
+	(void)framerate;
+
 	const bool skiplocal = !m_ForceSendAnimations && UseDecrement() != false;
 
 	m_pPlayer->pev->weaponanim = iAnim;
@@ -852,12 +856,13 @@ bool CBasePlayerWeapon::DefaultDeploy(const char* szViewModel, const char* szWea
 	m_pPlayer->pev->viewmodel = MAKE_STRING(szViewModel);
 	m_pPlayer->pev->weaponmodel = MAKE_STRING(szWeaponModel);
 	strcpy(m_pPlayer->m_szAnimExtention, szAnimExt);
-	SendWeaponAnim(iAnim, body);
 
 	// Quick Draw. The client's copy (cl_dll/hl/hl_weapons.cpp) scales the
-	// same two numbers by the same call; the draw animation plays under the
-	// shorter timer, the accepted state until per-tier draws exist.
+	// same two numbers by the same call; the draw anim's playback rate is the
+	// reciprocal, so it finishes across the shortened timer instead of late.
 	const float flDraw = DrawTimeScale();
+	SendWeaponAnim(iAnim, body, AnimSpeedupFor(flDraw));
+
 	m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.5 * flDraw;
 	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.0 * flDraw;
 	m_flLastFireTime = 0.0;

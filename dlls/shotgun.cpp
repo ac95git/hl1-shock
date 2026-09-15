@@ -255,7 +255,7 @@ void CShotgun::Reload()
 	// check to see if we're ready to reload
 	if (m_fInSpecialReload == 0)
 	{
-		SendWeaponAnim(SHOTGUN_START_RELOAD);
+		SendWeaponAnim(SHOTGUN_START_RELOAD, 0, AnimSpeedupFor(flReloadScale));
 		m_fInSpecialReload = 1;
 		m_pPlayer->m_flNextAttack = UTIL_WeaponTimeBase() + 0.6 * flReloadScale;
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.6 * flReloadScale;
@@ -275,7 +275,7 @@ void CShotgun::Reload()
 		else
 			EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/reload3.wav", 1, ATTN_NORM, 0, 85 + RANDOM_LONG(0, 0x1f));
 
-		SendWeaponAnim(SHOTGUN_RELOAD);
+		SendWeaponAnim(SHOTGUN_RELOAD, 0, AnimSpeedupFor(flReloadScale));
 
 		m_flNextReload = UTIL_WeaponTimeBase() + 0.5 * flReloadScale;
 		m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.5 * flReloadScale;
@@ -321,14 +321,15 @@ void CShotgun::WeaponIdle()
 			else
 			{
 				// reload debounce has timed out
-				SendWeaponAnim(SHOTGUN_PUMP);
+				// Still the reload sequence finishing (the pump after the last
+				// shell), so Fast Reload applies here too.
+				const float flPumpReloadScale = ReloadTimeScale();
+				SendWeaponAnim(SHOTGUN_PUMP, 0, AnimSpeedupFor(flPumpReloadScale));
 
 				// play cocking sound
 				EMIT_SOUND_DYN(ENT(m_pPlayer->pev), CHAN_ITEM, "weapons/scock1.wav", 1, ATTN_NORM, 0, 95 + RANDOM_LONG(0, 0x1f));
 				m_fInSpecialReload = 0;
-				// Still the reload sequence finishing (the pump after the last
-				// shell), so Fast Reload applies here too.
-				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.5 * ReloadTimeScale();
+				m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 1.5 * flPumpReloadScale;
 			}
 		}
 		else
