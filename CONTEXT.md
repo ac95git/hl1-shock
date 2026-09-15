@@ -111,15 +111,13 @@ _Avoid_: respec token, refund, reroll
 The smallest node in the Skill Tree: one flat bonus (+5% melee damage), one Skill Point, and a shared icon
 with every other node of the same stat. Stat nodes are the roads between Skills and the whole of their
 price; a player takes them to get somewhere, never for their own sake. A Stat node opens from any owned
-node beside it, so roads have no gates of their own (settled 2026-09-15, not yet built). A Stat node is
-a node, not a Skill.
+node beside it, so roads have no gates of their own (2026-09-15). A Stat node is a node, not a Skill.
 _Avoid_: passive, filler, minor (a tier name), travel node
 
 **Skill Tree**:
 The full set of Skills and Stat nodes on one grid. Any node opens from any owned node beside it, and
-empty cells are the only walls; there are no prerequisites (settled 2026-09-15, not yet built — the code
-still has them). The suit at the centre is the one start, held from the first moment and kept through a
-Reset. Every other node costs one Skill Point, and the tree is deliberately not completable.
+empty cells are the only walls; there are no prerequisites (settled and built 2026-09-15). The suit at
+the centre is the one start, held from the first moment and kept through a Reset. Every other node costs one Skill Point, and the tree is deliberately not completable.
 _Avoid_: upgrade tree, talent tree, perk tree; and board (a Grid word to avoid, and the tree is not one)
 
 ### The Infusion

@@ -4,7 +4,8 @@ Date: 2026-09-15
 
 ## Status
 
-Accepted. Supersedes the *reachability* and *roots* bullets of [SKILL_TREE.md, "The matrix"](../SKILL_TREE.md#the-matrix--settled-2026-09-14)
+Accepted, and **built the same day** (`SkillReachable`, `ESkillId::Suit`, the four board asserts, the
+board of SKILL_MAP.md). Supersedes the *reachability* and *roots* bullets of [SKILL_TREE.md, "The matrix"](../SKILL_TREE.md#the-matrix--settled-2026-09-14)
 (2026-09-14); everything else in that section stands.
 
 ## Context

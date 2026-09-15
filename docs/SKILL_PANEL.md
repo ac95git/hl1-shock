@@ -3,8 +3,11 @@
 The look and behaviour of the Skill Tree's page in the Inventory Panel, settled in a grill on 2026-09-15
 after [SKILL_TREE.md](SKILL_TREE.md) settled the tree's shape. This is the presentation only; the rules
 are in SKILL_TREE.md, the art is briefed in [ART_DEBT.md](ART_DEBT.md#the-skill-tree--the-circuit-substrate-traces-and-frames),
-and what exists in code today is `cl_dll/vgui_skilltree.cpp` and `cl_dll/vgui_inventory.cpp`. **None of
-this is built yet.**
+and the code is `cl_dll/vgui_skilltree.cpp` and `cl_dll/vgui_inventory.cpp`. **Built 2026-09-15, the
+same day it was settled**, with rects and the HUD's own sprites standing in for every asset the art
+brief names: the substrate is a drawn grid until a tile exists, the frames are rect chips with drawn
+pins until frame sprites exist, the icons are the stock HUD placeholders. Each row below says what stands
+in. The Skill Points counter shows two digits, 0–99.
 
 ## The theme in one paragraph
 

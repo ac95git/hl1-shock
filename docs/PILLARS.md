@@ -710,10 +710,26 @@ table row, one `EItemTypeId`, one `CItem` subclass, one FGD line, one `case`.
 
 **Status: Playable**
 
-**Planned:** the six remaining Routes in [SKILL_TREE.md](SKILL_TREE.md), built one at a time from
-[ROADMAP.md](ROADMAP.md#pillar-4-routes). The **Melee Route was built first, 2026-09-14**, whole; it is
-the worked example of a Route on the matrix. Of the reserved ids, `HiveCapacity` /
-`HiveRegrowth` return with the Alien Route and 22–23 wait for the stealth column; four are cut for good.
+**2026-09-15: the tree became the board, in one session.** [ADR-0012](adr/0012-the-skill-tree-has-one-start-and-open-roads.md)
+is built: the Suit (id 65, `ENodeTier::Suit`, cost 0) is the one start, held from spawn and through a
+Reset; **there are no prerequisites** — `SkillReachable` opens a node from any owned orthogonal
+neighbour, `prereq`/`prereq2` are gone from `SkillDef`, and with them the connector edges, the
+`Requires:` tooltip block and the `skilltree_debug_edges` overlay. Every node sits on the 15×15 board of
+[SKILL_MAP.md](SKILL_MAP.md): 160 ids, all nine regions placed, the three Module-gated regions and the
+Pulse nodes carrying an `EGate` and drawn as blank pads until the server's saved gate bitmask opens them
+(a byte on `gmsgSkillTree`, now 35 bytes; the Pulse gate is open until the Pulse becomes a Module;
+`skill_open_gates` / `skill_close_gates` are the cheats). Four compile-time checks hold the board: on the
+board, one per cell, no islands, every node reachable from the Suit by flood fill. Built the same day:
+Egon Focus, Overdraw, Last Stand and Glass Cannon; the hub's Max Health and Max Armour stats; and the
+panel of [SKILL_PANEL.md](SKILL_PANEL.md) — 1:1 with drag to pan, the gauge strip, the hazard-striped
+Reset switch, the suit-designation header, and the board drawn as the suit's circuit. **The bullets below
+that describe prerequisites, connectors, the `Requires:` list, the column layout or the fit-to-area view
+describe the tree as it was on 2026-09-14** and are struck where they contradict; none of it is code any
+more.
+
+**Planned:** the effects behind the hidden regions' nodes (Shinobi, Stealth, Alien, the Juggernaut's
+Matrix), each with its Module; the art the circuit is drawn with (ART_DEBT). The **Melee Route was built
+first, 2026-09-14**, whole; it is the worked example of a Route. Four ids are cut for good.
 
 Every Skill in the tree changes how the game plays. The pillar's own acceptance criterion — "every unlocked
 skill has an observable effect" — is met, which is what moved this off Scaffolded.
@@ -757,10 +773,12 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
 - A `static_assert` enforces that the table is ordered by id. It is indexed positionally, so a row out of
   place would silently make a save's unlocked bits refer to different abilities — the grouping that reads
   most naturally to a human is exactly the mistake, so it is a compile error.
-- Each `SkillDef` carries id, display name, description, icon, grid column/row, cost (always 1), **two**
-  prerequisites, a visual tier (`Stat` / `Minor` / `Medium` / `Major`) and a stat. Both prerequisites are
-  required, so a connector line always means "you need this".
-- `SkillPrereqMet` is the one implementation of the gating rule; server and client both call it.
+- Each `SkillDef` carries id, display name, description, icon, grid column/row, cost (always 1, the Suit
+  0), a visual tier (`Stat` / `Minor` / `Medium` / `Major` / `Suit`), a stat and a gate. ~~**two**
+  prerequisites … Both prerequisites are required, so a connector line always means "you need this".~~
+  **Gone 2026-09-15**: there are no prerequisites and no connectors.
+- ~~`SkillPrereqMet`~~ `SkillReachable` is the one implementation of the gating rule — any owned
+  orthogonal neighbour — and server and client both call it.
 
 **Server** — `dlls/player_skills.cpp` / `dlls/player_skills.h`
 
@@ -823,19 +841,16 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
   designed 96) overrides the grid step for judging spacing by eye.
 - **A layout check** (client), the second half of the pair SKILL_TREE.md asked for before the third Route.
   `SkillDefsOnePerCell` is a `static_assert` that no two rows of the table share a cell.
-  `skilltree_debug_edges` (default 0) redraws any prerequisite edge whose ends are not grid neighbours,
-  diagonals included, thick and red, marks its midpoint with the span as `(dc,dr)`, and lists the edges to
-  the console once when it turns on or the count changes. Adjacency is one helper, `GridCellsAdjacent`, so
-  the overlay and the listing cannot disagree.
+  ~~`skilltree_debug_edges` (default 0) redraws any prerequisite edge whose ends are not grid neighbours…~~
+  **Deleted 2026-09-15** with the edges; the board's checks are now all compile-time (`SkillDefsOnBoard`,
+  `SkillDefsNoIslands`, `SkillDefsAllReachableFromSuit` beside the one-per-cell assert).
 - **No text labels on nodes, by design** — an icon and a cost, nothing else. Reading the tree means
   hovering, which is the same instinct behind the anonymization feature below. This makes icon
   distinctness *blocking* rather than cosmetic; see [ART_DEBT.md](ART_DEBT.md).
-- **Cost is drawn on each node**, coloured for affordable / reachable-but-unaffordable / gated. It is the
-  most important number on the screen now that points are scarce, and it used to be visible nowhere at
-  all — `SkillNode::cost` was parsed and never drawn.
-- **The hover bubble** carries name, description and a `Requires:` list naming unmet prerequisites, which
-  is what makes a two-prerequisite tree with no labels navigable — a node greys out and the bubble is the
-  only thing that says why. Laid out from real font metrics; see [TECH_DEBT.md](TECH_DEBT.md).
+- ~~**Cost is drawn on each node**~~ Nothing is printed on a node since the matrix (every node costs one).
+- **The hover bubble** carries name and description only ~~and a `Requires:` list naming unmet
+  prerequisites~~ (gone 2026-09-15; the board has no prerequisites, and a hidden node's bubble reads
+  `No signal`). Laid out from real font metrics; see [TECH_DEBT.md](TECH_DEBT.md).
 - Labels, descriptions, icons, positions, costs, prerequisites and tiers all come from the shared
   `k_SkillDefs`. Adding a skill is one table row. The old client-local `k_SkillUiInfo` copy is gone.
 - "Available" is derived client-side from the unlocked mask and the shared table. That is a display
@@ -857,9 +872,13 @@ skill has an observable effect" — is met, which is what moved this off Scaffol
 - **Node icons.** The tree is deliberately label-free, which makes icon distinctness *blocking* rather than
   cosmetic — and today five Skills share `suit_full`. See [ART_DEBT.md](ART_DEBT.md).
 
-### Two prerequisites per Skill — DONE
+### ~~Two prerequisites per Skill — DONE~~ Superseded 2026-09-15
 
-A `SkillDef` now holds two prerequisites and requires both. **Follow-Up** (id 18) was the Skill that
+**No prerequisites remain** ([ADR-0012](adr/0012-the-skill-tree-has-one-start-and-open-roads.md)):
+Follow-Up now sits in the hub's corner cell between Melee and Juggernaut and opens from either side; its
+effect still needs a deflect. The section is kept as the record of the 2026-09 state.
+
+A `SkillDef` held two prerequisites and required both. **Follow-Up** (id 18) was the Skill that
 forced it — a crowbar payoff for a Pulse deflect, which used to hang off `CrowbarDamage` alone, so a
 player could take it having never touched the Pulse tree for a Skill that does nothing without deflecting.
 It is now gated on `CrowbarDamage` **and** `PulseRecharge`.

@@ -43,14 +43,14 @@ are assigned when a node is built, never reused, and **22 and 23 are spoken for*
 
 | Route | Nodes | Root | Major node | Needs |
 | --- | --- | --- | --- | --- |
-| [Juggernaut](#juggernaut) | 11 | Fortitude (8) | +100 decaying armour on Matrix activation | The Pulse Module for its Pulse nodes |
-| [Alien](#alien) | 7 | Hive Capacity (20) | The volley is energy damage | The alien Module; the whole Route is hidden until it |
+| [Juggernaut](#juggernaut) | 11 | Fortitude (8) | +100 decaying armour on Matrix activation | The Pulse Module for its Pulse nodes. **Matrix trio placed hidden 2026-09-15**, no effect yet |
+| [Alien](#alien) | 7 | Hive Capacity (20) | The volley is energy damage | The alien Module; the whole Route is hidden until it. **Placed hidden 2026-09-15**, no effects yet |
 | [Energy](#energy) | 6 + 4 Stat | Energy Damage (54) | Overdraw: energy attacks drain armour for bonus damage | — . **Building since 2026-09-14** |
 | [Melee](#melee) | 6 + 9 Stat | Melee Reach (1) | Cleave | — . **Built 2026-09-14** |
 | [Weapon Specialist](#weapon-specialist) | 7 + 7 Stat | Marksman (35) | Swap Surge (39) | — . **Built 2026-09-14** |
-| [Shinobi](#shinobi--the-dash-route) | 7 | Sure Footing (7), in the hub since 2026-09-15 | Air Dash | The Dash Module for its Dash nodes |
+| [Shinobi](#shinobi--the-dash-route) | 7 | Sure Footing (7), in the hub since 2026-09-15 | Air Dash | The Dash Module for its Dash nodes. **Placed hidden 2026-09-15**, no effects yet |
 | [Medical](#medical) | 5 + 4 Stat | Med Expert (19) | Last Stand | — . **Building since 2026-09-14** |
-| [Stealth](#stealth) | 7 | Soft Step | Silent Kill | The Night Vision Module; the region is hidden until it. **Shaped 2026-09-15** |
+| [Stealth](#stealth) | 7 | Soft Step | Silent Kill | The Night Vision Module; the region is hidden until it. **Shaped and placed hidden 2026-09-15**, no effects yet |
 
 49 Skills, ranks counted once. About sixteen carry ranks, and each rank becomes a Stat node on the road
 under [the matrix](#the-matrix--settled-2026-09-14); the tree that results is **154 nodes** (153 buyable)
@@ -201,7 +201,10 @@ it has been played.
 | --- | --- | --- |
 | **Glass Cannon** | Max health becomes 50 — **the ceiling after every other health bonus** (Fortitude, the hub's health nodes; confirmed 2026-09-15). Last Stand is permanently armed: a hit that would kill spends an unused Syringe and starts the Infusion, and Infusion healing is doubled below 50 — which at 50 max is always. **No damage multiplier of any kind**; the cannon is whatever the roads around it provide | The Melee–Dash seam, top-left. Medical is on the far side of the tree, so this is the west side's only Last Stand |
 
-Drawn Major-sized with a red frame.
+Drawn Major-sized with a red frame. **Built 2026-09-15** as id 105 at (0,5): the 50 is applied in
+`ApplySkillHealthBonus` after every other bonus (`skill_glass_cannon_max_health`), and every Last Stand
+test goes through `CBasePlayer::LastStandArmed`, which is Last Stand or Glass Cannon. Melee's (1,5)
+became `StatMelee12` (106) with it.
 
 **Last Stand, settled 2026-09-15, for the Medical Major and Glass Cannon alike:** a hit that would kill
 leaves the player at **1 health** instead; the player is **invincible for 3 seconds**; an unused Syringe
@@ -259,19 +262,15 @@ are an [ART_DEBT entry](ART_DEBT.md#the-skill-tree--the-circuit-substrate-traces
 - **Gated regions** draw as blank pads: a hidden Route shows a footprint, not a hole.
 - **Nothing is printed on a node.** The Skill Point readout and the Reset button stay as they are.
 
-### What it costs to build, before the third Route
+### ~~What it costs to build, before the third Route~~ Built 2026-09-15
 
-- `SkillPrereqMet` becomes the adjacency test, in the shared header, both DLLs; `prereq` and `prereq2`
-  leave `SkillDef`, and the connector-edge drawing and `skilltree_debug_edges` go with them (traces are
-  drawn between neighbours instead).
-- The suit node: an id, a row exempt from the cost-one `static_assert`, held on spawn and after
-  `TryReset`, not counted by `SpentPoints`.
-- An island check: a `static_assert` that every node has at least one neighbour, and ideally that every
-  node is reachable from the suit.
-- The 52 built nodes re-placed into their regions **per [SKILL_MAP.md](SKILL_MAP.md) and
-  `docs/skill_map.csv`**, settled cell by cell later the same day; ids, effects and cvars untouched.
-  `docs/skill_tree.csv` is superseded.
-- Each region reads from its door outward, not top to bottom as the column layout did.
+All of it, the same day it was settled: `SkillReachable` in the shared header; the Suit as id 65, cost 0,
+held through `HoldSuit` on spawn, after a Reset and in the predicted copy; four `static_assert`s (on the
+board, one per cell, no islands, flood fill from the Suit); every node re-placed per
+[SKILL_MAP.md](SKILL_MAP.md), the hidden regions included as gated rows (ids 107–159, `_Count` 160),
+with the server's saved gate bitmask sent as a byte on the sync message and the client drawing a gated
+node as one blank pad. What is not built is the effect behind every hidden node, and each Module that
+opens its gate.
 
 ---
 
@@ -355,10 +354,10 @@ deals energy damage, slash and wave (built 2026-09-14), and scales off both Mele
 | Energy Damage | 54 | Energy hits 15% harder (`DMG_ENERGYBEAM` at the damage chokepoints). The katana, the egon, the Discharge and the Alien volley all read it | Built. **Root** |
 | Energy Damage ×4 | 60–63 | +5% energy damage each, additive within the stat. **The root's ranks became these** | Built. **The roads** |
 | Energy Efficiency | 56 | The egon's ammo ticks come a third further apart (`skill_energy_efficiency_scale` 1.33), so uranium drains a quarter slower, and the katana's wave costs a quarter less uranium (5 → 4). Egon Efficiency until the wave spent uranium, 2026-09-14 | Built |
-| Egon Focus | 55 | Right click toggles the SDK's dormant narrow beam, as it is: single target, `sk_plr_egon_narrow` (6) per pulse against the wide beam's 14, 3 uranium a second against 5, no splash, no gib. Energy Damage and Energy Efficiency both read it | Reserved. **Detailed 2026-09-15** |
+| Egon Focus | 55 | Right click toggles the SDK's dormant narrow beam, as it is: single target, `sk_plr_egon_narrow` (6) per pulse against the wide beam's 14, 3 uranium a second against 5, no splash, no gib. Energy Damage and Energy Efficiency both read it | **Built 2026-09-15**: `CEgon::SecondaryAttack`, at (2,12) |
 | ~~Quick Charge~~ | 57 | ~~The katana's charged wave charges faster~~ | **Cut 2026-09-15**: the wave throws instantly, there is no charge. Id reserved forever; its cell becomes a Stat node |
 | Insulation | 58 | Energy **and shock** taken ×0.7 (`skill_insulation_scale`) in the player's `TakeDamage` | Built |
-| **Major: Overdraw** | 59 | **Energy attacks drain armour as well, for bonus damage. Always on, never below a floor** (~20) | Reserved. Named 2026-09-15. **Placed the same day on the Energy–Juggernaut seam** as the tree's Energy × Juggernaut node |
+| **Major: Overdraw** | 59 | **Energy attacks draw on armour too**: each unit of uranium spent also drains half a point of armour (`skill_overdraw_armor_per_uranium` 0.5), after Energy Efficiency's discount, never below `skill_overdraw_floor` (20); while armour is above the floor, energy damage ×`skill_overdraw_damage_scale` (1.5). The bonus's shape was never grilled; it is a cvar to be judged | **Built 2026-09-15** at (4,14), the Energy × Juggernaut seam: the drain in the egon's ammo ticks and the wave's charge, the bonus at the energy chokepoint, a `debug_damage` line per drain |
 
 **Superseded 2026-09-15 by [SKILL_MAP.md](SKILL_MAP.md)**: cols 0–4, rows 10–14, entered from Melee
 across Cleave's row and from Juggernaut's armour column, Overdraw at (4,14) on the Juggernaut seam. The
@@ -536,7 +535,7 @@ in it at all**. [ROADMAP](ROADMAP.md#medical).
 | Healing ×4 | 50–53 | +10% on an Infusion's rate and a medkit's heal each, additive within the stat. **Potency's ranks became these** | Built. **The roads** |
 | Overheal | 47 | An Infusion's ticks that would be lost on a full bar go above the maximum instead, up to `skill_overheal_cap` (50) over; the excess drains at `skill_overheal_decay` (2/s) once the Infusion ends. Read a little wider than "a Syringe used at full health": an Infusion that *reaches* full keeps going too, which is the same waste made a decision | Built |
 | Leech | 48 | Melee hits on a living monster heal a tenth of the swing's damage (`skill_leech_fraction`), every roster weapon, per victim in a Cleave. The chainsaw's lifesteal is its own base property | Built |
-| **Major** | 49 | **Last Stand**: a hit that would kill leaves the player at 1 health and invincible for 3 seconds; an unused Syringe is spent and its Infusion starts; Infusion healing is doubled below 50 health; 60 s cooldown | Reserved. ~~One question before it is built~~ **Answered 2026-09-15**: held at 1, see [the keystone](#the-keystone). Glass Cannon grants the same effect permanently |
+| **Major** | 49 | **Last Stand**: a hit that would kill leaves the player at 1 health and invincible for 3 seconds; an unused Syringe is spent and its Infusion starts; Infusion healing is doubled below 50 health; 60 s cooldown | **Built 2026-09-15**, in the player's `TakeDamage` after the armour split, spending the Syringe through the Inventory's own Use path; cvars `skill_last_stand_*`. Glass Cannon arms it permanently through `CBasePlayer::LastStandArmed` |
 
 **Superseded 2026-09-15 by [SKILL_MAP.md](SKILL_MAP.md)**: cols 5–9, rows 0–4, entered from Fortitude,
 Last Stand at the top between Overheal and Leech. The 2026-09-14 column layout, still what the code holds:

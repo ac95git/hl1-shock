@@ -1596,6 +1596,13 @@ and wants an ADR when the first Route lands.
   melee investment) still describes the early tree. It does not describe the endgame, which is meant to
   one-shot things that are not grunts.
 
+### Built 2026-09-15, the same day
+
+An implementation session with delegated agents built everything below that is code: the rule and the
+Suit, the board with every region placed and the hidden ones gated, the panel of SKILL_PANEL.md, and
+Egon Focus, Overdraw, Last Stand and Glass Cannon. Not built: the effects behind the hidden regions'
+nodes and the Modules that open them; the art. What exists is in [PILLARS pillar 4](PILLARS.md#4-skill-trees).
+
 ### Settled 2026-09-15 — one start, open roads, the count, the keystone, the circuit
 
 A grill held before the third Route, on the tree as a whole rather than on a Route. Every point below was
