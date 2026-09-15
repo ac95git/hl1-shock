@@ -291,9 +291,11 @@ including the muzzle-flash asymmetry that makes a naive generalisation exactly b
 [Deliberately not generalised](PERCEPTION.md#deliberately-not-generalised). Marked for review, not for
 building.
 
-**The flashlight, and night vision.** Proposed 2026-09-12 and not decided: remove the flashlight entirely
-and replace it with a night-vision device. Recorded because it is a stealth-motivated *item* change that
-would otherwise live only in conversation. Two verified facts bear on it. `GETENTITYILLUM` reads the baked
+**The flashlight, and night vision.** ~~Proposed 2026-09-12 and not decided: remove the flashlight entirely
+and replace it with a night-vision device.~~ **Decided 2026-09-15**: night vision is the fifth
+[Module](#pillar-3-modules), found in the world, replacing the flashlight from then on; the flashlight
+stays until it is found. It gates the Stealth region of the Skill Tree
+([SKILL_TREE.md](SKILL_TREE.md#the-night-vision-module)). Two verified facts bear on it. `GETENTITYILLUM` reads the baked
 lightmap only, so **the flashlight does not register in Concealment at all** — walking a dark corridor with
 it on is currently exactly as concealing as walking the same corridor dark, which is the one obvious hole in
 the light term and the cheapest thing night vision would close. And whatever icon night vision takes, it
@@ -1452,6 +1454,7 @@ can never assume, and because the same comfort goal is met better inside the Pul
 | **Dash** | A short, fast movement burst. | **The long jump module**, which serves the same purpose |
 | **Hook** | A grappling hook, in the manner of Opposing Force's barnacle grapple. | — |
 | **The alien Module** (unnamed) | A platform for alien weapons that run on **Cores**; the summon weapon is its first. Handed over by the freed alien slave. | — |
+| **Night Vision** | Opposing Force's night vision, adapted from `E:\Projects\halflife-op4-updated`. Gates the Stealth region of the Skill Tree. **Settled 2026-09-15.** | **The flashlight**, which stays until the Module is found |
 
 The Opposing Force grapple code will be added to the project for reference; nothing about the Hook should
 be designed against guesses until it is.
@@ -1618,6 +1621,19 @@ in [ADR-0012](adr/0012-the-skill-tree-has-one-start-and-open-roads.md).
   (Juggernaut), +5% bullet damage east (Specialist), +5% melee damage west (Melee), with a Minor of higher
   value on each side of the rim (first-cut reading: Fortitude, Battery Capacity, Marksman, Melee Force).
 - **The Dash Route is named Shinobi.**
+- **The Stealth Route is shaped**, seven nodes on Concealment roads, all reading a monster's own meter at
+  an action: Soft Step, Ambush (22, the merged unaware-damage node, ×1.25 below Spotted / ×1.5 below
+  Noticed, all weapons), Phantom (23, an Unseen Backstab buys 2 s at ×1.2 speed with silent movement),
+  Nightfall, Slip Away, Cut the Head, and the Major **Silent Kill** (an unseen kill leaves no witness, no
+  Disturbance, no squad LKP). The last two wait on the post-aggro step. The Gargantua stack was checked:
+  Stealth alone reaches 405 of 800 and needs Melee and Energy for the rest. See
+  [SKILL_TREE.md](SKILL_TREE.md#stealth).
+- **A fifth Module, Night Vision**, gates the Stealth region and replaces the flashlight when found; the
+  flashlight stays until then. Adapted from Opposing Force's, source at `E:\Projects\halflife-op4-updated`.
+- **Rejected while shaping Stealth**: Assassinate as a separate node (one verb with Ambush); Executioner
+  (an unnoticed Backstab kills outright — hands out the one-shot the stacking is meant to earn); Sabotage
+  (disabling turrets from behind); Follow Through and Shroud as the seventh node; a "never noticed" saved
+  flag in favour of reading the meter at the hit.
 - **Nine regions on 15×15.** Hub in the centre with the suit stats and the four old survivability
   Skills; ungated Routes on the edges (Melee W, Medical N, Specialist E, Juggernaut S); gated or late
   Routes in the corners (Dash NW, Stealth NE, Alien SE, Energy SW). Stealth is a corner because it may be
@@ -2364,6 +2380,7 @@ is designed, and may well change name first.
 | **Module** | A mechanic the player does not start with, found partway through the game and kept for good — never swapped. | Deliberately echoes "the longjump module", which is the model. Graduates to CONTEXT.md when the first one is built. |
 | **Dash**, **Hook** | Two of the three Modules; the Pulse is the third. Dash replaces the long jump. | Plain, and hard to improve on. |
 | **Shinobi** | The Route built on the Dash Module. | Named 2026-09-15; *Ninja* was the candidate, *Agility* stays with the suit. |
+| **Night Vision** | The fifth Module: replaces the flashlight when found, gates the Stealth region. | Settled 2026-09-15. Adapted from Opposing Force. |
 | **Overdraw** | The Energy Route's Major: energy attacks drain armour as well, for bonus damage. | Named 2026-09-15. |
 | **Evolution** | A durable alteration to a weapon that keeps the weapon's identity — silencer, second barrel, extended magazine. | Avoid *attachment* and *mod*; the first implies removable hardware, the second collides with "the mod". |
 | **Transmission** | A recorded log found in a level and played back. | Avoid *log*, *tape*, *audio diary*, *datapad*. |

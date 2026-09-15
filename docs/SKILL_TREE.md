@@ -50,6 +50,7 @@ are assigned when a node is built, never reused, and **22 and 23 are spoken for*
 | [Weapon Specialist](#weapon-specialist) | 7 + 7 Stat | Marksman (35) | Swap Surge (39) | — . **Built 2026-09-14** |
 | [Shinobi](#shinobi--the-dash-route) | 7 | Sure Footing (7), in the hub since 2026-09-15 | Air Dash | The Dash Module for its Dash nodes |
 | [Medical](#medical) | 5 + 4 Stat | Med Expert (19) | Last Stand | — . **Building since 2026-09-14** |
+| [Stealth](#stealth) | 7 | Soft Step | Silent Kill | The Night Vision Module; the region is hidden until it. **Shaped 2026-09-15** |
 
 49 Skills, ranks counted once. About sixteen carry ranks, and each rank becomes a Stat node on the road
 under [the matrix](#the-matrix--settled-2026-09-14); the tree that results is **about 140 nodes** on the
@@ -159,8 +160,8 @@ Why this ring and not another:
   (Energy, Juggernaut, Dash, Medical, Stealth) and an edge region touches only two corners. Energy is the
   Gargantua build and Dash is the ninja; they won. Juggernaut, Melee's third strong link, is reached
   through the hub's corner cell, where Follow-Up already needs both.
-- **Stealth is a corner, opposite Melee**, on purpose: it may be gated behind a Stealth Module later, and
-  the corners are where gated Routes live. The cost is that Dash and Stealth do not touch — both are
+- **Stealth is a corner, opposite Melee**, on purpose: it is gated behind the Night Vision Module (settled
+  later the same day), and the corners are where gated Routes live. The cost is that Dash and Stealth do not touch — both are
   corners — so the ninja's stealth half is reached through Medical's region or the hub, and the
   never-noticed Backstab tier is far from the Melee region. Recorded as a known trade, not an oversight.
 - **Medical is the edge between Dash and Stealth.** It is ungated, so it belongs on an edge, and Leech
@@ -552,6 +553,54 @@ Last Stand fires only when no Infusion is running ([ADR-0007](adr/0007-the-infus
 
 ---
 
+## Stealth
+
+**Shaped 2026-09-15**, the eighth region, north-east corner, roads of **Concealment** Stat nodes (each
+makes monsters learn about the player 5% slower). Built on the perception model in
+[PERCEPTION.md](PERCEPTION.md) and on nothing else: every node reads a monster's own Suspicion meter at
+the moment of an action — a strike, a kill, a break of contact — and none rewards waiting. **Hidden until
+the Night Vision Module** (below). Two nodes wait on the post-aggro step
+([ROADMAP](ROADMAP.md#the-post-aggro-step)), as Shinobi's wait on the Dash Module.
+
+One property of the model carries two of these nodes for free: **being hit fills a monster's meter
+outright**, so any player hit landing while the meter is below full is by construction the opening hit,
+and "unaware" needs no flag — it is a comparison against the meter and the two thresholds the readout
+already shows. *Unseen* is Suspicion below `suspicion_notice`; *Spotted* is at `suspicion_acquire`.
+
+| Node | Id | Effect | Works today? |
+| --- | --- | --- | --- |
+| Soft Step | new | Crouched and walking body noise halved again (`noise_stance_*` scaled) | Yes. **Entry** |
+| **Ambush** | 22 | Player-dealt damage to a hostile monster is multiplied by how unaware it is at the hit, read off that monster's own meter: **×1.25 below Spotted, ×1.5 below Noticed** (two cvars). Every weapon — bullets, blast, the katana's wave, hornets, melee — each victim of a grenade or a Cleave on its own meter. Stacks multiplicatively with the Backstab and everything else. Never on the always-aware profiles, on a monster flagged to ignore Concealment, or on anything not hostile to the player; a monster fighting something else *is* ambushable, and one that lost the player becomes ambushable again as its meter drains. Applied at the damage chokepoint **before** the hit fills the meter | Yes |
+| **Phantom** | 23 | A Backstab on a monster below Noticed grants **2 seconds at ×1.2 speed during which every movement action — running, Dashing, jumping — is silent** (body noise zero). A timed buff on a strike, not a change to the movement rules; the Shinobi link | Yes |
+| Nightfall | new | Darkness conceals twice as much (the light term's worst end doubled) | Yes; matters with dark maps and the Module |
+| Slip Away | new | Breaking line of sight while a monster has Noticed but not Spotted you drops its Suspicion by a third at once. Fires on the break, not on the hiding | Yes |
+| Cut the Head | new | Killing a squad leader drops every member's Suspicion to the notice floor | Post-aggro step |
+| **Major: Silent Kill** | new | A kill on a monster below Spotted is unseen and unheard: no death witnesses, no Disturbance, no squad LKP. Clear a squad one by one | Post-aggro step |
+
+**Ambush and Assassinate were one verb** — damage to unaware targets — and were merged on the day they
+were proposed; the two-tier multiplier is what remains of the second. **The stack it leaves for the
+Gargantua**, which was checked before the numbers were set: an unseen katana Backstab is 60 × 3 (Backstab)
+× 1.5 (Backstab node) × 1.5 (Ambush) = 405, and the Gargantua's 800 then needs Melee Force, the Energy
+entry and three Melee Damage roads — Stealth, Melee and Energy, the corner-to-corner walk. Stealth alone
+does not one-shot it, on purpose.
+
+**Feedback from day one**, the Ricochet lesson: a distinct hit sound for an Ambush at each tier, a cue when
+Phantom starts and ends, and `debug_damage` naming each multiplier as it lands.
+
+Placement, first cut: Soft Step and Ambush on the Specialist seam side (row 4) and toward Medical (col 10),
+so the region's two entries are cheap; Silent Kill in the far corner at (14, 0); Phantom toward the
+Medical side, since Shinobi is reached through the hub from there. Judged by eye when built.
+
+### The Night Vision Module
+
+**Settled 2026-09-15**: the fifth Module, and the Stealth region's reveal gate. Night vision **adapted from
+Opposing Force's**, whose updated source is on this machine at `E:\Projects\halflife-op4-updated`.
+**The flashlight stays until the Module is found**; the Module replaces it. It is also what closes the
+flashlight hole in the light term (a flashlight never touches the baked lightmap, so a lit corridor and a
+dark one conceal the same today) and what makes Nightfall and dark maps mean something.
+
+---
+
 ## Cross-Route links
 
 The builds live here. Solid links are prerequisites in the tree; dotted ones are effects that read another
@@ -605,7 +654,8 @@ graph LR
 | **Weapon Mastery scales the Discharge** | Emergent since the Discharge exists; kept |
 | **Reprisal reads melee kills** | A one-shot melee kill refills a Dash; the Backstab and Cleave are how you get one |
 | **Leech reads melee hits** | Medical × Melee: the sustain the glass cannon lacks |
-| **The never-noticed Backstab tier** | A Stealth node on Melee's mechanic; ids 22–23 |
+| ~~**The never-noticed Backstab tier**~~ **Ambush (22)** | Became the all-weapons unaware multiplier on 2026-09-15; a Backstab on an Unseen monster gets it on top. Stealth × Melee, and Stealth × everything |
+| **Phantom (23)** | A Backstab on an Unseen monster buys two silent, faster seconds — the Dash in them silent too. Stealth × Shinobi |
 | **Glass Cannon** on the Melee–Dash seam | The keystone: 50 max health and Last Stand permanently armed, the Medical major's effect on the far side of the tree from Medical. Settled 2026-09-15 |
 
 ## Reveal gates
@@ -617,7 +667,7 @@ A node is hidden until the player holds the thing it modifies. Settled per Route
 | The Pulse Module | Pulse Window, Recharge, Discharge, Rebound, the Defense Matrix and everything behind it |
 | The alien Module | The whole Alien Route, Hive nodes included |
 | The Dash Module | Every Shinobi node; Sure Footing stays visible (in the hub since 2026-09-15) |
-| A Stealth Module, perhaps | The Stealth region. Not decided; it is why Stealth sits in a corner |
+| The Night Vision Module | The whole Stealth region. Settled 2026-09-15; it is why Stealth sits in a corner |
 
 A hidden node is a blank pad and **cannot be bought**, so a gated region is impassable until it opens
 (settled 2026-09-15). Seam nodes therefore sit on the ungated side, and the Juggernaut's Pulse nodes on
@@ -633,7 +683,7 @@ the far side of its region.
 | Sprint Speed | 6 | **Cut** | Alters the normal movement rules |
 | Crowbar Speed | 11 | Returns as Melee Speed | The halving rule that blocked it is dropped |
 | Hive Capacity, Hive Regrowth | 20, 21 | Return in the Alien Route | Reserved today |
-| Stealth column | 22, 23 | Spoken for, not yet in the enum | The never-noticed Backstab tier is its first node |
+| Stealth column | 22, 23 | In the enum as reserved; **Ambush (22) and Phantom (23)** since 2026-09-15 | See [Stealth](#stealth) |
 
 Cut ids stay reserved forever and are never reused.
 
