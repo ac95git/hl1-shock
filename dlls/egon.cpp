@@ -216,6 +216,14 @@ void CEgon::Attack()
 		Fire(vecSrc, vecAiming);
 		m_pPlayer->m_iWeaponVolume = EGON_PRIMARY_VOLUME;
 
+		// Egon Focus: ItemPostFrame clears IN_ATTACK2 after every secondary
+		// attack and then runs the catch-all WeaponIdle, whose held-button
+		// guard only knows IN_ATTACK. Without this the idle timer from the
+		// startup ends a held narrow beam 0.1 s in and it restarts 0.5 s
+		// later. Releasing still ends it, within this 0.1 s.
+		if (m_fireMode == FIRE_NARROW)
+			m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 0.1;
+
 		if (pev->fuser1 <= UTIL_WeaponTimeBase())
 		{
 			PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), m_usEgonFire, 0, g_vecZero, g_vecZero, 0.0, 0.0, 0, m_fireMode, 0, 0);
