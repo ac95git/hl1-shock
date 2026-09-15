@@ -1630,6 +1630,9 @@ in [ADR-0012](adr/0012-the-skill-tree-has-one-start-and-open-roads.md).
   [SKILL_TREE.md](SKILL_TREE.md#stealth).
 - **A fifth Module, Night Vision**, gates the Stealth region and replaces the flashlight when found; the
   flashlight stays until then. Adapted from Opposing Force's, source at `E:\Projects\halflife-op4-updated`.
+- **Energy's two loose ends closed**: Egon Focus is the SDK's narrow beam on right click, as it is; Quick
+  Charge (57) is cut, the wave having no charge. Glass Cannon's 50 is the ceiling after every health bonus;
+  the hub's rim Minors are Fortitude, Battery Capacity, Marksman and Melee Force.
 - **Rejected while shaping Stealth**: Assassinate as a separate node (one verb with Ambush); Executioner
   (an unnoticed Backstab kills outright — hands out the one-shot the stacking is meant to earn); Sabotage
   (disabling turrets from behind); Follow Through and Shroud as the seventh node; a "never noticed" saved

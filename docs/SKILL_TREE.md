@@ -178,9 +178,9 @@ The 5×5 centre. The suit sits at (7,7). **Settled 2026-09-15, second round:** t
 max armour toward Juggernaut (south), +5% bullet damage toward Weapon Specialist (east), +5% melee damage
 toward Melee (west) — so leaving toward a Route costs two or three points that already lean its way. Health
 and armour are percentages, not flat amounts. On the hub's outer ring, each side carries **a Minor Skill
-that grants a higher value of the same subject**; the reading that fits the existing Skills, put here as a
-first cut: Fortitude (8) north, Battery Capacity (13) south, Marksman (35) east, Melee Force (2) west,
-each stepping out of its Route's region onto the hub's rim as that Route's entry. Armor Expert (9) and
+that grants a higher value of the same subject** — confirmed 2026-09-15 as the four existing Skills:
+Fortitude (8) north, Battery Capacity (13) south, Marksman (35) east, Melee Force (2) west, each stepping
+out of its Route's region onto the hub's rim as that Route's entry. Armor Expert (9) and
 Sure Footing (7) live in the hub too. The hub's four **corner cells** each touch two edge regions and are where a
 cross-Route Skill sits: Follow-Up (18), the melee payoff for a Pulse deflect, goes in the south-west
 corner cell between Melee and Juggernaut. **The other three corners stay open for now** (settled
@@ -198,7 +198,7 @@ it has been played.
 
 | Node | Effect | Where |
 | --- | --- | --- |
-| **Glass Cannon** | Max health becomes 50. Last Stand is permanently armed: a hit that would kill spends an unused Syringe and starts the Infusion, and Infusion healing is doubled below 50 — which at 50 max is always. **No damage multiplier of any kind**; the cannon is whatever the roads around it provide | The Melee–Dash seam, top-left. Medical is on the far side of the tree, so this is the west side's only Last Stand |
+| **Glass Cannon** | Max health becomes 50 — **the ceiling after every other health bonus** (Fortitude, the hub's health nodes; confirmed 2026-09-15). Last Stand is permanently armed: a hit that would kill spends an unused Syringe and starts the Infusion, and Infusion healing is doubled below 50 — which at 50 max is always. **No damage multiplier of any kind**; the cannon is whatever the roads around it provide | The Melee–Dash seam, top-left. Medical is on the far side of the tree, so this is the west side's only Last Stand |
 
 Drawn Major-sized with a red frame.
 
@@ -350,8 +350,8 @@ deals energy damage, slash and wave (built 2026-09-14), and scales off both Mele
 | Energy Damage | 54 | Energy hits 15% harder (`DMG_ENERGYBEAM` at the damage chokepoints). The katana, the egon, the Discharge and the Alien volley all read it | Built. **Root** |
 | Energy Damage ×4 | 60–63 | +5% energy damage each, additive within the stat. **The root's ranks became these** | Built. **The roads** |
 | Energy Efficiency | 56 | The egon's ammo ticks come a third further apart (`skill_energy_efficiency_scale` 1.33), so uranium drains a quarter slower, and the katana's wave costs a quarter less uranium (5 → 4). Egon Efficiency until the wave spent uranium, 2026-09-14 | Built |
-| Egon Focus | 55 | Secondary fire unlocks the egon's narrow beam (dormant in the SDK) | Reserved. Details to be decided |
-| Quick Charge | 57 | The katana's charged wave charges faster | Reserved. Waits on the charge; first to cut |
+| Egon Focus | 55 | Right click toggles the SDK's dormant narrow beam, as it is: single target, `sk_plr_egon_narrow` (6) per pulse against the wide beam's 14, 3 uranium a second against 5, no splash, no gib. Energy Damage and Energy Efficiency both read it | Reserved. **Detailed 2026-09-15** |
+| ~~Quick Charge~~ | 57 | ~~The katana's charged wave charges faster~~ | **Cut 2026-09-15**: the wave throws instantly, there is no charge. Id reserved forever; its cell becomes a Stat node |
 | Insulation | 58 | Energy **and shock** taken ×0.7 (`skill_insulation_scale`) in the player's `TakeDamage` | Built |
 | **Major: Overdraw** | 59 | **Energy attacks drain armour as well, for bonus damage. Always on, never below a floor** (~20) | Reserved. Named 2026-09-15. **Placed the same day on the Energy–Juggernaut seam** as the tree's Energy × Juggernaut node |
 
@@ -682,6 +682,7 @@ the far side of its region.
 | High Jump | 5 | **Cut** | Alters the normal movement rules; reaching is a Module's job |
 | Sprint Speed | 6 | **Cut** | Alters the normal movement rules |
 | Crowbar Speed | 11 | Returns as Melee Speed | The halving rule that blocked it is dropped |
+| Quick Charge | 57 | **Cut** 2026-09-15 | The wave has no charge to quicken |
 | Hive Capacity, Hive Regrowth | 20, 21 | Return in the Alien Route | Reserved today |
 | Stealth column | 22, 23 | In the enum as reserved; **Ambush (22) and Phantom (23)** since 2026-09-15 | See [Stealth](#stealth) |
 
