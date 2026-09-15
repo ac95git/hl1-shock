@@ -53,8 +53,9 @@ are assigned when a node is built, never reused, and **22 and 23 are spoken for*
 | [Stealth](#stealth) | 7 | Soft Step | Silent Kill | The Night Vision Module; the region is hidden until it. **Shaped 2026-09-15** |
 
 49 Skills, ranks counted once. About sixteen carry ranks, and each rank becomes a Stat node on the road
-under [the matrix](#the-matrix--settled-2026-09-14); the tree that results is **about 140 nodes** on the
-15×15 grid settled on 2026-09-15, against **100 findable Skill Points**. The "Root" column above names
+under [the matrix](#the-matrix--settled-2026-09-14); the tree that results is **154 nodes** (153 buyable)
+on the 15×15 board settled cell by cell on 2026-09-15 in [SKILL_MAP.md](SKILL_MAP.md), against **100
+findable Skill Points**. The "Root" column above names
 each Route's entry Skill, the first Skill on the way in from the hub; since 2026-09-15 none of them is a
 root in the old sense, because the tree has one start.
 
@@ -267,9 +268,10 @@ are an [ART_DEBT entry](ART_DEBT.md#the-skill-tree--the-circuit-substrate-traces
   `TryReset`, not counted by `SpentPoints`.
 - An island check: a `static_assert` that every node has at least one neighbour, and ideally that every
   node is reachable from the suit.
-- The 52 built nodes re-placed into their regions; ids, effects and cvars untouched. `docs/skill_tree.csv`
-  is superseded by the region map above.
-- Each region reads from its hub-facing side outward, not top to bottom as the column layout did.
+- The 52 built nodes re-placed into their regions **per [SKILL_MAP.md](SKILL_MAP.md) and
+  `docs/skill_map.csv`**, settled cell by cell later the same day; ids, effects and cvars untouched.
+  `docs/skill_tree.csv` is superseded.
+- Each region reads from its door outward, not top to bottom as the column layout did.
 
 ---
 
@@ -358,7 +360,9 @@ deals energy damage, slash and wave (built 2026-09-14), and scales off both Mele
 | Insulation | 58 | Energy **and shock** taken ×0.7 (`skill_insulation_scale`) in the player's `TakeDamage` | Built |
 | **Major: Overdraw** | 59 | **Energy attacks drain armour as well, for bonus damage. Always on, never below a floor** (~20) | Reserved. Named 2026-09-15. **Placed the same day on the Energy–Juggernaut seam** as the tree's Energy × Juggernaut node |
 
-The region as placed, columns 14–15, `E` an Energy Damage Stat node:
+**Superseded 2026-09-15 by [SKILL_MAP.md](SKILL_MAP.md)**: cols 0–4, rows 10–14, entered from Melee
+across Cleave's row and from Juggernaut's armour column, Overdraw at (4,14) on the Juggernaut seam. The
+2026-09-14 column layout, still what the code holds:
 
 ```
      col14         col15
@@ -405,7 +409,9 @@ maybe more. Valve's rapid-swing halving is dropped: every swing does full damage
 | Follow-Up | 18 | After a deflect, the next hit lands far harder | Built. **Cross-Route link**, at the seam with the Pulse |
 | **Major** | 34 | **Cleave**: while ready, the swing *is* an 80° arc 160 units deep — everything in it that can take damage is hit, every hit ×1.5, a primed Follow-Up on all of them — spent on the swing hit or not, then a 4 s cooldown. An air shock in the weapon's colour and a heavier sound on the swing; an icon and a cue when ready. The primary click only | Built. Revised in two grills on 2026-09-14: the first shape needed a landed hit, and was short, wide and drawn as a laser |
 
-The region as placed, columns 0–3, `S` a Melee Damage Stat node:
+**Superseded 2026-09-15 by [SKILL_MAP.md](SKILL_MAP.md)**, where the region is cols 0–4, rows 5–9,
+entered from Melee Force on the hub's rim, with Glass Cannon and Cleave in its far corners. The placement
+below is the 2026-09-14 column layout, kept as the record of what the code still holds:
 
 ```
      col0     col1     col2       col3
@@ -453,8 +459,9 @@ Handling speed, typed damage, and a major node that makes swapping weapons the w
 | Headhunter | 38 | Hits to the head ×1.5 on top of the head multiplier, player hits only. Decapitation keys on the same hitgroup | Built |
 | **Major** | 39 | **Swap Surge**: for 2 s after a weapon swap (`skill_swap_surge_window`, counted from the swap, draw included), everything the player deals ×1.5 (`skill_swap_surge_scale`) at the chokepoints; 6 s cooldown from the swap (`skill_swap_surge_cooldown`). Opened by `DefaultDeploy`, the one place every weapon comes up through; both times saved | Built. Name provisional |
 
-"Ranks" in the earlier draft became the Stat nodes, as in Melee. The region as placed, columns 9–11, `B`
-a Bullet Damage Stat node; Marksman sits in the middle so its four children are each one Stat node away:
+"Ranks" in the earlier draft became the Stat nodes, as in Melee. **Superseded 2026-09-15 by
+[SKILL_MAP.md](SKILL_MAP.md)**: cols 10–14, rows 5–9, entered from Marksman on the hub's rim, Swap Surge in
+the far bottom corner. The 2026-09-14 column layout, still what the code holds:
 
 ```
      col9        col10       col11
@@ -531,7 +538,8 @@ in it at all**. [ROADMAP](ROADMAP.md#medical).
 | Leech | 48 | Melee hits on a living monster heal a tenth of the swing's damage (`skill_leech_fraction`), every roster weapon, per victim in a Cleave. The chainsaw's lifesteal is its own base property | Built |
 | **Major** | 49 | **Last Stand**: a hit that would kill leaves the player at 1 health and invincible for 3 seconds; an unused Syringe is spent and its Infusion starts; Infusion healing is doubled below 50 health; 60 s cooldown | Reserved. ~~One question before it is built~~ **Answered 2026-09-15**: held at 1, see [the keystone](#the-keystone). Glass Cannon grants the same effect permanently |
 
-The region as placed, columns 12–13, `H` a Healing Stat node:
+**Superseded 2026-09-15 by [SKILL_MAP.md](SKILL_MAP.md)**: cols 5–9, rows 0–4, entered from Fortitude,
+Last Stand at the top between Overheal and Leech. The 2026-09-14 column layout, still what the code holds:
 
 ```
      col12       col13
@@ -590,9 +598,8 @@ does not one-shot it, on purpose.
 **Feedback from day one**, the Ricochet lesson: a distinct hit sound for an Ambush at each tier, a cue when
 Phantom starts and ends, and `debug_damage` naming each multiplier as it lands.
 
-Placement, first cut: Soft Step and Ambush on the Specialist seam side (row 4) and toward Medical (col 10),
-so the region's two entries are cheap; Silent Kill in the far corner at (14, 0); Phantom toward the
-Medical side, since Shinobi is reached through the hub from there. Judged by eye when built.
+Placement: settled the same day in [SKILL_MAP.md](SKILL_MAP.md) — Soft Step at the Specialist door,
+Ambush above it, Phantom at the Medical door, Silent Kill in the far corner at (14,0).
 
 ### The Night Vision Module
 

@@ -1639,6 +1639,11 @@ in [ADR-0012](adr/0012-the-skill-tree-has-one-start-and-open-roads.md).
   hazard-striped Reset switch fixed over the field; the board at 1:1 with drag to pan, opening on the
   suit; the region palette grounded in the game's objects; monochrome glyph icons in the HUD style;
   tooltip name and effect only; hidden pads say `No signal`; one unlock sound.
+- **The board placed cell by cell**, in [SKILL_MAP.md](SKILL_MAP.md) and `docs/skill_map.csv`: seams are
+  regions touching directly with empty cells curating the doors; the hub has health and armour on its
+  diagonals and one melee and one bullet cell toward their Routes; every region's map was put as a drawn
+  question and accepted; 154 nodes. Sizes for the 1:1 view: a 112 step, 36 / 50 / 62 / 74, the processor
+  92; Mastery, Discharge, Rebound and Follow-Up keep the Major-sized frame.
 - **Rejected while shaping Stealth**: Assassinate as a separate node (one verb with Ambush); Executioner
   (an unnoticed Backstab kills outright — hands out the one-shot the stacking is meant to earn); Sabotage
   (disabling turrets from behind); Follow Through and Shroud as the seventh node; a "never noticed" saved

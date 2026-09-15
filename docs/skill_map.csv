@@ -1,0 +1,16 @@
+row\col,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14
+0,Air Dash [Major],Dash Recovery,,Dash Recovery,Dash Recovery,Overheal (47),Healing,Last Stand (49) [Major],Healing,Leech (48),Concealment,,Nightfall,Concealment,Silent Kill [Major]
+1,Dash Recovery,,Phase,,Dash Recovery,Healing,,,,Healing,Concealment,Concealment,Concealment,,Concealment
+2,Dash Recovery,Dash Recovery,Dash Recovery,Dash Reach,Dash Recovery,Healing,Healing,Med Expert (19),Healing,Healing,Phantom (23),,Concealment,Cut the Head,Concealment
+3,Reprisal,,Dash Recovery,,Second Wind,,,Healing,,,,,Slip Away,,
+4,Dash Recovery,Dash Recovery,,Dash Recovery,Dash Recovery (Skill),,,Healing,,,Soft Step,Concealment,Ambush (22),,Concealment
+5,Glass Cannon {Keystone},Melee Damage,,Melee Damage,,,,Fortitude (8),,,Bullet Damage,Bullet Damage,Headhunter (38),Bullet Damage,Demolitions (37)
+6,Melee Damage,,Melee Speed (11),Melee Damage,Melee Damage,Sure Footing (7),Max Health,Max Health,Max Health,,,,Bullet Damage,,Bullet Damage
+7,Melee Damage,Backstab (33),Melee Damage,Melee Reach (1),Melee Damage,Melee Force (2),Melee Damage,SUIT (start),Bullet Damage,Marksman (35),Bullet Damage,Quick Draw (36),Bullet Damage,Bullet Damage,Weapon Mastery (4)
+8,Melee Damage,,,,,Max Armour,Max Armour,Max Armour,Max Armour,Armor Expert (9),,,Bullet Damage,,Bullet Damage
+9,Cleave (34) [Major],Melee Damage,Melee Damage,Melee Damage,,Follow-Up (18),,Battery Capacity (13),,,Bullet Damage,Bullet Damage,Fast Reload (3),Bullet Damage,Swap Surge (39) [Major]
+10,Energy Damage,Energy Damage (54) (Skill),,,Energy Damage,Max Armour,,Max Armour,,Max Armour,Hornet Replenish,,Hive Capacity (20),,Hornet Replenish
+11,Energy Damage,,Energy Damage,Energy Damage,Energy Damage,Max Armour,Max Armour,Max Armour,Max Armour,Ricochet (64),Hornet Replenish,Hornet Replenish,Hornet Replenish,Hive Replenish (21),Hornet Replenish
+12,Insulation (58),,Egon Focus (55),,,Max Armour,,,,Pulse Window (12),Hive Attack Speed,,Hornet Replenish,,
+13,Energy Damage,Energy Damage,Energy Damage,,,Max Armour,,Juggernaut Major,Defense Matrix,Pulse Recharge (15),Hornet Replenish,Pack,Hornet Replenish,Tether,Hornet Replenish
+14,,,Energy Efficiency (56),Energy Damage,Overdraw (59) [Major],Max Armour,Pulse Discharge (16),Pulse Rebound (17),Matrix on Kill,,,,Recall,Hornet Replenish,Alien Major
