@@ -62,6 +62,58 @@ namespace
 }
 
 // =====================================================================
+// The region washes -- the nine 5x5 blocks of docs/SKILL_MAP.md, coloured
+// from docs/SKILL_PANEL.md "Regions". col0/row0 is the block's top-left
+// cell; every block is 5 steps square. Alphas are FillRGBA's (255 opaque),
+// picked low enough that toggling skilltree_wash off and on again is the
+// only way to be sure they were ever there -- a wash that reads as a panel
+// on its own is too strong. The hub sits a little dimmer still, since its
+// bare-copper tint is the same hue the substrate and traces already draw in.
+// =====================================================================
+namespace
+{
+    struct SkillRegion
+    {
+        int col0, row0;      // top-left cell of the region's 5x5 block
+        int r, g, b;          // wash colour
+        int washAlpha;        // FillRGBA alpha, 255 = opaque
+        const char* name;     // comment/debugging only
+    };
+
+    constexpr SkillRegion k_Regions[9] =
+    {
+        {  0,  0, 150,  80, 220, 26, "Shinobi (NW) -- violet" },
+        {  5,  0, 210, 235, 210, 26, "Medical (N) -- white-green" },
+        { 10,  0,  70,  55, 150, 26, "Stealth (NE) -- deep indigo" },
+        {  0,  5, 183,  65,  14, 26, "Melee (W) -- rust orange" },
+        {  5,  5, 184, 115,  51, 18, "Hub -- bare copper" },
+        { 10,  5,  95, 115, 135, 26, "Weapon Specialist (E) -- steel blue-grey" },
+        {  0, 10,  40, 210, 225, 26, "Energy (SW) -- electric cyan" },
+        {  5, 10, 255, 180,  40, 26, "Juggernaut (S) -- HEV amber" },
+        { 10, 10, 120, 220,  70, 26, "Alien (SE) -- Xen green" },
+    };
+
+    // The substrate's grid lines and corner dots: very dim copper, so dim it
+    // reads as texture rather than as a drawn line (SKILL_PANEL.md
+    // "Substrate" -- this stands in for the TGA tile). Written in VGUI's own
+    // drawSetColor convention (a=0 opaque, a=255 invisible), since the brief
+    // gives the line's alpha in exactly those terms.
+    constexpr int k_SubstrateLineR = 60, k_SubstrateLineG = 40, k_SubstrateLineB = 20;
+    constexpr int k_SubstrateLineAlpha = 215; // high VGUI alpha: barely there
+    constexpr int k_SubstrateDotR = 95, k_SubstrateDotG = 68, k_SubstrateDotB = 38;
+    constexpr int k_SubstrateDotAlpha = 175;  // slightly brighter than the lines
+
+    // Trace colours, FillRGBA convention (255 opaque). Three states
+    // (SKILL_PANEL.md "Traces"): dim copper, lit copper, and a glow with a
+    // near-white core for the one direction that means "buy me next".
+    enum class ETraceState { Dim, Lit, Glow };
+    constexpr int k_TraceDimR = 90,  k_TraceDimG = 60,  k_TraceDimB = 30,  k_TraceDimAlpha = 120;
+    constexpr int k_TraceLitR = 220, k_TraceLitG = 140, k_TraceLitB = 60,  k_TraceLitAlpha = 200;
+    constexpr int k_TraceGlowR = 255, k_TraceGlowG = 190, k_TraceGlowB = 90, k_TraceGlowAlpha = 235;
+    constexpr int k_TraceCoreR = 255, k_TraceCoreG = 240, k_TraceCoreB = 210, k_TraceCoreAlpha = 255;
+}
+
+// =====================================================================
 // Text measurement
 //
 // vgui::Font::getTextSize is the real thing -- the previous code assumed
@@ -174,6 +226,9 @@ static void WrapToWidth(vgui::Font* font, const char* text, int maxW,
 CSkillTreeView::CSkillTreeView()
     : m_iSkillPoints(0)
 {
+    // skilltree_wash (registered in hud.cpp with the other skilltree cvars,
+    // since this view is rebuilt on every map load and the engine warns on
+    // a second registration of the same name) is read in Paint.
     RebuildNodeList();
 }
 
@@ -198,6 +253,13 @@ void CSkillTreeView::RebuildNodeList()
     m_nodeRects.clear();
     m_nodeSprites.clear();
     m_lastW = 0;
+
+    // The reverse lookup DrawTrace uses to go from a neighbour's id (out of
+    // SkillIdAtCell) to its rect: built in the same pass as m_nodes so the
+    // two can never disagree.
+    m_idToNodeIndex.assign(k_MaxSkills, -1);
+    for (int i = 0; i < (int)m_nodes.size(); ++i)
+        m_idToNodeIndex[m_nodes[i]] = i;
 }
 
 void CSkillTreeView::UpdateState(const unsigned char* unlockedMask, int skillPoints, int resetTokens, unsigned char openGates)
@@ -439,6 +501,277 @@ void CSkillTreeView::BuildTooltip(int skillId, vgui::Font* titleFont, vgui::Font
 }
 
 // =====================================================================
+// DrawSubstrate -- thin lines at every cell boundary plus a corner dot,
+// under everything (docs/SKILL_PANEL.md "Substrate"). Always the board's own
+// 15x15 extent, never the (possibly larger) preview grid: the substrate is
+// what the board is printed on, not what a layout experiment adds to it.
+// =====================================================================
+void CSkillTreeView::DrawSubstrate(CInventoryPanel* ctx, const IRect& field) const
+{
+    const int boardX0 = m_gridX0;
+    const int boardY0 = m_gridY0;
+    const int boardW  = k_BoardCols * m_colStep;
+    const int boardH  = k_BoardRows * m_rowStep;
+
+    ctx->drawSetColor(k_SubstrateLineR, k_SubstrateLineG, k_SubstrateLineB, k_SubstrateLineAlpha);
+    for (int col = 0; col <= k_BoardCols; ++col)
+    {
+        IRect line{ boardX0 + col * m_colStep, boardY0, 1, boardH }, c;
+        if (IntersectRect(line, field, c))
+            ctx->drawFilledRect(c.x, c.y, c.x + c.w, c.y + c.h);
+    }
+    for (int row = 0; row <= k_BoardRows; ++row)
+    {
+        IRect line{ boardX0, boardY0 + row * m_rowStep, boardW, 1 }, c;
+        if (IntersectRect(line, field, c))
+            ctx->drawFilledRect(c.x, c.y, c.x + c.w, c.y + c.h);
+    }
+
+    ctx->drawSetColor(k_SubstrateDotR, k_SubstrateDotG, k_SubstrateDotB, k_SubstrateDotAlpha);
+    for (int col = 0; col <= k_BoardCols; ++col)
+    {
+        for (int row = 0; row <= k_BoardRows; ++row)
+        {
+            IRect dot{ boardX0 + col * m_colStep - 1, boardY0 + row * m_rowStep - 1, 3, 3 }, c;
+            if (IntersectRect(dot, field, c))
+                ctx->drawFilledRect(c.x, c.y, c.x + c.w, c.y + c.h);
+        }
+    }
+}
+
+// =====================================================================
+// DrawWashes -- the nine region tints, over the substrate and under
+// everything else (docs/SKILL_PANEL.md "Regions"). skilltree_wash 0 hides
+// them outright, so the faintness can be judged both ways.
+// =====================================================================
+void CSkillTreeView::DrawWashes(CInventoryPanel* ctx, const IRect& field) const
+{
+    if (CVAR_GET_FLOAT("skilltree_wash") == 0.0f)
+        return;
+
+    for (const SkillRegion& reg : k_Regions)
+    {
+        IRect wash{ m_gridX0 + reg.col0 * m_colStep, m_gridY0 + reg.row0 * m_rowStep,
+            5 * m_colStep, 5 * m_rowStep }, c;
+        if (IntersectRect(wash, field, c))
+            FillRGBA(c.x, c.y, c.w, c.h, reg.r, reg.g, reg.b, reg.washAlpha);
+    }
+}
+
+// =====================================================================
+// DrawTraces -- one trace between every orthogonally adjacent pair of
+// nodes, and nowhere else (docs/SKILL_PANEL.md "Traces"). Walking the right
+// and down neighbour of every occupied cell visits each adjacent pair
+// exactly once; SkillIdAtCell is the one lookup the reachability rule
+// itself uses (skill_defs.h), so "what is next to this" cannot disagree
+// between the tree's rules and its drawing.
+// =====================================================================
+void CSkillTreeView::DrawTraces(CInventoryPanel* ctx, const IRect& field) const
+{
+    if (m_nodeRects.size() != m_nodes.size())
+        return;
+
+    for (int row = 0; row < k_BoardRows; ++row)
+    {
+        for (int col = 0; col < k_BoardCols; ++col)
+        {
+            const int idA = SkillIdAtCell(col, row);
+            if (idA == 0)
+                continue;
+
+            if (col + 1 < k_BoardCols)
+            {
+                const int idB = SkillIdAtCell(col + 1, row);
+                if (idB != 0)
+                    DrawTrace(ctx, field, idA, idB, true);
+            }
+            if (row + 1 < k_BoardRows)
+            {
+                const int idB = SkillIdAtCell(col, row + 1);
+                if (idB != 0)
+                    DrawTrace(ctx, field, idA, idB, false);
+            }
+        }
+    }
+}
+
+// =====================================================================
+// DrawTrace -- one trace, from a filled rect between the two nodes' own
+// edges (never their cell edges). Always axis-aligned: DrawTraces only ever
+// calls this for an orthogonal pair, and a node's centre lands on the same
+// row/column line regardless of its tier (RebuildRects centres every tier
+// in its cell), so 'horizontal' fully decides the geometry.
+// =====================================================================
+void CSkillTreeView::DrawTrace(CInventoryPanel* ctx, const IRect& field, int idA, int idB, bool horizontal) const
+{
+    if (idA <= 0 || idA >= (int)m_idToNodeIndex.size() || idB <= 0 || idB >= (int)m_idToNodeIndex.size())
+        return;
+    const int idxA = m_idToNodeIndex[idA];
+    const int idxB = m_idToNodeIndex[idB];
+    if (idxA < 0 || idxB < 0)
+        return;
+
+    const IRect& ra = m_nodeRects[idxA];
+    const IRect& rb = m_nodeRects[idxB];
+
+    // A trace to a hidden pad gives nothing away, whatever the other end
+    // holds (SKILL_PANEL.md "Hidden pads"): always dim.
+    ETraceState state = ETraceState::Dim;
+    if (!IsHidden(idA) && !IsHidden(idB))
+    {
+        const bool unlockedA = IsUnlocked(idA);
+        const bool unlockedB = IsUnlocked(idB);
+        // Glowing means it leads FROM a held node TO one that can be bought
+        // next -- a direction, not just "one end held" (SKILL_PANEL.md).
+        if ((unlockedA && IsAvailable(idB)) || (unlockedB && IsAvailable(idA)))
+            state = ETraceState::Glow;
+        else if (unlockedA || unlockedB)
+            state = ETraceState::Lit;
+    }
+
+    const int width = (state == ETraceState::Glow) ? 4 : 2;
+    IRect trace;
+    if (horizontal)
+    {
+        const IRect& left  = (ra.x <= rb.x) ? ra : rb;
+        const IRect& right = (ra.x <= rb.x) ? rb : ra;
+        const int x0 = left.x + left.w;
+        const int x1 = right.x;
+        if (x1 <= x0)
+            return; // nodes touch or overlap at this scale; nothing to draw
+        const int cy = left.y + left.h / 2;
+        trace = { x0, cy - width / 2, x1 - x0, width };
+    }
+    else
+    {
+        const IRect& top    = (ra.y <= rb.y) ? ra : rb;
+        const IRect& bottom = (ra.y <= rb.y) ? rb : ra;
+        const int y0 = top.y + top.h;
+        const int y1 = bottom.y;
+        if (y1 <= y0)
+            return;
+        const int cx = top.x + top.w / 2;
+        trace = { cx - width / 2, y0, width, y1 - y0 };
+    }
+
+    IRect c;
+    if (!IntersectRect(trace, field, c))
+        return;
+
+    int r, g, b, alpha;
+    switch (state)
+    {
+    case ETraceState::Glow: r = k_TraceGlowR; g = k_TraceGlowG; b = k_TraceGlowB; alpha = k_TraceGlowAlpha; break;
+    case ETraceState::Lit:  r = k_TraceLitR;  g = k_TraceLitG;  b = k_TraceLitB;  alpha = k_TraceLitAlpha;  break;
+    default:                r = k_TraceDimR;  g = k_TraceDimG;  b = k_TraceDimB;  alpha = k_TraceDimAlpha;  break;
+    }
+    FillRGBA(c.x, c.y, c.w, c.h, r, g, b, alpha);
+
+    if (state == ETraceState::Glow)
+    {
+        // A 1px lighter core down the middle of the glow.
+        IRect core = horizontal
+            ? IRect{ trace.x, trace.y + width / 2, trace.w, 1 }
+            : IRect{ trace.x + width / 2, trace.y, 1, trace.h };
+        IRect cc;
+        if (IntersectRect(core, field, cc))
+            FillRGBA(cc.x, cc.y, cc.w, cc.h, k_TraceCoreR, k_TraceCoreG, k_TraceCoreB, k_TraceCoreAlpha);
+    }
+}
+
+// =====================================================================
+// DrawNodePins -- the small pins sticking out of a frame, 'count' per side.
+// Placed from the node's own unclipped rect 'r' and clipped one at a time,
+// the same way the icon's scissor works around the rect it is fitted to,
+// so a pin on a panned-off edge disappears cleanly instead of stretching.
+// =====================================================================
+void CSkillTreeView::DrawNodePins(CInventoryPanel* ctx, const IRect& r, const IRect& field,
+    int count, bool sidesLR, bool sidesTB, int pinR, int pinG, int pinB, int alpha) const
+{
+    auto placeSide = [&](bool vertical, int fixedCoord, int start, int length)
+    {
+        for (int i = 1; i <= count; ++i)
+        {
+            const int center = start + length * i / (count + 1);
+            IRect pin = vertical
+                ? IRect{ fixedCoord, center - k_PinLength / 2, k_PinThickness, k_PinLength }
+                : IRect{ center - k_PinLength / 2, fixedCoord, k_PinLength, k_PinThickness };
+
+            IRect c;
+            if (IntersectRect(pin, field, c))
+                FillRGBA(c.x, c.y, c.w, c.h, pinR, pinG, pinB, alpha);
+        }
+    };
+
+    if (sidesLR)
+    {
+        placeSide(true, r.x - k_PinThickness, r.y, r.h); // left
+        placeSide(true, r.x + r.w,             r.y, r.h); // right
+    }
+    if (sidesTB)
+    {
+        placeSide(false, r.y - k_PinThickness, r.x, r.w); // top
+        placeSide(false, r.y + r.h,             r.x, r.w); // bottom
+    }
+}
+
+// =====================================================================
+// DrawNodeFrame -- fill, outline(s), pins, and (Suit only) the inner die.
+// Shape is entirely a function of tier (docs/SKILL_MAP.md "Frames"): Stat is
+// a plain pad, Minor gets two pins each on the left and right, Medium two
+// pins on all four sides, Major and Suit three pins on all four sides plus
+// the double outline, and the Suit alone gets the inset die. The keystone
+// (GlassCannon) is Major-sized already (skill_defs.h) and reaches this
+// through the same path, with its colours overridden by the caller.
+// =====================================================================
+void CSkillTreeView::DrawNodeFrame(CInventoryPanel* ctx, const IRect& r, const IRect& c, const IRect& field,
+    ENodeTier tier, bool bHeld, bool bAvailable,
+    int fillR, int fillG, int fillB, int lineR, int lineG, int lineB) const
+{
+    FillRGBA(c.x, c.y, c.w, c.h, fillR, fillG, fillB, 180);
+    ctx->drawSetColor(lineR, lineG, lineB, bAvailable ? 20 : 80);
+    ctx->drawOutlinedRect(c.x, c.y, c.x + c.w, c.y + c.h);
+
+    const int tierIdx = (int)tier < (int)ENodeTier::_Count ? (int)tier : 0;
+    if (k_TierBorderW[tierIdx] >= 2 && c.w > 2 && c.h > 2)
+    {
+        // Double outline: a second rect inset 1 px (Major and Suit).
+        ctx->drawSetColor(lineR, lineG, lineB, bAvailable ? 60 : 140);
+        ctx->drawOutlinedRect(c.x + 1, c.y + 1, c.x + c.w - 1, c.y + c.h - 1);
+    }
+
+    const int pinAlpha = (bHeld || bAvailable) ? 220 : 140;
+    switch (tier)
+    {
+    case ENodeTier::Minor:
+        DrawNodePins(ctx, r, field, 2, /*sidesLR=*/true, /*sidesTB=*/false, lineR, lineG, lineB, pinAlpha);
+        break;
+    case ENodeTier::Medium:
+        DrawNodePins(ctx, r, field, 2, true, true, lineR, lineG, lineB, pinAlpha);
+        break;
+    case ENodeTier::Major:
+        DrawNodePins(ctx, r, field, 3, true, true, lineR, lineG, lineB, pinAlpha);
+        break;
+    case ENodeTier::Suit:
+    {
+        DrawNodePins(ctx, r, field, 3, true, true, lineR, lineG, lineB, pinAlpha);
+
+        // The processor's die, inset a quarter on every side -- half the
+        // node's width and height, centred. Always the held tint: the Suit
+        // is always drawn as held (SKILL_PANEL.md "Frames").
+        const IRect die{ r.x + r.w / 4, r.y + r.h / 4, r.w / 2, r.h / 2 };
+        IRect dieClipped;
+        if (IntersectRect(die, field, dieClipped))
+            FillRGBA(dieClipped.x, dieClipped.y, dieClipped.w, dieClipped.h, lineR, lineG, lineB, 220);
+        break;
+    }
+    case ENodeTier::Stat:
+    default:
+        break; // a plain pad: single outline, no pins
+    }
+}
+
+// =====================================================================
 // Paint
 // =====================================================================
 void CSkillTreeView::Paint(CInventoryPanel* ctx,
@@ -507,6 +840,12 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
 
     const IRect field{ x0, y0, areaW, areaH };
 
+    // ---- The circuit, under the nodes: substrate, washes, then traces
+    // (docs/SKILL_PANEL.md "The board"; draw order per docs/TECH_DEBT.md's
+    // "VGUI Draw Order" -- all of this is sprites/fills, none of it text) ----
+    DrawSubstrate(ctx, field);
+    DrawWashes(ctx, field);
+
     // ---- Preview: ghost cells where the grid has no node ----
     //
     // A Stat-sized outline in every empty cell, so the footprint of a
@@ -534,11 +873,13 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
         }
     }
 
+    // ---- Traces: one between every orthogonally adjacent pair of nodes,
+    // over the washes and under the nodes themselves (docs/SKILL_PANEL.md
+    // "Traces"). The board has no other edges (ADR-0012) -- this is not a
+    // prerequisite graph, just the circuit the neighbour rule already implies.
+    DrawTraces(ctx, field);
+
     // ---- Nodes ----
-    //
-    // No connectors are drawn between nodes any more: the board has no
-    // edges, only neighbours (ADR-0012).  The traces between adjacent nodes
-    // arrive with the circuit drawing (docs/SKILL_PANEL.md).
     //
     // A node panned entirely outside the field is skipped outright; one
     // straddling the edge has every filled/outlined rect clamped to the
@@ -573,19 +914,42 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
         const bool bUnlocked  = IsUnlocked(skillId);
         const bool bAvailable = IsAvailable(skillId);
 
+        // The Suit is always drawn as held -- it is (SKILL_PANEL.md
+        // "Frames") -- so its tint never depends on the mask having already
+        // arrived from the server.
+        const bool bIsSuit     = (skillId == (int)ESkillId::Suit);
+        const bool bIsKeystone = (skillId == (int)ESkillId::GlassCannon);
+        const bool bHeldDisplay = bIsSuit ? true : bUnlocked;
+
         IRect c;
         if (!IntersectRect(r, field, c))
             continue;
 
-        // Tier-based sizing
-        int tierIdx = (int)def.tier < (int)ENodeTier::_Count ? (int)def.tier : 0;
-        int stripeH = k_TierStripeH[tierIdx];
-        int borderW = k_TierBorderW[tierIdx];
-
         int br, bg, bb_col;
         int fr, fg, fb_col;
 
-        if (bUnlocked)
+        if (bIsKeystone)
+        {
+            // The keystone: red-black in every state, brightness following
+            // the same three-way tint as everything else (SKILL_MAP.md
+            // "Frames", SKILL_TREE.md "the keystone").
+            if (bHeldDisplay)
+            {
+                br = 130; bg = 15; bb_col = 15;
+                fr = 255; fg = 70; fb_col = 60;
+            }
+            else if (bAvailable)
+            {
+                br = 55;  bg = 10; bb_col = 10;
+                fr = 255; fg = 110; fb_col = 90;
+            }
+            else
+            {
+                br = 30;  bg = 8;  bb_col = 8;
+                fr = 120; fg = 35; fb_col = 35;
+            }
+        }
+        else if (bHeldDisplay)
         {
             // Fully unlocked: orange fill
             br = 200; bg = 120; bb_col = 0;
@@ -604,20 +968,7 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
             fr = 80;  fg = 80;  fb_col = 80;
         }
 
-        // Fill + border, clamped to the field by intersection
-        FillRGBA(c.x, c.y, c.w, c.h, br, bg, bb_col, 180);
-        ctx->drawSetColor(fr, fg, fb_col, bAvailable ? 20 : 80);
-        ctx->drawOutlinedRect(c.x, c.y, c.x + c.w, c.y + c.h);
-        if (borderW >= 2 && c.w > 2 && c.h > 2)
-        {
-            // Double outline for Major nodes: second rect inset by 1 px
-            ctx->drawSetColor(fr, fg, fb_col, bAvailable ? 60 : 140);
-            ctx->drawOutlinedRect(c.x + 1, c.y + 1, c.x + c.w - 1, c.y + c.h - 1);
-        }
-
-        // Top accent stripe (height driven by tier), clamped the same way
-        ctx->drawSetColor(fr, fg, fb_col, bUnlocked ? 0 : 100);
-        ctx->drawFilledRect(c.x, c.y, c.x + c.w, c.y + std::min(stripeH, c.h));
+        DrawNodeFrame(ctx, r, c, field, def.tier, bHeldDisplay, bAvailable, br, bg, bb_col, fr, fg, fb_col);
 
         // Sprite icon, fitted into the node
         //
@@ -643,9 +994,10 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
                 if (boxW >= 4 && boxH >= 4)
                 {
                     // Tint: white=unlocked, gold=available, grey=locked
-                    int tr = bUnlocked ? 255 : (bAvailable ? 255 : 100);
-                    int tg = bUnlocked ? 255 : (bAvailable ? 200 :  80);
-                    int tb = bUnlocked ? 255 : (bAvailable ?  60 :  80);
+                    // (the keystone's icon tints the same as any node's).
+                    int tr = bHeldDisplay ? 255 : (bAvailable ? 255 : 100);
+                    int tg = bHeldDisplay ? 255 : (bAvailable ? 200 :  80);
+                    int tb = bHeldDisplay ? 255 : (bAvailable ?  60 :  80);
                     SPR_Set(ns.hSprite, tr, tg, tb);
                     SPR_EnableScissor(c.x, c.y, c.w, c.h);
                     SPR_DrawFitted(ns.hSprite, ns.rc, r.x + pad, r.y + pad, boxW, boxH,

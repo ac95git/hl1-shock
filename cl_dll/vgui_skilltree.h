@@ -122,6 +122,37 @@ private:
     // segments walking the perimeter. 'alpha' drives the blink once armed.
     void DrawHazardFrame(CInventoryPanel* ctx, const IRect& r, int seg, int alpha) const;
 
+    // ---- The suit's circuit (docs/SKILL_PANEL.md "The board") ----
+    //
+    // Painted in this literal order -- substrate, washes, traces, then the
+    // node frames themselves -- each a small helper rather than folding
+    // further into Paint(). All take the field rect so every fill and
+    // outline clips the same way the rest of the view already does.
+    void DrawSubstrate(CInventoryPanel* ctx, const IRect& field) const;
+    void DrawWashes(CInventoryPanel* ctx, const IRect& field) const;
+    void DrawTraces(CInventoryPanel* ctx, const IRect& field) const;
+
+    // One trace, between the node at 'idA' and its right or down neighbour
+    // 'idB' (DrawTraces only ever calls it that way, so the two are always
+    // orthogonally adjacent and the line is always axis-aligned).
+    void DrawTrace(CInventoryPanel* ctx, const IRect& field, int idA, int idB, bool horizontal) const;
+
+    // The frame for one node: fill, outline(s), pins, and -- for the Suit --
+    // the inner die. 'r' is the node's own unclipped rect (pins are placed
+    // from it and clipped individually, as the icon's scissor already is);
+    // 'c' is 'r' pre-clipped to the field, for the fill and outline.
+    void DrawNodeFrame(CInventoryPanel* ctx, const IRect& r, const IRect& c, const IRect& field,
+                        ENodeTier tier, bool bHeld, bool bAvailable,
+                        int fillR, int fillG, int fillB, int lineR, int lineG, int lineB) const;
+
+    // The pins sticking out of a frame: 'count' per side, on the left/right
+    // sides if 'sidesLR', the top/bottom sides if 'sidesTB'. Tier alone
+    // decides both (SKILL_MAP.md "Frames"), so DrawNodeFrame is the only
+    // caller.
+    void DrawNodePins(CInventoryPanel* ctx, const IRect& r, const IRect& field,
+                       int count, bool sidesLR, bool sidesTB,
+                       int pinR, int pinG, int pinB, int alpha) const;
+
     // Lazily load HUD sprites for each node (no-op if already loaded).
     void EnsureSprites();
 
@@ -139,6 +170,12 @@ private:
     std::vector<int>         m_nodes;
     std::vector<IRect>       m_nodeRects;    // parallel to m_nodes, set in Paint()
     std::vector<NodeSprite>  m_nodeSprites;  // parallel to m_nodes, loaded lazily
+
+    // Reverse lookup, id -> index into m_nodes/m_nodeRects, or -1. The
+    // traces need a node's screen rect starting from its neighbour's id
+    // (SkillIdAtCell gives ids, not indices), and this is the one place that
+    // mapping is built, in step with m_nodes (RebuildNodeList).
+    std::vector<int>         m_idToNodeIndex;
 
     unsigned char            m_unlockedMask[k_SkillMaskBytes] = {};
     unsigned char            m_openGates = 0; // one bit per EGate value, from gmsgSkillTree
@@ -220,10 +257,12 @@ private:
     static constexpr int k_TierNodeH[(int)ENodeTier::_Count] = { 36, 50, 62, 74, 92 };
     // Gap between the icon and the node's border, at full scale.
     static constexpr int k_IconPad = 4;
-    // Accent stripe height per tier
-    static constexpr int k_TierStripeH[(int)ENodeTier::_Count] = { 1, 2, 3, 4, 4 };
     // Border thickness per tier (1=single outline, 2=double outline inset 1px)
     static constexpr int k_TierBorderW[(int)ENodeTier::_Count] = { 1, 1, 1, 2, 2 };
+    // Pin size, in pixels: 'Length' runs along the frame's edge, 'Thickness'
+    // sticks out perpendicular to it (SKILL_MAP.md "Frames").
+    static constexpr int k_PinLength    = 4;
+    static constexpr int k_PinThickness = 2;
 
     // The grid step, both axes: 112 for the 15x15 board at 1:1
     // (docs/SKILL_MAP.md, Sizes).  skilltree_step overrides it for judging
