@@ -77,6 +77,9 @@ public:
 	// Send bones and verts to renderer
 	virtual void StudioRenderModel();
 
+	// The katana's hot blade cooling: the cold skin drawn over the hot one
+	virtual void StudioRenderKatanaCooling();
+
 	// Finalize rendering
 	virtual void StudioRenderFinal();
 

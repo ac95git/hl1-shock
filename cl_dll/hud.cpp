@@ -403,11 +403,13 @@ void CHud::Init()
 	CVAR_CREATE("cleave_wave_height", "2", 0);
 	// The blade lights up on the swing: a dynamic light at the hand, and the
 	// blade itself going HOT -- the viewmodel's hot skin family, whose blade
-	// texture is drawn additive.  Life in seconds; 0 turns each off.  The hot
-	// skin is on or off; the light decays over its life, and with the two
-	// equal that decay reads as the blade cooling.
-	CVAR_CREATE("katana_glow_light", "0.9", 0);
-	CVAR_CREATE("katana_glow_hot", "0.9", 0);
+	// texture is drawn additive.  Life in seconds; 0 turns each off.  The
+	// light decays over its life.  The hot skin holds, then cools into the
+	// cold one over the last katana_glow_fade seconds of its life (0 for the
+	// old hard switch); the crossfade is StudioModelRenderer's cooling pass.
+	CVAR_CREATE("katana_glow_light", "3", 0);
+	CVAR_CREATE("katana_glow_hot", "0.7", 0);
+	CVAR_CREATE("katana_glow_fade", "0.5", 0);
 	// The swing trail (katana_trail.cpp): the ribbon the blade sweeps, in
 	// first person.  Life is how long a sample of the blade stays before it
 	// has faded, in seconds, so it sets the trail's length; 0.12 was the

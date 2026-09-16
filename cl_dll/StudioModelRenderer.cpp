@@ -1228,6 +1228,9 @@ bool CStudioModelRenderer::StudioDrawModel(int flags)
 
 		StudioRenderModel();
 
+		if (m_pCurrentEntity == gEngfuncs.GetViewModel())
+			StudioRenderKatanaCooling();
+
 		// The katana's swing trail is drawn here, inside the viewmodel's own
 		// draw, because this is the one place with this frame's attachments
 		// (katana_trail.cpp).  Every other viewmodel makes it a no-op.
@@ -1636,6 +1639,45 @@ void CStudioModelRenderer::StudioRenderModel()
 	{
 		StudioRenderFinal();
 	}
+}
+
+/*
+====================
+StudioRenderKatanaCooling
+
+The hot blade cooling (view.cpp, V_KatanaHeat).  The skin is a whole-model
+choice, so the fade is two draws: the hot skin, drawn as ever, then the cold
+skin over it, blended in as the heat falls.  Everything but the blade is the
+same texture in both families, so blending it over itself changes nothing;
+the blade alone goes from hot to cold.  The same trick as the glow shell's
+second draw, with the lighting already set up.  Hardware only: the software
+renderer keeps the hard switch.
+====================
+*/
+float V_KatanaHeat(float time);
+
+void CStudioModelRenderer::StudioRenderKatanaCooling()
+{
+	if (0 == IEngineStudio.IsHardware() || m_pStudioHeader->numskinfamilies < 6)
+		return;
+	entity_state_t& state = m_pCurrentEntity->curstate;
+	// Families go cold then hot per suit (V_SetViewModelSkin): odd is hot.
+	if ((state.skin & 1) == 0 || state.rendermode != kRenderNormal || state.renderfx == kRenderFxGlowShell)
+		return;
+	const float heat = V_KatanaHeat(m_clTime);
+	if (heat >= 1.0f)
+		return;
+	const float cold = heat <= 0.0f ? 1.0f : 1.0f - heat;
+
+	const int skin = state.skin;
+	const int renderamt = state.renderamt;
+	state.skin = skin - 1;
+	state.rendermode = kRenderTransTexture;
+	IEngineStudio.StudioSetRenderamt((int)(cold * 255.0f));
+	StudioRenderFinal();
+	state.skin = skin;
+	state.rendermode = kRenderNormal;
+	IEngineStudio.StudioSetRenderamt(renderamt);
 }
 
 /*

@@ -864,6 +864,19 @@ void V_CalcNormalRefdef(struct ref_params_s* pparams)
 // =====================================================================
 extern float g_flKatanaHotEnd;
 
+// How hot the katana's blade is: 1 while the swing's heat holds, falling to 0
+// over the last katana_glow_fade seconds before g_flKatanaHotEnd, 0 after.
+float V_KatanaHeat(float time)
+{
+	const float left = g_flKatanaHotEnd - time;
+	if (left <= 0.0f)
+		return 0.0f;
+	const float fade = gEngfuncs.pfnGetCvarFloat("katana_glow_fade");
+	if (fade <= 0.0f || left >= fade)
+		return 1.0f;
+	return left / fade;
+}
+
 void V_SetViewModelSkin(cl_entity_t* view, float time)
 {
 	if (view == nullptr || view->model == nullptr)
@@ -873,7 +886,7 @@ void V_SetViewModelSkin(cl_entity_t* view, float time)
 		return;
 
 	const int variant = gHUD.SuitVariant();
-	const int hot = (g_flKatanaHotEnd > time) ? 1 : 0;
+	const int hot = (V_KatanaHeat(time) > 0.0f) ? 1 : 0;
 
 	int skin = 0;
 	if (hdr->numskinfamilies >= 6)

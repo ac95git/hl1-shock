@@ -402,9 +402,11 @@ Skills happened once, for the roster, on 2026-09-14.
   is scraped and flown through, and a step spent wholly inside the world ends it. The katana is therefore
   a **ranged melee weapon**: the blade for what is in reach, the wave for what is not, at half strength,
   and a crowd on the path is a crowd hit.
-- **The blade goes hot on the swing.** Two parts: a dynamic light at the hand (`katana_glow_light`, 0.9 s,
+- **The blade goes hot on the swing.** Two parts: a dynamic light at the hand (`katana_glow_light`, 3 s,
   decaying over its life, which is the fade the eye reads) and the blade's own texture swapping to a hot
-  one (`katana_glow_hot`, 0.9 s). The hot blade is a second state in the skin families — six now, glove
+  one (`katana_glow_hot`, 0.7 s), cooling back over its last `katana_glow_fade` (0.5 s) — the viewmodel
+  drawn a second time in the cold skin, blended in as the heat falls, so only the blade changes
+  (`StudioRenderKatanaCooling`). The hot blade is a second state in the skin families — six now, glove
   colour × cold/hot, glove-major — with the blade metal split onto a material of its own so only it
   swaps, and the hot texture flagged **additive** by `utils/mdltool/mdlflags.py` after the compile. It
   is drawn as light over what is behind it and is a little transparent; it does **not** shine in the dark
