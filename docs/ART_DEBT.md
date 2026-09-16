@@ -546,8 +546,9 @@ Either README.md credits Half-Life: Extended for the animation under a licence t
 ### Scope
 `E:\CustomAssets\models\src\v_katana_aoc\` — the probe compiled by `E:\CustomAssets\scripts\katana_aoc.py`
 on 2026-09-16 from Andrei's Crowbar decompile of Age of Chivalry's `v_longsword.mdl` at
-`E:\CustomAssets\models\decompiled\aoc\v_longsword\`. Nothing in the repo's `models/` and nothing in the
-install; it exists to be judged in HLMV (ROADMAP.md, *The longsword moveset*).
+`E:\CustomAssets\models\decompiled\aoc\v_longsword\`. Nothing in the repo's `models/`; in the install
+only as a session's drop-in over `v_katana.mdl` (`--install`), for judging in HLMV and in game
+(ROADMAP.md, *The longsword moveset*).
 
 ### What it is
 Three things from **Age of Chivalry**, the Source mod that became Chivalry: Medieval Warfare: the

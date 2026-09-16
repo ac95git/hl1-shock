@@ -513,8 +513,12 @@ fingers. Shaped in a grilling session the same day:
   (the only AoC hand mesh under GoldSrc's 2048-vertex submodel limit; the knight's is 4,200) in flat
   stand-in colours and a `blade` bodygroup holding the decompiled longsword and the katana blade, so the
   same swing is seen with the sword it was made for and with ours. Output
-  `E:\CustomAssets\models\src\v_katana_aoc\v_katana_aoc.mdl`; ships nowhere, no attachments, hitboxes
-  or glove skins. The slot table is the crowbar's twelve indices — idle_01 in the three idle slots,
+  `E:\CustomAssets\models\src\v_katana_aoc\v_katana_aoc.mdl`; ships nowhere. **Seen in HLMV the same
+  day — "has potential" — and rebuilt as a game drop-in** (`--install` copies it over the install's
+  `v_katana.mdl`; the repo's `models/v_katana.mdl` restores it): the katana first in its bodygroup so
+  body 0 shows it, the trail's three attachments bone-local on the sword bone, the blade's cold and hot
+  textures laid out as the six glove-major skin families the client reads, no glove variants, no
+  hitboxes of its own, no code change. The slot table is the crowbar's twelve indices — idle_01 in the three idle slots,
   draw, holster, swing1 as attack1, swing2 as attack2 and as the Cleave, stab as attack3 — then block
   and deflect appended as 12 and 13, unplayed until a Guard verb exists. **None of the eight is
   dropped.** Measured: the katana's point reaches 25 units past the grip where the longsword's reaches
