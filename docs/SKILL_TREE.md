@@ -284,7 +284,7 @@ Matrix, and the armour both lean on. [ROADMAP](ROADMAP.md#juggernaut--resilient)
 | Fortitude | 8 | +25 max health | — | Exists. **Root** |
 | Armor Expert | 9 | Less of each hit gets past armour | 1→2→3 | Exists |
 | Battery Capacity | 13 | More max armour | 1→2 | Exists |
-| Ricochet | 64 | A chance per bullet (`skill_ricochet_chance` 0.2) to bounce it, negated for the player, its full damage dealt to the attacker as bullet damage with a tracer back to them. Bullets only, needs armour | ranks later | **Built 2026-09-14**, off Armor Expert where it stands; its ranks and the region wait on the Route |
+| Ricochet | 64 | A chance per bullet (`skill_ricochet_chance` 0.2) to bounce it, negated for the player, its full damage dealt to the attacker as bullet damage with a tracer back to them. Bullets only, needs armour | — | **Built 2026-09-14**; a spur off the armour road since 2026-09-16. One node, tuned by its cvar: under the matrix there is no rank for it, and the Juggernaut's road stat is Max Armour. Whether Ricochet wants a stat of its own is a low-priority question to revisit once the Route has been played |
 | Pulse Window | 12 | The Shield stands longer | — | Exists |
 | Pulse Recharge | 15 | The Recharge is shorter | — | Exists |
 | Pulse Discharge | 16 | Negated hits vent at the crosshair, as energy | — | Exists |

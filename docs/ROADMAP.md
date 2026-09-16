@@ -1810,7 +1810,10 @@ at the moment of damage and had a line to the player.
 Shield's answer and before the suit's report: `skill_ricochet_chance` (0.2) per bullet hit while armour is
 above zero, the hit refused, the shooter dealt the full damage as `DMG_BULLET` with the player as
 inflictor, a `TE_TRACER` from the player's centre to theirs and the stock ricochet spark at the player.
-The ranks and the tracer's look wait on the Route's region.
+The tracer's look waits on the Route's region. ~~The ranks~~ do not exist under the matrix: a rank is a
+Stat node on the road and the Juggernaut's road stat is Max Armour, so Ricochet is one node at its cvar.
+A Ricochet-chance stat of its own is a **low-priority reevaluation** once the Route has been played, not
+a promise (settled 2026-09-16).
 
 ##### The nodes — settled
 
@@ -1873,7 +1876,9 @@ Juggernaut link, which is exactly what a cross-gated node is for.
 ##### Still open
 
 - Every number: the share, the slow (20% is the starting guess), 6 s, 10 s, the grant (100 is "to be
-  toned down"), Ricochet's chance per rank, Matrix on Kill's amount (15, a first guess). All cvars now.
+  toned down"), Ricochet's chance, Matrix on Kill's amount (15, a first guess). All cvars now.
+- **Low priority, later:** whether Ricochet wants a Stat node of its own to raise its chance. Under the
+  matrix it has no ranks; see the Ricochet note above.
   ~~Its decay~~ is derived: the grant fades over the Matrix's duration, gone as it drops (tuned in play
   2026-09-16 from a 10-per-second first guess).
 - ~~The major node's name~~ (**Decaying Armor** in the table since 2026-09-15), and the Matrix's own icon.
