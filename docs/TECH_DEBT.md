@@ -459,9 +459,15 @@ node icons, which had been invisible since the scissor arrived with the 1:1 pane
 2026-09-15: `skilltree_icon_debug` showed every icon landing inside its clip, and bypassing
 the scissor made every one appear. Presumably the scissor is compared in true screen space
 while the paint's coordinates are translated by the panel's position, so the clip never
-overlaps the draw; not confirmed. The rule is: **never scissor a sprite drawn from a VGUI
-paint. Clip the sprite rect by hand** — `SPR_DrawFittedClipped` in `cl_dll/spr_fit.h` is
-the one implementation, and the tree's icons go through it.
+overlaps the draw; not confirmed.
+
+The rule is: **never scissor a sprite drawn from a VGUI paint. Clip it by cutting the
+rect**, in the scaled frame's own pixels — the rect a scaled `SPR_DrawGeneric` takes is in
+pixels of the *requested* size, not of the sprite, which is the model the header comment of
+`cl_dll/spr_fit.h` sets out with the four observations behind it. `SPR_DrawFittedClipped`
+there is the one implementation, and the tree's icons go through it. The first attempt cut a
+sub-rect in sprite pixels and the icons drifted; that was the model being wrong, not the
+approach.
 
 ### Recommended Next Steps
 1. Find the actual state leak between `drawPrintText`/`drawSetTextPos` and `SPR_DrawAdditive`.

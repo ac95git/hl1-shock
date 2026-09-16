@@ -996,14 +996,13 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
         // The node is sized by the layout, not by the art, so the icon is
         // shrunk to the room it has: a HUD sprite that is 88px at 1280 and
         // 132px at 2560 lands the same at both. The 640 bucket's 44px is
-        // smaller than the room and stays 44px, since the engine will not
-        // magnify. Nothing else is drawn on a node: every node costs one,
+        // smaller than the room and stays 44px, since the fit is capped at
+        // native size. Nothing else is drawn on a node: every node costs one,
         // so there is no price to print (docs/SKILL_TREE.md).
         //
-        // Clipped with the engine scissor rather than another rect
-        // intersection: SPR_DrawFitted centres the sprite from the node's
-        // own (unclipped) box, and the scissor cuts what lands outside the
-        // field without disturbing that centring.
+        // Centred from the node's own (unclipped) box, then cut to the
+        // node's visible part by the draw, so the centring is undisturbed
+        // by the field's edge.
         if (i < (int)m_nodeSprites.size())
         {
             const NodeSprite& ns = m_nodeSprites[i];
@@ -1020,17 +1019,18 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
                     int tg = bHeldDisplay ? 255 : (bAvailable ? 200 :  80);
                     int tb = bHeldDisplay ? 255 : (bAvailable ?  60 :  80);
                     // Clipped to the node's visible part by the draw itself,
-                    // not by SPR_EnableScissor: inside a VGUI paint the engine
-                    // scissor drew nothing at all, measured 2026-09-16
-                    // (cl_dll/spr_fit.h, "the third trap").
+                    // in the scaled frame's own pixels, never by the engine
+                    // scissor, which draws nothing from a VGUI paint
+                    // (cl_dll/spr_fit.h, the model and its four observations).
+                    // An edge node's icon is cut where its frame is cut.
                     SPR_Set(ns.hSprite, tr, tg, tb);
                     const SprFitDraw d = SPR_DrawFittedClipped(ns.hSprite, ns.rc, r.x + pad, r.y + pad, boxW, boxH,
                                    c.x, c.y, c.w, c.h, SPR_BLEND_ONE, SPR_BLEND_ONE);
 
                     // skilltree_icon_debug 1: the numbers each distinct sprite
                     // was drawn with, once per second, the Grid's readout shape
-                    // (inv_icon_debug). "at" and "size" are the unclipped fit;
-                    // "clip" is the node's visible part it was cut to.
+                    // (inv_icon_debug). "at" and "size" are the whole fit;
+                    // "clip" the node's visible part; "vis" what was drawn.
                     if (CVAR_GET_FLOAT("skilltree_icon_debug") != 0.0f)
                     {
                         static float s_windowEnd = 0.0f;
@@ -1047,12 +1047,13 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
                         if (!seen && s_nSeen < 64)
                         {
                             s_seen[s_nSeen++] = (int)ns.hSprite;
-                            gEngfuncs.Con_Printf("skilltree_icon '%s' h%d rc %d,%d-%d,%d frame %dx%d node %d,%d %dx%d clip %d,%d %dx%d at %d,%d size %dx%d req %dx%d tint %d,%d,%d\n",
+                            gEngfuncs.Con_Printf("skilltree_icon '%s' h%d rc %d,%d-%d,%d frame %dx%d node %d,%d %dx%d clip %d,%d %dx%d at %d,%d size %dx%d req %dx%d vis %d,%d %dx%d tint %d,%d,%d\n",
                                 def.spriteName, (int)ns.hSprite,
                                 ns.rc.left, ns.rc.top, ns.rc.right, ns.rc.bottom,
                                 SPR_Width(ns.hSprite, 0), SPR_Height(ns.hSprite, 0),
                                 r.x, r.y, r.w, r.h, c.x, c.y, c.w, c.h,
-                                d.x, d.y, d.w, d.h, d.reqW, d.reqH, tr, tg, tb);
+                                d.x, d.y, d.w, d.h, d.reqW, d.reqH,
+                                d.visX, d.visY, d.visW, d.visH, tr, tg, tb);
                         }
                     }
                 }
