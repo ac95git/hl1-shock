@@ -241,14 +241,26 @@ is.
 _Avoid_: hidden, detected, exposed; and *concealed* especially, which invites confusion with Concealment
 
 **Search**:
-What a squad does after losing the player: go to where they were last seen, and look. It ends when they
-find the player or give up.
+What a monster does about a place it has reason to look at — where the player was last seen, or where a
+body fell: walk there, look, walk back. One monster at a time from a squad; every loner that heard.
+It ends when it finds the player or comes home. Since 2026-09-17 it is the SDK's own investigate schedule.
 _Avoid_: sweep, hunt, patrol — the first two already name other behaviour
 
 **Post**:
-The place a monster guards. A Search that finds nothing moves the squad's Posts rather than returning them
-to where they began, so a failed hunt permanently reshapes the space.
+The place a monster stood when it left to Search, and returns to. Since 2026-09-17 a Search does not move
+Posts; what a failed hunt leaves behind is the floor, not a new position.
 _Avoid_: station (a Station takes items in and gives items out), spot, waypoint, position
+
+**Witness**:
+A monster that saw a kill happen — it had a line to the victim as it died, whether or not it can see the
+player. A witness jumps to Noticed, speaks, and knows where the body is. Player-dealt kills only.
+_Avoid_: observer, spectator, alerted
+
+**The floor**:
+The lowest a monster's Suspicion can drain to for the rest of the level, once it has witnessed a kill or
+given up a chase. Just under the Noticed line, so the room is primed while the readout stays dim. Cleared
+by a level change, never by a save.
+_Avoid_: alert level, memory, grudge
 
 **Perception Profile**:
 How good one kind of monster is at perceiving. Every monster has one. A poor Profile makes a monster slower
@@ -272,8 +284,9 @@ the blade. `weapon_katana` in code and maps; `katana_wave` is the projectile.
 _Avoid_: sword, blade, energy sword, gauss blade; and *katana* alone where the gauss half matters
 
 **Disturbance**:
-What a death leaves behind at the place it happened. Monsters that care about such things can be drawn to
-one, for as long as it lasts.
+What a player-dealt death leaves behind at the place it happened: a sound, not a sight. Monsters that care
+about such things — soldiers — hear it and one comes to look, for as long as it lasts. A Silent Kill leaves
+none.
 _Avoid_: corpse, body, evidence, alert marker
 
 ### The Alien Route

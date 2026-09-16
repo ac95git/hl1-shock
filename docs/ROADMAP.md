@@ -144,7 +144,15 @@ See [The world](#pillar-1-the-world) for what the maps should eventually contain
 ## Pillar 6: Stealth
 
 **Shape: Building. Steps 1–4 and 6 are done — everything that decides whether the player is noticed, and
-telling them about it. Step 5, everything after acquisition, is all that remains.**
+telling them about it. Step 5, everything after acquisition, is all that remains, and it was re-sliced on
+2026-09-17 around one decision: stealth is predator first.**
+
+**Predator first — settled 2026-09-17.** The loop the pillar is judged on is *unseen, kill, unseen again*.
+Ghosting a room stays possible and is not the measure, because every Stealth node that exists rewards a
+strike on an unaware monster and none rewards passing one, corpses are invisible so one-by-one kills are
+what the engine makes cheap, and in vanilla maps "I saved some ammo" is a reward nobody can feel. The
+intended play, from which every number below was checked: stab one, swap to the silenced pistol, put a
+round in the head of whoever saw it before its meter fills.
 
 Half-Life has a working perception model that the vanilla game barely uses and never rewards. Stealth here
 is not a new system — it is finishing one Valve left half-connected and then giving the player tools to
@@ -173,7 +181,7 @@ that already describes what it changes.
 | 2 | **The Backstab** | `CanBackstab()`, the curated exclusion list, `FInRearArc`, two cvars, `adr/0010`, and the headshot entry under [pillar 2](#headshots-and-how-they-reconcile-with-this). **Done 2026-08-31.** |
 | 3 | **Suspicion** | Perception Profile, the meter, the `Look` gate, the `debug_suspicion` view, `SF_MONSTER_IGNORE_CONCEALMENT`, `adr/0009`. **Done 2026-09-01.** |
 | 4 | ~~**The readout**~~ | `gmsgConceal` plus `CHudConceal`, following `CHudPulse`'s send-on-change pattern. **Done 2026-09-02.** |
-| 5 | **[The post-aggro step](#the-post-aggro-step)** | Everything that happens *after* a monster acquires the player: de-escalation, the Search, Posts, aim-versus-facing, death witnesses, the Disturbance marker, the level-transition reset. Attempted 2026-09-02 and reverted — see below. |
+| 5 | **[The post-aggro step](#the-post-aggro-step)** | Everything that happens *after* a monster acquires the player. Attempted 2026-09-02 and reverted; **re-sliced 2026-09-17**, cost of a kill first (witnesses, the Disturbance, the Search), then the give-up, then the captain's channel — see below. Aim-versus-facing is dropped. |
 | 6 | ~~**Noise**~~ | A deliberate multiplier on the computed noise volume for crouching and walking. **Done 2026-09-02**, pulled forward: without it a crouched player could not get within crowbar reach without being heard, so the Backstab's own approach did not work. |
 
 ### The post-aggro step
@@ -243,50 +251,112 @@ Post-aggro stealth behaviour could not be evaluated against a monster that may b
 and the aim seam above may look less urgent now that a monster that loses the player actually turns
 around. **5a's question is the next thing to put.**
 
-**How this step is sliced** — agreed 2026-09-12, small commits with aim first, each independently playable:
+~~**How this step is sliced** — agreed 2026-09-12, small commits with aim first.~~ **Re-sliced 2026-09-17
+under predator first.** The 2026-09-12 order put aim (5a) first and the give-up (5b) second. Both changed:
 
-| | |
-| --- | --- |
-| 5a | Monsters only shoot where they face |
-| 5b | Give up the chase (contact-keyed, not meter-keyed) |
-| 5c | The Search |
-| 5d | Posts |
-| 5e | The squad channel — the captain's *"call for search"* from the original brief |
-| 5f | Death witnesses and the Disturbance marker |
-| 5g | The level-change reset |
+**5a is dropped.** Under predator first, being hunted means the loop has already failed and the player is
+in vanilla combat, which the mod promises to leave byte-for-byte alone. Whether being behind a hunting
+monster should be safer is a combat question, and clamping the shot to the cone would change every
+gunfight in the vanilla campaign. Aim stays vanilla. The move-wait fix already removed the frozen grunt
+shooting through its own back; if that is seen again it is a bug report, not a design question. The
+diagnosis above is kept because it is true, not because anything will act on it.
 
-Aim went first because it is the smallest piece, and because while monsters can still shoot behind them a
-give-up test is confounded — you cannot tell which fault you are watching.
+**The cost of a kill comes before the recovery from a failure.** Today a kill costs nothing — kill one grunt
+of four from behind and the other three do not react — so every kill is already a Silent Kill and the
+Major rewards nothing. The loop needs tension before it needs mercy, and a witnessed kill ending in a
+vanilla fight is a failure state the player understands and can be judged in any grunt squad in any
+vanilla map. The order, each commit independently playable:
 
-**5a's design is still open.** The question was put on 2026-09-12 and set aside in favour of diagnosis:
-*should being behind a monster that is already hunting you be safer than being in front of it?* Three seams
-were identified, and the choice depends on the answer:
+| | | Settled |
+| --- | --- | --- |
+| **5f** | **Witnesses, the Disturbance, the Search.** The cost of a kill | 2026-09-17, below |
+| **5b** | **The give-up**, contact-keyed, into the same Search | 2026-09-17, below |
+| **5e** | **The captain's channel** — notice propagation | 2026-09-17, below |
+| 5g | The level-change reset | 2026-08-31, [PERCEPTION.md](PERCEPTION.md#losing-the-player--the-give-up-settled-2026-09-17-not-built) |
+| ~~5c, 5d~~ | ~~The Search, Posts~~ | Absorbed into 5f: the SDK already has both |
+| ~~5a~~ | ~~Monsters only shoot where they face~~ | Dropped |
 
-1. **Clamp the shot to the firing arc** (`ShootAtEnemy`) — being behind it becomes genuinely safe.
-2. **Withhold the free last-known-position** (`CanSenseUnseenEnemy`, built and reverted 2026-09-02) — it
-   misses rather than stops, and still fires through its own back.
-3. **Leave aim alone; make monsters turn much faster** so facing catches up with aim. Fixes the *look*,
-   keeps vanilla tracking, and gives repositioning almost no value.
+Alongside 5f, two things outside this pillar that the intended play depends on: **the silenced pistol
+comes forward as a found item**, the first [Evolution](#weapon-evolutions), and **Headhunter ignores the
+grunt's helmet** with Ambush retuned to ×1.5 / ×2 ([SKILL_TREE.md](SKILL_TREE.md#stealth) has the
+arithmetic — without both, the stab-then-headshot play leaves a live grunt at 0.75 and rising).
 
-Answer it **after** the move-wait fix, not before: a monster that actually turns around may make the
-question look different.
+**What 5f is.** The full model is in [PERCEPTION.md part 2](PERCEPTION.md#death-witnesses-and-the-disturbance--settled-2026-09-17-not-built);
+the decisions, in the order they were made:
 
-The give-up that fixes it must key on **contact** (last sight, or last damage) rather than on the meter, or
-a monster under fire from an unseen attacker will quietly time out mid-firefight.
+- **A witness** is any hostile monster with a meter that passes a visibility trace on the victim as it
+  dies, squad or not, **for player-dealt kills only** — otherwise every marines-versus-aliens set piece
+  fills the sound pool with grunts searching bodies they shot themselves. It jumps to `suspicion_witness`
+  (0.75), speaks, and takes the death spot as its last known position. **A jump, not a floor**: from
+  there the meter fills or drains as normal, but never again below `suspicion_floor` (0.3) until a level
+  change. 0.75 rather than outright acquisition because the difference is exactly the half-second the loop
+  is made of — kill, duck, gone — and it keeps "only sight acquires" true with no new exception. The floor
+  sits *under* the readout's Noticed line (0.35) on purpose: the room is primed, the icon stays dim.
+- **The Disturbance** is the death spot entering the sound list: a new sound bit, `disturbance_volume`
+  (512 units) for `disturbance_duration` (20 s), player-dealt kills only, heard by Trained profiles via a
+  flag on the profile struct (soldiers care about bodies; a zombie does not; the bullsquid already smells a
+  carcass through the existing scent bit and that stays untouched). It is a real sound, so the existing
+  hear-and-turn machinery drives it for free.
+- **The Search is the SDK's own.** `slInvestigateSound` (`dlls/defaultai.cpp:285`) stops, stores the
+  monster's position, walks to the best sound, idles ten seconds, walks back and clears — a Search and a
+  return to Post in one vanilla table that only the assassin ever picks. Grunts have every task it needs.
+  So the Search and the Post are a schedule switch on hearing a Disturbance, and 5c and 5d cease to exist.
+- **A squad sends one.** The leader picks its nearest member; the rest hold where they are, meters at the
+  jump, turned toward the body. The predator's reward for a clean kill is the next isolated target.
+- **Loners all go.** With no leader there is nobody to pick one, so every leaderless monster that hears a
+  Disturbance walks to it and they arrive as a mob. **Kept deliberately** (2026-09-17, one-answers-by-claim
+  was proposed and rejected): disciplined squads isolate, rabble converge, and the mob has an answer — kill
+  a grunt, make a noise, drop a satchel, leave. [ADR-0014](adr/0014-a-body-draws-one-squad-member-or-every-loner.md).
+- **Silent Kill is about the ears only.** On a victim below Spotted no Disturbance is inserted, so a
+  squadmate around the corner never knows. A squadmate *in sight* reacts in full — soldiers are not blind,
+  and the answer to the one who saw is the silenced headshot. The weapon's own noise is untouched: a
+  gunshot is a sound that led to the kill, not one that results from it, and a quiet gun is the silencer.
 
-Step 2 goes first despite not being the pillar's centrepiece, because it is the only part judgeable in
-vanilla maps today — it needs no meter, no profile and no squad code.
+**What 5b is.** No sight of the player and no player damage for `suspicion_giveup` seconds (first guess
+10), then the monster nulls its enemy, sets its meter to the same 0.75 jump (it was pinned at 1.0, and left
+there the next look would re-acquire on sight and no Search would ever happen), says "stay alert", runs the
+same investigate schedule to the last known position, and settles at ALERT on the floor. **Contact is
+squad-wide where there is a leader** — last sight by any member, last damage to any — via the
+`m_flLastEnemySightTime` the leader already holds, or one grunt gives up and says "stay alert" while its
+squadmate is trading fire. The damage clause stays, so shooting from cover and waiting does not work.
+
+**What 5e is, and why the captain matters.** When any member crosses Noticed, the leader lifts every
+member to the notice line with a line — "stay alert people". Loners never do this. So while he lives the
+captain sends the searcher, primes the squad on a slip, and holds the contact clock; when he dies the SDK
+dissolves the squad with no promotion, and the survivors lose acquisition sharing (a slip alerts the one
+who saw you, not four), the attack slots (everyone fires and throws at once), the friendly-fire check, and
+the propagation. Killing him first is encouraged by what he does alive, not by a node. He is already
+marked — the leader wears the commander head, the beret, set in `StartMonster` — and already unhelmeted,
+so the pistol headshot always worked on him. **Cut the Head is dropped** (id 129 retired): its "drop the
+survivors' meters" was a footnote to a free reward. **Shroud** takes its cell, a flat ×0.8 on the fill.
+
+**Sentences.** Every line above is composed from words the grunt already has, in a new mod `sentences.txt`
+(the mod has none yet). First picks: `HG_ALERT3` "shit, we got hostiles" for the witness, `HG_QUEST5`
+"sweep that sector" for the send, `HG_QUEST0` / `HG_QUEST11` "stay alert" for the give-up and the
+propagation, `HG_CLEAR3` "no sign hostiles sir" for the walk back. The vanilla `HG_QUEST` group cannot be
+played as a group — it also holds "echo mission is go".
+
+**Fill at 2.0.** `suspicion_fill` doubles (from 1.0), settled 2026-09-17 with the Stealth numbers: a Trained
+monster looking at a running, lit player at close range takes 0.35 s, and a fully invested player crouched
+in front of a lit grunt at mid range has about three seconds, cover to cover. Stealth is meant to work
+behind unaware enemies and in the dark; the lit room is generous enough at that.
+
+**Two facts to record rather than fix.** The witness window in the open is about a sixth of a second at
+fill 1.0 and less at 2.0 — the play exists only from cover, which is what "sufficiently concealed" meant
+when it was said. And a searcher that hears a second Disturbance mid-walk restarts the schedule from where
+it stands, so its walk-back position drifts; the vanilla schedule drifts the same way.
 
 ### Deliberately deferred
 
 Recorded so they are not rediscovered as gaps.
 
-**Silent weapons.** `dlls/glock.cpp:77` is `// pev->body = 1;`. Set it and the model switches to its
-silenced submodel, the shot drops to `QUIET_GUN_VOLUME` and `DIM_GUN_FLASH` (`dlls/glock.cpp:120-130`), and
-`GLOCK_ADD_SILENCER` (`dlls/weapons.h:490`) is a real attach animation already in `v_9mmhandgun.mdl`.
-Everything except the decision to expose it is done — and that decision belongs to
-[Evolutions](#weapon-evolutions), where a silencer is the canonical example of "base weapon plus a small
-alteration". Uncommenting it now would pre-decide the Evolutions identity question. The crossbow is already
+~~**Silent weapons.**~~ **Brought forward 2026-09-17.** `dlls/glock.cpp:77` is `// pev->body = 1;`. Set it
+and the model switches to its silenced submodel, the shot drops to `QUIET_GUN_VOLUME` and `DIM_GUN_FLASH`
+(`dlls/glock.cpp:120-130`), and `GLOCK_ADD_SILENCER` (`dlls/weapons.h:490`) is a real attach animation
+already in `v_9mmhandgun.mdl`. The decision to expose it was deferred to [Evolutions](#weapon-evolutions)
+so as not to pre-decide the identity question; the predator loop's intended play needs it, so it arrives
+**as a found item, permanent once attached, and is the first Evolution** — which answers the question with
+the example it was written around rather than pre-deciding it. Built with 5f. The crossbow is already
 `QUIET_GUN_VOLUME` (`dlls/crossbow.cpp:322`) and is the mod's existing quiet weapon whether anyone intended
 it or not.
 
@@ -297,7 +367,8 @@ made.
 
 ~~**Stealth Skills.**~~ **Built 2026-09-16**, Night Vision Module included; moved to
 [PILLARS.md pillar 6](PILLARS.md#the-stealth-region-and-the-night-vision-module--built-2026-09-16-untested-in-game).
-Cut the Head and Silent Kill still wait on [the post-aggro step](#the-post-aggro-step).
+Silent Kill waits on [the post-aggro step](#the-post-aggro-step); Cut the Head was dropped on 2026-09-17
+and Shroud takes its cell.
 
 **Generalising perception to monster-vs-monster.** Scoped to the player deliberately. The reasoning —
 including the muzzle-flash asymmetry that makes a naive generalisation exactly backwards — is under
@@ -322,8 +393,10 @@ whether the player gets a readout, and how scripted sequences interact.
 
 ### Done when
 
-A player can cross an occupied room without being seen, using choices they made — light, speed, weapon —
-and is measurably better off for it than a player who fought through.
+**Rewritten 2026-09-17 for predator first.** A player can clear an occupied room one monster at a time,
+through choices they made — light, speed, weapon, who to take first — with each kill leaving them unseen
+again, and a kill that was seen costs them the room. Crossing a room unseen is a way to reach the first
+kill, not the measure.
 
 ---
 
@@ -555,15 +628,24 @@ the silenced submodel and the fire code branches on it (`dlls/glock.cpp:120-130`
 built, in the base game, on the exact weapon the user identified. It needs to become durable player state
 that saves and syncs rather than a body value nobody sets.
 
-Consequences to settle before building:
+**The silencer is the first Evolution — settled 2026-09-17**, pulled forward by
+[pillar 6](#the-post-aggro-step) because the predator loop's intended play (stab, swap, silenced headshot)
+has no second half without it. It is **found**, an item entity in the pattern of the Night Vision Module:
+pick it up, the pistol plays its attach animation, and from then on it fires quiet and dim. **Permanent**
+once attached. That answers the second question below for this Evolution by example, and gives mappers a
+way to hand the loop's second half to the player where the level wants it. A Stealth node was rejected
+because no other node changes a weapon's identity; always-on was rejected because it changes the vanilla
+campaign for players who never touch stealth.
+
+Consequences to settle before building the next one:
 
 - Where does an Evolution **live**? It is durable per-weapon state, so it wants to sit with the weapon
   rather than in `CPlayerInventory` — but a dropped weapon keeps its clip today and would have to keep its
   Evolutions too, or dropping becomes lossy (the inventory design is explicit that dropping and retaking is
-  exactly lossless).
-- Is an Evolution **found** or **bought**? Found argues for an Item Type and a pillar 1 reward; bought
-  argues for Skill Points and makes the Armaments column mean something. The user's list puts weapon
-  handling upgrades under "upgrade points invested", which points at bought.
+  exactly lossless). The silencer has to answer this for itself when built.
+- Is an Evolution **found** or **bought**? The silencer is found. Whether every Evolution is, or whether
+  the Armaments column buys some, is still open — the user's list put weapon handling upgrades under
+  "upgrade points invested", which points at bought for at least some.
 - Does the **viewmodel** have to change per Evolution? A silencer does (submodel), a magazine may not.
   This is the cheapest possible Evolution to ship first for exactly that reason.
 
@@ -1682,12 +1764,14 @@ in [ADR-0012](adr/0012-the-skill-tree-has-one-start-and-open-roads.md).
   value on each side of the rim (first-cut reading: Fortitude, Battery Capacity, Marksman, Melee Force).
 - **The Dash Route is named Shinobi.**
 - **The Stealth Route is shaped**, seven nodes on Concealment roads, all reading a monster's own meter at
-  an action: Soft Step, Ambush (22, the merged unaware-damage node, ×1.25 below Spotted / ×1.5 below
-  Noticed, all weapons), Phantom (23, an Unseen Backstab kill buys 4 s at ×1.5 speed with silent movement; 2 s at ×1.2 on a hit was the first shape),
-  Nightfall, Slip Away, Cut the Head, and the Major **Silent Kill** (an unseen kill leaves no witness, no
-  Disturbance, no squad LKP). The last two wait on the post-aggro step. The Gargantua stack was checked:
-  Stealth alone reaches 405 of 800 and needs Melee and Energy for the rest. See
-  [SKILL_TREE.md](SKILL_TREE.md#stealth).
+  an action: Soft Step, Ambush (22, the merged unaware-damage node, all weapons; ×1.25 below Spotted /
+  ×1.5 below Noticed as built, **×1.5 / ×2 settled 2026-09-17**), Phantom (23, an Unseen Backstab kill buys
+  4 s at ×1.5 speed with silent movement; 2 s at ×1.2 on a hit was the first shape), Nightfall, Slip Away,
+  ~~Cut the Head~~ (dropped 2026-09-17; **Shroud**, ×0.8 on the fill, takes its cell), and the Major
+  **Silent Kill** (a kill below Spotted is unheard — no Disturbance — and nothing more; a witness in
+  sight reacts in full, settled 2026-09-17). The Major waits on the post-aggro step. The Gargantua stack
+  was checked: Stealth alone reaches 405 of 800 at the built tiers, 540 at the settled ones, and needs
+  Melee and Energy for the rest. See [SKILL_TREE.md](SKILL_TREE.md#stealth).
 - **A fifth Module, Night Vision**, gates the Stealth region and replaces the flashlight when found; the
   flashlight stays until then. Adapted from Opposing Force's, source at `E:\Projects\halflife-op4-updated`.
 - **Energy's two loose ends closed**: Egon Focus is the SDK's narrow beam on right click, as it is; Quick

@@ -1556,7 +1556,8 @@ has the table with every id and cvar. None of it has been played yet.
   `pfnSetClientMaxspeed` can only lower it. `skill_phantom_duration` (4), `skill_phantom_speed_scale`
   (1.5); cues are `buttons/blip2.wav` at pitch 150 on start and 80 on end, a placeholder shared with
   Cleave's ready blip ([ART_DEBT.md](ART_DEBT.md)).
-- **Cut the Head** (129) and **Silent Kill** (130), the Major, remain unbuilt — the post-aggro step.
+- **Silent Kill** (130), the Major, remains unbuilt — the post-aggro step. **Cut the Head** (129) was
+  dropped on 2026-09-17 and **Shroud** (160, ×0.8 on the fill) takes its cell; neither is built.
 
 **The Night Vision Module** — `item_nightvision` (`dlls/items.cpp`) opens `EGate::NightVision`; it needs
 the suit and turns off a lit flashlight first. With the gate open, `impulse 100` sets `EF_NIGHTVISION`
@@ -1579,31 +1580,33 @@ flashlight's own icon, which is a genuine confusion risk and is recorded in
 whether a corner icon is read in time mid-approach, are questions only play answers — `hud_conceal 0` turns
 it off for comparison.
 
-**Nothing searches.** A monster that loses the player gives up and returns to ALERT where it stands, but it
-does not go and look: no Search toward the last known position, no Post to settle at, no squad channel, and
-deaths and corpses are still imperceptible. Giving up is currently a timer rather than a behaviour.
+**A kill costs nothing, and nothing gives up.** Kill one grunt of four from behind and the other three do
+not react: deaths and corpses are imperceptible, so every kill is already a Silent Kill and the Major has
+nothing to be against. And once a monster acquires the player it keeps them forever — no give-up, no
+Search, no Post, no squad channel. Both halves are settled and unbuilt; see the next step.
 
 ### Next step
 
-**The design is settled** as of 2026-08-31 — Concealment, Suspicion, de-escalation and the Search, squad
-coordination, the readout, and a positional Backstab. It is written up in
-[PERCEPTION.md part 2](PERCEPTION.md#part-2--the-model-this-mod-adds), and
-[ROADMAP.md](ROADMAP.md#pillar-6-stealth) holds the build order and what is still open.
+**The design is settled** as of 2026-08-31, and **everything after acquisition was settled on 2026-09-17**
+under one frame: stealth is *predator first* — the loop is unseen, kill, unseen again, and crossing a room
+unseen is a way to reach the first kill rather than the measure. The order is the cost of a kill first
+(witnesses at a 0.75 jump, a Disturbance sound that draws one squad member or every loner, the Search on
+the SDK's own investigate schedule), then the give-up into the same Search, then the captain's notice
+propagation. Aim-versus-facing is dropped. With it come the silenced pistol as a found item and a helmet
+skip on Headhunter, because the intended play — stab, swap, silenced headshot on the witness — did not add
+up without them. It is written up in [PERCEPTION.md part 2](PERCEPTION.md#part-2--the-model-this-mod-adds),
+and [ROADMAP.md](ROADMAP.md#the-post-aggro-step) holds the order, the numbers and the sentences.
 
 **The Backstab is built and is filed under [pillar 2](#2-enhanced-combat)**, because it came out positional
 — awareness does not gate it — which makes it a melee mechanic rather than a stealth one. It was this
 pillar's first commit and is the only piece judgeable in vanilla maps, but it is not stealth and this
 pillar should not take credit for it.
 
-What is next is **the readout** — three states, Unseen / Noticed / Spotted, derived server-side from the
-highest Suspicion among every monster that can currently perceive the player, sent only on a threshold
-crossing. Until it exists the meter is invisible outside `debug_suspicion`, and a stealth mechanic the
-player cannot read is not a mechanic.
+### Acceptance criteria (draft, rewritten 2026-09-17)
 
-### Acceptance criteria (draft)
-
-- A player can cross an occupied room unseen, through choices they made — light, speed, weapon.
-- Doing so leaves them measurably better off than fighting through.
+- A player can clear an occupied room one monster at a time, through choices they made — light, speed,
+  weapon, who to take first — and each kill leaves them unseen again.
+- A kill that was seen costs them the room: a fight, or a Search that walks to where they stand.
 - No stealth state is decided client-side.
 
 ---

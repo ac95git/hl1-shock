@@ -470,7 +470,7 @@ Handling speed, typed damage, and a major node that makes swapping weapons the w
 | Quick Draw | 36 | Weapons come up 40% faster (`skill_draw_time_scale` 0.6 in both copies of `DefaultDeploy`; predicted) | Built |
 | Weapon Mastery | 4 | All weapons +10% | Built; moved deeper, where the two roads meet |
 | Demolitions | 37 | Explosives dealt ×1.25 (`DMG_BLAST` at the chokepoints), explosions taken ×0.5 (own grenades included) | Built |
-| Headhunter | 38 | Hits to the head ×1.5 on top of the head multiplier, player hits only. Decapitation keys on the same hitgroup | Built |
+| Headhunter | 38 | Hits to the head ×1.5 on top of the head multiplier, player hits only. Decapitation keys on the same hitgroup. **Settled 2026-09-17, unbuilt: also ignores the grunt's helmet**, the one head armour in the roster, so the Stealth loop's silenced headshot lands — see [Stealth](#stealth) | Built; the helmet skip is not |
 | **Major** | 39 | **Swap Surge**: for 2 s after a weapon swap (`skill_swap_surge_window`, counted from the swap, draw included), everything the player deals ×1.5 (`skill_swap_surge_scale`) at the chokepoints; 6 s cooldown from the swap (`skill_swap_surge_cooldown`). Opened by `DefaultDeploy`, the one place every weapon comes up through; both times saved | Built. Name provisional |
 
 "Ranks" in the earlier draft became the Stat nodes, as in Melee. **Superseded 2026-09-15 by
@@ -584,8 +584,10 @@ Last Stand fires only when no Infusion is running ([ADR-0007](adr/0007-the-infus
 makes monsters learn about the player 5% slower). Built on the perception model in
 [PERCEPTION.md](PERCEPTION.md) and on nothing else: every node reads a monster's own Suspicion meter at
 the moment of an action — a strike, a kill, a break of contact — and none rewards waiting. **Hidden until
-the Night Vision Module** (below). **Every node but the post-aggro step's two was built 2026-09-16**, along
-with the Module that reveals the region; none of it is verified in game yet.
+the Night Vision Module** (below). **Every node but the post-aggro step's Major was built 2026-09-16**,
+along with the Module that reveals the region; none of it is verified in game yet. On 2026-09-17 the
+post-aggro step was settled around the loop these nodes serve — *unseen, kill, unseen again* — and three
+things here moved with it: Ambush's tiers, Cut the Head's cell, and Silent Kill's text.
 
 One property of the model carries two of these nodes for free: **being hit fills a monster's meter
 outright**, so any player hit landing while the meter is below full is by construction the opening hit,
@@ -596,19 +598,41 @@ already shows. *Unseen* is Suspicion below `suspicion_notice`; *Spotted* is at `
 | --- | --- | --- | --- |
 | Soft Step | 126 | Crouch and walk body-noise scales (`noise_stance_*`) multiplied again by `skill_soft_step_scale` (0.5) in `UpdatePlayerSound`; running untouched | **Built 2026-09-16**, untested in game. **Entry** |
 | Concealment Stat ×10 | 131–140 | Each adds `skill_stat_concealment` (0.05) to the multiplier `PlayerConcealmentScale` (`dlls/perception.cpp`) applies to the fill rate in `UpdateSuspicion`, player only | **Built 2026-09-16**. **The roads** |
-| **Ambush** | 22 | Player-dealt damage to a hostile monster is multiplied by how unaware it is at the hit, read off that monster's own meter: **×1.25 below Spotted, ×1.5 below Noticed** (`skill_ambush_spotted_scale`, `skill_ambush_noticed_scale`). Every weapon — bullets, blast, the katana's wave, hornets, melee — each victim of a grenade or a Cleave on its own meter, through `PlayerAmbushScale` (`dlls/player_skills.cpp`), called beside `SkillScaleWeaponDamage` at both chokepoints (`ApplyMultiDamage`, the direct branch of `RadiusDamage`). Stacks multiplicatively with the Backstab and everything else. Never on the always-aware profiles, `SF_MONSTER_IGNORE_CONCEALMENT`, or anything not hostile to the player; a monster fighting something else *is* ambushable, and one that lost the player becomes ambushable again as its meter drains. Applied **before** the hit fills the meter; shown as `xAMBUSH` in the `debug_damage` line via `DebugDamageAppend` | **Built 2026-09-16**, untested in game |
+| **Ambush** | 22 | Player-dealt damage to a hostile monster is multiplied by how unaware it is at the hit, read off that monster's own meter: **×1.25 below Spotted, ×1.5 below Noticed** as built (`skill_ambush_spotted_scale`, `skill_ambush_noticed_scale`); **×1.5 / ×2 settled 2026-09-17**, to be set with the post-aggro step. Every weapon — bullets, blast, the katana's wave, hornets, melee — each victim of a grenade or a Cleave on its own meter, through `PlayerAmbushScale` (`dlls/player_skills.cpp`), called beside `SkillScaleWeaponDamage` at both chokepoints (`ApplyMultiDamage`, the direct branch of `RadiusDamage`). Stacks multiplicatively with the Backstab and everything else. Never on the always-aware profiles, `SF_MONSTER_IGNORE_CONCEALMENT`, or anything not hostile to the player; a monster fighting something else *is* ambushable, and one that lost the player becomes ambushable again as its meter drains. Applied **before** the hit fills the meter; shown as `xAMBUSH` in the `debug_damage` line via `DebugDamageAppend` | **Built 2026-09-16**, untested in game |
 | **Phantom** | 23 | A Backstab **kill** on a monster below Noticed calls `CBasePlayer::PhantomStart()` (eligibility read before the hit, the kill after it), saved as `m_flPhantomUntil`: **4 seconds at ×1.5 speed during which every movement action — running, Dashing, jumping — is silent** (body noise zero). A Backstab hit alone, for 2 s at ×1.2, was the first shape; Andrei set the kill and the numbers on 2026-09-16 after the first play. The speed rides a physinfo key (`"phs"`, percent) written by `PhantomSync` (PreThink) and read in `PM_CheckParamters`, multiplying `pmove->maxspeed` before the wish-speed clamp, since `pfnSetClientMaxspeed` can only lower it. A timed buff on a strike, not a change to the movement rules; the Shinobi link. `skill_phantom_duration` (4), `skill_phantom_speed_scale` (1.5); cues `buttons/blip2.wav` at pitch 150 on start and 80 on end, a placeholder shared with Cleave's ready blip ([ART_DEBT.md](ART_DEBT.md)) | **Built 2026-09-16**, untested in game |
 | Nightfall | 127 | `conceal_light_dark` scaled by `skill_nightfall_scale` (0.5) in `ConcealmentOf`, for a player holding it — darkness conceals twice as much | **Built 2026-09-16**; matters with dark maps and the Module |
 | Slip Away | 128 | A new saved `m_bSuspicionHadTarget` on `CBaseMonster` remembers whether the last `Look` had a target; on the seen→unseen edge, with the meter between `suspicion_notice` and `suspicion_acquire`, the meter is multiplied by 1 − `skill_slip_away_fraction` (0.33), once. Fires on the break, not on the hiding; the single-player assumption is `UTIL_PlayerByIndex(1)`, and it is logged under `debug_suspicion` | **Built 2026-09-16**, untested in game |
-| Cut the Head | 129 | Killing a squad leader drops every member's Suspicion to the notice floor | Post-aggro step, unbuilt |
-| **Major: Silent Kill** | 130 | A kill on a monster below Spotted is unseen and unheard: no death witnesses, no Disturbance, no squad LKP. Clear a squad one by one | Post-aggro step, unbuilt |
+| ~~Cut the Head~~ | ~~129~~ | ~~Killing a squad leader drops every member's Suspicion to the notice floor~~ | **Dropped 2026-09-17**, id retired. Killing the leader already dissolves the squad with no promotion — no acquisition sharing, no attack slots, no friendly-fire check, no notice propagation, nobody to send a searcher — and a node that adds "and the meters drop" is a footnote to that. He is already marked (the beret) and already unhelmeted. See [PERCEPTION.md](PERCEPTION.md#the-captains-channel--settled-2026-09-17-not-built) |
+| **Shroud** | 160 | A flat ×0.8 on the fill for the holder, `skill_shroud_scale` — the ten roads over again in one node. Takes Cut the Head's cell (13,2). A stillness term was rejected because it rewards waiting, which no Stealth node does; a crouch-only boost was the second choice. Name provisional | Settled 2026-09-17, unbuilt |
+| **Major: Silent Kill** | 130 | A kill on a monster below Spotted is **unheard**: no Disturbance is inserted, so a squadmate around the corner never knows and nobody searches. **It is about the ears only** — a squadmate in sight is a witness in full, because soldiers are not blind, and the weapon's own noise is the weapon's. The play is stab, then drop the witness with a silenced headshot before its 0.75 fills. Settled 2026-09-17; the first text said "no witnesses" too | Post-aggro step, unbuilt |
 
 **Ambush and Assassinate were one verb** — damage to unaware targets — and were merged on the day they
 were proposed; the two-tier multiplier is what remains of the second. **The stack it leaves for the
 Gargantua**, which was checked before the numbers were set: an unseen katana Backstab is 60 × 3 (Backstab)
 × 1.5 (Backstab node) × 1.5 (Ambush) = 405, and the Gargantua's 800 then needs Melee Force, the Energy
 entry and three Melee Damage roads — Stealth, Melee and Energy, the corner-to-corner walk. Stealth alone
-does not one-shot it, on purpose.
+does not one-shot it, on purpose. At the 2026-09-17 tiers the same stab is 540, and Stealth alone still
+does not.
+
+**The stab-then-shoot play, checked 2026-09-17.** The predator loop's intended answer to a witness is a
+silenced round in its head before its meter fills from 0.75. The grunt's helmet hitbox absorbs 20 before
+anything else (`CHGrunt::TraceAttack`), so a 9mm round at 8 ricochets off it for nothing; a shot to the
+face gets the ×3 head multiplier and still fell short. Two changes were settled so the play is true:
+**Headhunter ignores the helmet** (a skip in the grunt's own clause; nothing else in the roster armours its
+head, and the leader's commander head never had one) and **Ambush becomes ×1.5 below Spotted, ×2 below
+Noticed**. Every node multiplies, so a head hit on a witness at Noticed:
+
+| Held | Damage | Kills a grunt |
+| --- | --- | --- |
+| Headhunter, Ambush | 8 × 3 × 1.5 × 1.5 = 54 | easy and medium, not hard's 80 |
+| plus Marksman, which Headhunter needs anyway | 62 | same |
+| plus six Bullet Damage roads | 81 | hard |
+| plus Weapon Mastery and four roads instead | 82 | hard |
+| plus **Swap Surge** instead of any roads | 81 | hard |
+
+Swap Surge's window is two seconds from the swap, draw included — stab, swap to the pistol, shoot *is*
+that window. The Weapon Specialist Major is the stab-then-shoot play, and it is always in play when
+switching from melee to the pistol. On an Unseen target at ×2 the same shot is 72, 83 with Marksman.
 
 **Feedback from day one**, the Ricochet lesson: a distinct hit sound for an Ambush at each tier, a cue when
 Phantom starts and ends, and `debug_damage` naming each multiplier as it lands.
@@ -720,6 +744,7 @@ the far side of its region.
 | Quick Charge | 57 | **Cut** 2026-09-15 | The wave has no charge to quicken |
 | Hive Capacity, Hive Regrowth | 20, 21 | Returned in the Alien Route, **built 2026-09-16** as Hive Capacity and Hive Replenish | See [Alien](#alien) |
 | Stealth column | 22, 23 | In the enum as reserved; **Ambush (22) and Phantom (23)**, built 2026-09-16 | See [Stealth](#stealth) |
+| Cut the Head | 129 | **Cut** 2026-09-17 | Killing the leader already dissolves the squad; the node was a footnote. Shroud (160) takes its cell |
 
 Cut ids stay reserved forever and are never reused.
 

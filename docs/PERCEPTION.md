@@ -7,21 +7,22 @@ has been noticed.
 Two halves. **[Part 1](#part-1--what-half-life-does-today)** documents the base SDK exactly as it is, with
 no changes proposed — it is the thing being built on, and most of it is undocumented anywhere else.
 **[Part 2](#part-2--the-model-this-mod-adds)** is the model this mod layers on top, settled 2026-08-31.
-Concealment, Suspicion, the Perception Profile and the Backstab are **built**; de-escalation, the Search,
-the Post, the squad channel, the Disturbance, the readout and the noise multiplier are not. Each section
-below says which it is.
+Concealment, Suspicion, the Perception Profile, the readout, the noise multiplier and the Backstab are
+**built**; witnesses, the Disturbance, the Search, the give-up and the captain's channel are **settled
+2026-09-17 and not built**. Each section below says which it is.
 
 What is intended and unbuilt is tracked in [ROADMAP.md](ROADMAP.md#pillar-6-stealth); what exists today is
 in [PILLARS.md](PILLARS.md#6-stealth). Vocabulary is in [CONTEXT.md](../CONTEXT.md) — **Concealment**,
 **Suspicion**, **Search**, **Post**, **Perception Profile**, **Backstab**.
 
-**Last updated:** 2026-09-16 (branch `hl-shock` — the Stealth Skill Tree region now reads and writes this
-model: Soft Step, Nightfall, Slip Away, Ambush, Phantom and ten Concealment Stat nodes, behind the Night
-Vision Module, which also closes the flashlight hole noted below. None of it is verified in game yet; the
-detail is in [SKILL_TREE.md](SKILL_TREE.md#stealth) and [PILLARS.md pillar 6](PILLARS.md#6-stealth), not
-duplicated here. Before that, 2026-09-02 — **everything before acquisition is built**: Concealment,
-Suspicion, the Perception Profile, the noise multipliers. Everything after acquisition is deferred to
-[the post-aggro step](ROADMAP.md#the-post-aggro-step). The readout is next)
+**Last updated:** 2026-09-17 (branch `hl-shock` — **everything after acquisition is now settled**, under
+one frame: stealth is predator first, the loop is *unseen, kill, unseen again*. The witness, the
+Disturbance, the Search on the SDK's own investigate schedule, the give-up and the captain's channel are
+written below as decisions with their reasons; the build order and the numbers that were checked against
+them are in [the post-aggro step](ROADMAP.md#the-post-aggro-step). Aim-versus-facing is dropped.
+`suspicion_fill` becomes 2.0. Before that, 2026-09-16 — the Stealth Skill Tree region reads and writes
+this model behind the Night Vision Module, none of it verified in game; the detail is in
+[SKILL_TREE.md](SKILL_TREE.md#stealth) and [PILLARS.md pillar 6](PILLARS.md#6-stealth))
 
 ---
 
@@ -236,7 +237,8 @@ successful cover searches it can walk to a node 384 units away, which is how a "
 wander out of the room.
 
 In the base game this is rare because nothing makes losing the player a normal event. Under this mod it is
-the *point*, which is why [de-escalation](#losing-the-player--de-escalation-search-post) is not optional.
+the *point*, which is why [the give-up](#losing-the-player--the-give-up-settled-2026-09-17-not-built) is
+not optional.
 
 **The specific cause was found on 2026-09-12, and it is not the pathing.** A grunt's grenade-cover schedule
 sets a 99-second freeze and can die before the task that releases it; the freeze then leaks into the next
@@ -523,71 +525,142 @@ expected you to reach — and never a third.
 
 The post-aggro work was attempted on 2026-09-02 and reverted the same day. What it found is recorded in
 [ROADMAP.md](ROADMAP.md#the-post-aggro-step) rather than here, because it is a plan and not a description
-of the code. The short version: **aim is not facing**, the LKP has four writers, and the right seam is
-`ShootAtEnemy` rather than the four writers.
+of the code. The short version: **aim is not facing**, the LKP has four writers, and the right seam would
+have been `ShootAtEnemy` rather than the four writers. **Dropped 2026-09-17**: under predator first a
+hunted player is in vanilla combat, and vanilla combat stays vanilla. The diagnosis is kept as a fact.
 
-### Losing the player — de-escalation, Search, Post
+### The frame — predator first, settled 2026-09-17
 
-**None of this is built.** Once acquired, a monster keeps the player forever — `GetIdealState`'s only exit
-from `MONSTERSTATE_COMBAT` is a null enemy, and nothing sets one. This is the base game's behaviour,
-unchanged, and it is the first item of [the post-aggro step](ROADMAP.md#the-post-aggro-step).
+Everything below is shaped by one decision: **stealth is a way to fight, not a way to not fight.** The
+loop is *unseen, kill, unseen again*. A witnessed kill is the loop's failure state and ends in a vanilla
+fight; the give-up is what makes the loop restartable. The reasons and the intended play are in
+[ROADMAP.md](ROADMAP.md#pillar-6-stealth). Two consequences run through every section:
 
-Intended: if the enemy stays occluded and deals no damage for a give-up interval, Suspicion drains. At the
-floor the monster drops `m_hEnemy` and runs a **Search** toward the last known position. Taking damage
-resets the interval, so shooting a monster and strolling away does not work. What holds an enemy must be
-**contact** — last sight or last damage — and not the meter, or a monster under fire from an unseen attacker
-would quietly time out mid-firefight.
+- **The cost of a kill was designed before the recovery from a failure.** Without the first, every kill is
+  a Silent Kill and the Major rewards nothing.
+- **One number, the jump.** A witness, and a monster giving up, both land at `suspicion_witness` (0.75) —
+  Noticed, not Spotted — and drain from there to a permanent `suspicion_floor` (0.3). One rule, not two.
 
-A Search that finds nothing resolves to a **Post**:
+### Death, witnesses, and the Disturbance — settled 2026-09-17, not built
 
-- If the mapper gave the monster `pev->target`, advance `m_pGoalEnt` along the authored `path_corner`
-  chain. Authored intent wins, which is how Half-Life already treats `pev->target`.
-- Otherwise, the leader assigns new Posts spread around the last known position, using the existing
-  `SquadMemberInRange(..., 128)` spacing rule so members do not stack.
+Two mechanisms doing two different jobs, both **for player-dealt kills only**. Monster-on-monster deaths
+produce neither, or every marines-versus-aliens set piece would fill the sound pool with grunts searching
+bodies they shot themselves. The scoping mirrors the damage rule's.
 
-Either way the monster settles at `MONSTERSTATE_ALERT` with a **permanently raised Suspicion floor** —
+**Seeing the kill.** At death — before `SquadRemove`, or the member list is already gone — every hostile
+monster with a meter that passes `FVisible` on the *victim* is a **witness**, squad or not. It jumps to
+`suspicion_witness` (0.75), speaks, and takes the death position as its LKP. The test is on the victim,
+not the player: a witness that saw the body drop but cannot see the player is at 0.75 with nothing
+filling it, which is the "sufficiently concealed" case the loop is made of. A monster that could not see
+the victim reacts to nothing here.
+
+**Why 0.75 and not acquisition.** Being shot is proof and fills the meter outright; a squadmate dropping
+is proof too, and the settled design of 2026-08-31 said "a high floor". The 2026-09-17 grill kept it: in
+the open the difference from acquisition is a sixth of a second, because a Trained meter at full exposure
+fills at 3.0 per second; from cover it is the beat the loop is built on — kill, duck, gone. And it keeps
+**only sight acquires** true with no new exception.
+
+**A jump, not a floor.** From 0.75 the meter fills or drains as normal, but never again below
+`suspicion_floor` (0.3) until a level change. A permanent 0.75 would make the second kill in a room nearly
+impossible, which punishes the loop the pillar is judged on; no floor at all would make a witnessed kill
+free once hidden. The floor is **just under the readout's Noticed line** (`suspicion_notice` 0.35),
+deliberately: the readout reports Noticed at *or above* the line, so a floor at 0.35 would leave the icon
+amber for the rest of the level. At 0.3 the room is primed and the icon stays dim.
+
+**Finding the body.** A new sound type, `bits_SOUND_DISTURBANCE` (`1 << 7`, free), inserted at the death
+position at `disturbance_volume` (512 units, a room) for `disturbance_duration` (20 s, less than the
+carcass scent's 30) and **added to `FIsSound()`'s mask** so it behaves as a real sound — which buys
+`bits_COND_HEAR_SOUND`, `PBestSound`, `MakeIdealYaw` and every existing schedule interrupt for nothing.
+Only profiles with `bListensForDisturbance` hear it: **Trained only** — grunt, assassin, alien grunt,
+alien slave. Bodies mean something to soldiers and nothing to a zombie, and the bullsquid and houndeye
+already smell a carcass through the existing scent bit, which stays untouched. A future NPC opts in by
+picking a profile and nothing else. It expires on its own, so a level does not accumulate permanent
+distractions, and `Look` never has to look at a corpse.
+
+**Silent Kill removes the Disturbance and nothing else.** On a victim below Spotted no sound is inserted,
+so a squadmate around the corner never knows. A squadmate in sight is a witness in full: soldiers are not
+blind, and the answer to the one who saw is the silenced headshot before its 0.75 fills. The weapon's own
+noise is untouched — a gunshot is a sound that led to the kill, not one that results from it, and the
+quiet gun is the silencer, now a found Evolution.
+
+Watch `MAX_WORLD_SOUNDS`: it is 64 for the whole world. The duration is modest and the insert is
+player-kills-only for that reason.
+
+### The Search is the SDK's own — settled 2026-09-17, not built
+
+`slInvestigateSound` (`dlls/defaultai.cpp:285`): stop, `TASK_STORE_LASTPOSITION`, path to the best sound,
+walk, idle ten seconds, path back to the stored position, walk, clear. **A Search and a return to Post in
+one vanilla table**, needing no enemy and touching nothing about de-escalation. Only the assassin ever
+picks it (`dlls/hassassin.cpp:841`); the grunt has every task it needs and never uses it. The Disturbance
+is a real sound, so `PBestSound` hands it over and the Search is a schedule switch. The spread-the-squad
+Posts and the `path_corner` rule of 2026-08-31 are superseded: a monster's Post is where it stood when it
+heard, and it walks back there.
+
+**A squad sends one.** The leader picks its nearest member; the rest hold where they are, meters at the
+jump, turned toward the body by the ordinary hear-and-turn. The predator's reward for a clean kill is the
+next isolated target, walking to the corpse the player is standing beside.
+
+**Loners all go.** A leaderless monster that hears a Disturbance goes itself, so a leaderless group
+arrives as a mob. Kept deliberately — [ADR-0014](adr/0014-a-body-draws-one-squad-member-or-every-loner.md)
+has the rejected alternative and why.
+
+A searcher that hears a second Disturbance mid-walk restarts the schedule from where it stands, so its
+walk-back position drifts. The vanilla schedule drifts the same way; recorded, not fixed.
+
+### Losing the player — the give-up, settled 2026-09-17, not built
+
+Once acquired, a monster keeps the player forever — `GetIdealState`'s only exit from
+`MONSTERSTATE_COMBAT` is a null enemy, and nothing sets one. This is the base game's behaviour, unchanged.
+
+Settled: after `suspicion_giveup` seconds (first guess 10) with **no sight and no player damage**, the
+monster nulls `m_hEnemy`, sets its meter to `suspicion_witness` (0.75), speaks ("stay alert"), and runs
+the same investigate schedule to `m_vecEnemyLKP`, settling at `MONSTERSTATE_ALERT` on `suspicion_floor` —
 never back to IDLE. A room the player was spotted in stays harder for the rest of the level.
 
-**Across a level change it does return to IDLE.** On restore with `fUseLandmark` set, Suspicion, the raised
-floor and the Post all clear, and a monster with no valid enemy that is not in a script is pushed to
-`MONSTERSTATE_IDLE`. A plain save/load changes nothing, so quickloading is not a "calm everyone down"
-button.
+Two details that are not optional:
 
-### Squad coordination
+- **The meter must be set on the drop.** While the player is the enemy it is pinned at 1.0; left there,
+  the next `Look` re-acquires on sight and no Search ever happens. 0.75 is the same jump a witness gets,
+  so it is one rule.
+- **Contact is squad-wide where there is a leader** — last sight by any member, last damage to any —
+  through `m_flLastEnemySightTime`, which the leader already holds and which is already saved. Otherwise
+  one grunt gives up and says "stay alert" while its squadmate is trading fire. A loner uses its own.
 
-**There is no squad-level Suspicion value.** One source of truth: each monster's own meter. The squad
-channel is a set of writes the leader makes.
+What holds an enemy is **contact** and never the meter, or a monster under fire from an unseen attacker
+would quietly time out mid-firefight. The damage clause is why shooting from cover and waiting does not
+work.
+
+**Across a level change it does return to IDLE.** On restore with `fUseLandmark` set, Suspicion, the
+floor and the stored Post all clear, and a monster with no valid enemy that is not in a script is pushed
+to `MONSTERSTATE_IDLE`. A plain save/load changes nothing, so quickloading is not a "calm everyone down"
+button. (Settled 2026-08-31, unchanged.)
+
+### The captain's channel — settled 2026-09-17, not built
+
+**There is no squad-level Suspicion value.** One source of truth: each monster's own meter. The channel
+is a set of writes the leader makes, and it is what makes the captain the first target:
 
 | Trigger | What the leader does |
 | --- | --- |
-| a member crosses the notice threshold | raise every member's Suspicion to a floor, with a voice line |
+| a member crosses `suspicion_notice` | lift every member to the notice line, with a line — "stay alert people" |
 | a member crosses acquisition | `SquadMakeEnemy` — vanilla, unchanged |
-| `m_fEnemyEluded` and enough time since `m_flLastEnemySightTime` | call a **Search**: distribute the LKP, spread the squad |
+| a Disturbance is heard | send the nearest member to it; the rest hold |
+| no sight or damage for `suspicion_giveup` | the give-up, on the squad's shared contact |
 
-This reuses `m_fEnemyEluded` and `m_flLastEnemySightTime` where they already live and are already saved.
+Loners do none of the first, third or fourth. **Killing the leader dissolves the squad** — `SquadRemove`
+nulls every handle and the SDK has no promotion — and from that frame each survivor is a loner in every
+check: no `SquadCopyEnemyInfo`, so a slip alerts the one who saw and not four; `OccupySlot` and
+`NoFriendlyFire` both return true for a loner, so everyone fires and throws at once, through each other;
+the eluded flag and the contact clock die with him. That is why killing him first is encouraged by what he
+does alive rather than by a node — Cut the Head was dropped on 2026-09-17 for being a footnote to this.
 
-Killing the leader silently therefore removes the squad's entire coordination layer, permanently, because
-the SDK has no leader promotion. That is a large stealth reward that costs nothing to build.
+**The leader is already marked, and already unhelmeted.** `StartMonster` sets the leader's head bodygroup
+to the commander head, the beret (`dlls/squadmonster.cpp:437`, commented by Valve as an ugly hack), and
+the helmet clause in `CHGrunt::TraceAttack` fires only for the plain grunt head. So in vanilla the
+sergeant is the one in the beret, and he is the one grunt a pistol headshot always worked on.
 
-### Death, witnesses, and the Disturbance
-
-Two mechanisms doing two different jobs.
-
-**Seeing the kill.** At death — before `SquadRemove` — loop the victim's squadmates and nearby monsters.
-Each one passing `FVisible` on the victim jumps to a high Suspicion floor and takes the death position as
-its LKP. A monster that could not see it reacts to nothing.
-
-**Finding the body.** A new sound type, `bits_SOUND_DISTURBANCE` (`1 << 7`, free), inserted at death with a
-duration and **added to `FIsSound()`'s mask** so it behaves as a real sound — which buys
-`bits_COND_HEAR_SOUND`, `PBestSound`, `MakeIdealYaw` and every existing schedule interrupt for nothing.
-Only monsters whose Perception Profile opts in listen for it. It expires on its own, so a level does not
-accumulate permanent distractions, and `Look` never has to look at a corpse.
-
-Reaching a Disturbance raises the squad's Suspicion floor once. **This is the single exception to "only
-sight fills the meter"**, and it is justified because a body is proof rather than a hint.
-
-Watch `MAX_WORLD_SOUNDS`: it is 64 for the whole world. Keep the duration modest and insert only for
-profiles that opt in, or a large firefight will crowd the pool.
+**Sentences** are composed from words the grunt already has, in a new mod `sentences.txt`; the picks are
+in [ROADMAP.md](ROADMAP.md#the-post-aggro-step).
 
 ### Perception Profiles — built 2026-09-01
 
@@ -753,8 +826,15 @@ Recorded now so they are not rediscovered as bugs.
 - **Circle-strafing into the rear arc trivially Backstabs slow enemies** — zombies and headcrabs, which are
   exactly the monsters the Follow-Up is already tuned against.
 - **Getting behind an acquired monster does nothing for gunfire.** Aim reads the LKP, not facing, so a
-  monster you are standing behind still shoots you accurately whenever anything refreshes its LKP. Deferred,
-  with the diagnosis, to [the post-aggro step](ROADMAP.md#the-post-aggro-step).
+  monster you are standing behind still shoots you accurately whenever anything refreshes its LKP.
+  **Accepted 2026-09-17**: a hunted player is in vanilla combat, and repositioning is a combat trick.
+- **The witness window in the open is nil.** At `suspicion_fill` 2.0 a Trained meter fills at 3.0 per
+  second at full exposure, so a witness at 0.75 is Spotted in under a tenth of a second if the player is
+  standing in the light. The stab-then-headshot play exists only from cover — which is the design, not a
+  gap.
+- **A leaderless group answers a body as a mob.** Deliberate; the satchel is the answer. But it means the
+  captain-first opening turns the isolation a squad gives for free into a crowd at the corpse, and the
+  payoff for the captain is containment, not isolation.
 - **Light is nearly inert until custom maps exist.** Blocked on [Maps](ROADMAP.md#maps), like most of the
   mod.
 - **Pillar 6's "measurably better off" criterion is not carried by the damage model.** The Backstab is
@@ -780,8 +860,12 @@ The knobs the model needs, and which exist today: Concealment weights per term (
 and drain rates and the two thresholds (`suspicion_fill`, `suspicion_drain`, `suspicion_notice`,
 `suspicion_acquire`); the
 crouch and walk noise multipliers (`noise_stance_duck`, `noise_stance_walk`); and the Backstab's rear-arc
-dot and multiplier (`backstab_*`). Still to come with the features that need them: the Search duration,
-per-profile scales if the constants prove wrong, and Disturbance volume and duration.
+dot and multiplier (`backstab_*`). Settled 2026-09-17 and arriving with the post-aggro step:
+`suspicion_witness` (0.75), `suspicion_floor` (0.3), `suspicion_giveup` (10 s), `disturbance_volume` (512),
+`disturbance_duration` (20 s), and `suspicion_fill` moving from 1.0 to **2.0** — every time in the
+Concealment table halves, on the reasoning that stealth is meant to work behind unaware enemies and in the
+dark, and crouching cover to cover in front of a lit grunt is generous enough for a full Concealment
+investment. Per-profile scales stay constants unless the ratio itself proves wrong.
 
 A debug view of live Suspicion values shipped with the meter rather than after it — `debug_suspicion`,
 described above. Two [TECH_DEBT.md](TECH_DEBT.md) entries already ask for debug visualization of custom

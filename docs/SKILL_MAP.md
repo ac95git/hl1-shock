@@ -56,7 +56,7 @@ is Bullet Damage.
 | Juggernaut | 18 | 10 | Ricochet, Pulse Window, Pulse Recharge, Defense Matrix, the Major, Matrix on Kill, Pulse Discharge, Pulse Rebound |
 | Energy | 15 | 9 | Energy Damage, Insulation, Egon Focus, Energy Efficiency, Overdraw |
 | Shinobi | 19 | 13 | Dash Reach, Dash Recovery, Second Wind, Reprisal, Phase, Air Dash |
-| Stealth | 17 | 10 | Soft Step, Ambush, Phantom, Slip Away, Nightfall, Cut the Head, Silent Kill |
+| Stealth | 17 | 10 | Soft Step, Ambush, Phantom, Slip Away, Nightfall, Shroud (Cut the Head until 2026-09-17), Silent Kill |
 | Alien | 18 | 11 | Hive Capacity, Hive Replenish, Hive Attack Speed, Pack, Tether, Recall, the Major |
 | **Board** | **154** (153 buyable) | 96 | 57 |
 
