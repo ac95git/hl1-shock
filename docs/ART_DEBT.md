@@ -402,20 +402,38 @@ The hand sits on the stock through the whole draw and fire cycle.
 The `spriteName` column of `k_SkillDefs` in `game_shared/skill_defs.h`.
 
 ### Current stand-in
-Stock HUD sprites. The nine Melee Damage Stat nodes share `d_crowbar` **on purpose** — a Stat node's icon
-is per stat, so a road reads as what it is made of — and that shared icon is the one piece of this entry
-that is a design rather than a stand-in; it still wants art of its own, small and plainly "melee". The
-Skills are placeholders picked for being distinct from each other, not for meaning anything: Reach is a
-tripmine, Speed a revolver, the Backstab node a crossbow, Cleave a hand grenade. The Weapon Specialist's
-(2026-09-14) are the same: the seven Bullet Damage Stat nodes share `d_9mmAR` on purpose, like the melee
-road; Marksman is a bolt, Quick Draw a revolver (which Speed also is, in another region), Demolitions a
-rocket, Headhunter a skull (Force's too), Mastery a shotgun, Swap Surge a hornet. The Medical Route's four
-Healing Stat nodes share `cross`, the HUD's health cross, which is the one placeholder here that says what
-it is; Leech is `dmg_bio`, Overheal the Syringe's own `item_syringe`. The Energy Route's four Energy
-Damage Stat nodes share `dmg_shock`; Energy Damage is the egon, Energy Efficiency a satchel, Insulation the
-radiation tile. Ricochet is the tracktrain. Cleave's **ready icon**
-at the screen edge is `d_crowbar` too, for want of anything that says "melee" better; when the Stat node
-gets its icon, the ready icon should be the same image so the two read as one thing.
+Stock HUD sprites. A Stat node's icon is per stat **on purpose**, so a road reads as what it is made of,
+and on 2026-09-16 the roads and the Skills that had an obvious vanilla match were re-picked for meaning
+rather than mere distinctness:
+
+- **The hub** wears the HUD's own readouts: Max Health is `cross`, the health number's icon, and Fortitude
+  (+25 max HP) the same; Max Armour is `suit_full`, the armour number's icon, and Armor Expert and the
+  Juggernaut's continuing armour road the same. Battery Capacity keeps `item_battery`, the pickup that
+  does what it does. The Suit has no icon by decision: the processor frame with its die is the mark, and
+  the suit icon belongs to the armour roads around it.
+- **Medical**: the Healing road is `item_healthkit`, since Healing scales what a medkit heals; Med Expert is
+  `item_syringe`, the Infusion it lengthens; Leech `dmg_bio`. Overheal is `dmg_chem` and Last Stand
+  `dmg_heat`, placeholders.
+- **Weapon Specialist**: the Bullet Damage road is `d_9mmAR`; Marksman is `autoaim_c`, the crosshair that
+  is the Route's settled motif; Headhunter a skull (the head), Quick Draw a revolver, Demolitions a rocket.
+  Fast Reload (a pistol), Mastery (a shotgun) and Swap Surge (`d_bolt`, freed by Marksman) mean nothing;
+  Swap Surge was a hornet until 2026-09-16, which made the Specialist's major read as an Alien node beside
+  the Alien region.
+- **Melee**: the road is `d_crowbar`, and still wants art of its own, small and plainly "melee". Reach is a
+  tripmine, Speed a revolver (Quick Draw's too, in another region), Force a skull, the Backstab node a
+  crossbow, Cleave `d_grenade` — placeholders. Cleave's name was `d_handgrenade`, not a sprite in
+  `hud.txt`, until 2026-09-16, so the node drew with no icon at all.
+- **Energy**: the road is `dmg_shock`; Energy Damage is the egon, Egon Focus `flash_beam` (the one narrow
+  beam in the set), Insulation the radiation tile (a resistance, near enough); Energy Efficiency a satchel
+  and Overdraw a battery, placeholders.
+- **Juggernaut's Pulse and Matrix**, and the three hidden regions, are untouched placeholders: the Pulse's
+  four (crosshair, empty flashlight, egon, beam), the Matrix's three (suit, battery, radiation), the
+  Shinobi's train arrows and long jump, the Stealth's flashlights and skulls, the Alien's hornet on four
+  nodes at once. Nothing vanilla says a Dash, an eye or a hive.
+
+Cleave's **ready icon** at the screen edge is `d_crowbar` too, for want of anything that says "melee"
+better; when the Stat node gets its icon, the ready icon should be the same image so the two read as one
+thing.
 
 ### What's wrong with it
 This is the one entry here that is **blocking rather than cosmetic**. The tree is deliberately going

@@ -442,21 +442,26 @@ struct SkillDef
 	{ ESkillId::idName, "Bullet Damage", "+5% bullet damage", \
 	  "d_9mmAR", col, row, 1, ENodeTier::Stat, EStat::BulletDamage, EGate::None }
 
+// Healing scales what a medkit heals, so its road wears the medkit; the HUD's
+// health cross belongs to Max Health below, the number it raises.
 #define STAT_HEAL(idName, col, row) \
 	{ ESkillId::idName, "Healing", "+10% healing", \
-	  "cross", col, row, 1, ENodeTier::Stat, EStat::Healing, EGate::None }
+	  "item_healthkit", col, row, 1, ENodeTier::Stat, EStat::Healing, EGate::None }
 
 #define STAT_ENERGY(idName, col, row) \
 	{ ESkillId::idName, "Energy Damage", "+5% energy damage", \
 	  "dmg_shock", col, row, 1, ENodeTier::Stat, EStat::EnergyDamage, EGate::None }
 
+// The hub's two roads wear the HUD's own readout icons, 2026-09-16: the
+// health cross for Max Health and the suit for Max Armour, the icons beside
+// the two numbers these raise.
 #define STAT_HEALTH(idName, col, row) \
 	{ ESkillId::idName, "Max Health", "+5% max HP", \
-	  "item_healthkit", col, row, 1, ENodeTier::Stat, EStat::MaxHealth, EGate::None }
+	  "cross", col, row, 1, ENodeTier::Stat, EStat::MaxHealth, EGate::None }
 
 #define STAT_ARMOUR(idName, col, row) \
 	{ ESkillId::idName, "Max Armor", "+5% max AP", \
-	  "item_battery", col, row, 1, ENodeTier::Stat, EStat::MaxArmour, EGate::None }
+	  "suit_full", col, row, 1, ENodeTier::Stat, EStat::MaxArmour, EGate::None }
 
 // The three hidden regions' Stat macros, 2026-09-15.  Gated like every other
 // node in their region (docs/adr/0012): hidden until the player holds the
@@ -528,7 +533,7 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// 7-9: the hub's Skills.  Fortitude is the north rim Minor, Sure Footing
 	// the west rim toward Shinobi, Armor Expert the east rim toward Juggernaut.
 	{ ESkillId::FallResistance,  "Sure Footing",     "-50% fall damage",                             "item_longjump",  5,  6,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
-	{ ESkillId::MoreHealth,      "Fortitude",        "+25 max HP",                                         "item_healthkit", 7,  5,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
+	{ ESkillId::MoreHealth,      "Fortitude",        "+25 max HP",                                         "cross",          7,  5,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
 	{ ESkillId::ArmorEfficiency, "Armor Expert",     "-10% damage through armor",                   "suit_full",      9,  8,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
 	// 10: cut (rewarded idling)
@@ -559,7 +564,7 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	{ ESkillId::FollowUp,        "Follow-Up",        "x3 melee damage on the hit after a deflect",       "d_gauss",        5,  9,  1,  ENodeTier::Major,  EStat::None,  EGate::None },
 
 	// 19: the Medical Route's entry, on its spine
-	{ ESkillId::MedExpert,       "Med Expert",       "+5 s Infusion",                          "flash_full",     7,  2,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
+	{ ESkillId::MedExpert,       "Med Expert",       "+5 s Infusion",                          "item_syringe",   7,  2,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
 	// 20-21: the Alien region's root and its first road-mate, 2026-09-15
 	// (docs/SKILL_MAP.md).  Gated on EGate::AlienModule with the rest of
@@ -589,10 +594,10 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	{ ESkillId::Backstab,        "Backstab",         "x1.5 Backstab damage", "d_crossbow",    1,  7,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
 	// 34: Cleave, the Melee major, in the region's south-west corner
-	{ ESkillId::Cleave,          "Cleave",           "When ready, a melee swing hits everything in front at x1.5; 4 s cooldown.", "d_handgrenade", 0, 9, 1, ENodeTier::Major, EStat::None, EGate::None },
+	{ ESkillId::Cleave,          "Cleave",           "When ready, a melee swing hits everything in front at x1.5; 4 s cooldown.", "d_grenade", 0, 9, 1, ENodeTier::Major, EStat::None, EGate::None },
 
 	// 35: Marksman, the hub's east rim Minor
-	{ ESkillId::Marksman,        "Marksman",         "+15% bullet damage",                                     "d_bolt",         9,  7,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
+	{ ESkillId::Marksman,        "Marksman",         "+15% bullet damage",                                     "autoaim_c",      9,  7,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
 
 	// 36: Quick Draw on the entry road.  Predicted: DefaultDeploy runs on
 	// both sides, so the scale comes through skill_tuning.h.
@@ -607,7 +612,7 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// 39: Swap Surge, the Route's major, in the region's far bottom corner.
 	// The window opens on every DefaultDeploy, on a cooldown, so the
 	// specialist juggles weapons and every swap is a hit.
-	{ ESkillId::SwapSurge,       "Swap Surge",       "After a weapon swap, x1.5 damage for 2 s; 6 s cooldown.", "d_hornet", 14, 9, 1, ENodeTier::Major, EStat::None, EGate::None },
+	{ ESkillId::SwapSurge,       "Swap Surge",       "After a weapon swap, x1.5 damage for 2 s; 6 s cooldown.", "d_bolt", 14, 9, 1, ENodeTier::Major, EStat::None, EGate::None },
 
 	// 40-46: the Weapon Specialist's roads (docs/SKILL_MAP.md, Specialist)
 	STAT_BULLET(StatBullet01, 10, 7),
@@ -620,7 +625,7 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 
 	// 47: Overheal, Medical's north-west corner.  Server-side, in the
 	// Infusion's tick (player_infusion.cpp); the excess drains after.
-	{ ESkillId::Overheal,        "Overheal",         "Infusions heal up to 50 HP over max; the excess drains after.", "item_syringe", 5, 0, 1, ENodeTier::Medium, EStat::None, EGate::None },
+	{ ESkillId::Overheal,        "Overheal",         "Infusions heal up to 50 HP over max; the excess drains after.", "dmg_chem", 5, 0, 1, ENodeTier::Medium, EStat::None, EGate::None },
 
 	// 48: Leech, Medical's north-east corner.  Melee hits on a living
 	// monster heal; server-side, in CCrowbar::Swing and CleaveArc.
@@ -645,7 +650,7 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// 55: Egon Focus, between Energy Efficiency's and Insulation's Stat roads.
 	// Right click unlocks the SDK's dormant narrow beam: single target,
 	// cheaper on uranium, no splash.
-	{ ESkillId::EgonFocus,       "Egon Focus",       "Right click: narrow egon beam, single target, cheaper uranium.", "d_grenade", 2, 12, 1, ENodeTier::Medium, EStat::None, EGate::None },
+	{ ESkillId::EgonFocus,       "Egon Focus",       "Right click: narrow egon beam, single target, cheaper uranium.", "flash_beam", 2, 12, 1, ENodeTier::Medium, EStat::None, EGate::None },
 
 	// 56: Energy Efficiency, on the region's bottom row.  The interval between
 	// the egon's ammo ticks (server-side) and the katana's wave's uranium cost
@@ -674,8 +679,10 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	{ ESkillId::Ricochet,        "Ricochet",         "20% of bullets bounce back at the shooter; needs AP.", "d_tracktrain", 9, 11, 1, ENodeTier::Medium, EStat::None, EGate::None },
 
 	// 65: the suit.  Cost 0, held from spawn, kept through a Reset, never
-	// bought (ADR-0012).  The one row the cost-one assert exempts.
-	{ ESkillId::Suit,            "HEV Suit",         "Every road starts here.",             "suit_full",      7,  7,  0,  ENodeTier::Suit,   EStat::None,  EGate::None },
+	// bought (ADR-0012).  The one row the cost-one assert exempts.  No icon
+	// by decision (2026-09-16): the processor frame with its die is the
+	// mark, and the suit icon belongs to the armour roads around it.
+	{ ESkillId::Suit,            "HEV Suit",         "Every road starts here.",             nullptr,          7,  7,  0,  ENodeTier::Suit,   EStat::None,  EGate::None },
 
 	// 66-67: Melee's bottom road past Cleave, toward the Energy doors
 	STAT_MELEE(StatMelee10, 2, 9),
