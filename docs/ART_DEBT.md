@@ -583,3 +583,32 @@ The tree is the suit's circuit, and the assets are the metaphor made literal:
 ### Done when
 A player who has never opened the tree can tell a Stat node from a Skill from a Major by shape, can see
 which region is which by colour, and can follow a lit trace from the suit to what they own.
+
+## The Status page — suit silhouette and Module glyphs
+
+### Scope
+The doll on the Inventory Panel's Status tab ([STATUS_PANEL.md](STATUS_PANEL.md)): the figure the five
+Slots sit on, and the icon in each filled Slot. Settled and built 2026-09-16 with stand-ins.
+
+### Current stand-in
+Five boxed rect frames arranged as a body with nothing behind them (`CStatusView::Paint`), and in each
+filled Slot an existing HUD sprite named in `k_ModuleDefs` (`game_shared/module_defs.h`), borrowed from the
+tree's own nodes: `dmg_gas` Night Vision, `item_longjump` Dash, `autoaim_c` Pulse, `d_hornet` Alien.
+
+### What's wrong with it
+Five boxes in a cross read as a diagram, not a suit, and the borrowed HUD sprites share nothing: the
+long jump's pack icon says "pickup", not "a burst of speed built into the suit's torso".
+
+### What to look for
+- **The silhouette.** An HEV suit outline, front-on, drawn in the suit colour at low contrast behind the
+  frames, so the Slots sit on the head, torso, forearms and legs they name. Monochrome and tinted like the
+  rest of the chrome, so one file serves all three Suit Variants.
+- **Four glyphs**, monochrome, white on black, additive and tinted — the HUD sprite style of the Skill
+  Tree's icons. Each is its Module's Route motif from [SKILL_PANEL.md](SKILL_PANEL.md): **eye** Night
+  Vision, **wind** Dash, **shield** Pulse, **hive** the Alien Module. Distinct from each other at a
+  glance, and related to the tree glyph of the region the Module opens.
+- Made with the sprtool scripts, at all four resolution buckets ([SPRITE_WORKFLOW.md](SPRITE_WORKFLOW.md)).
+
+### Done when
+A player opening the tab reads a suit with parts on it before reading boxes, and can say which region of
+the Skill Tree each filled Slot's Module opens from its glyph alone.

@@ -243,6 +243,7 @@ DECLARE_MESSAGE(m_Ammo, HideWeapon); // hides the weapon, ammo, and crosshair di
 DECLARE_MESSAGE(m_Ammo, ItemPickup);
 DECLARE_MESSAGE(m_Ammo, Inventory);
 DECLARE_MESSAGE(m_Ammo, SkillTree);
+DECLARE_MESSAGE(m_Ammo, SkillStats);
 
 DECLARE_COMMAND(m_Ammo, Slot1);
 DECLARE_COMMAND(m_Ammo, Slot2);
@@ -277,6 +278,7 @@ bool CHudAmmo::Init()
 	HOOK_MESSAGE(AmmoX);
 	HOOK_MESSAGE(Inventory);
 	HOOK_MESSAGE(SkillTree);
+	HOOK_MESSAGE(SkillStats);
 
 	HOOK_COMMAND("slot1", Slot1);
 	HOOK_COMMAND("slot2", Slot2);
@@ -607,6 +609,39 @@ bool CHudAmmo::MsgFunc_SkillTree(const char* pszName, int iSize, void* pbuf)
 
 	if (gViewPort && gViewPort->m_pInventoryPanel)
 		gViewPort->m_pInventoryPanel->UpdateSkillTree(unlockedMask, skillPoints, resetTokens, openGates);
+
+	return true;
+}
+
+// The Status page's numbers, computed on the server (SendSkillStatsToClient):
+// two maxima, then every multiplier and share in thousandths, then the Dash
+// recharge in milliseconds.  The order here is the order written there.
+bool CHudAmmo::MsgFunc_SkillStats(const char* pszName, int iSize, void* pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+
+	if (iSize != k_SkillStatsBytes)
+		return true;
+
+	auto milli = []() { return READ_SHORT() / 1000.0f; };
+
+	SkillStatsView stats;
+	stats.valid        = true;
+	stats.maxHealth    = READ_SHORT();
+	stats.maxArmor     = READ_SHORT();
+	stats.healing      = milli();
+	stats.armorEff     = milli();
+	stats.blastResist  = milli();
+	stats.energyResist = milli();
+	stats.fallResist   = milli();
+	stats.melee        = milli();
+	stats.bullet       = milli();
+	stats.energy       = milli();
+	stats.explosive    = milli();
+	stats.dashRecharge = milli();
+
+	if (gViewPort && gViewPort->m_pInventoryPanel)
+		gViewPort->m_pInventoryPanel->UpdateSkillStats(stats);
 
 	return true;
 }

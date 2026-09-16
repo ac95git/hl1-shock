@@ -1092,13 +1092,13 @@ grant Rows later without rework.
 
 **Status: Playable**
 
-**Planned:** a [Modules](ROADMAP.md#pillar-3-modules) tab, and a
-[Transmissions](ROADMAP.md#pillar-1-transmissions) list that is deliberately *not* an Inventory change.
+**Planned:** a [Transmissions](ROADMAP.md#pillar-1-transmissions) list that is deliberately *not* an
+Inventory change.
 
 ### What exists
 
-**`CInventoryPanel`** (`cl_dll/vgui_inventory.cpp`) — a VGUI panel with two tabs, Inventory and Upgrades,
-each delegating to a plain helper view. Opened via the `+inventory` command bound in `cl_dll/input.cpp:990`, and only once the player has the suit
+**`CInventoryPanel`** (`cl_dll/vgui_inventory.cpp`) — a VGUI panel with three tabs, Inventory, Upgrades
+and Status, each delegating to a plain helper view, and one nav table (`k_NavTabs`) for all three. Opened via the `+inventory` command bound in `cl_dll/input.cpp:990`, and only once the player has the suit
 (`TeamFortressViewport::ShowInventory` checks `gHUD.HasSuit()`).
 
 **`CInventoryGridView`** (`cl_dll/vgui_inventory_grid.cpp`)
@@ -1123,6 +1123,28 @@ each delegating to a plain helper view. Opened via the `+inventory` command boun
 - `inv_icon_pad` is the fitted margin; `inv_icon_fit 0` and `inv_icon_blend` are comparison switches for
   the HUD-sprite fallback; `inv_icon_debug 1` prints each Icon load and draw.
 - Hit rectangles rebuilt every paint.
+
+**The Status tab — built 2026-09-16** (`CStatusView`, `cl_dll/vgui_status.cpp`), designed the same day
+in [STATUS_PANEL.md](STATUS_PANEL.md):
+
+- **The doll.** Five fixed Slots drawn as rect frames in a body shape — head Night Vision, body Dash, left
+  arm (screen left) Pulse, right arm the Alien Module, legs empty. A Slot fills when its Module's gate is
+  open (`openGates` on `gmsgSkillTree`); filled, a stand-in HUD sprite tinted the suit colour, and a hover
+  tooltip with name, the key from `Key_LookupBinding` on the Module's command, and a description. Empty,
+  a dim frame with no tooltip. The Modules are one shared table, `k_ModuleDefs` in
+  `game_shared/module_defs.h`.
+- **The stats column.** HEALTH (Health, Healing), ARMOR (Armor, Armor efficiency, Explosive, Energy and
+  Fall resistance), DAMAGE (Melee, Bullet, Energy, Explosive), and MODULES — Dash recharge once the Dash
+  is found; Concealment and Hornet replenish stay hidden until their stats have an effect
+  (`k_ConcealmentBuilt`, `k_HornetReplenishBuilt`). Multipliers print as ASCII `x1.73`.
+- **The numbers come from the server.** `SendSkillStatsToClient` (`dlls/player_skills.cpp`) runs at the end
+  of every `SendSkillTreeToClient` and sends twelve shorts (`k_SkillStatsBytes`) on `gmsgSkillStats`. Each is
+  read from the function the effect itself uses: `PlayerStandingDamageScale` (Weapon Mastery and the typed
+  damage; `SkillScaleWeaponDamage` is it times Swap Surge and Overdraw, which the page leaves out),
+  `PlayerMeleeScale` (`CCrowbar::SwingDamage`), `PlayerArmorRatioScale`, `PlayerBlastTakenScale`,
+  `PlayerEnergyTakenScale`, `PlayerFallTakenScale` (`CBasePlayer::TakeDamage` and the fall), plus
+  `PlayerHealingScale`, `PlayerMaxArmor`, `max_health` and `DashRechargeTime`. `ARMOR_RATIO` moved to
+  `dlls/player.h` for it. Current Health and Armor are the HUD's own.
 
 **Context menu** — right-click gives Use and Drop. Weapons issue `use <classname>` and close the panel;
 items issue `inv_use <classname>` and stay open.

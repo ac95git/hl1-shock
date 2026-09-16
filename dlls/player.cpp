@@ -378,8 +378,8 @@ void CBasePlayer::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vec
 	etc are implemented with subsequent calls to TakeDamage using DMG_GENERIC.
 */
 
-#define ARMOR_RATIO 0.2 // Armor Takes 80% of the damage
-#define ARMOR_BONUS 0.5 // Each Point of Armor is work 1/x points of health
+// ARMOR_RATIO and ARMOR_BONUS live in player.h, so the Status page's Armor
+// efficiency (SendSkillStatsToClient) reads the same constant as this file.
 
 bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType)
 {
@@ -399,8 +399,7 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 
 	// Armor Expert. flRatio is the fraction of a blow that gets PAST armor,
 	// so scaling it DOWN is what makes armor better.
-	if (m_skills.HasSkill(ESkillId::ArmorEfficiency))
-		flRatio *= std::max(0.0f, skill_armor_ratio_scale.value);
+	flRatio *= PlayerArmorRatioScale(this);
 
 	if ((bitsDamageType & DMG_BLAST) != 0 && g_pGameRules->IsMultiplayer())
 	{
@@ -513,14 +512,14 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 	// Demolitions, taken: explosions hurt the player less, their own grenades
 	// included. Before the armour split and the suit's report, so both see
 	// the blow that actually arrived, the way Sure Footing scales a fall.
-	if ((bitsDamageType & DMG_BLAST) != 0 && m_skills.HasSkill(ESkillId::Demolitions))
-		flDamage *= std::max(0.0f, skill_demolitions_resist_scale.value);
+	if ((bitsDamageType & DMG_BLAST) != 0)
+		flDamage *= PlayerBlastTakenScale(this);
 
 	// Insulation, the same way: energy and shock. Shock included so it means
 	// something in Xen, where the slave's, controller's and Nihilanth's zaps
 	// are shock and the controller's balls and env_beam hazards are energy.
-	if ((bitsDamageType & (DMG_ENERGYBEAM | DMG_SHOCK)) != 0 && m_skills.HasSkill(ESkillId::Insulation))
-		flDamage *= std::max(0.0f, skill_insulation_scale.value);
+	if ((bitsDamageType & (DMG_ENERGYBEAM | DMG_SHOCK)) != 0)
+		flDamage *= PlayerEnergyTakenScale(this);
 
 	// keep track of amount of damage last sustained
 	m_lastDamageAmount = flDamage;
@@ -2912,8 +2911,7 @@ void CBasePlayer::PostThink()
 
 			// Sure Footing. Scaled here rather than inside FlPlayerFallDamage
 			// so the game rules stay free of per-player skill state.
-			if (m_skills.HasSkill(ESkillId::FallResistance))
-				flFallDamage *= std::max(0.0f, skill_fall_damage_scale.value);
+			flFallDamage *= PlayerFallTakenScale(this);
 
 			if (flFallDamage > pev->health)
 			{ //splat

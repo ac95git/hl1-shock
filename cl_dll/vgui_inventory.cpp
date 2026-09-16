@@ -43,6 +43,15 @@ static constexpr int INV_LEFT_COL_W  = 240;
 static constexpr int INV_MARGIN      = 8;
 static constexpr int INV_SECTION_GAP = 6;
 
+// The nav buttons, top to bottom: one table for the drawing, the labels and
+// the click, so a tab cannot be added to one and missed in another.
+struct InvNavEntry { const char* label; EInventoryTab tab; };
+static constexpr InvNavEntry k_NavTabs[] = {
+    { "Inventory", EInventoryTab::Inventory },
+    { "Upgrades",  EInventoryTab::Upgrades  },
+    { "Status",    EInventoryTab::Status    },
+};
+
 // =====================================================================
 // CInventoryCloseAction
 // =====================================================================
@@ -554,16 +563,13 @@ void CInventoryPanel::paintBackground()
         drawSetColor(sr, sg, sb, 0);
         drawFilledRect(colX, p1Y, colX + colW, p1Y + 2);
 
-        struct NavEntry { const char* label; EInventoryTab tab; };
-        NavEntry navBtns[k_NumNavBtns] = {
-            { "Inventory", EInventoryTab::Inventory },
-            { "Upgrades",  EInventoryTab::Upgrades  }
-        };
+        static_assert(sizeof(k_NavTabs) / sizeof(k_NavTabs[0]) == k_NumNavBtns,
+            "k_NavTabs and k_NumNavBtns disagree");
 
         int btnY = p1Y + 6;
         for (int nb = 0; nb < k_NumNavBtns; ++nb)
         {
-            bool active = (m_eActiveTab == navBtns[nb].tab);
+            bool active = (m_eActiveTab == k_NavTabs[nb].tab);
             int btnX  = colX + 6;
             int btnW2 = colW - 12;
             int btnH  = NAV_BTN_H;
@@ -664,9 +670,14 @@ void CInventoryPanel::paintBackground()
         m_gridView.Paint(this, x0, y0, areaW, areaH,
             m_entries, m_gridWidth, m_gridRows, m_gridRowsToDraw);
     }
-    else
+    else if (m_eActiveTab == EInventoryTab::Upgrades)
     {
         m_skillTreeView.Paint(this, x0, y0, areaW, areaH,
+            m_pSmallFont, m_pTitleFont);
+    }
+    else
+    {
+        m_statusView.Paint(this, x0, y0, areaW, areaH,
             m_pSmallFont, m_pTitleFont);
     }
 
@@ -687,14 +698,13 @@ void CInventoryPanel::paintBackground()
     // affecting later sprite draws inside the same frame.
     if (m_pSmallFont)
     {
-        static const char* navLabels[k_NumNavBtns] = { "Inventory", "Upgrades" };
         static constexpr int NAV_BTN_PAD = 6;
 
         for (int nb = 0; nb < k_NumNavBtns; ++nb)
         {
             const IRect& r = m_navBtnRects[nb];
-            bool active = (m_eActiveTab == ((nb == 0) ? EInventoryTab::Inventory : EInventoryTab::Upgrades));
-            int nameLen = (int)strlen(navLabels[nb]);
+            bool active = (m_eActiveTab == k_NavTabs[nb].tab);
+            int nameLen = (int)strlen(k_NavTabs[nb].label);
 
             vgui::Font* navFont = m_pTitleFont ? m_pTitleFont : m_pSmallFont;
             drawSetTextFont(navFont);
@@ -703,7 +713,7 @@ void CInventoryPanel::paintBackground()
 
             int textH = m_pTitleFont ? 18 : 10;
             drawSetTextPos(r.x + NAV_BTN_PAD + 4, r.y + (r.h - textH) / 2);
-            drawPrintText(navLabels[nb], nameLen);
+            drawPrintText(k_NavTabs[nb].label, nameLen);
         }
     }
 
@@ -784,9 +794,10 @@ void CInventoryPanel::mousePressed(vgui::MouseCode code, vgui::Panel* panel)
         if (r.w <= 0 || r.h <= 0) continue;
         if (localx >= r.x && localx < r.x + r.w && localy >= r.y && localy < r.y + r.h)
         {
-            m_eActiveTab = (nb == 0) ? EInventoryTab::Inventory : EInventoryTab::Upgrades;
+            m_eActiveTab = k_NavTabs[nb].tab;
             m_gridView.CancelDrag();
             m_skillTreeView.HandleMouseMove(-1, -1);
+            m_statusView.HandleMouseMove(-1, -1);
             m_skillTreeView.CancelResetConfirm();
             m_skillTreeView.CancelDrag();
             return;
@@ -806,9 +817,10 @@ void CInventoryPanel::mousePressed(vgui::MouseCode code, vgui::Panel* panel)
     }
 
     // ---- Active view ----
+    // The Status page takes no clicks: it has nothing to press.
     if (m_eActiveTab == EInventoryTab::Inventory)
         m_gridView.HandleMousePress(this, localx, localy, m_entries);
-    else
+    else if (m_eActiveTab == EInventoryTab::Upgrades)
         m_skillTreeView.HandleMousePress(this, localx, localy);
 }
 
@@ -822,7 +834,7 @@ void CInventoryPanel::mouseReleased(vgui::MouseCode code, vgui::Panel* panel)
 
     if (m_eActiveTab == EInventoryTab::Inventory)
         m_gridView.HandleMouseRelease(this, localx, localy, m_entries);
-    else
+    else if (m_eActiveTab == EInventoryTab::Upgrades)
         m_skillTreeView.HandleMouseRelease(this, localx, localy);
 }
 
@@ -838,6 +850,8 @@ void CInventoryPanel::cursorMoved(int x, int y, vgui::Panel* panel)
 
     if (m_eActiveTab == EInventoryTab::Inventory)
         m_gridView.HandleMouseMove(localx, localy);
-    else
+    else if (m_eActiveTab == EInventoryTab::Upgrades)
         m_skillTreeView.HandleMouseMove(localx, localy);
+    else
+        m_statusView.HandleMouseMove(localx, localy);
 }

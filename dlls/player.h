@@ -28,6 +28,11 @@
 #define PLAYER_MIN_BOUNCE_SPEED 200
 #define PLAYER_FALL_PUNCH_THRESHHOLD (float)350 // won't punch player's screen/make scrape noise unless player falling at least this fast.
 
+// Moved here from player.cpp so the Status page's Armor efficiency
+// (SendSkillStatsToClient) reads the same constant as TakeDamage.
+#define ARMOR_RATIO 0.2 // Armor Takes 80% of the damage
+#define ARMOR_BONUS 0.5 // Each Point of Armor is work 1/x points of health
+
 //
 // Player PHYSICS FLAGS bits
 //

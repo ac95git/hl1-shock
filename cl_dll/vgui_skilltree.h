@@ -9,6 +9,13 @@
 
 class CInventoryPanel;
 
+// Text measurement and pixel-width word wrap, defined in vgui_skilltree.cpp.
+// The Skill Tree's tooltip was the first user; the Status page's tooltip
+// wraps the same way, so they are shared rather than copied.
+int  TextWidth(vgui::Font* font, const char* text);
+int  TextWidth(vgui::Font* font, const std::string& text);
+void WrapToWidth(vgui::Font* font, const char* text, int maxW, std::vector<std::string>& lines);
+
 // =====================================================================
 // CSkillTreeView
 //   Plain C++ helper � not a VGUI panel.

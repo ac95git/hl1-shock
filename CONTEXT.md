@@ -182,6 +182,20 @@ _Avoid_: dodge, roll, sprint, blink, long jump (a different verb that still exis
 One Dash's worth of readiness. A Dash spends one; they come back one at a time.
 _Avoid_: stack, stamina; cooldown for the charges themselves (Recharge is the Pulse's word)
 
+### The Status page
+
+**Status**:
+The Inventory Panel's third tab: the Modules found, as Slots on the suit, and the build's final numbers.
+Every number is what the game actually uses, with every always-on bonus folded in; situational bonuses
+are not on it. Designed 2026-09-16 ([docs/STATUS_PANEL.md](docs/STATUS_PANEL.md)).
+_Avoid_: stats page, character sheet, loadout
+
+**Slot**:
+A Module's fixed place on the suit — head, body, left arm, right arm, legs — shown on the Status page. One
+Module per Slot, always the same one; nothing is put into a Slot or taken out. Never a unit of Grid space
+(that is a Cell) or a weapon's HUD position.
+_Avoid_: socket, mount, equipment slot (it implies a choice there is none of)
+
 ### The Suit
 
 **Suit Variant**:

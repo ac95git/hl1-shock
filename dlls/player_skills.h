@@ -255,6 +255,31 @@ float SkillHeadshotScale(struct entvars_s* pevAttacker);
 // anywhere passive.
 // =====================================================================
 float PlayerHealingScale(CBasePlayer* pPlayer);
+
+// =====================================================================
+// The standing multipliers: what always applies, never what depends on a
+// moment (Swap Surge, Overdraw, Backstab, Follow-Up, Cleave).  Each is read
+// both where its effect is applied and by SendSkillStatsToClient, so the
+// Status page shows the number the game uses.
+// =====================================================================
+
+// Weapon Mastery and the typed damage Skills and Stat nodes, for a hit of
+// 'bitsDamageType'.  SkillScaleWeaponDamage is this times the situational.
+float PlayerStandingDamageScale(CBasePlayer* pPlayer, int bitsDamageType);
+// Melee Force and the Melee Damage Stat nodes, applied in CCrowbar::SwingDamage.
+float PlayerMeleeScale(CBasePlayer* pPlayer);
+// Armor Expert: the scale on ARMOR_RATIO, the fraction that gets past armour.
+float PlayerArmorRatioScale(CBasePlayer* pPlayer);
+// Damage taken: Demolitions on blasts, Insulation on energy and shock,
+// Sure Footing on falls.  1.0 without the Skill.
+float PlayerBlastTakenScale(CBasePlayer* pPlayer);
+float PlayerEnergyTakenScale(CBasePlayer* pPlayer);
+float PlayerFallTakenScale(CBasePlayer* pPlayer);
+
+// Sends the Status page's numbers (docs/STATUS_PANEL.md).  Called at the
+// end of SendSkillTreeToClient, since every change that moves a number is
+// already a skill-tree sync.
+void SendSkillStatsToClient(CBasePlayer* pPlayer);
 // The medkit's heal for this player: gSkillData.healthkitCapacity scaled.
 // Both places a medkit heals ask this, so the "wastes nothing" test and
 // the heal agree.

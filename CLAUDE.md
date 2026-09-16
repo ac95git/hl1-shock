@@ -29,6 +29,7 @@ Referenced by `00-PROJECT-OVERVIEW.md` but **not yet written**: `10-COMMON-TASKS
 | [docs/SKILL_TREE.md](docs/SKILL_TREE.md) | Adding, pricing or placing a Skill — the agreed tree as one reference: seven Routes, every node, the prerequisite structure, the cross-Route links and the reveal gates. The reasoning behind it is in ROADMAP.md's Routes section |
 | [docs/SKILL_MAP.md](docs/SKILL_MAP.md) | Placing any node — the 15×15 board cell by cell, every door between regions, the prices from the suit, and the placement rules. `docs/skill_map.csv` is the same grid as data. Settled 2026-09-15, not built |
 | [docs/SKILL_PANEL.md](docs/SKILL_PANEL.md) | Drawing or changing the Skill Tree's page — the circuit theme, the header, the gauge strip, the Reset switch, the 1:1 pan, the palette, the frames, the tooltip. Settled 2026-09-15, not built |
+| [docs/STATUS_PANEL.md](docs/STATUS_PANEL.md) | Drawing or changing the Inventory Panel's Status tab — the Modules as fixed Slots on a doll of the suit, which stats get a line and how each number is written, and the server message the numbers come from. Settled and built 2026-09-16 |
 | [docs/MAP_BRIEF.md](docs/MAP_BRIEF.md) | Building or editing a map — the toolchain that is already in use and the FGD sync rule. Closed 2026-09-15: the Skill Point economy is a non-issue, and `topmap` is the default test map |
 | [docs/MAP_WORKFLOW.md](docs/MAP_WORKFLOW.md) | Making or changing a map — the `.map`-to-install-to-compile loop, the facts that bind it, the tools under `utils/maptool/`, and what the agent can and cannot do in map work |
 | [docs/PROVING_MAP.md](docs/PROVING_MAP.md) | Looking up GoldSrc unit sizes and editor rules for a first-time mapper. The proving map itself is tested and closed (2026-09-15), a showcase of coworking in mapping; `topmap` is the default test map |
@@ -66,6 +67,8 @@ Out of scope: engine-level changes — graphics upgrades, physics, and anything 
 
 - Skill tree — definitions `game_shared/skill_defs.h` (both DLLs), server state `dlls/player_skills.cpp` / `.h`, client `cl_dll/vgui_skilltree.cpp` / `.h`
 - Inventory — `cl_dll/vgui_inventory.cpp`, `cl_dll/vgui_inventory_grid.cpp` and headers
+- Status page — Module table `game_shared/module_defs.h` (both DLLs), server `SendSkillStatsToClient` in
+  `dlls/player_skills.cpp`, client `cl_dll/vgui_status.cpp` / `.h`
 - Suit Variant — definitions `game_shared/suit_defs.h` (both DLLs), server `CItemSuit` in `dlls/items.cpp`,
   client `CHud::UpdateSuitVariant` / `SuitColour*` in `cl_dll/hud.cpp`. The value is the player's
   `pev->skin`; there is no save field and no user message for it

@@ -161,16 +161,10 @@ float CCrowbar::SwingDamage(bool bCleaveSwing)
 {
 	float flDamage = BaseDamage() * std::max(0.0f, BladeDamageScale());
 
-	// Melee Force. Before the Follow-Up, so a primed swing multiplies the
-	// already-stronger hit rather than a base one.
-	if (m_pPlayer->m_skills.HasSkill(ESkillId::MeleeForce))
-		flDamage *= std::max(0.0f, skill_melee_force_scale.value);
-
-	// The Melee Damage Stat nodes: additive within the stat, multiplied
-	// with everything else. Five at 0.05 are x1.25 on top of Force.
-	const int iStat = m_pPlayer->m_skills.CountStat(EStat::MeleeDamage);
-	if (iStat > 0)
-		flDamage *= 1.0f + iStat * std::max(0.0f, skill_stat_melee_damage.value);
+	// Melee Force and the Melee Damage Stat nodes. Before the Follow-Up, so a
+	// primed swing multiplies the already-stronger hit rather than a base one.
+	// One function, so the Status page reads the same number.
+	flDamage *= PlayerMeleeScale(m_pPlayer);
 
 	// Cleave's scale, on every hit of a Cleave swing.
 	if (bCleaveSwing)

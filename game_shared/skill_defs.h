@@ -388,6 +388,11 @@ static_assert(k_MaxSkills <= k_SkillIdCeiling,
 // cannot disagree about the message length.
 inline constexpr int k_SkillMaskBytes = (k_SkillIdCeiling + 7) / 8;
 
+// The Status page's numbers message (SendSkillStatsToClient): twelve shorts
+// -- max health, max armour, nine multipliers and shares in thousandths, the
+// Dash recharge in milliseconds.  One constant so both DLLs agree on it.
+inline constexpr int k_SkillStatsBytes = 12 * 2;
+
 // The board is 15x15 (docs/SKILL_MAP.md).  Cells are checked against
 // this so a typo cannot place a node off the board; the reachability
 // flood fill below is sized by it too.

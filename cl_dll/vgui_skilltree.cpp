@@ -121,7 +121,7 @@ namespace
 // debt entry recorded proper measurement as only "if available in VGUI
 // APIs". It is available, and every heuristic here is gone as a result.
 // =====================================================================
-static int TextWidth(vgui::Font* font, const char* text)
+int TextWidth(vgui::Font* font, const char* text)
 {
     if (!font || !text || !text[0])
         return 0;
@@ -131,7 +131,7 @@ static int TextWidth(vgui::Font* font, const char* text)
     return w;
 }
 
-static int TextWidth(vgui::Font* font, const std::string& text)
+int TextWidth(vgui::Font* font, const std::string& text)
 {
     return TextWidth(font, text.c_str());
 }
@@ -141,7 +141,7 @@ static int TextWidth(vgui::Font* font, const std::string& text)
 // Guards the two pathological inputs the debt entry called out: explicit
 // newlines, and a single word wider than the box (broken by character rather
 // than allowed to overflow).
-static void WrapToWidth(vgui::Font* font, const char* text, int maxW,
+void WrapToWidth(vgui::Font* font, const char* text, int maxW,
                         std::vector<std::string>& lines)
 {
     lines.clear();

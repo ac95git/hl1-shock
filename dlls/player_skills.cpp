@@ -391,15 +391,39 @@ float SkillScaleWeaponDamage(entvars_t* pevAttacker, float flDamage, int bitsDam
     CBasePlayer* pPlayer = (CBasePlayer*)pAttacker;
     const CPlayerSkills& sk = pPlayer->m_skills;
 
-    // Weapon Mastery: everything.
-    if (sk.HasSkill(ESkillId::ExtraDamage))
-        flDamage *= std::max(0.0f, skill_weapon_damage_scale.value);
+    // Everything that always applies: Weapon Mastery and the typed damage.
+    flDamage *= PlayerStandingDamageScale(pPlayer, bitsDamageType);
 
     // Swap Surge: everything, while the window after a swap is open.  A
     // window rather than one empowered shot, so the egon and MP5 get their
     // burst as much as the shotgun and python get a big first shot.
     if (pPlayer->SwapSurgeActive())
         flDamage *= std::max(0.0f, skill_swap_surge_scale.value);
+
+    // Overdraw: armour as fuel, both ways.  While there is armour above
+    // the floor left to drain, energy attacks hit harder too.  Situational,
+    // so not in the standing scale or on the Status page.
+    if ((bitsDamageType & DMG_ENERGYBEAM) != 0 && sk.HasSkill(ESkillId::EnergyMajor)
+        && pPlayer->pev->armorvalue > std::max(0.0f, skill_overdraw_floor.value))
+        flDamage *= std::max(0.0f, skill_overdraw_damage_scale.value);
+
+    return flDamage;
+}
+
+// =====================================================================
+// PlayerStandingDamageScale
+// =====================================================================
+float PlayerStandingDamageScale(CBasePlayer* pPlayer, int bitsDamageType)
+{
+    if (!pPlayer)
+        return 1.0f;
+
+    const CPlayerSkills& sk = pPlayer->m_skills;
+    float scale = 1.0f;
+
+    // Weapon Mastery: everything.
+    if (sk.HasSkill(ESkillId::ExtraDamage))
+        scale *= std::max(0.0f, skill_weapon_damage_scale.value);
 
     // The Weapon Specialist's typed damage.  A damage-type test here rather
     // than a weapon list: whatever a weapon fires as bullets is bullets, so
@@ -408,13 +432,13 @@ float SkillScaleWeaponDamage(entvars_t* pevAttacker, float flDamage, int bitsDam
     if ((bitsDamageType & DMG_BULLET) != 0)
     {
         if (sk.HasSkill(ESkillId::Marksman))
-            flDamage *= std::max(0.0f, skill_marksman_scale.value);
+            scale *= std::max(0.0f, skill_marksman_scale.value);
 
         // The Bullet Damage Stat nodes: additive within the stat, multiplied
         // with everything else, the Melee Damage nodes' shape.
         const int iStat = sk.CountStat(EStat::BulletDamage);
         if (iStat > 0)
-            flDamage *= 1.0f + iStat * std::max(0.0f, skill_stat_bullet_damage.value);
+            scale *= 1.0f + iStat * std::max(0.0f, skill_stat_bullet_damage.value);
     }
 
     // The Energy Route: energy is DMG_ENERGYBEAM and nothing else, so the
@@ -424,16 +448,11 @@ float SkillScaleWeaponDamage(entvars_t* pevAttacker, float flDamage, int bitsDam
     if ((bitsDamageType & DMG_ENERGYBEAM) != 0)
     {
         if (sk.HasSkill(ESkillId::EnergyDamage))
-            flDamage *= std::max(0.0f, skill_energy_damage_scale.value);
+            scale *= std::max(0.0f, skill_energy_damage_scale.value);
 
         const int iStat = sk.CountStat(EStat::EnergyDamage);
         if (iStat > 0)
-            flDamage *= 1.0f + iStat * std::max(0.0f, skill_stat_energy_damage.value);
-
-        // Overdraw: armour as fuel, both ways.  While there is armour above
-        // the floor left to drain, energy attacks hit harder too.
-        if (sk.HasSkill(ESkillId::EnergyMajor) && pPlayer->pev->armorvalue > std::max(0.0f, skill_overdraw_floor.value))
-            flDamage *= std::max(0.0f, skill_overdraw_damage_scale.value);
+            scale *= 1.0f + iStat * std::max(0.0f, skill_stat_energy_damage.value);
     }
 
     // Demolitions, dealt.  Grenades, the satchel, the tripmine, the RPG and
@@ -441,9 +460,98 @@ float SkillScaleWeaponDamage(entvars_t* pevAttacker, float flDamage, int bitsDam
     // by either branch.  So does the egon's splash, which carries the bit
     // beside its energy; accepted rather than special-cased.
     if ((bitsDamageType & DMG_BLAST) != 0 && sk.HasSkill(ESkillId::Demolitions))
-        flDamage *= std::max(0.0f, skill_demolitions_scale.value);
+        scale *= std::max(0.0f, skill_demolitions_scale.value);
 
-    return flDamage;
+    return scale;
+}
+
+// =====================================================================
+// PlayerMeleeScale
+// =====================================================================
+float PlayerMeleeScale(CBasePlayer* pPlayer)
+{
+    if (!pPlayer)
+        return 1.0f;
+
+    const CPlayerSkills& sk = pPlayer->m_skills;
+    float scale = 1.0f;
+
+    // Melee Force.
+    if (sk.HasSkill(ESkillId::MeleeForce))
+        scale *= std::max(0.0f, skill_melee_force_scale.value);
+
+    // The Melee Damage Stat nodes: additive within the stat, multiplied
+    // with everything else. Five at 0.05 are x1.25 on top of Force.
+    const int iStat = sk.CountStat(EStat::MeleeDamage);
+    if (iStat > 0)
+        scale *= 1.0f + iStat * std::max(0.0f, skill_stat_melee_damage.value);
+
+    return scale;
+}
+
+// =====================================================================
+// The protection scales
+// =====================================================================
+float PlayerArmorRatioScale(CBasePlayer* pPlayer)
+{
+    // Armor Expert.  The ratio is the fraction of a blow that gets PAST
+    // armour, so scaling it DOWN is what makes armour better.
+    if (!pPlayer || !pPlayer->m_skills.HasSkill(ESkillId::ArmorEfficiency))
+        return 1.0f;
+    return std::max(0.0f, skill_armor_ratio_scale.value);
+}
+
+float PlayerBlastTakenScale(CBasePlayer* pPlayer)
+{
+    if (!pPlayer || !pPlayer->m_skills.HasSkill(ESkillId::Demolitions))
+        return 1.0f;
+    return std::max(0.0f, skill_demolitions_resist_scale.value);
+}
+
+float PlayerEnergyTakenScale(CBasePlayer* pPlayer)
+{
+    if (!pPlayer || !pPlayer->m_skills.HasSkill(ESkillId::Insulation))
+        return 1.0f;
+    return std::max(0.0f, skill_insulation_scale.value);
+}
+
+float PlayerFallTakenScale(CBasePlayer* pPlayer)
+{
+    if (!pPlayer || !pPlayer->m_skills.HasSkill(ESkillId::FallResistance))
+        return 1.0f;
+    return std::max(0.0f, skill_fall_damage_scale.value);
+}
+
+// =====================================================================
+// SendSkillStatsToClient
+//
+// Two maxima, then nine multipliers and shares in thousandths, then the
+// Dash recharge in milliseconds -- CHudAmmo::MsgFunc_SkillStats reads them
+// in this order.  Every value comes from the function the effect itself
+// reads, so the Status page cannot disagree with the game.  A resistance
+// is sent as the share resisted, because the page writes it that way.
+// =====================================================================
+void SendSkillStatsToClient(CBasePlayer* pPlayer)
+{
+    if (!pPlayer || gmsgSkillStats == 0)
+        return;
+
+    auto milli = [](float v) { return (int)std::min(32767.0f, std::max(0.0f, v * 1000.0f + 0.5f)); };
+
+    MESSAGE_BEGIN(MSG_ONE, gmsgSkillStats, NULL, pPlayer->pev);
+    WRITE_SHORT(std::min(32767, std::max(0, (int)pPlayer->pev->max_health)));
+    WRITE_SHORT(std::min(32767, std::max(0, PlayerMaxArmor(pPlayer))));
+    WRITE_SHORT(milli(PlayerHealingScale(pPlayer)));
+    WRITE_SHORT(milli(1.0f - (float)ARMOR_RATIO * PlayerArmorRatioScale(pPlayer)));
+    WRITE_SHORT(milli(1.0f - PlayerBlastTakenScale(pPlayer)));
+    WRITE_SHORT(milli(1.0f - PlayerEnergyTakenScale(pPlayer)));
+    WRITE_SHORT(milli(1.0f - PlayerFallTakenScale(pPlayer)));
+    WRITE_SHORT(milli(PlayerMeleeScale(pPlayer) * PlayerStandingDamageScale(pPlayer, DMG_CLUB)));
+    WRITE_SHORT(milli(PlayerStandingDamageScale(pPlayer, DMG_BULLET)));
+    WRITE_SHORT(milli(PlayerStandingDamageScale(pPlayer, DMG_ENERGYBEAM)));
+    WRITE_SHORT(milli(PlayerStandingDamageScale(pPlayer, DMG_BLAST)));
+    WRITE_SHORT(milli(pPlayer->DashRechargeTime()));
+    MESSAGE_END();
 }
 
 // =====================================================================
@@ -517,4 +625,8 @@ void SendSkillTreeToClient(CBasePlayer* pPlayer)
     // length below and in UserMessages.cpp) if a fifth Module needs bit 8.
     WRITE_BYTE((unsigned char)(sk.OpenGatesMask() & 0xFF));
     MESSAGE_END();
+
+    // Every change that can move a Status page number -- a Skill unlocked, a
+    // Reset, a Module found, spawn and restore -- already ends up here.
+    SendSkillStatsToClient(pPlayer);
 }

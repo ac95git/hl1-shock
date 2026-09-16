@@ -125,6 +125,7 @@ public:
 	bool MsgFunc_HideWeapon(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_Inventory(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_SkillTree(const char* pszName, int iSize, void* pbuf);
+	bool MsgFunc_SkillStats(const char* pszName, int iSize, void* pbuf);
 
 	void SlotInput(int iSlot);
 	void UserCmd_Slot1();
@@ -341,6 +342,9 @@ public:
 	bool VidInit() override;
 	bool Draw(float flTime) override;
 	bool MsgFunc_Battery(const char* pszName, int iSize, void* pbuf);
+
+	// Current armour, for the Inventory Panel's Status page.
+	int Armor() const { return m_iBat; }
 
 private:
 	HSPRITE m_hSprite1;

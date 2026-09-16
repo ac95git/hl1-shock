@@ -62,6 +62,10 @@ inline int gmsgInventoryItem = 0;
 // Reset Tokens.  Definitions are shared, not sent (see SendSkillTreeToClient).
 inline int gmsgSkillTree = 0;
 
+// The Status page's numbers: fixed length, sent with every skill-tree sync
+// (see SendSkillStatsToClient).
+inline int gmsgSkillStats = 0;
+
 // Inventory sync: variable-length, sent in chunks (see SendInventoryToClient)
 inline int gmsgInventory = 0;
 

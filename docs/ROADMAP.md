@@ -8,7 +8,7 @@ build on, and list the questions that have to be answered before the first line 
 is built, its content moves into PILLARS.md and the entry here is deleted — this file only ever shrinks
 from the top.
 
-**Last updated:** 2026-09-14 (branch `hl-shock` — the Skill Tree becomes a matrix: Stat nodes as roads, every node one point, not completable, settled in SKILL_TREE.md and the Melee Route built whole on it the same day; the fitted node icon draw, the 256-id ceiling and the layout cvars too; later the same day, without a grill, the Weapon Specialist Route whole, the katana's blade as energy, Fast Reload on the shotgun, the move-wait leak fixed, the edge-adjacency overlay; the day before, all seven Routes shaped, the Dash and alien Modules with them, the katana reworked on paper, four Skills cut)
+**Last updated:** 2026-09-16 (branch `hl-shock` — the Status page shaped in a grill and built the same day: the Modules as fixed Slots on a doll of the suit, and the build's final stats beside them, in STATUS_PANEL.md; its entry moved to PILLARS pillar 5). Before that, 2026-09-14 (the Skill Tree becomes a matrix: Stat nodes as roads, every node one point, not completable, settled in SKILL_TREE.md and the Melee Route built whole on it the same day; the fitted node icon draw, the 256-id ceiling and the layout cvars too; later the same day, without a grill, the Weapon Specialist Route whole, the katana's blade as energy, Fast Reload on the shotgun, the move-wait leak fixed, the edge-adjacency overlay; the day before, all seven Routes shaped, the Dash and alien Modules with them, the katana reworked on paper, four Skills cut)
 
 ## Shape legend
 
@@ -1443,8 +1443,10 @@ branches and each Module's details are not.**
 
 **A Module is a mechanic the player does not have at the start, found partway through the game and kept
 from then on.** Half-Life's long jump module is the model, exactly. Modules are **not swappable** and
-there are no slots: finding one is permanent, and level design may assume any Module the player has
-already passed.
+there is no loadout: finding one is permanent, and level design may assume any Module the player has
+already passed. Each Module has a fixed **Slot** on the suit where the Status page
+shows it (built 2026-09-16, [PILLARS pillar 5](PILLARS.md#5-inventory-management)) — a place, not a
+choice; swappable Slots were rejected again, for now.
 
 That makes Modules the one kind of reward that changes **what the player can do**, where Skill Points,
 Row Grants and items change how well they do it. It is what gives exploration an access reward — a ledge
@@ -1554,9 +1556,9 @@ since the reasoning it replaces is written down and the new reasoning should be 
   **Answered 2026-09-13: walk-over.** Every pickup is, since
   [ADR-0011](adr/0011-pickups-are-walk-over.md); the suit itself moved back.
 - ~~**"Dash: upgradeable"**~~ **Answered 2026-09-13: by Skill Points**, the [Dash Route](#the-dash-route-name-pending).
-- **Where are they shown?** Not a loadout, so the tab is a record of what has been found. The Inventory
-  Panel's second tab is already the Skill Tree ("Upgrades"), so this is a third tab or a section of one.
-  A Module occupies no Cells, like a Reset Token.
+- ~~**Where are they shown?**~~ **Answered 2026-09-16:** on a third tab, **Status**, as fixed Slots on a
+  doll of the suit beside the build's final stats — [STATUS_PANEL.md](STATUS_PANEL.md). A Module
+  occupies no Cells, like a Reset Token.
 
 ---
 

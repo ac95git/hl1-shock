@@ -11,13 +11,14 @@
 #include "inventory_defs.h"
 #include "vgui_inventory_grid.h"
 #include "vgui_skilltree.h"
+#include "vgui_status.h"
 
 class CInventoryPanel;
 
 // ------------------------------------------------------------------
 // Which right-hand view is active
 // ------------------------------------------------------------------
-enum class EInventoryTab { Inventory, Upgrades };
+enum class EInventoryTab { Inventory, Upgrades, Status };
 
 // ------------------------------------------------------------------
 // InvEntryView
@@ -115,6 +116,7 @@ class CInventoryPanel : public vgui::Panel, public vgui::CDefaultInputSignal
     // View helpers need access to protected draw methods
     friend class CInventoryGridView;
     friend class CSkillTreeView;
+    friend class CStatusView;
 
 private:
     vgui::Label*  m_pLabel;
@@ -139,12 +141,13 @@ private:
     // ---- Tab state ----
     EInventoryTab m_eActiveTab = EInventoryTab::Inventory;
     struct IRect { int x; int y; int w; int h; };
-    static constexpr int k_NumNavBtns = 2;
+    static constexpr int k_NumNavBtns = 3;
     IRect m_navBtnRects[k_NumNavBtns] = {};
 
     // ---- Sub-views ----
     CInventoryGridView m_gridView;
     CSkillTreeView     m_skillTreeView;
+    CStatusView        m_statusView;
 
     CInventoryContextMenu* m_pContextMenu;
 
@@ -177,7 +180,13 @@ public:
 
     // Skill-tree state update (call from UserMessage handler)
     void UpdateSkillTree(const unsigned char* unlockedMask, int skillPoints, int resetTokens, unsigned char openGates)
-    { m_skillTreeView.UpdateState(unlockedMask, skillPoints, resetTokens, openGates); }
+    {
+        m_skillTreeView.UpdateState(unlockedMask, skillPoints, resetTokens, openGates);
+        m_statusView.SetOpenGates(openGates);
+    }
+
+    // The Status page's numbers (call from the SkillStats UserMessage handler)
+    void UpdateSkillStats(const SkillStatsView& stats) { m_statusView.UpdateStats(stats); }
 
     void CloseContextMenu();
 
