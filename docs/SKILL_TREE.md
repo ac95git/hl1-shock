@@ -44,13 +44,13 @@ are assigned when a node is built, never reused, and **22 and 23 are spoken for*
 | Route | Nodes | Root | Major node | Needs |
 | --- | --- | --- | --- | --- |
 | [Juggernaut](#juggernaut) | 11 | Fortitude (8) | +100 decaying armour on Matrix activation | The Pulse Module for its Pulse nodes. **Built whole 2026-09-16**: the Matrix trio has its effects, on a `+pulse` hold |
-| [Alien](#alien) | 7 | Hive Capacity (20) | The volley is energy damage | The alien Module; the whole Route is hidden until it. **Placed hidden 2026-09-15**, no effects yet |
+| [Alien](#alien) | 7 | Hive Capacity (20) | The volley is energy damage | The alien Module; the whole Route is hidden until it. **Placed hidden 2026-09-15; the Module, Cores, the Hive nodes and the summon's left click built 2026-09-16**, untested in game — Pack, Tether, Recall and the Major still to come |
 | [Energy](#energy) | 6 + 4 Stat | Energy Damage (54) | Overdraw: energy attacks drain armour for bonus damage | — . **Building since 2026-09-14** |
 | [Melee](#melee) | 6 + 9 Stat | Melee Reach (1) | Cleave | — . **Built 2026-09-14** |
 | [Weapon Specialist](#weapon-specialist) | 7 + 7 Stat | Marksman (35) | Swap Surge (39) | — . **Built 2026-09-14** |
 | [Shinobi](#shinobi--the-dash-route) | 7 | Sure Footing (7), in the hub since 2026-09-15 | Air Dash | The Dash Module for its Dash nodes. **Placed hidden 2026-09-15**, no effects yet |
 | [Medical](#medical) | 5 + 4 Stat | Med Expert (19) | Last Stand | — . **Building since 2026-09-14** |
-| [Stealth](#stealth) | 7 | Soft Step | Silent Kill | The Night Vision Module; the region is hidden until it. **Shaped and placed hidden 2026-09-15**, no effects yet |
+| [Stealth](#stealth) | 7 | Soft Step | Silent Kill | The Night Vision Module; the region is hidden until it. **Shaped and placed hidden 2026-09-15; every node short of the post-aggro step, and the Module, built 2026-09-16**, untested in game |
 
 49 Skills, ranks counted once. About sixteen carry ranks, and each rank becomes a Stat node on the road
 under [the matrix](#the-matrix--settled-2026-09-14); the tree that results is **154 nodes** (153 buyable)
@@ -322,13 +322,14 @@ gained**, Hive nodes included. [ROADMAP](ROADMAP.md#alien).
 
 | Node | Id | Effect | Ranks | State |
 | --- | --- | --- | --- | --- |
-| Hive Capacity | 20 | Hivehand holds more hornets | — | Reserved. **Root** |
-| Hive Replenish | 21 | Hornets replenish faster | — | Reserved as `HiveRegrowth`; display name changes |
-| Hive Attack Speed | new | Hivehand fires faster (predicted; both DLLs) | — | New |
-| Pack | new | Maximum ghosts out | 1→2→3 | New |
-| Tether | new | Ghost lifetime longer | — | New |
-| Recall | new | Summon cooldown shorter | — | New |
-| **Major** | new | **The volley is energy damage**: scales with the Energy Route and passes the Gargantua filter. Expected to change | — | New |
+| Hive Capacity | 20 | Hivehand holds more hornets: `PlayerHornetMaxCarry` (`dlls/player_skills.cpp`) is `HORNET_MAX_CARRY` + `skill_hive_capacity_bonus` (4), read by `CHgun::Reload` and the multiplayer refill. Ammo boxes and `CanHaveAmmo` still cap a pickup at 8 — the `ItemInfo` registry cannot ask a player, a named gap | — | **Built 2026-09-16**, untested in game. **Root** |
+| Hive Replenish | 21 | `PlayerHornetReplenishScale` divides the regrowth interval by `skill_hive_replenish_scale` (1.5) | — | **Built 2026-09-16** |
+| Hornet Replenish Stat ×11 | 146–156 | Each adds `skill_stat_hornet_replenish` (0.05) to the same multiplier, additive within the stat | — | **Built 2026-09-16**. **The roads** |
+| Hive Attack Speed | 141 | Both Hivehand fire intervals × `skill_hive_attack_speed_scale` (0.75), through `skill_tuning.h`, both DLLs since the cadence is predicted. The fire animation itself is not sped up | — | **Built 2026-09-16** |
+| Pack | 142 | The summon's ghost cap +1 (`skill_pack_bonus`), added to `summon_max_ghosts` rather than scaled. The design's 1→2→3 ranks are one node today | 1→2→3 | **Built 2026-09-16**: one rank |
+| Tether | 143 | Ghost lifetime × `skill_tether_scale` (1.5) | — | **Built 2026-09-16** |
+| Recall | 144 | Summon cooldown × `skill_recall_scale` (0.5) | — | **Built 2026-09-16** |
+| **Major: Energy Volley** | 145 | **The volley is energy damage**: scales with the Energy Route and passes the Gargantua filter. Expected to change | — | Placed 2026-09-15, no effect yet — the ultimate it depends on is not built |
 
 ```mermaid
 graph TD
@@ -339,6 +340,18 @@ graph TD
   TE --> AM{{"Major: the volley is energy"}}
   RE --> AM
 ```
+
+**Built 2026-09-16, untested in game.** `item_core` gives one Core toward `CORE_MAX_CARRY` (6); `item_alienmodule`
+(a stand-in for the freed slave's hand-over, `w_sqknest.mdl`) opens `EGate::AlienModule` and gives
+`weapon_summon` with `SUMMON_DEFAULT_GIVE` (3) Cores. `weapon_summon` (`dlls/summon.cpp`, `WEAPON_SUMMON`
+17, bucket 4 position 4, hivehand models/sprites/sounds standing in) spends one Core on a left click for
+one `monster_ghost_slave` — CISlave with `m_bAlly` and `m_bVanishOnDeath` added to the base class for any
+future friendly slave to share, plus a summoner handle, a lifetime (`summon_ghost_lifetime` 30, Tether's),
+and translucent render — spawned behind or beside the player at 64 then 96 units on a human-hull ground
+trace with a clear line from the eye; a refusal costs nothing. `summon_cooldown` (3, Recall's) and
+`summon_max_ghosts` (1, Pack's) gate the next one. Right click idles; the ultimate is the next slice, and
+the ghost does not yet follow the player. Predicted only for the animation and the cooldown; the summon
+itself is server-only.
 
 Dropped: Poise (a longer hold window) and a Snark node; Snarks may leave the mod.
 
@@ -571,23 +584,24 @@ Last Stand fires only when no Infusion is running ([ADR-0007](adr/0007-the-infus
 makes monsters learn about the player 5% slower). Built on the perception model in
 [PERCEPTION.md](PERCEPTION.md) and on nothing else: every node reads a monster's own Suspicion meter at
 the moment of an action — a strike, a kill, a break of contact — and none rewards waiting. **Hidden until
-the Night Vision Module** (below). Two nodes wait on the post-aggro step
-([ROADMAP](ROADMAP.md#the-post-aggro-step)), as Shinobi's wait on the Dash Module.
+the Night Vision Module** (below). **Every node but the post-aggro step's two was built 2026-09-16**, along
+with the Module that reveals the region; none of it is verified in game yet.
 
 One property of the model carries two of these nodes for free: **being hit fills a monster's meter
 outright**, so any player hit landing while the meter is below full is by construction the opening hit,
 and "unaware" needs no flag — it is a comparison against the meter and the two thresholds the readout
 already shows. *Unseen* is Suspicion below `suspicion_notice`; *Spotted* is at `suspicion_acquire`.
 
-| Node | Id | Effect | Works today? |
+| Node | Id | Effect | State |
 | --- | --- | --- | --- |
-| Soft Step | new | Crouched and walking body noise halved again (`noise_stance_*` scaled) | Yes. **Entry** |
-| **Ambush** | 22 | Player-dealt damage to a hostile monster is multiplied by how unaware it is at the hit, read off that monster's own meter: **×1.25 below Spotted, ×1.5 below Noticed** (two cvars). Every weapon — bullets, blast, the katana's wave, hornets, melee — each victim of a grenade or a Cleave on its own meter. Stacks multiplicatively with the Backstab and everything else. Never on the always-aware profiles, on a monster flagged to ignore Concealment, or on anything not hostile to the player; a monster fighting something else *is* ambushable, and one that lost the player becomes ambushable again as its meter drains. Applied at the damage chokepoint **before** the hit fills the meter | Yes |
-| **Phantom** | 23 | A Backstab on a monster below Noticed grants **2 seconds at ×1.2 speed during which every movement action — running, Dashing, jumping — is silent** (body noise zero). A timed buff on a strike, not a change to the movement rules; the Shinobi link | Yes |
-| Nightfall | new | Darkness conceals twice as much (the light term's worst end doubled) | Yes; matters with dark maps and the Module |
-| Slip Away | new | Breaking line of sight while a monster has Noticed but not Spotted you drops its Suspicion by a third at once. Fires on the break, not on the hiding | Yes |
-| Cut the Head | new | Killing a squad leader drops every member's Suspicion to the notice floor | Post-aggro step |
-| **Major: Silent Kill** | new | A kill on a monster below Spotted is unseen and unheard: no death witnesses, no Disturbance, no squad LKP. Clear a squad one by one | Post-aggro step |
+| Soft Step | 126 | Crouch and walk body-noise scales (`noise_stance_*`) multiplied again by `skill_soft_step_scale` (0.5) in `UpdatePlayerSound`; running untouched | **Built 2026-09-16**, untested in game. **Entry** |
+| Concealment Stat ×10 | 131–140 | Each adds `skill_stat_concealment` (0.05) to the multiplier `PlayerConcealmentScale` (`dlls/perception.cpp`) applies to the fill rate in `UpdateSuspicion`, player only | **Built 2026-09-16**. **The roads** |
+| **Ambush** | 22 | Player-dealt damage to a hostile monster is multiplied by how unaware it is at the hit, read off that monster's own meter: **×1.25 below Spotted, ×1.5 below Noticed** (`skill_ambush_spotted_scale`, `skill_ambush_noticed_scale`). Every weapon — bullets, blast, the katana's wave, hornets, melee — each victim of a grenade or a Cleave on its own meter, through `PlayerAmbushScale` (`dlls/player_skills.cpp`), called beside `SkillScaleWeaponDamage` at both chokepoints (`ApplyMultiDamage`, the direct branch of `RadiusDamage`). Stacks multiplicatively with the Backstab and everything else. Never on the always-aware profiles, `SF_MONSTER_IGNORE_CONCEALMENT`, or anything not hostile to the player; a monster fighting something else *is* ambushable, and one that lost the player becomes ambushable again as its meter drains. Applied **before** the hit fills the meter; shown as `xAMBUSH` in the `debug_damage` line via `DebugDamageAppend` | **Built 2026-09-16**, untested in game |
+| **Phantom** | 23 | A Backstab on a monster below Noticed calls `CBasePlayer::PhantomStart()`, saved as `m_flPhantomUntil`: **2 seconds at ×1.2 speed during which every movement action — running, Dashing, jumping — is silent** (body noise zero). The speed rides a physinfo key (`"phs"`, percent) written by `PhantomSync` (PreThink) and read in `PM_CheckParamters`, multiplying `pmove->maxspeed` before the wish-speed clamp, since `pfnSetClientMaxspeed` can only lower it. A timed buff on a strike, not a change to the movement rules; the Shinobi link. `skill_phantom_duration` (2), `skill_phantom_speed_scale` (1.2); cues `buttons/blip2.wav` at pitch 150 on start and 80 on end, a placeholder shared with Cleave's ready blip ([ART_DEBT.md](ART_DEBT.md)) | **Built 2026-09-16**, untested in game |
+| Nightfall | 127 | `conceal_light_dark` scaled by `skill_nightfall_scale` (0.5) in `ConcealmentOf`, for a player holding it — darkness conceals twice as much | **Built 2026-09-16**; matters with dark maps and the Module |
+| Slip Away | 128 | A new saved `m_bSuspicionHadTarget` on `CBaseMonster` remembers whether the last `Look` had a target; on the seen→unseen edge, with the meter between `suspicion_notice` and `suspicion_acquire`, the meter is multiplied by 1 − `skill_slip_away_fraction` (0.33), once. Fires on the break, not on the hiding; the single-player assumption is `UTIL_PlayerByIndex(1)`, and it is logged under `debug_suspicion` | **Built 2026-09-16**, untested in game |
+| Cut the Head | 129 | Killing a squad leader drops every member's Suspicion to the notice floor | Post-aggro step, unbuilt |
+| **Major: Silent Kill** | 130 | A kill on a monster below Spotted is unseen and unheard: no death witnesses, no Disturbance, no squad LKP. Clear a squad one by one | Post-aggro step, unbuilt |
 
 **Ambush and Assassinate were one verb** — damage to unaware targets — and were merged on the day they
 were proposed; the two-tier multiplier is what remains of the second. **The stack it leaves for the
@@ -604,11 +618,21 @@ Ambush above it, Phantom at the Medical door, Silent Kill in the far corner at (
 
 ### The Night Vision Module
 
-**Settled 2026-09-15**: the fifth Module, and the Stealth region's reveal gate. Night vision **adapted from
-Opposing Force's**, whose updated source is on this machine at `E:\Projects\halflife-op4-updated`.
-**The flashlight stays until the Module is found**; the Module replaces it. It is also what closes the
-flashlight hole in the light term (a flashlight never touches the baked lightmap, so a lit corridor and a
-dark one conceal the same today) and what makes Nightfall and dark maps mean something.
+**Settled 2026-09-15, built 2026-09-16, untested in game**: the fifth Module, and the Stealth region's
+reveal gate. Night vision **adapted from Opposing Force's**, whose updated source is on this machine at
+`E:\Projects\halflife-op4-updated`. `item_nightvision` (`dlls/items.cpp`) opens `EGate::NightVision`; it
+needs the suit, turns off a lit flashlight first, and stands in on `models/w_silencer.mdl` with the
+placeholder sentence `!HEV_A1`. **The flashlight stays until the Module is found**; with the gate open,
+`impulse 100` (`FlashlightTurnOn` / `FlashlightTurnOff`) sets `EF_NIGHTVISION` instead of `EF_DIMLIGHT` —
+the bit sat unused since the SDK, and `pev->effects` is already saved, so nothing new is saved — the
+Module replaces the flashlight with no new key, same battery drain and recharge, same HUD icon.
+`gmsgFlashlight` grew to three bytes (on, battery, mode) on all three senders. The client
+(`cl_dll/flashlight.cpp`, `DrawNightVision`) tiles Opposing Force's `of_nv_b.spr` noise additively and adds
+an eye-level client dlight keyed to the player's index, both cvars: `nv_overlay` (160, the overlay's alpha,
+0 off) and `nv_light_radius` (700, 0 off), both `FCVAR_ARCHIVE`. Monsters are unaffected — no light touches
+the world — which is what closes the flashlight hole in the light term (a flashlight never touches the
+baked lightmap, so a lit corridor and a dark one conceal the same today) by removing the flashlight rather
+than fixing it, and what makes Nightfall and dark maps mean something.
 
 ---
 
@@ -694,8 +718,8 @@ the far side of its region.
 | Sprint Speed | 6 | **Cut** | Alters the normal movement rules |
 | Crowbar Speed | 11 | Returns as Melee Speed | The halving rule that blocked it is dropped |
 | Quick Charge | 57 | **Cut** 2026-09-15 | The wave has no charge to quicken |
-| Hive Capacity, Hive Regrowth | 20, 21 | Return in the Alien Route | Reserved today |
-| Stealth column | 22, 23 | In the enum as reserved; **Ambush (22) and Phantom (23)** since 2026-09-15 | See [Stealth](#stealth) |
+| Hive Capacity, Hive Regrowth | 20, 21 | Returned in the Alien Route, **built 2026-09-16** as Hive Capacity and Hive Replenish | See [Alien](#alien) |
+| Stealth column | 22, 23 | In the enum as reserved; **Ambush (22) and Phantom (23)**, built 2026-09-16 | See [Stealth](#stealth) |
 
 Cut ids stay reserved forever and are never reused.
 
@@ -716,5 +740,8 @@ nodes; a thorough player owns about 71%. The numbers and the reason they were ac
 **Melee, 2026-09-14**, whole; it is the worked example. **Weapon Specialist the same day**, node by node
 in five commits, the first Route built on the matrix without a grill: every node was already settled and
 the numbers are first guesses in cvars. **The Juggernaut, 2026-09-16**, on the press-and-release Pulse
-command pair it needed. Of the rest, the Dash and Alien Routes each need their Module; Energy and Medical need nothing new. The infrastructure in front of them is done: the four cuts on 2026-09-13,
+command pair it needed. **The Stealth region and the Alien Route's first slice followed the same day**,
+each on the Module it waited for — the Night Vision Module and the alien Module, both built alongside
+them, none of it verified in game yet; the Alien Route's Major still waits on its ultimate. Energy and
+Medical need nothing new. The infrastructure in front of them is done: the four cuts on 2026-09-13,
 the fitted icon draw, the 256-id ceiling, the Stat tier and the layout cvars on 2026-09-14.

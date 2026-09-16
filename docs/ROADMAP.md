@@ -8,7 +8,15 @@ build on, and list the questions that have to be answered before the first line 
 is built, its content moves into PILLARS.md and the entry here is deleted — this file only ever shrinks
 from the top.
 
-**Last updated:** 2026-09-16 (branch `hl-shock` — the Defense Matrix built as shaped, with Matrix on Kill and Decaying Armor, on a `+pulse`/`-pulse` pair that times the hold; the Juggernaut is whole and its entry below is the record; earlier the same day the Status page shaped in a grill and built: the Modules as fixed Slots on a doll of the suit, and the build's final stats beside them, in STATUS_PANEL.md; its entry moved to PILLARS pillar 5). Before that, 2026-09-14 (the Skill Tree becomes a matrix: Stat nodes as roads, every node one point, not completable, settled in SKILL_TREE.md and the Melee Route built whole on it the same day; the fitted node icon draw, the 256-id ceiling and the layout cvars too; later the same day, without a grill, the Weapon Specialist Route whole, the katana's blade as energy, Fast Reload on the shotgun, the move-wait leak fixed, the edge-adjacency overlay; the day before, all seven Routes shaped, the Dash and alien Modules with them, the katana reworked on paper, four Skills cut)
+**Last updated:** 2026-09-16 (branch `hl-shock` — one wave from five parallel agents on the Juggernaut
+foundation, reviewed and built together: the Stealth region's effects and the Night Vision Module that
+reveals them, moved into PILLARS pillar 6; the Hive nodes, into pillar 2; the Alien Route's first slice —
+Cores, the alien Module, `monster_ghost_slave` and the summon's left click — into pillars 2 and 3, with the
+Route's entry below trimmed to what is still open. None of it is verified in game yet. Earlier the same
+day, the Defense Matrix built as shaped, with Matrix on Kill and Decaying Armor, on a `+pulse`/`-pulse`
+pair that times the hold; the Juggernaut is whole and its entry below is the record; earlier still the
+Status page shaped in a grill and built: the Modules as fixed Slots on a doll of the suit, and the build's
+final stats beside them, in STATUS_PANEL.md; its entry moved to PILLARS pillar 5). Before that, 2026-09-14 (the Skill Tree becomes a matrix: Stat nodes as roads, every node one point, not completable, settled in SKILL_TREE.md and the Melee Route built whole on it the same day; the fitted node icon draw, the 256-id ceiling and the layout cvars too; later the same day, without a grill, the Weapon Specialist Route whole, the katana's blade as energy, Fast Reload on the shotgun, the move-wait leak fixed, the edge-adjacency overlay; the day before, all seven Routes shaped, the Dash and alien Modules with them, the katana reworked on paper, four Skills cut)
 
 ## Shape legend
 
@@ -287,28 +295,14 @@ stealth kill from a flank. If "measurably better off" proves too thin in play, a
 victim has never acquired the player is the obvious lever, and it costs one branch on a test already being
 made.
 
-**Stealth Skills.** Ids **22** and **23** are spoken for, so a stealth column can open later without an id
-shuffle — the same move already made for the alien column. (Spoken for, not yet reserved: `_Count` is still
-22 and neither id is in `ESkillId`. See [Routes](#pillar-4-routes).) Nothing gets priced until
-the mechanic has been played. Note the constraint: column 7 is spoken for by the alien branch, and
-`CSkillTreeView` scales the whole tree to fit down to a `k_MinScale` floor of 0.55, so a ninth column risks
-clipping icons that [ART_DEBT.md](ART_DEBT.md) already calls blocking rather than cosmetic.
+~~**Stealth Skills.**~~ **Built 2026-09-16**, Night Vision Module included; moved to
+[PILLARS.md pillar 6](PILLARS.md#the-stealth-region-and-the-night-vision-module--built-2026-09-16-untested-in-game).
+Cut the Head and Silent Kill still wait on [the post-aggro step](#the-post-aggro-step).
 
 **Generalising perception to monster-vs-monster.** Scoped to the player deliberately. The reasoning —
 including the muzzle-flash asymmetry that makes a naive generalisation exactly backwards — is under
 [Deliberately not generalised](PERCEPTION.md#deliberately-not-generalised). Marked for review, not for
 building.
-
-**The flashlight, and night vision.** ~~Proposed 2026-09-12 and not decided: remove the flashlight entirely
-and replace it with a night-vision device.~~ **Decided 2026-09-15**: night vision is the fifth
-[Module](#pillar-3-modules), found in the world, replacing the flashlight from then on; the flashlight
-stays until it is found. It gates the Stealth region of the Skill Tree
-([SKILL_TREE.md](SKILL_TREE.md#the-night-vision-module)). Two verified facts bear on it. `GETENTITYILLUM` reads the baked
-lightmap only, so **the flashlight does not register in Concealment at all** — walking a dark corridor with
-it on is currently exactly as concealing as walking the same corridor dark, which is the one obvious hole in
-the light term and the cheapest thing night vision would close. And whatever icon night vision takes, it
-must not be `flash_full`, which the Concealment readout is already borrowing as a placeholder
-([ART_DEBT.md](ART_DEBT.md#the-concealment-readout--icon)).
 
 ### Open questions
 
@@ -1511,8 +1505,8 @@ can never assume, and because the same comfort goal is met better inside the Pul
 | **Pulse** | The existing Pulse, no longer available from the start. | Suit hardware — the Pulse today comes with the suit at Anomalous Materials |
 | **Dash** | A short, fast movement burst. | **The long jump module**, which serves the same purpose |
 | **Hook** | A grappling hook, in the manner of Opposing Force's barnacle grapple. | — |
-| **The alien Module** (unnamed) | A platform for alien weapons that run on **Cores**; the summon weapon is its first. Handed over by the freed alien slave. | — |
-| **Night Vision** | Opposing Force's night vision, adapted from `E:\Projects\halflife-op4-updated`. Gates the Stealth region of the Skill Tree. **Settled 2026-09-15.** | **The flashlight**, which stays until the Module is found |
+| **The alien Module** (unnamed) | A platform for alien weapons that run on **Cores**; the summon weapon is its first. **Built 2026-09-16, untested in game, via a stand-in pickup** — the freed alien slave's actual hand-over is not built. | — |
+| **Night Vision** | Opposing Force's night vision, adapted from `E:\Projects\halflife-op4-updated`. Gates the Stealth region of the Skill Tree. **Built 2026-09-16, untested in game.** | **The flashlight**, which stays until the Module is found |
 
 The Opposing Force grapple code will be added to the project for reference; nothing about the Hook should
 be designed against guesses until it is.
@@ -1937,39 +1931,47 @@ declined.
 
 #### Alien
 
-**Shape: Shaped 2026-09-13**, in a grilling session that turned a speculative note into the design below.
-The Route absorbs the reserved [alien column](PILLARS.md#wanted-the-alien-column), ids 20 and 21. It is the
+**Shape: Building since 2026-09-16.** Shaped 2026-09-13 in a grilling session that turned a speculative note
+into the design below; the first slice — Cores, the Module, the Hive nodes and the summon's left click —
+built 2026-09-16, untested in game ([PILLARS.md pillar 2 and 3](PILLARS.md#2-enhanced-combat)). The Route
+absorbs the reserved [alien column](PILLARS.md#wanted-the-alien-column), ids 20 and 21. It is the
 one Route built on a new **Module**, and the Module came out of the grill as the larger half of the design.
 
-##### The alien Module — settled
+##### The alien Module — built 2026-09-16, untested in game
 
-- **The summon is a Module**, the fourth after Pulse, Dash and Hook, and the answer to the boss entry's
-  *"Which Module?"*: the [freed alien slave](#friendly-alien-slave) hands it over, **whole**, after the boss
-  fight. A weapon whose right click does nothing reads as broken, so both verbs work from the hand-over and
-  the Route is what makes them grow.
+- **The summon is a Module**, the fourth after Pulse, Dash and Hook. **Handed over by a stand-in
+  pickup, `item_alienmodule`, rather than by the [freed alien slave](#friendly-alien-slave)** — the boss
+  fight it should follow is not built, so the answer to the boss entry's *"Which Module?"* is still open.
+  A weapon whose right click does nothing reads as broken, so both verbs work from the hand-over and
+  the Route is what makes them grow — but only the left click exists so far.
 - **The Module and its ammunition serve several weapons. Marked for refinement.** The Module is a platform:
   gaining it grants access to alien weapons that run on **Cores**, and the summon weapon below is the first
   of them. What the others are is not decided (the alien chainsaw is the obvious candidate). The
   consequence is that "the Module" and "the summon weapon" are two things, and the hidden-until rule below
   keys on the Module, not on any one weapon.
-- **Cores are the resource**: a real **ammo type**, so the HUD readout, the carry ceiling and the pickup all
-  come from the engine's ammo path; `item_core` is the world pickup, the shape of the uranium box. **Found
-  in the world only, finite**, with a carry ceiling; the hand-over includes a starting stock. Not made by
-  the slave, so that "finite" stays true and the lab is not a place the player treks back to for ammo. A
-  Station that converts something into a Core is the shape a renewable source would take, if one is wanted.
+- **Cores are the resource: built.** A real **ammo type** (`CORE_MAX_CARRY` 6), so the HUD readout, the
+  carry ceiling and the pickup all come from the engine's ammo path; `item_core` gives one, standing in on
+  `w_gaussammo.mdl`. **Found in the world only, finite**; the hand-over gives `SUMMON_DEFAULT_GIVE` (3).
+  Not made by the slave, so that "finite" stays true and the lab is not a place the player treks back to
+  for ammo. A Station that converts something into a Core is the shape a renewable source would take, if
+  one is wanted.
 - **No new binds.** The verbs live on a weapon: **left click summons, right click is the ultimate.** Two
   impulse binds were considered and rejected as flooding the keyboard.
 
-##### The summon weapon — settled
+##### The summon weapon — left click built 2026-09-16, untested in game; right click not built
 
-- **Left click summons one ghost slave** for one Core, on a cooldown, up to a maximum out at once.
-- **A ghost appears near the player on an eligible surface.** Spawning at the crosshair was rejected: it
-  puts the ghost against a wall, and possibly far from the fight the player is in.
-- **A ghost is the stock alien slave on the player's side** with a lifetime and no corpse. It fights what it
-  sees and follows the player at a distance when idle, so the pack moves between rooms. The timer ends it;
-  death ends it early, with no refund. Whatever makes a slave an ally is shared with the friendly slave on
-  the roster, built once.
-- **Right click is the ultimate.** It **fills the pack to the maximum**, one Core per ghost it has to create,
+- **Left click summons one ghost** for one Core, on a cooldown (`summon_cooldown` 3), up to a maximum out
+  at once (`summon_max_ghosts` 1) — built. A refusal costs nothing.
+- **A ghost appears near the player on an eligible surface — built.** Spawning at the crosshair was
+  rejected: it puts the ghost against a wall, and possibly far from the fight the player is in. The test
+  is a human-hull ground trace at 64 then 96 units behind or beside the player, plus a clear line from the
+  eye; with none found (the vent case) the summon is refused outright and the Core is kept.
+- **A ghost is the stock alien slave on the player's side** with a lifetime (`summon_ghost_lifetime` 30)
+  and no corpse — built, as `monster_ghost_slave`, translucent. **Following the player when idle is not
+  built**, so the pack does not yet move between rooms with the player. The timer ends it; death ends it
+  early, with no refund. `CISlave` gained `m_bAlly` and `m_bVanishOnDeath` as shared, saved flags so
+  whatever makes the [friendly slave](#friendly-alien-slave) an ally, when it exists, can reuse them.
+- **Right click is the ultimate — not built.** It **fills the pack to the maximum**, one Core per ghost it has to create,
   and **refuses if the player cannot afford the fill**, so it fires at full strength or not at all. Every
   ghost is **teleported to the player's left and right, never in front or behind**. They **charge a zap the
   way a slave does** and **hold it for 3–5 seconds**; **left click fires them all** through the player's own
@@ -1993,13 +1995,14 @@ bigger: ghost zap damage is deliberately not a node, because the Energy Route al
 
 | Node | What it does | Note |
 | --- | --- | --- |
-| Hive Capacity (20) | Hivehand holds more hornets | Exists, reserved |
-| Hive Replenish (21) | Hornets replenish faster | Exists as `HiveRegrowth`; display name changes, id does not |
-| Hive Attack Speed | Hivehand fires faster | New. The cadence is predicted, so it is a both-sides node through `skill_tuning.h`, like Fast Reload |
-| Pack | Maximum ghosts out, 1 → 2 → 3 | The ranks shape: chained ids drawn as one node |
-| Tether | Ghost lifetime longer | |
-| Recall | Summon cooldown shorter | |
-| Major node | The volley is energy damage | Stands, and is expected to change. See below |
+| Hive Capacity (20) | Hivehand holds more hornets | **Built 2026-09-16** |
+| Hive Replenish (21) | Hornets replenish faster | **Built 2026-09-16**, as `HiveRegrowth`; display name changed, id did not |
+| Hornet Replenish Stat ×11 (146–156) | +5% hornet replenish each, additive within the stat | **Built 2026-09-16**. The roads |
+| Hive Attack Speed (141) | Hivehand fires faster | **Built 2026-09-16**. The cadence is predicted, so it is a both-sides node through `skill_tuning.h`, like Fast Reload; the fire animation itself is not sped up |
+| Pack (142) | Maximum ghosts out, 1 → 2 → 3 | **Built 2026-09-16**: one rank, `+1` rather than scaled. The ranks shape is still one node today |
+| Tether (143) | Ghost lifetime longer | **Built 2026-09-16** |
+| Recall (144) | Summon cooldown shorter | **Built 2026-09-16** |
+| Major node (145) | The volley is energy damage | Placed 2026-09-15; no effect — it depends on the ultimate, which is not built. See below |
 
 **The major node is the cross-Route hook.** A slave's zap is `DMG_SHOCK` (`dlls/islave.cpp:831`), which the
 Gargantua ignores and the alien slave itself is immune to. As energy damage the volley scales with the
@@ -2017,19 +2020,21 @@ weapon that reveals it) was considered and set aside for the single gate.
 
 - **Which other weapons the Module serves**, and what a Core-powered weapon is when it is not the summon.
   The refinement the Module is marked for.
-- **The numbers.** Pack's base, lifetime, cooldown, the hold window inside 3–5 s, Core carry ceiling,
-  starting stock. First guesses, judged against a map like everything else.
+- **The ultimate.** Right click, the teleport to left and right, the 3–5 s hold, ethereal, the volley — none
+  of it is built; today right click idles.
+- **The freed alien slave's actual hand-over.** `item_alienmodule` is a stand-in for it, and the boss fight
+  it should follow is not built.
 - **The summon weapon's name**, its HUD bucket, its viewmodel and world model. All [ART_DEBT.md](ART_DEBT.md)
-  entries the day it exists.
-- **"Eligible surface near the player."** The test that finds one, and what happens when the player is in
-  a vent with none.
+  entries the day it exists — `sprites/weapon_summon.txt` still borrows the gauss ammo icon for a Core.
+- **The ghost following the player when idle**, so the pack moves between rooms.
 - **The endgame set piece** that inherits the Pulse redirect.
 - **Do Snarks go?**
+- Worth watching once this is played: a ghost's zap beam can hit the player standing in its line, and a
+  ghost behind the player is solid and can shove them.
 
-What already exists near each part: `CISlave` for the ghost and its zap; `CTalkMonster` plus `CLASS_NONE`
-for the friendly slave (the ally relationship should be one piece of code between them); the uranium box
-(`dlls/egon.cpp:549`) for the Core pickup; `m_iRebounds` for a count that a Skill raises; and the Pulse's
-`CanHolster`-style refusal for the hold.
+What already exists near the rest: `CTalkMonster` plus `CLASS_NONE` for the friendly slave, and the ally
+relationship (`m_bAlly`, `m_bVanishOnDeath` on `CISlave`) built for the ghost should be one piece of code
+shared with it; and the Pulse's `CanHolster`-style refusal for the ultimate's hold.
 
 #### Energy
 
@@ -2523,8 +2528,8 @@ is designed, and may well change name first.
 | **Trace** | A drawn connector in the Skill Tree: thin between neighbours, thick for a Skill's gate, lit when powered. | Presentation term, 2026-09-15. Avoid *edge* in player-facing text (kept in code and the debug overlay). |
 | ~~**Stat node**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#skills) on 2026-09-14, when the Melee Route built the first nine. | |
 | **Defense Matrix** | The Juggernaut Route's stance: the Pulse key held for a second raises it, armour takes a far larger share of every hit while it is up, the player is slowed. Drops on release, at 6 s, or at zero armour. | Settled 2026-09-13. **Not a Shield** — that word is the Pulse's field in CONTEXT.md. |
-| **Core** | The alien Module's ammunition: an ammo type, found in the world, finite. Powers the summon weapon and whatever other alien weapons the Module serves. | Settled 2026-09-13, replacing *green battery*, which collided with the HEV **Battery** Item Type and the Battery Capacity Skill. *Cell* was also out: it is the Grid's unit. |
-| **Ghost slave** | A summoned, time-limited alien slave that fights for the player. Vanishes on its timer, on death, or with the ultimate's volley. | Settled 2026-09-13 with the Alien Route. |
+| ~~**Core**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#the-alien-route) on 2026-09-16, when Cores were built as a real ammo type. | |
+| ~~**Ghost slave**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#the-alien-route) on 2026-09-16 as **Ghost**, when `monster_ghost_slave` was built; the classname already says slave once. | |
 
 **Graduated 2026-08-31**, when the stealth design was settled: **Concealment** and **Backstab** are now in
 [CONTEXT.md](../CONTEXT.md), joined there by **Suspicion**, **Search**, **Post**, **Perception Profile**,

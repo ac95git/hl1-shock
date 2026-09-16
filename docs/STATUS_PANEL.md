@@ -71,9 +71,10 @@ Health's maximum and Weapon Mastery inside every damage line, even though neithe
 - **The MODULES block** holds the stats whose road sits behind a Module, in the doll's order — head, body,
   right arm. **Each line is hidden until its Module is found, and the block with it until the first one
   is.** The tree hides those regions; this page does not name them early. The Pulse has no road stat, so
-  it adds no line. Concealment and Hornet replenish have no effect in code today, so **each also stays
-  hidden until its stat has an effect**, even with its gate open (`skill_open_gates` would otherwise
-  show a number that does nothing). The check goes when the stat is built.
+  it adds no line. **Concealment and Hornet replenish went live 2026-09-16**, when the Stealth region and
+  the Hive nodes gave those two stats an effect (`k_ConcealmentBuilt`, `k_HornetReplenishBuilt`); until
+  then each stayed hidden behind its own check even with its gate open, so `skill_open_gates` could never
+  show a number that did nothing.
 
 ## Where the numbers come from
 
@@ -91,8 +92,8 @@ static data, server-owned derived data).
 
 - **The leg Slot** has no Module. It draws as an empty frame until one is decided.
 - **The Hook** is outside this design, and gets its Slot, or none, when it is designed.
-- **The Alien Module's key.** It is carried as a weapon; which binding its tooltip names is settled when it
-  is built.
+- ~~**The Alien Module's key.**~~ **Resolved 2026-09-16**: it is `weapon_summon`, an ordinary weapon, so its
+  tooltip names whatever is bound to primary attack, the same as any other weapon's Slot would.
 
 ## Rejected in the grill
 

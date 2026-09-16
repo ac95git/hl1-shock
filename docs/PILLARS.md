@@ -9,8 +9,11 @@ same commit as the code change.
 This file records **what exists today**. Intended work that has not been built lives in
 [ROADMAP.md](ROADMAP.md), and each pillar below links to its entries there.
 
-**Last updated:** 2026-09-16 (branch `hl-shock`, the Defense Matrix built on a held Pulse key, and the Status
-tab before it; 2026-09-12 before that, after the Suit Variant)
+**Last updated:** 2026-09-16 (branch `hl-shock`, one wave from five parallel agents on the Juggernaut
+foundation: the Stealth region's effects and the Night Vision Module that reveals it, the Hive nodes, and
+the Alien Route's first slice — Cores, a ghost, the summon's left click; none of it verified in game yet.
+Earlier the same day, the Defense Matrix built on a held Pulse key, and the Status tab before it; 2026-09-12
+before that, after the Suit Variant)
 
 ## Status legend
 
@@ -26,11 +29,11 @@ tab before it; 2026-09-12 before that, after the Suit Variant)
 | # | Pillar | Status | One-line state |
 | --- | --- | --- | --- |
 | 1 | [Exploration](#1-exploration) | **Not started** | Its rewards exist — Row Grants, Skill Points, Reset Tokens are all findable entities, and `topmap`, the default test map, places them — but no map yet has spaces to explore *for* them. |
-| 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar — and since 2026-09-16 the same key held is the Defense Matrix, the Juggernaut Route's last three nodes, untested in game. Melee Skills land, and the Backstab gives melee its first positional decision. Numbers untuned. |
-| 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. The Dash, the first Module, is built on SHIFT and untested in game. |
+| 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar — and since 2026-09-16 the same key held is the Defense Matrix, the Juggernaut Route's last three nodes, untested in game. Melee Skills land, and the Backstab gives melee its first positional decision. The hivehand's three Hive nodes (capacity, replenish, fire rate) followed the same day, also untested. Numbers untuned. |
+| 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. The Dash, the first Module, is built on SHIFT and untested in game. The Night Vision and alien Modules followed on 2026-09-16, also untested. |
 | 4 | [Skill trees](#4-skill-trees) | **Playable** | 52 nodes, **all with effects**: the Melee and Weapon Specialist Routes built whole on the matrix (Stat nodes as their roads, every node one point, a major at the end of each), the Medical and Energy Routes built to all but their open nodes, Ricochet ahead of the Juggernaut, and the Dash and Alien columns waiting for their Modules. Points and Reset Tokens are earned and spent, the tree fits any screen, and nothing in it lies about what it does. Numbers untuned; `topmap`, the default test map, places Skill Points, and the economy is a non-issue. |
 | 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work over a server-owned model. Row Grants are now placeable; Boxes are the remaining gap. |
-| 6 | [Stealth](#6-stealth) | **Partial** | Concealment and Suspicion are live: monsters no longer acquire the player on sight, they fill a meter at a rate set by angle, distance, stance and light, and the player is warned by `CHudConceal`. Quiet movement is deliberate. Nothing after acquisition has changed — once acquired, a monster stays acquired. |
+| 6 | [Stealth](#6-stealth) | **Partial** | Concealment and Suspicion are live: monsters no longer acquire the player on sight, they fill a meter at a rate set by angle, distance, stance and light, and the player is warned by `CHudConceal`. Quiet movement is deliberate. Nothing after acquisition has changed — once acquired, a monster stays acquired. Since 2026-09-16 the Stealth Skill Tree region acts on that meter — Soft Step, Nightfall, Slip Away, Ambush, Phantom and ten Concealment Stat nodes — behind the Night Vision Module, which also closes the flashlight's hole in the light term; none of it is tested in game yet. |
 
 ---
 
@@ -494,6 +497,16 @@ through, so "melee" is true by construction rather than by a damage-type list:
   works. `m_flNextAttack` is owned by the client frame to frame, so the two sides shortening the reload
   differently would hitch at the end of every one. Both read the same cvar through
   `dlls/skill_tuning.h`, and both read the same `m_skills` — see pillar 4.
+- **The Hive nodes** (ids 20, 21, 141, built 2026-09-16, untested in game) scale the hivehand rather than
+  change it. **Hive Capacity**: `PlayerHornetMaxCarry` (`dlls/player_skills.cpp`) is `HORNET_MAX_CARRY` +
+  `skill_hive_capacity_bonus` (4), read by `CHgun::Reload` and the multiplayer refill — though the
+  `ItemInfo` registry cannot ask a player, so ammo boxes and `CanHaveAmmo` still cap a pickup at 8, a named
+  gap. **Hive Replenish**: `PlayerHornetReplenishScale` divides the regrowth interval by
+  `skill_hive_replenish_scale` (1.5), times one plus the held count of the Hornet Replenish Stat nodes
+  (`skill_stat_hornet_replenish`, 0.05 each) — printed under `debug_damage`. **Hive Attack Speed**: both
+  fire intervals × `skill_hive_attack_speed_scale` (0.75) through `skill_tuning.h`, both DLLs since the
+  cadence is predicted; the fire animation itself is not sped up, a visible gap the way Quick Draw's used
+  to be.
 
 **The Backstab** — `CBaseMonster::FInRearArc` (`dlls/combat.cpp`) plus `CanBackstab()`, applied in
 `CCrowbar::Swing`. A melee hit landed in a monster's rear arc deals `backstab_damage_scale`× (3) when the
@@ -696,6 +709,50 @@ included, forward when no key is held — **from the ground only**. Walk moved t
 
 The framework landed with inventory iteration 1, and the **Health Syringe** is the first item in the mod
 that Half-Life does not have.
+
+### The Night Vision Module — built 2026-09-16, untested in game
+
+The fifth Module, settled 2026-09-15 and the Stealth region's reveal
+gate ([SKILL_TREE.md](SKILL_TREE.md#the-night-vision-module)). `item_nightvision` (`dlls/items.cpp`) opens
+`EGate::NightVision`; it needs the suit and turns a lit flashlight off first. With the gate open,
+`impulse 100` (`FlashlightTurnOn` / `FlashlightTurnOff`) sets `EF_NIGHTVISION` instead of `EF_DIMLIGHT` —
+the bit sat unused since the SDK and `pev->effects` is already saved, so night vision costs no new save
+field and no new user message. **The flashlight stays until the Module is found**; the Module replaces it
+outright, same battery drain and recharge, same key, same HUD icon. `gmsgFlashlight` grew to three bytes
+(on, battery, mode) on all three senders. The client (`cl_dll/flashlight.cpp`, `DrawNightVision`) tiles
+Opposing Force's `of_nv_b.spr` noise additively (copied from the gearbox install into the repo's `sprites/`
+and `topmod/sprites/`) and allocates an eye-level client dlight keyed to the player's index; two cvars,
+`nv_overlay` (160, the overlay's alpha, 0 off) and `nv_light_radius` (700, 0 off), both `FCVAR_ARCHIVE`.
+Monsters are unaffected — no light touches the world — which is what closes the flashlight hole in the
+light term recorded in [PERCEPTION.md](PERCEPTION.md#concealment--built-2026-09-01) (a flashlight never
+touches the baked lightmap, so a lit corridor and a dark one conceal the same) by removing the flashlight
+from the equation rather than fixing it. `models/w_silencer.mdl` stands in for the pickup and `!HEV_A1`
+for its voice line, both [ART_DEBT.md](ART_DEBT.md) entries.
+
+### The alien Module — built 2026-09-16, untested in game
+
+The fourth Module, and the [Alien Route](ROADMAP.md#alien)'s first slice: Cores, a ghost, and the summon
+weapon's left click. **Cores** are a real ammo type, `CORE_MAX_CARRY` (6); `item_core` gives one
+(`w_gaussammo.mdl` stands in). `item_alienmodule` (`dlls/items.cpp`, a stand-in for the freed slave's
+hand-over, `w_sqknest.mdl`) opens `EGate::AlienModule` and gives `weapon_summon` with `SUMMON_DEFAULT_GIVE`
+(3) Cores.
+
+**`weapon_summon`** (`dlls/summon.cpp`, `WEAPON_SUMMON` 17 in `dlls/cdll_dll.h`, bucket 4 position 4, the
+hivehand's models, sprites and sounds standing in, `sprites/weapon_summon.txt` with the gauss ammo icon
+standing in for a Core): left click spends one Core for one ghost, on a cooldown (`summon_cooldown` 3, ×
+`skill_recall_scale` 0.5 with Recall) up to a cap (`summon_max_ghosts` 1, + `skill_pack_bonus` 1 with
+Pack), spawned behind or beside the player — 64 then 96 units out — on a human-hull ground trace with a
+clear line from the eye; a refusal costs nothing. Right click idles; the ultimate is the next slice.
+Predicted only for the animation and the cooldown — the summon itself is server-only.
+
+**`monster_ghost_slave`** (end of `dlls/islave.cpp`): `CISlave` gained two saved flags on the slave class
+itself, so any future friendly slave can share them — `m_bAlly` (`Classify()` returns `CLASS_PLAYER_ALLY`)
+and `m_bVanishOnDeath` (`Vanish()`: a `TE_TELEPORT`, `zap1.wav`, and `Remove()` — no corpse). The ghost adds
+a summoner handle (`m_hSummoner`) and a lifetime (`m_flVanishTime`, `summon_ghost_lifetime` 30 ×
+`skill_tether_scale` 1.5 with Tether), drawn translucent (render amount 160) and without
+`FCAP_ACROSS_TRANSITION`. **Not built**: the ghost following the player, the ultimate, the slave's actual
+hand-over, and the Alien Route's Major. Worth watching in play: a ghost's zap beam can hit the player
+standing in its line, and a ghost behind the player is solid and can shove them.
 
 ### What exists
 
@@ -992,7 +1049,12 @@ The connector loop builds one edge per prerequisite, so a two-gated node draws t
 same thing — every line is a requirement — which is why only AND is supported. An OR gate would need a
 second line style before it could be read.
 
-### Wanted: the alien column
+### ~~Wanted: the alien column~~ Built 2026-09-16, untested in game
+
+Kept as the record of the pre-matrix shape; ids 20 and 21 (Hive Capacity, Hive Replenish) and Hive Attack
+Speed are built as part of the [Alien Route](ROADMAP.md#alien)'s first slice, at one point each under the
+matrix rather than the Tier/Cost below — see [SKILL_TREE.md](SKILL_TREE.md#alien) and
+[pillar 2](#2-enhanced-combat) for what exists today.
 
 A branch of Skills for alien weapons, **hidden entirely until the player carries one**, so that reading the
 tree does not spoil that the branch exists. The column is reserved now rather than built: ids 20 and 21 are
@@ -1197,10 +1259,11 @@ in [STATUS_PANEL.md](STATUS_PANEL.md):
   `game_shared/module_defs.h`.
 - **The stats column.** HEALTH (Health, Healing), ARMOR (Armor, Armor efficiency, Explosive, Energy and
   Fall resistance), DAMAGE (Melee, Bullet, Energy, Explosive), and MODULES — Dash recharge once the Dash
-  is found; Concealment and Hornet replenish stay hidden until their stats have an effect
-  (`k_ConcealmentBuilt`, `k_HornetReplenishBuilt`). Multipliers print as ASCII `x1.73`.
+  is found; Concealment (the share by which monsters learn slower) and Hornet replenish (its multiplier)
+  went live the same way on 2026-09-16, when the Stealth region and the Hive nodes gave those two stats an
+  effect to show (`k_ConcealmentBuilt`, `k_HornetReplenishBuilt`). Multipliers print as ASCII `x1.73`.
 - **The numbers come from the server.** `SendSkillStatsToClient` (`dlls/player_skills.cpp`) runs at the end
-  of every `SendSkillTreeToClient` and sends twelve shorts (`k_SkillStatsBytes`) on `gmsgSkillStats`. Each is
+  of every `SendSkillTreeToClient` and sends fourteen shorts (`k_SkillStatsBytes`) on `gmsgSkillStats`. Each is
   read from the function the effect itself uses: `PlayerStandingDamageScale` (Weapon Mastery and the typed
   damage; `SkillScaleWeaponDamage` is it times Swap Surge and Overdraw, which the page leaves out),
   `PlayerMeleeScale` (`CCrowbar::SwingDamage`), `PlayerArmorRatioScale`, `PlayerBlastTakenScale`,
@@ -1454,6 +1517,51 @@ this. The short version:
   nobody but `pev->owner`, no sound enters `CSoundEnt` on death, and `Look` skips anything with
   `health <= 0` (`dlls/monsters.cpp:324`). A body in a lit corridor is never noticed by anyone. That is
   load-bearing for a stealth pillar and was missing from both documents.
+
+### The Stealth region and the Night Vision Module — built 2026-09-16, untested in game
+
+Every node the Stealth region did not wait on [the post-aggro step](ROADMAP.md#the-post-aggro-step) has an
+effect now, gated behind the Module that also reveals the region — [SKILL_TREE.md](SKILL_TREE.md#stealth)
+has the table with every id and cvar. None of it has been played yet.
+
+- **Ten Concealment Stat nodes** (ids 131–140), the region's roads: `PlayerConcealmentScale`
+  (`dlls/perception.cpp`) adds `skill_stat_concealment` (0.05) per node to the multiplier
+  `UpdateSuspicion` applies to the fill rate, player only.
+- **Soft Step** (126) multiplies the crouch and walk body-noise scales again by `skill_soft_step_scale`
+  (0.5) in `UpdatePlayerSound`; running is untouched.
+- **Nightfall** (127) scales `conceal_light_dark`, the light term's worst end, by `skill_nightfall_scale`
+  (0.5) in `ConcealmentOf`, for a player holding it.
+- **Slip Away** (128) adds a saved `m_bSuspicionHadTarget` to `CBaseMonster`, remembering whether the last
+  `Look` had a target. On the seen→unseen edge, with the meter between `suspicion_notice` and
+  `suspicion_acquire`, it is multiplied by 1 − `skill_slip_away_fraction` (0.33), once — logged under
+  `debug_suspicion`. The single-player assumption is `UTIL_PlayerByIndex(1)`.
+- **Ambush** (22) reads the *victim's* own meter at both damage chokepoints (`ApplyMultiDamage` in
+  `weapons.cpp`, the direct branch of `RadiusDamage` in `combat.cpp`), through `PlayerAmbushScale`
+  (`dlls/player_skills.cpp`) beside `SkillScaleWeaponDamage`, before `TakeDamage` fills the meter:
+  ×`skill_ambush_noticed_scale` (1.5) below `suspicion_notice`, else ×`skill_ambush_spotted_scale` (1.25)
+  below `suspicion_acquire`. Never on the always-aware profiles, `SF_MONSTER_IGNORE_CONCEALMENT`, or a
+  non-hostile; shown as `xAMBUSH` in the `debug_damage` line through the new `DebugDamageAppend`, which
+  adds to the melee breakdown rather than replacing it.
+- **Phantom** (23): both Backstab branches of the crowbar call `CBasePlayer::PhantomStart()` when the
+  victim is below Noticed, saving `m_flPhantomUntil`. The silence is `UpdatePlayerSound` zeroing body
+  noise; the speed rides a physinfo key (`"phs"`, percent) written by `PhantomSync` (`PreThink`) and read
+  in `PM_CheckParamters`, multiplying `pmove->maxspeed` before the wish-speed clamp, since
+  `pfnSetClientMaxspeed` can only lower it. `skill_phantom_duration` (2), `skill_phantom_speed_scale`
+  (1.2); cues are `buttons/blip2.wav` at pitch 150 on start and 80 on end, a placeholder shared with
+  Cleave's ready blip ([ART_DEBT.md](ART_DEBT.md)).
+- **Cut the Head** (129) and **Silent Kill** (130), the Major, remain unbuilt — the post-aggro step.
+
+**The Night Vision Module** — `item_nightvision` (`dlls/items.cpp`) opens `EGate::NightVision`; it needs
+the suit and turns off a lit flashlight first. With the gate open, `impulse 100` sets `EF_NIGHTVISION`
+instead of `EF_DIMLIGHT` on the player — the bit sat unused since the SDK and `pev->effects` is already
+saved, so there is no new save field and no new user message beyond `gmsgFlashlight` growing to three
+bytes (on, battery, mode) on all three senders. The client (`cl_dll/flashlight.cpp`, `DrawNightVision`)
+tiles Opposing Force's `of_nv_b.spr` noise additively and adds an eye-level client dlight keyed to the
+player's index; `nv_overlay` (160, 0 off) and `nv_light_radius` (700, 0 off), both `FCVAR_ARCHIVE`.
+Monsters are unaffected, so this is also what closes the flashlight hole in the light term above (a
+flashlight never touches the baked lightmap) — by removing the flashlight from the equation, not by
+patching it. `models/w_silencer.mdl` and the sentence `!HEV_A1` stand in ([ART_DEBT.md](ART_DEBT.md)); see
+[pillar 3](#3-custom-items) for the item itself.
 
 ### What's missing
 

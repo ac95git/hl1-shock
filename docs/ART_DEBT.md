@@ -7,7 +7,8 @@ entry names what is wrong with the stand-in, so the replacement is judged agains
 Also here: assets **imported from other mods**, which are not wrong but are not ours. Each of those
 entries names the source and the two ways out — credit it and keep it, or replace it — so that neither
 is forgotten at release. The first is *The Cleave swing — imported from Half-Life: Extended*; the
-second, *The longsword moveset — imported from Age of Chivalry*, is a probe that ships nowhere yet.
+second, *The longsword moveset — imported from Age of Chivalry*, is a probe that ships nowhere yet; the
+third, *Night vision — imported from Opposing Force*, shipped 2026-09-16.
 
 Distinct from [TECH_DEBT.md](TECH_DEBT.md): that register is about code that needs fixing. This one is
 about assets that need making.
@@ -501,7 +502,7 @@ Every Skill in the tree has its own icon, and a player can tell two Skills apart
 | The Cleave swing sound | `weapons/cbar_miss1.wav` at pitch 70 | The ordinary miss, lower. Reads as heavier, not as a different act |
 | The Cleave wall impact | `weapons/cbar_hit1.wav` at pitch 60, once per wave where the bow first meets a wall | The crowbar's own wall hit, lower. Wants the sound of displaced air stopping, per weapon: a dull thump for the crowbar, a crackle for the katana. (The wave passes through bodies and makes no sound on them; each victim's own hit feedback is the cue) |
 | The Cleave ready icon | `d_crowbar`, gold, at the screen edge | The death-notice crowbar; also the Melee Damage Stat node's icon, on purpose for now |
-| The Cleave ready cue | `buttons/blip2.wav` at pitch 130, quiet | A button |
+| The Cleave ready cue | `buttons/blip2.wav` at pitch 130, quiet | A button. **Since 2026-09-16 Phantom's start and end cues are the same file** at pitch 150 and 80 ([SKILL_TREE.md](SKILL_TREE.md#stealth)) — three different meanings on one sample, told apart only by pitch |
 | The Follow-Up primed icon | `d_gauss`, gold | The Follow-Up's own tree placeholder, itself a gauss gun |
 | The Follow-Up attack sound | `zombie/claw_strike1.wav` at pitch 90 | A zombie's swipe, on top of the crowbar's own body-hit sound |
 | The Cleave swing animation | Half-Life: Extended's `attack_swing_miss3`, retargeted onto Valve's bones, at `CROWBAR_CLEAVE` on both viewmodels since 2026-09-15 | Not a stand-in — it reads right and Andrei accepted it in game — but imported, not made. Its own entry is below: *The Cleave swing — imported from Half-Life: Extended* |
@@ -678,3 +679,83 @@ long jump's pack icon says "pickup", not "a burst of speed built into the suit's
 ### Done when
 A player opening the tab reads a suit with parts on it before reading boxes, and can say which region of
 the Skill Tree each filled Slot's Module opens from its glyph alone.
+
+## Night vision — imported from Opposing Force
+
+### Scope
+`cl_dll/flashlight.cpp` (`DrawNightVision`), `sprites/of_nv_b.spr`.
+
+### What it is
+The noise overlay Opposing Force's night vision tiles over the screen, copied from the gearbox install
+into this repo's `sprites/` and the mod dir's `topmod/sprites/` and adapted 2026-09-16
+([SKILL_TREE.md](SKILL_TREE.md#the-night-vision-module)) alongside `E:\Projects\halflife-op4-updated`,
+where the updated source lives. It is Gearbox's asset, not this mod's; the eye-level client dlight beside
+it is new code with no art of its own.
+
+### Why it is here
+It is another studio's work, shipped without a credit line. Licence unchecked; nothing in this repo names
+Gearbox or Opposing Force.
+
+### The two ways out
+1. **Keep it and credit it.** Confirm Opposing Force's assets may be reused, and add an attribution line
+   to README.md's contributors and licensing section naming Opposing Force and the sprite. Then delete
+   this entry.
+2. **Replace it.** A noise overlay of the mod's own, in the same visual language as the rest of the
+   suit's HUD — the Concealment readout and the Pulse's rings are the nearest references.
+
+### Done when
+Either README.md credits Opposing Force for `of_nv_b.spr` under terms that allow it, or the night vision
+overlay is the mod's own.
+
+## The Night Vision Module — pickup model and voice line
+
+### Scope
+`dlls/items.cpp` (`CItemNightVision`), `models/w_silencer.mdl`, the `!HEV_A1` sentence.
+
+### Current stand-ins
+| Use | Asset | Borrowed from |
+| --- | --- | --- |
+| World model | `models/w_silencer.mdl` | the glock's silencer attachment prop |
+| Voice line | `!HEV_A1` | a stock HEV sentence, picked for want of a better one |
+| HUD icon | the flashlight's own `flash_empty` / `flash_beam` (`cl_dll/flashlight.cpp`) | unchanged: the icon cannot tell which device is on, only the screen effect can. Whatever it becomes must not be `flash_full`, which the Concealment readout already borrows |
+
+### What's wrong with them
+- A silencer is a weapon attachment. Nothing about it says *seeing in the dark*, and a player who has
+  found the real silencer prop elsewhere will not read this as night vision at all.
+- `!HEV_A1`'s line was picked without checking what it says; it is a placeholder in the same sense the
+  wrong model is.
+
+### What to look for
+A pickup that reads as an optical device — goggles, a headset, a scope — matching the shape the other
+four Modules already have a look for. The voice line wants whatever `!HEV_A1` actually plays checked, and
+likely replaced with something that names night vision the way the Infusion's `!HEV_HEAL7` names healing.
+
+### Done when
+The pickup on the floor says *this lets me see in the dark* before the player reads a tooltip, and the
+voice line says the same thing out loud.
+
+## The alien Module — stand-in models and the summon weapon's borrowed everything
+
+### Scope
+`dlls/items.cpp` (`CItemAlienModule`), `dlls/summon.cpp` (`CSummon`, `CCoreAmmo`), `sprites/weapon_summon.txt`.
+
+### Current stand-ins
+| Use | Asset | Borrowed from |
+| --- | --- | --- |
+| `item_alienmodule` world model | `models/w_sqknest.mdl` | the squeak grenade's nest prop |
+| `item_core` world model | `models/w_gaussammo.mdl` | the gauss gun's ammo box |
+| `weapon_summon` viewmodel, world model, sounds | the hivehand's | the hivehand |
+| `weapon_summon`'s HUD/ammo icon | the gauss ammo icon, in `sprites/weapon_summon.txt` | the gauss, standing in for a Core |
+
+### What's wrong with them
+- Nothing here says *alien* or *summon* except the effect. A squeak nest is the wrong prop for a hand-over
+  from a freed slave, which the Module does not yet dramatise at all — [ROADMAP.md](ROADMAP.md#alien)
+  records that the hand-over itself is a stand-in pickup, not the boss fight it should follow.
+- The summon weapon plays and sounds exactly like the hivehand, so drawing it reads as drawing the
+  hivehand rather than a new weapon with a new verb.
+- A Core on the HUD is a gauss ammo icon — borrowed because it exists, not because it says the right
+  thing, the same accident the Pulse's first readout icon was.
+
+### Done when
+`item_alienmodule`, `item_core` and `weapon_summon` each have a look of their own, and a Core reads on the
+HUD as something other than gauss ammo.

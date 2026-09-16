@@ -274,3 +274,16 @@ _Avoid_: sword, blade, energy sword, gauss blade; and *katana* alone where the g
 What a death leaves behind at the place it happened. Monsters that care about such things can be drawn to
 one, for as long as it lasts.
 _Avoid_: corpse, body, evidence, alert marker
+
+### The Alien Route
+
+**Core**:
+The Alien Route's ammunition — an ordinary ammo type, found in the world only and never made, that the
+summon weapon and whatever else the alien Module serves spend. Built 2026-09-16.
+_Avoid_: green battery (the name it replaced), cell (the Grid's unit), energy (the Energy Route's word)
+
+**Ghost**:
+A monster_ghost_slave summoned by the alien Module's weapon: an alien slave fighting on the player's side,
+translucent, with no corpse, gone when its lifetime runs out, on death, or — once built — with the
+ultimate's volley. Built 2026-09-16; it does not yet follow the player.
+_Avoid_: ghost slave (the classname says slave once already), pet, minion, summon (the weapon and the verb)

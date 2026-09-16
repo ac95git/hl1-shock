@@ -128,6 +128,7 @@ FGD line. No new file, so no project change.
 | `skill_addtokens <n>` | **Cheat-gated.** Grant Reset Tokens without a pickup |
 | `skill_open_gates <n\|all>` | **Cheat-gated.** Open one gate (`n` is the `EGate` number) or every gate, without finding its Module. Resyncs the client |
 | `skill_close_gates <n\|all>` | **Cheat-gated.** Close one gate or every gate, re-hiding its region. Resyncs the client |
+| `give item_nightvision`, `give item_alienmodule`, `give item_core` | Ordinary `give`s — no new command. The pickups behind the Night Vision and alien Modules and a single Core, for testing without placing them |
 
 Neither cvar is capped, deliberately: the ceiling on each is how many pickups a map places, and a cap
 would let a found pickup silently do nothing.
@@ -199,10 +200,30 @@ Raising `skill_points_start` is the way to work on the tree UI without hunting f
 | `skill_matrix_speed_scale` | 0.8 | The player's maxspeed as a fraction of `sv_maxspeed` while the Matrix is up — the slow |
 | `skill_matrix_kill_armor` | 15 | Matrix on Kill restores this much armour per kill while up, up to `PlayerMaxArmor` |
 | `skill_matrix_grant` | 100 | Decaying Armor grants this much armour, above the cap, when the Matrix comes up. It fades over `skill_matrix_duration`, so it is gone as the Matrix drops; the rate is derived, not a knob |
+| `skill_stat_concealment` | 0.05 | Each Concealment Stat node adds this to the multiplier `PlayerConcealmentScale` applies to a monster's Suspicion fill rate, player only |
+| `skill_soft_step_scale` | 0.5 | Soft Step multiplies the crouch and walk body-noise scales again in `UpdatePlayerSound`; running is untouched |
+| `skill_nightfall_scale` | 0.5 | Nightfall multiplies `conceal_light_dark`, the light term's worst end, in `ConcealmentOf` |
+| `skill_slip_away_fraction` | 0.33 | Slip Away takes this fraction off a monster's meter, once, on the seen→unseen edge while it is between `suspicion_notice` and `suspicion_acquire` |
+| `skill_ambush_noticed_scale` | 1.5 | Ambush's damage multiplier while the victim's own meter is below `suspicion_notice` |
+| `skill_ambush_spotted_scale` | 1.25 | Ambush's damage multiplier while the victim's own meter is below `suspicion_acquire` |
+| `skill_phantom_duration` | 2 | Seconds Phantom's silent, faster window lasts after a qualifying Backstab |
+| `skill_phantom_speed_scale` | 1.2 | Phantom's `maxspeed` multiplier for that window, carried to the client as the physinfo key `"phs"` |
+| `skill_hive_capacity_bonus` | 4 | Hive Capacity's addition to `HORNET_MAX_CARRY`, read by `PlayerHornetMaxCarry` |
+| `skill_hive_replenish_scale` | 1.5 | Hive Replenish divides the Hivehand's regrowth interval by this, through `PlayerHornetReplenishScale` |
+| `skill_stat_hornet_replenish` | 0.05 | Each Hornet Replenish Stat node adds this to the same multiplier |
+| `skill_hive_attack_speed_scale` | 0.75 | Hive Attack Speed multiplies both Hivehand fire intervals; both DLLs, through `skill_tuning.h`, since the cadence is predicted |
+| `summon_cooldown` | 3 | Seconds between the summon weapon's left clicks, before Recall |
+| `summon_max_ghosts` | 1 | The summon weapon's ghost cap, before Pack |
+| `summon_ghost_lifetime` | 30 | Seconds a ghost lasts, before Tether |
+| `skill_pack_bonus` | 1 | Pack's addition to `summon_max_ghosts` — a flat `+1`, not a scale |
+| `skill_tether_scale` | 1.5 | Tether multiplies a ghost's lifetime |
+| `skill_recall_scale` | 0.5 | Recall multiplies the summon weapon's cooldown |
 
 Two client cvars go with the Matrix, both `FCVAR_ARCHIVE` in `cl_dll/hud_pulse.cpp`: `hud_matrix_tint`
 (110), the alpha of the outermost edge band while it stands, 0 for none, and `hud_matrix_tint_width`
-(0.12), the bands' depth as a fraction of the screen's height.
+(0.12), the bands' depth as a fraction of the screen's height. Two more go with night vision, both
+`FCVAR_ARCHIVE` in `cl_dll/flashlight.cpp`: `nv_overlay` (160), the tiled noise overlay's alpha, 0 off, and
+`nv_light_radius` (700), the eye-level client dlight's radius, 0 off.
 
 Two rules that are easy to break:
 

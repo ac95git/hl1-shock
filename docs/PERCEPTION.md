@@ -15,7 +15,11 @@ What is intended and unbuilt is tracked in [ROADMAP.md](ROADMAP.md#pillar-6-stea
 in [PILLARS.md](PILLARS.md#6-stealth). Vocabulary is in [CONTEXT.md](../CONTEXT.md) — **Concealment**,
 **Suspicion**, **Search**, **Post**, **Perception Profile**, **Backstab**.
 
-**Last updated:** 2026-09-02 (branch `hl-shock` — **everything before acquisition is built**: Concealment,
+**Last updated:** 2026-09-16 (branch `hl-shock` — the Stealth Skill Tree region now reads and writes this
+model: Soft Step, Nightfall, Slip Away, Ambush, Phantom and ten Concealment Stat nodes, behind the Night
+Vision Module, which also closes the flashlight hole noted below. None of it is verified in game yet; the
+detail is in [SKILL_TREE.md](SKILL_TREE.md#stealth) and [PILLARS.md pillar 6](PILLARS.md#6-stealth), not
+duplicated here. Before that, 2026-09-02 — **everything before acquisition is built**: Concealment,
 Suspicion, the Perception Profile, the noise multipliers. Everything after acquisition is deferred to
 [the post-aggro step](ROADMAP.md#the-post-aggro-step). The readout is next)
 
@@ -387,10 +391,12 @@ the dark lights the player for about a second and nobody has to write that rule.
 
 **The flashlight does not register.** `GETENTITYILLUM` reads the baked lightmap; the flashlight is a
 client-side dynamic light and never touches it. So walking a dark corridor with the flashlight on is exactly
-as concealing as walking it dark — the one obvious hole in the light term, and the reason
-[replacing the flashlight with night vision](ROADMAP.md#deliberately-deferred) is worth considering. Closing
-it without that change would mean giving the flashlight a synthetic value by the same route
-`m_iWeaponFlash` already uses.
+as concealing as walking it dark while the flashlight is still the equipped device — the one obvious hole
+in the light term. **Closed 2026-09-16** by the Night Vision Module
+([SKILL_TREE.md](SKILL_TREE.md#the-night-vision-module)), which replaces the flashlight rather than fixing
+it: the same key raises `EF_NIGHTVISION` instead of `EF_DIMLIGHT`, and nothing about it touches the world,
+so the hole closes by removing the light source that caused it. The flashlight itself is unchanged and
+still does not register until it is replaced.
 
 Angle, distance and stance carry the first version, so the model is tunable in vanilla Half-Life maps.
 Light is wired from the first commit and contributes, but is deliberately the mildest of the four, because
@@ -422,6 +428,12 @@ Three cases short-circuit the meter, in this order:
 And one more, which is not a special case so much as a boundary: while `m_hEnemy` **is** the player the
 meter is pinned full. Dropping an enemy is de-escalation, which this does not own; the meter must not
 quietly become a give-up timer under a monster that is actively shooting.
+
+**Five Skills read or write this meter now, built 2026-09-16.** Ten Concealment Stat nodes and Nightfall
+scale what feeds it; Soft Step scales the noise multipliers below; Slip Away takes a fraction off it on a
+sight break; Ambush reads a victim's own meter at the damage chokepoint, before this fills it. None changes
+the shape above — they scale terms that already exist. The detail, cvar by cvar, is in
+[SKILL_TREE.md](SKILL_TREE.md#stealth).
 
 ### Where it gates — [adr/0009](adr/0009-suspicion-gates-the-relationship-bits.md)
 
@@ -693,6 +705,10 @@ so `TraceAttack` zeroes the damage and plays a ricochet (`:830-851`) and `TakeDa
 0.01 on top (`:858-871`). A crowbar therefore never hurts one, however large the multiplier. The
 [Gauss Katana](ROADMAP.md#the-gauss-katana), already proposed as `DMG_ENERGYBEAM`, passes the filter — so
 the endgame melee weapon is what makes a Gargantua stabbable at all.
+
+**Phantom, built 2026-09-16**, hangs off the same swing: a Backstab landed on a monster below Noticed
+starts a timed silent, faster window for the player. It is a Skill, not a change to the Backstab itself —
+see [SKILL_TREE.md](SKILL_TREE.md#stealth).
 
 ---
 
