@@ -463,6 +463,9 @@ void CHud::Init()
 	// 1 shows the board's region washes (docs/SKILL_PANEL.md, "Regions"), 0
 	// hides them, so "faint enough" can be judged with and without.
 	CVAR_CREATE("skilltree_wash", "1", 0);
+	// Prints, once per second per distinct sprite, the numbers each node icon
+	// was drawn with, and every lookup that failed. inv_icon_debug's shape.
+	CVAR_CREATE("skilltree_icon_debug", "0", 0);
 	// Highlights any prerequisite edge whose two ends are not grid-adjacent
 	// (see docs/SKILL_TREE.md, "The matrix") -- the mistake a ~180-row,
 	// hand-placed table will eventually make. Off by default; when on it

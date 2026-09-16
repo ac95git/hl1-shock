@@ -33,18 +33,27 @@
 // at 1:1. Art for a fitted box therefore has to be made at least as large
 // as the box will ever be; shrinking is free, growing is not possible.
 //
+// The third trap: the engine's sprite scissor cannot clip this draw. Inside
+// a VGUI paint, SPR_EnableScissor around SPR_DrawGeneric drew NOTHING, even
+// with a clip rect that contained the whole draw (measured 2026-09-16 on the
+// Skill Tree's nodes: the readout showed every icon landing inside its clip,
+// and none appeared until the scissor was bypassed). So a draw that must
+// stop at an edge clips itself: SPR_DrawFittedClipped intersects the fitted
+// rect with the clip and hands the engine the matching sub-rect of the
+// sprite at the same scale, which is exactly what the scissor should have
+// done.
+//
 // Returns where the rect landed and what was asked of the engine, so a
 // caller with a debug readout can print the same numbers it drew with.
 // =====================================================================
 struct SprFitDraw
 {
-	int x = 0, y = 0, w = 0, h = 0; // where the sprite rect was drawn
+	int x = 0, y = 0, w = 0, h = 0; // where the sprite rect was drawn, before any clip
 	int reqW = 0, reqH = 0;         // the whole-frame size handed to the engine
 };
 
-inline SprFitDraw SPR_DrawFitted(HSPRITE hspr, const Rect& rc,
-	int boxX, int boxY, int boxW, int boxH,
-	int srcBlend, int dstBlend)
+// The fit alone: where the rect would land, and what to ask of the engine.
+inline SprFitDraw SPR_FitRect(HSPRITE hspr, const Rect& rc, int boxX, int boxY, int boxW, int boxH)
 {
 	SprFitDraw out;
 
@@ -64,7 +73,61 @@ inline SprFitDraw SPR_DrawFitted(HSPRITE hspr, const Rect& rc,
 
 	out.x = boxX + (boxW - out.w) / 2;
 	out.y = boxY + (boxH - out.h) / 2;
+	return out;
+}
+
+inline SprFitDraw SPR_DrawFitted(HSPRITE hspr, const Rect& rc,
+	int boxX, int boxY, int boxW, int boxH,
+	int srcBlend, int dstBlend)
+{
+	const SprFitDraw out = SPR_FitRect(hspr, rc, boxX, boxY, boxW, boxH);
+	if (out.w <= 0 || out.h <= 0)
+		return out;
 
 	SPR_DrawGeneric(0, out.x, out.y, &rc, srcBlend, dstBlend, out.reqW, out.reqH);
+	return out;
+}
+
+// The same fit, drawn only where it overlaps the clip rect (screen space,
+// the same space the box is in). The part outside is cut from the sprite
+// rect rather than from the screen, so nothing is asked of the scissor.
+inline SprFitDraw SPR_DrawFittedClipped(HSPRITE hspr, const Rect& rc,
+	int boxX, int boxY, int boxW, int boxH,
+	int clipX, int clipY, int clipW, int clipH,
+	int srcBlend, int dstBlend)
+{
+	const SprFitDraw out = SPR_FitRect(hspr, rc, boxX, boxY, boxW, boxH);
+	if (out.w <= 0 || out.h <= 0)
+		return out;
+
+	const int visX0 = std::max(out.x, clipX);
+	const int visY0 = std::max(out.y, clipY);
+	const int visX1 = std::min(out.x + out.w, clipX + clipW);
+	const int visY1 = std::min(out.y + out.h, clipY + clipH);
+	if (visX1 <= visX0 || visY1 <= visY0)
+		return out; // entirely outside the clip
+
+	if (visX0 == out.x && visY0 == out.y && visX1 == out.x + out.w && visY1 == out.y + out.h)
+	{
+		SPR_DrawGeneric(0, out.x, out.y, &rc, srcBlend, dstBlend, out.reqW, out.reqH);
+		return out;
+	}
+
+	// Map the visible screen span back onto the sprite rect at the draw's
+	// scale. The far edges round up so a sliver is never lost to truncation;
+	// the rect is then cut out of the frame at the same scale it was fitted
+	// at, so the visible part lands exactly where the whole would have.
+	const int   sprW  = rc.right - rc.left;
+	const int   sprH  = rc.bottom - rc.top;
+	const float scale = std::max((float)out.w / sprW, (float)out.h / sprH);
+	Rect sub;
+	sub.left   = rc.left + (int)((visX0 - out.x) / scale);
+	sub.top    = rc.top  + (int)((visY0 - out.y) / scale);
+	sub.right  = std::min(rc.right,  rc.left + (int)((visX1 - out.x) / scale + 0.999f));
+	sub.bottom = std::min(rc.bottom, rc.top  + (int)((visY1 - out.y) / scale + 0.999f));
+	if (sub.right <= sub.left || sub.bottom <= sub.top)
+		return out;
+
+	SPR_DrawGeneric(0, visX0, visY0, &sub, srcBlend, dstBlend, out.reqW, out.reqH);
 	return out;
 }

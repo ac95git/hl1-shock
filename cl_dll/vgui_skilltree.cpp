@@ -335,9 +335,20 @@ void CSkillTreeView::EnsureSprites()
         const char* name = k_SkillDefs[m_nodes[i]].spriteName;
         if (!name) continue;
         int idx = gHUD.GetSpriteIndex(name);
-        if (idx < 0) continue;
+        if (idx < 0)
+        {
+            // A name hud.txt does not define, or a lookup before VidInit.
+            // Retried every paint; reported when the readout is on.
+            if (CVAR_GET_FLOAT("skilltree_icon_debug") != 0.0f)
+                gEngfuncs.Con_Printf("skilltree_icon: node %d '%s' sprite '%s' not in hud.txt\n",
+                    m_nodes[i], k_SkillDefs[m_nodes[i]].name, name);
+            continue;
+        }
         m_nodeSprites[i].hSprite = gHUD.GetSprite(idx);
         m_nodeSprites[i].rc      = gHUD.GetSpriteRect(idx);
+        if (m_nodeSprites[i].hSprite == 0 && CVAR_GET_FLOAT("skilltree_icon_debug") != 0.0f)
+            gEngfuncs.Con_Printf("skilltree_icon: node %d '%s' sprite '%s' idx %d has no handle (file failed to load)\n",
+                m_nodes[i], k_SkillDefs[m_nodes[i]].name, name, idx);
     }
 }
 
@@ -1008,11 +1019,42 @@ void CSkillTreeView::Paint(CInventoryPanel* ctx,
                     int tr = bHeldDisplay ? 255 : (bAvailable ? 255 : 100);
                     int tg = bHeldDisplay ? 255 : (bAvailable ? 200 :  80);
                     int tb = bHeldDisplay ? 255 : (bAvailable ?  60 :  80);
+                    // Clipped to the node's visible part by the draw itself,
+                    // not by SPR_EnableScissor: inside a VGUI paint the engine
+                    // scissor drew nothing at all, measured 2026-09-16
+                    // (cl_dll/spr_fit.h, "the third trap").
                     SPR_Set(ns.hSprite, tr, tg, tb);
-                    SPR_EnableScissor(c.x, c.y, c.w, c.h);
-                    SPR_DrawFitted(ns.hSprite, ns.rc, r.x + pad, r.y + pad, boxW, boxH,
-                                   SPR_BLEND_ONE, SPR_BLEND_ONE);
-                    SPR_DisableScissor();
+                    const SprFitDraw d = SPR_DrawFittedClipped(ns.hSprite, ns.rc, r.x + pad, r.y + pad, boxW, boxH,
+                                   c.x, c.y, c.w, c.h, SPR_BLEND_ONE, SPR_BLEND_ONE);
+
+                    // skilltree_icon_debug 1: the numbers each distinct sprite
+                    // was drawn with, once per second, the Grid's readout shape
+                    // (inv_icon_debug). "at" and "size" are the unclipped fit;
+                    // "clip" is the node's visible part it was cut to.
+                    if (CVAR_GET_FLOAT("skilltree_icon_debug") != 0.0f)
+                    {
+                        static float s_windowEnd = 0.0f;
+                        static int   s_seen[64];
+                        static int   s_nSeen = 0;
+                        if (gHUD.m_flTime >= s_windowEnd)
+                        {
+                            s_windowEnd = gHUD.m_flTime + 1.0f;
+                            s_nSeen = 0;
+                        }
+                        bool seen = false;
+                        for (int k = 0; k < s_nSeen; ++k)
+                            if (s_seen[k] == (int)ns.hSprite) { seen = true; break; }
+                        if (!seen && s_nSeen < 64)
+                        {
+                            s_seen[s_nSeen++] = (int)ns.hSprite;
+                            gEngfuncs.Con_Printf("skilltree_icon '%s' h%d rc %d,%d-%d,%d frame %dx%d node %d,%d %dx%d clip %d,%d %dx%d at %d,%d size %dx%d req %dx%d tint %d,%d,%d\n",
+                                def.spriteName, (int)ns.hSprite,
+                                ns.rc.left, ns.rc.top, ns.rc.right, ns.rc.bottom,
+                                SPR_Width(ns.hSprite, 0), SPR_Height(ns.hSprite, 0),
+                                r.x, r.y, r.w, r.h, c.x, c.y, c.w, c.h,
+                                d.x, d.y, d.w, d.h, d.reqW, d.reqH, tr, tg, tb);
+                        }
+                    }
                 }
             }
         }

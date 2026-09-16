@@ -452,6 +452,17 @@ left behind by the VGUI1 text path, which the sprite path then trips over. Every
 site works around the symptom rather than fixing the cause, and the workaround is easy to
 forget because interleaved drawing is the obvious way to write it.
 
+### The same path, a second symptom: the engine scissor draws nothing
+**`SPR_EnableScissor` around a sprite draw inside a VGUI paint draws nothing at all**, even
+with a clip rect that contains the whole draw. Measured 2026-09-16 on the Skill Tree's
+node icons, which had been invisible since the scissor arrived with the 1:1 panel on
+2026-09-15: `skilltree_icon_debug` showed every icon landing inside its clip, and bypassing
+the scissor made every one appear. Presumably the scissor is compared in true screen space
+while the paint's coordinates are translated by the panel's position, so the clip never
+overlaps the draw; not confirmed. The rule is: **never scissor a sprite drawn from a VGUI
+paint. Clip the sprite rect by hand** — `SPR_DrawFittedClipped` in `cl_dll/spr_fit.h` is
+the one implementation, and the tree's icons go through it.
+
 ### Recommended Next Steps
 1. Find the actual state leak between `drawPrintText`/`drawSetTextPos` and `SPR_DrawAdditive`.
 2. If it can be reset explicitly, wrap it in one helper and delete the deferral lists.
