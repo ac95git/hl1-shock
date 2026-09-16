@@ -83,6 +83,7 @@ TYPEDESCRIPTION CBasePlayer::m_playerSaveData[] =
 		DEFINE_FIELD(CBasePlayer, m_flSurgeReadyTime, FIELD_TIME),
 		DEFINE_FIELD(CBasePlayer, m_flLastStandUntil, FIELD_TIME),
 		DEFINE_FIELD(CBasePlayer, m_flLastStandReadyTime, FIELD_TIME),
+		DEFINE_FIELD(CBasePlayer, m_flPhantomUntil, FIELD_TIME),
 
 		DEFINE_FIELD(CBasePlayer, m_afButtonLast, FIELD_INTEGER),
 		DEFINE_FIELD(CBasePlayer, m_afButtonPressed, FIELD_INTEGER),
@@ -2822,6 +2823,12 @@ void CBasePlayer::UpdatePlayerSound()
 		iBodyVolume = 0;
 	}
 
+	// Phantom: every movement action silent for its window -- running, the
+	// Dash, the jump's +100 below, all of it.  Body only, like the stance
+	// scales: a gunshot is exactly as loud inside the window as outside it.
+	if (PhantomActive())
+		flBodyNoiseScale = 0.0f;
+
 	if ((pev->button & IN_JUMP) != 0)
 	{
 		iBodyVolume += 100;
@@ -3991,6 +3998,17 @@ void CBasePlayer::GiveNamedItem(const char* szName, int defaultAmmo)
 bool CBasePlayer::FlashlightIsOn()
 {
 	return FBitSet(pev->effects, EF_DIMLIGHT);
+}
+
+// ---- Phantom (docs/SKILL_TREE.md, "Stealth") ----
+bool CBasePlayer::PhantomActive() const
+{
+	return m_flPhantomUntil > 0 && gpGlobals->time < m_flPhantomUntil;
+}
+
+void CBasePlayer::PhantomStart()
+{
+	m_flPhantomUntil = gpGlobals->time + std::max(0.0f, skill_phantom_duration.value);
 }
 
 

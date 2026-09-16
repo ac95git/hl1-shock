@@ -482,6 +482,15 @@ public:
 		return m_skills.HasSkill(ESkillId::LastStand) || m_skills.HasSkill(ESkillId::GlassCannon);
 	}
 
+	// ---- Phantom, the Stealth region's Shinobi link ----
+	// A Backstab on a monster below Noticed starts it (PhantomStart, from the
+	// crowbar's Backstab branches); until m_flPhantomUntil every movement action
+	// is silent (UpdatePlayerSound zeroes the body noise) and the player runs at
+	// skill_phantom_speed_scale.  Saved as FIELD_TIME like Last Stand's window.
+	float m_flPhantomUntil = 0;
+	bool PhantomActive() const;
+	void PhantomStart();
+
 	// Last Pickup Prompt sent, so it is only resent when it changes.
 	// Transient display state -- deliberately not saved; it is re-derived on
 	// the first frame after a restore.

@@ -776,6 +776,37 @@ cvar_t conceal_light_dark = {"conceal_light_dark", "0.5"};
 cvar_t noise_stance_duck = {"noise_stance_duck", "0.3"};
 cvar_t noise_stance_walk = {"noise_stance_walk", "0.6"};
 
+// The Stealth region -- docs/SKILL_TREE.md, "Stealth".  Every number a first
+// guess, set 2026-09-16 from the design's own words.
+//
+// Each Concealment Stat node makes every monster's meter fill this much
+// slower against this player: ten of them are half speed.
+cvar_t skill_stat_concealment = {"skill_stat_concealment", "0.05"};
+// Soft Step: the crouched and walking body noise halved again, on top of
+// noise_stance_duck / noise_stance_walk.  Running is untouched.
+cvar_t skill_soft_step_scale = {"skill_soft_step_scale", "0.5"};
+// Nightfall: darkness conceals twice as much -- conceal_light_dark, the
+// exposure at the dark end of the light term, scaled by this.
+cvar_t skill_nightfall_scale = {"skill_nightfall_scale", "0.5"};
+// Slip Away: breaking line of sight while a monster has Noticed but not
+// Spotted the player drops its Suspicion by this fraction, once, on the break.
+cvar_t skill_slip_away_fraction = {"skill_slip_away_fraction", "0.33"};
+// Ambush: player damage to a monster, by how unaware it is at the hit, read
+// off the victim's own meter.  Below suspicion_acquire the first; below
+// suspicion_notice the second instead, not on top.
+cvar_t skill_ambush_spotted_scale = {"skill_ambush_spotted_scale", "1.25"};
+cvar_t skill_ambush_noticed_scale = {"skill_ambush_noticed_scale", "1.5"};
+// Phantom: a Backstab on a monster below Noticed buys this many seconds of
+// silent movement at this multiple of the run speed.
+cvar_t skill_phantom_duration = {"skill_phantom_duration", "2"};
+cvar_t skill_phantom_speed_scale = {"skill_phantom_speed_scale", "1.2"};
+
+// The Alien region's Hive nodes -- docs/SKILL_TREE.md, "Alien".  First guesses.
+cvar_t skill_hive_capacity_bonus = {"skill_hive_capacity_bonus", "4"};
+cvar_t skill_hive_replenish_scale = {"skill_hive_replenish_scale", "1.5"};
+cvar_t skill_hive_attack_speed_scale = {"skill_hive_attack_speed_scale", "0.75"};
+cvar_t skill_stat_hornet_replenish = {"skill_stat_hornet_replenish", "0.05"};
+
 // Damage debug readout -- see game.h.  Throwaway diagnostic, off by default.
 cvar_t debug_damage = {"debug_damage", "0"};
 // Live Suspicion readout -- see perception.h.  Shares the screen centre with
@@ -960,6 +991,20 @@ void GameDLLInit()
 	CVAR_REGISTER(&conceal_stance_duck);
 	CVAR_REGISTER(&conceal_stance_walk);
 	CVAR_REGISTER(&conceal_light_dark);
+
+	CVAR_REGISTER(&skill_stat_concealment);
+	CVAR_REGISTER(&skill_soft_step_scale);
+	CVAR_REGISTER(&skill_nightfall_scale);
+	CVAR_REGISTER(&skill_slip_away_fraction);
+	CVAR_REGISTER(&skill_ambush_spotted_scale);
+	CVAR_REGISTER(&skill_ambush_noticed_scale);
+	CVAR_REGISTER(&skill_phantom_duration);
+	CVAR_REGISTER(&skill_phantom_speed_scale);
+
+	CVAR_REGISTER(&skill_hive_capacity_bonus);
+	CVAR_REGISTER(&skill_hive_replenish_scale);
+	CVAR_REGISTER(&skill_hive_attack_speed_scale);
+	CVAR_REGISTER(&skill_stat_hornet_replenish);
 
 	CVAR_REGISTER(&debug_damage);
 	CVAR_REGISTER(&debug_suspicion);

@@ -181,6 +181,27 @@ extern cvar_t conceal_stance_duck;
 extern cvar_t conceal_stance_walk;
 extern cvar_t conceal_light_dark;
 
+// The Stealth region (docs/SKILL_TREE.md, "Stealth").  Server-only, like the
+// perception cvars they modify: every one of them changes what a monster
+// believes or what the server deals, never anything the client predicts.
+extern cvar_t skill_stat_concealment;     // each Concealment Stat node: fill this much slower
+extern cvar_t skill_soft_step_scale;      // Soft Step: the crouch/walk body noise, scaled again
+extern cvar_t skill_nightfall_scale;      // Nightfall: the light term's dark end, scaled down
+extern cvar_t skill_slip_away_fraction;   // Slip Away: the share of Suspicion lost on a break of contact
+extern cvar_t skill_ambush_spotted_scale; // Ambush: on a victim below Spotted
+extern cvar_t skill_ambush_noticed_scale; // Ambush: on a victim below Noticed (replaces, not stacks)
+extern cvar_t skill_phantom_duration;     // Phantom: seconds of silence and speed after an unseen Backstab
+extern cvar_t skill_phantom_speed_scale;  // Phantom: the player's maxspeed during it
+
+// The Alien region's Hive nodes (docs/SKILL_TREE.md, "Alien").  The capacity
+// bonus is server-side; the replenish and attack-speed scales are read by the
+// hivehand on both sides through dlls/skill_tuning.h, since its cadence is
+// predicted.  Defined here so the names live in one place.
+extern cvar_t skill_hive_capacity_bonus;     // Hive Capacity: extra hornets carried
+extern cvar_t skill_hive_replenish_scale;    // Hive Replenish: the regrowth rate, above 1 is faster
+extern cvar_t skill_hive_attack_speed_scale; // Hive Attack Speed: the fire interval, below 1 is faster
+extern cvar_t skill_stat_hornet_replenish;   // each Hornet Replenish Stat node adds this to the rate
+
 // ---------------------------------------------------------
 // Damage debug readout.  THROWAWAY DIAGNOSTIC -- delete the cvar and both
 // functions once the numbers are settled.
