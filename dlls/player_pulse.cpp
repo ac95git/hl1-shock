@@ -507,7 +507,14 @@ void CPlayerPulse::SyncClient(CBasePlayer* pPlayer)
 	int state = PULSE_READY;
 	float flRemaining = 0;
 
-	if (m_bShieldUp)
+	// No Module, no readout: the bar would otherwise stand READY for a verb
+	// the player does not have.  Sent as its own state rather than left to
+	// the client's HasSuit test, since the suit no longer implies the Pulse.
+	if (!pPlayer->m_skills.IsGateOpen(EGate::PulseModule))
+	{
+		state = PULSE_NONE;
+	}
+	else if (m_bShieldUp)
 	{
 		state = PULSE_SHIELD;
 		flRemaining = m_flShieldEndTime - gpGlobals->time;
@@ -541,10 +548,10 @@ bool CPlayerPulse::TryPulse(CBasePlayer* pPlayer)
 	if (!pPlayer || !pPlayer->IsAlive())
 		return false;
 
-	// The Pulse is suit hardware.  No suit, no Pulse -- and no sound
-	// either, because a player without the suit should have no idea the
-	// ability exists.
-	if (!pPlayer->HasSuit())
+	// The Pulse is a found Module (docs/adr/0013): no suit or no Module, no
+	// Pulse -- and no sound either, because a player without it should have
+	// no idea the ability exists.
+	if (!pPlayer->HasSuit() || !pPlayer->m_skills.IsGateOpen(EGate::PulseModule))
 		return false;
 
 	if (!Ready())
@@ -687,7 +694,8 @@ void CPlayerPulse::MatrixThink(CBasePlayer* pPlayer)
 		// Gated by its Skill, and needing the Pulse like everything else on
 		// the press -- and without the Skill a held key is just a held key,
 		// so no sound either.
-		if (pPlayer->m_skills.HasSkill(ESkillId::DefenseMatrix) && pPlayer->HasSuit() && pPlayer->IsAlive())
+		if (pPlayer->m_skills.HasSkill(ESkillId::DefenseMatrix) && pPlayer->HasSuit() && pPlayer->IsAlive()
+			&& pPlayer->m_skills.IsGateOpen(EGate::PulseModule))
 		{
 			// Armour is the pool, so with none there is nothing to raise --
 			// unless the Major is about to grant some.

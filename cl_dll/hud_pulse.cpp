@@ -24,6 +24,7 @@ DECLARE_MESSAGE(m_Pulse, Matrix)
 #define PULSE_READY 0
 #define PULSE_SHIELD 1
 #define PULSE_RECHARGING 2
+#define PULSE_NONE 3 // no Pulse Module held: nothing to draw (dlls/player_pulse.h)
 
 // Mirrors EMatrixState in dlls/player_pulse.h.
 #define MATRIX_NONE 0
@@ -223,9 +224,10 @@ bool CHudPulse::Draw(float flTime)
 	if ((gHUD.m_iHideHUDDisplay & (HIDEHUD_ALL | HIDEHUD_HEALTH)) != 0)
 		return true;
 
-	// The Pulse is suit hardware. Without the suit the player does not have it,
-	// so there is nothing to show.
-	if (!gHUD.HasSuit())
+	// The Pulse is a found Module (docs/adr/0013). Without the suit, or before
+	// the Module -- which the server says with PULSE_NONE -- there is nothing
+	// to show.
+	if (!gHUD.HasSuit() || m_iState == PULSE_NONE)
 		return true;
 
 	// ---- Screen tint ----------------------------------------------------

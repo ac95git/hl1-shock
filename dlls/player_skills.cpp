@@ -81,12 +81,12 @@ void CPlayerSkills::EnsureInitialised()
     // clear (ADR-0012).
     HoldSuit();
 
-    // The Pulse is suit hardware today, not a found Module (docs/SKILL_TREE.md,
-    // Juggernaut), so its gate is open unconditionally -- every call, not just
-    // the first -- so a save written before m_iOpenGates existed (the bit
-    // clear, same as an old Suit flag above) still shows the Pulse's nodes.
-    // Take this out when the Pulse becomes a Module with its own reveal.
-    OpenGate(EGate::PulseModule);
+    // The Pulse is a found Module since 2026-09-16 (item_pulsemodule opens
+    // its gate; docs/adr/0013), so its gate starts closed like the others.
+    // Until then it was opened here on every call; a save from before the
+    // gate mask existed (2026-09-15) therefore loses the Pulse on load, which
+    // skill_open_gates 1 restores.  Saves written between then and now
+    // carry the bit set and keep it.
 
     if (m_bInitialised)
         return;

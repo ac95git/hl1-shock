@@ -734,6 +734,30 @@ likely replaced with something that names night vision the way the Infusion's `!
 The pickup on the floor says *this lets me see in the dark* before the player reads a tooltip, and the
 voice line says the same thing out loud.
 
+## The Pulse Module — pickup model and voice line
+
+### Scope
+`dlls/items.cpp` (`CItemPulseModule`), `models/w_adrenaline.mdl`, the `!HEV_A1` sentence.
+
+### Current stand-ins
+| Use | Asset | Borrowed from |
+| --- | --- | --- |
+| World model | `models/w_adrenaline.mdl` | a stock Half-Life pickup model the game never places |
+| Voice line | `!HEV_A1` | the same stock sentence the other Module pickups use |
+
+### What's wrong with them
+- A syringe-shaped canister says *medicine*, and the Infusion already owns that shape in this mod; nothing
+  about it says *the suit's discharge*.
+- `!HEV_A1` is the line every Module pickup plays; none of them names its Module.
+
+### What to look for
+A pickup in the family the other Modules will share — the Pulse's own motif is the shield glyph the Status
+page and the tree already use — and a voice line that names it, as the Infusion's `!HEV_HEAL7` names
+healing.
+
+### Done when
+The pickup on the floor says *this is the Pulse* before the tooltip does.
+
 ## The alien Module — stand-in models and the summon weapon's borrowed everything
 
 ### Scope

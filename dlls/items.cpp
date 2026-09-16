@@ -775,3 +775,55 @@ class CItemAlienModule : public CItem
 };
 
 LINK_ENTITY_TO_CLASS(item_alienmodule, CItemAlienModule);
+
+// ---------------------------------------------------------
+// The Pulse Module -- the first Module, and the reveal gate for every Pulse
+// node and the Defense Matrix (docs/adr/0013-the-pulse-is-a-found-module.md).
+// The Pulse was suit hardware until 2026-09-16: it came with the suit, its
+// gate was opened on every spawn, and level design could assume it from
+// Anomalous Materials on.  Now it is found, early, and assumed only after.
+//
+// A stand-in pickup like item_alienmodule's: the design says only "found in
+// the world, early", so a walk-over item is the whole of it for now.  Nothing
+// new is saved: held is EGate::PulseModule being open.
+// ---------------------------------------------------------
+class CItemPulseModule : public CItem
+{
+	void Spawn() override
+	{
+		Precache();
+		SET_MODEL(ENT(pev), "models/w_adrenaline.mdl"); // stand-in, a stock model nothing else uses; see ART_DEBT
+		CItem::Spawn();
+	}
+	void Precache() override
+	{
+		PRECACHE_MODEL("models/w_adrenaline.mdl");
+	}
+	bool MyTouch(CBasePlayer* pPlayer) override
+	{
+		if (pPlayer->m_skills.IsGateOpen(EGate::PulseModule))
+		{
+			return false;
+		}
+
+		if (!pPlayer->HasSuit())
+		{
+			return false;
+		}
+
+		pPlayer->m_skills.OpenGate(EGate::PulseModule);
+		SendSkillTreeToClient(pPlayer);
+
+		// The bar appears with the Module: the next sync sends READY instead
+		// of NONE, since the sent state no longer matches.
+		pPlayer->m_pulse.ForgetSentState();
+
+		AnnouncePickup(pPlayer, false);
+
+		EMIT_SOUND_SUIT(pPlayer->edict(), "!HEV_A1"); // placeholder, as item_longjump's
+
+		return true;
+	}
+};
+
+LINK_ENTITY_TO_CLASS(item_pulsemodule, CItemPulseModule);

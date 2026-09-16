@@ -1502,7 +1502,7 @@ can never assume, and because the same comfort goal is met better inside the Pul
 
 | Module | What it does | Replaces |
 | --- | --- | --- |
-| **Pulse** | The existing Pulse, no longer available from the start. | Suit hardware — the Pulse today comes with the suit at Anomalous Materials |
+| **Pulse** | The existing Pulse, no longer available from the start. **Built 2026-09-16, untested in game**: `item_pulsemodule` opens its gate, and without it the key, the bar and every Pulse node are absent ([ADR-0013](adr/0013-the-pulse-is-a-found-module.md)). The pickup is a stand-in like the alien Module's | Suit hardware — the Pulse came with the suit at Anomalous Materials until 2026-09-16 |
 | **Dash** | A short, fast movement burst. | **The long jump module**, which serves the same purpose |
 | **Hook** | A grappling hook, in the manner of Opposing Force's barnacle grapple. | — |
 | **The alien Module** (unnamed) | A platform for alien weapons that run on **Cores**; the summon weapon is its first. **Built 2026-09-16, untested in game, via a stand-in pickup** — the freed alien slave's actual hand-over is not built. | — |
@@ -1568,10 +1568,10 @@ from each:
 - **The timed Shield.** Order in `CBasePlayer::TakeDamage` becomes: a standing Shield refuses the hit
   outright, then the pool, then armour, then health.
 
-This **reverses a recorded decision**. PILLARS pillar 2 says the Pulse is suit hardware because *"Skills
+This **reverses a recorded decision**. PILLARS pillar 2 said the Pulse is suit hardware because *"Skills
 evolve a verb the player already has rather than granting it, which lets level design assume it."* As a
-Module, level design may assume it only after its acquisition point. That wants an ADR when it is built,
-since the reasoning it replaces is written down and the new reasoning should be too.
+Module, level design may assume it only after its acquisition point. ~~That wants an ADR when it is
+built~~ **Built 2026-09-16 with [ADR-0013](adr/0013-the-pulse-is-a-found-module.md).**
 
 ### Open questions
 
@@ -1683,7 +1683,7 @@ in [ADR-0012](adr/0012-the-skill-tree-has-one-start-and-open-roads.md).
 - **The Dash Route is named Shinobi.**
 - **The Stealth Route is shaped**, seven nodes on Concealment roads, all reading a monster's own meter at
   an action: Soft Step, Ambush (22, the merged unaware-damage node, ×1.25 below Spotted / ×1.5 below
-  Noticed, all weapons), Phantom (23, an Unseen Backstab buys 2 s at ×1.2 speed with silent movement),
+  Noticed, all weapons), Phantom (23, an Unseen Backstab kill buys 4 s at ×1.5 speed with silent movement; 2 s at ×1.2 on a hit was the first shape),
   Nightfall, Slip Away, Cut the Head, and the Major **Silent Kill** (an unseen kill leaves no witness, no
   Disturbance, no squad LKP). The last two wait on the post-aggro step. The Gargantua stack was checked:
   Stealth alone reaches 405 of 800 and needs Melee and Energy for the rest. See

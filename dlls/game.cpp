@@ -796,10 +796,12 @@ cvar_t skill_slip_away_fraction = {"skill_slip_away_fraction", "0.33"};
 // suspicion_notice the second instead, not on top.
 cvar_t skill_ambush_spotted_scale = {"skill_ambush_spotted_scale", "1.25"};
 cvar_t skill_ambush_noticed_scale = {"skill_ambush_noticed_scale", "1.5"};
-// Phantom: a Backstab on a monster below Noticed buys this many seconds of
-// silent movement at this multiple of the run speed.
-cvar_t skill_phantom_duration = {"skill_phantom_duration", "2"};
-cvar_t skill_phantom_speed_scale = {"skill_phantom_speed_scale", "1.2"};
+// Phantom: a Backstab KILL on a monster below Noticed buys this many seconds
+// of silent movement at this multiple of the run speed.  2 s at x1.2 on a
+// Backstab hit was the first shape; Andrei set the kill, 4 s and x1.5 on
+// 2026-09-16 after the first play.
+cvar_t skill_phantom_duration = {"skill_phantom_duration", "4"};
+cvar_t skill_phantom_speed_scale = {"skill_phantom_speed_scale", "1.5"};
 
 // The Alien region's Hive nodes -- docs/SKILL_TREE.md, "Alien".  First guesses.
 cvar_t skill_hive_capacity_bonus = {"skill_hive_capacity_bonus", "4"};

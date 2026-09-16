@@ -182,6 +182,7 @@ enum EPulseState
 	PULSE_READY = 0,      // armed, nothing running
 	PULSE_SHIELD = 1,     // a Shield is standing
 	PULSE_RECHARGING = 2, // waiting to be armed again
+	PULSE_NONE = 3,       // no Pulse Module held: the client draws nothing (docs/adr/0013)
 };
 
 //=========================================================

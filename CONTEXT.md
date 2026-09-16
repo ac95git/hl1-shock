@@ -136,8 +136,9 @@ _Avoid_: regen, heal-over-time, HoT, buff, dose
 ### The Pulse
 
 **Pulse**:
-The suit's brief defensive discharge, and the act of triggering it. Suit hardware — anyone wearing the HEV
-suit has it, and no Skill grants it.
+The suit's brief defensive discharge, and the act of triggering it. A found Module since 2026-09-16
+(`item_pulsemodule`, [ADR-0013](docs/adr/0013-the-pulse-is-a-found-module.md)) — before that it was suit
+hardware, and it is still no Skill's to grant.
 _Avoid_: parry, block, dodge, guard
 
 **Shield**:

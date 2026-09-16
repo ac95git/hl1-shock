@@ -1,5 +1,31 @@
 # Technical Debt Register
 
+## The Dash Readout Repeats Across The Screen And Never Drains — OPEN, NOT REPRODUCED
+
+Seen once by Andrei on 2026-09-16, on the build after the Stealth wave (9d9ca70): the Dash bar after the
+Concealment icon "copies itself to the right until the end of the screen" and does not drain when a charge
+is spent. The Dash had been played before that build without it. Situational; not reproduced since.
+
+### Scope
+`cl_dll/hud_dash.cpp` (`CHudDash::Draw`), `dlls/player.cpp` (`CBasePlayer::DashSync`), the physinfo
+string.
+
+### What is known
+The draw loop runs once per charge, counted from the physinfo key `dsn`, which the server only ever
+writes as 1 or 2 (`DashMaxCharges`). A screen of bars therefore means the client read something other than
+what the server wrote, or the string was garbled. The only new thing touching physinfo in that build is
+Phantom's `phs` key (`PhantomSync`), written on change only.
+
+### The readout
+`dash_debug` (a client console command added in `hud_dash.cpp` for this) prints the raw value of every
+Dash key plus `phs` and `slj` as the HUD sees them. **When it reproduces, run `dash_debug` and paste the
+output**: 1 or 2 for `dsn` blames the draw, anything else blames the string. Delete the command with the
+entry.
+
+### Acceptance Criteria For Closure
+The cause is named from a capture, fixed, and the bar draws one bar per charge and drains on a spend
+across a save and load.
+
 ## A Leaked Move-Wait Freezes A Monster For Up To 99 Seconds — RESOLVED 2026-09-14
 
 **Base-game bug, present in unmodified Half-Life.** Diagnosed 2026-09-12 from in-game capture; left alone

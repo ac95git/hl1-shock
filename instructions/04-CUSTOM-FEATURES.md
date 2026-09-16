@@ -206,8 +206,8 @@ Raising `skill_points_start` is the way to work on the tree UI without hunting f
 | `skill_slip_away_fraction` | 0.33 | Slip Away takes this fraction off a monster's meter, once, on the seen→unseen edge while it is between `suspicion_notice` and `suspicion_acquire` |
 | `skill_ambush_noticed_scale` | 1.5 | Ambush's damage multiplier while the victim's own meter is below `suspicion_notice` |
 | `skill_ambush_spotted_scale` | 1.25 | Ambush's damage multiplier while the victim's own meter is below `suspicion_acquire` |
-| `skill_phantom_duration` | 2 | Seconds Phantom's silent, faster window lasts after a qualifying Backstab |
-| `skill_phantom_speed_scale` | 1.2 | Phantom's `maxspeed` multiplier for that window, carried to the client as the physinfo key `"phs"` |
+| `skill_phantom_duration` | 4 | Seconds Phantom's silent, faster window lasts after a qualifying Backstab kill |
+| `skill_phantom_speed_scale` | 1.5 | Phantom's `maxspeed` multiplier for that window, carried to the client as the physinfo key `"phs"` |
 | `skill_hive_capacity_bonus` | 4 | Hive Capacity's addition to `HORNET_MAX_CARRY`, read by `PlayerHornetMaxCarry` |
 | `skill_hive_replenish_scale` | 1.5 | Hive Replenish divides the Hivehand's regrowth interval by this, through `PlayerHornetReplenishScale` |
 | `skill_stat_hornet_replenish` | 0.05 | Each Hornet Replenish Stat node adds this to the same multiplier |

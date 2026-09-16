@@ -43,8 +43,8 @@ struct CPlayerSkills
 
     // Which gates (EGate) are open, one bit per value: bit N is
     // static_cast<int>(EGate) == N, so bit 0 is spare since EGate::None
-    // never gates anything.  EGate::PulseModule starts open (see
-    // EnsureInitialised); every other gate starts closed.  Per-player state,
+    // never gates anything.  Every gate starts closed and is opened by its
+    // Module's pickup (dlls/items.cpp).  Per-player state,
     // so it is saved and sent to the client alongside the unlocked mask.
     int m_iOpenGates = 0;
 

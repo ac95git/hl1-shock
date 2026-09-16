@@ -55,7 +55,7 @@ enum class ENodeTier : uint8_t
 enum class EGate : uint8_t
 {
 	None        = 0,
-	PulseModule = 1, // the Pulse's nodes.  Open until the Pulse becomes a Module: the Pulse is suit hardware today
+	PulseModule = 1, // the Pulse's nodes.  Opened by item_pulsemodule since 2026-09-16; the Pulse was suit hardware before
 	DashModule  = 2, // the Shinobi region
 	AlienModule = 3, // the Alien region
 	NightVision = 4, // the Stealth region
@@ -128,7 +128,7 @@ enum class ESkillId : int
 	// Renamed from StealthReserved1/2 on 2026-09-15 when the region was built;
 	// the numbers did not move.
 	Ambush              = 22, // the all-weapons unaware damage multiplier
-	Phantom             = 23, // a Backstab on an Unseen monster buys silent seconds
+	Phantom             = 23, // a Backstab kill on an Unseen monster buys silent, faster seconds
 
 	// ---- The Melee Route's Stat nodes ----
 	// The roads between the Melee Skills: one flat bonus each, one point
@@ -584,7 +584,7 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// day they were proposed (docs/SKILL_TREE.md, Stealth).  Gated on
 	// EGate::NightVision with the rest of the region below.
 	{ ESkillId::Ambush,          "Ambush",           "Hits on a monster that has not Spotted you x1.25, not Noticed you x1.5.", "d_skull", 12, 4, 1, ENodeTier::Medium, EStat::None, EGate::NightVision },
-	{ ESkillId::Phantom,         "Phantom",          "A Backstab on an unaware monster: 2 s at x1.2 speed, all movement silent.", "flash_beam", 10, 2, 1, ENodeTier::Medium, EStat::None, EGate::NightVision },
+	{ ESkillId::Phantom,         "Phantom",          "A Backstab kill on an unaware monster: 4 s at x1.5 speed, all movement silent.", "flash_beam", 10, 2, 1, ENodeTier::Medium, EStat::None, EGate::NightVision },
 
 	// 24-32: the Melee Route's roads (docs/SKILL_MAP.md, Melee)
 	STAT_MELEE(StatMelee01, 4, 7),
@@ -833,10 +833,9 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	STAT_HORNET(StatHornet11, 13, 14),
 
 	// ---- 157-159: the Juggernaut's Matrix, 2026-09-15 (docs/SKILL_MAP.md,
-	// docs/SKILL_TREE.md "Juggernaut").  EGate::PulseModule, open by default
-	// (dlls/player_skills.cpp), so these are shown and buyable today like
-	// the rest of the Pulse's nodes -- the gate comes out entirely when the
-	// Pulse becomes a Module.
+	// docs/SKILL_TREE.md "Juggernaut").  EGate::PulseModule, opened by the
+	// Pulse Module's pickup since 2026-09-16 (dlls/items.cpp), so these hide
+	// with the rest of the Pulse's nodes until it is found.
 	// The trio runs down the east column since 2026-09-16 -- Matrix, Matrix on
 	// Kill, the Major in the far corner -- off the armour road at (9,11) and
 	// touching no Pulse node.

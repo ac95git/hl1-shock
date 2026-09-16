@@ -247,20 +247,18 @@ int CCrowbar::CleaveArc(const Vector& vecSrc, float flDamage, bool bBackstabNode
 				flHit *= std::max(1.0f, skill_backstab_bonus_scale.value);
 		}
 
-		// Phantom: a Backstab on a victim below Noticed buys the Shinobi
-		// link's silent, faster window. Read off THIS victim's own meter,
-		// the same tier Ambush reads (player_skills.cpp PlayerAmbushScale):
-		// uses the meter at all (bUsesSuspicion), not opted out of it
-		// (SF_MONSTER_IGNORE_CONCEALMENT). A Cleave can Backstab several
-		// victims in one swing; the first that qualifies is enough to start
-		// the window, so this is a start call with nothing to double-spend.
-		if (bBackstab && pMonster->GetPerceptionProfile().bUsesSuspicion &&
+		// Phantom: a Backstab KILL on a victim below Noticed buys the Shinobi
+		// link's silent, faster window (a Backstab hit alone was the first
+		// shape; Andrei tightened it to the kill on 2026-09-16).  The tier is
+		// read off THIS victim's own meter before the hit, the same tier
+		// Ambush reads (player_skills.cpp PlayerAmbushScale): uses the meter
+		// at all (bUsesSuspicion), not opted out of it
+		// (SF_MONSTER_IGNORE_CONCEALMENT).  Whether it was a kill is known
+		// only after the damage, below.
+		const bool bPhantomEligible = bBackstab && pMonster->GetPerceptionProfile().bUsesSuspicion &&
 			!FBitSet(pMonster->pev->spawnflags, SF_MONSTER_IGNORE_CONCEALMENT) &&
 			pMonster->m_flSuspicion < suspicion_notice.value &&
-			m_pPlayer->m_skills.HasSkill(ESkillId::Phantom))
-		{
-			m_pPlayer->PhantomStart();
-		}
+			m_pPlayer->m_skills.HasSkill(ESkillId::Phantom);
 
 		DebugDamageDetail("cleave -> %s %.0f%s%s%s",
 			STRING(pEntity->pev->classname), flHit,
@@ -280,6 +278,12 @@ int CCrowbar::CleaveArc(const Vector& vecSrc, float flDamage, bool bBackstabNode
 			LeechHeal(flHit);
 
 		ReprisalRefill(pMonster, bUnhurt);
+
+		// A Cleave can Backstab several victims in one swing; the first kill
+		// that qualifies is enough to start the window, so this is a start
+		// call with nothing to double-spend.
+		if (bPhantomEligible && !pMonster->IsAlive())
+			m_pPlayer->PhantomStart();
 
 		// After the damage, so a headcrab the hit killed is still thrown.
 		if (bFollowUp)
@@ -560,15 +564,14 @@ bool CCrowbar::Swing(bool fFirst)
 		if (bBackstabNode)
 			flDamage *= std::max(1.0f, skill_backstab_bonus_scale.value);
 
-		// Phantom: the Shinobi link. Same tier Ambush reads off pVictim's own
-		// meter -- see CleaveArc's copy of this check for why the three tests.
-		if (bBackstab && pVictim->GetPerceptionProfile().bUsesSuspicion &&
+		// Phantom: the Shinobi link, on a Backstab KILL of an unaware victim.
+		// Eligibility is read here, before the hit fills the meter; whether
+		// the hit killed is known after ApplyMultiDamage below.  See
+		// CleaveArc's copy of this check for why the three tests.
+		const bool bPhantomEligible = bBackstab && pVictim->GetPerceptionProfile().bUsesSuspicion &&
 			!FBitSet(pVictim->pev->spawnflags, SF_MONSTER_IGNORE_CONCEALMENT) &&
 			pVictim->m_flSuspicion < suspicion_notice.value &&
-			m_pPlayer->m_skills.HasSkill(ESkillId::Phantom))
-		{
-			m_pPlayer->PhantomStart();
-		}
+			m_pPlayer->m_skills.HasSkill(ESkillId::Phantom);
 
 		// A deflect primes the next melee HIT. Consumed here rather than in
 		// PrimaryAttack so a swing that connects with nothing costs nothing.
@@ -606,6 +609,9 @@ bool CCrowbar::Swing(bool fFirst)
 				LeechHeal(flDamage);
 
 			ReprisalRefill(pVictim, bUnhurt);
+
+			if (bPhantomEligible && !pVictim->IsAlive())
+				m_pPlayer->PhantomStart();
 
 			// After the damage, so a headcrab the hit killed is still thrown.
 			if (bFollowUp)

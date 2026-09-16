@@ -31,7 +31,7 @@ flashlight's key (`impulse 100`), which it replaces.
 | **Empty Slot** | A **dim, unlabelled frame**. No name, no icon, no hint — the player sees that a Slot is empty, never what fills it |
 | **Tooltip, filled** | On hover: **name, bound key, one-sentence description**. The key is looked up live with `gEngfuncs.Key_LookupBinding` (as `cl_dll/input.cpp` already does), so it never goes stale when the player rebinds. The name and description come from a new shared Module table beside `EGate` in `game_shared/`, the way a Skill's come from `k_SkillDefs`. Styled as the Skill Tree's tooltip |
 | **Tooltip, empty** | **None.** Hovering an empty Slot does nothing |
-| **When a Slot fills** | When its Module's gate opens (`openGates` on `gmsgSkillTree`, which the client already has). The Pulse's gate is open while the Pulse is suit hardware, so the left arm is filled whenever the panel can open; when the Pulse becomes a found Module the Slot follows with no change here |
+| **When a Slot fills** | When its Module's gate opens (`openGates` on `gmsgSkillTree`, which the client already has). ~~The Pulse's gate is open while the Pulse is suit hardware, so the left arm is filled whenever the panel can open~~ Since 2026-09-16 the Pulse is a found Module (`item_pulsemodule`, [ADR-0013](adr/0013-the-pulse-is-a-found-module.md)) and the left arm fills when it is found, with no change here |
 
 **No live state.** Dash Charges and the Pulse's Recharge are on the HUD already (`CHudDash`, the readiness
 bar); the tooltip says what a Module does and how to use it, not how ready it is.

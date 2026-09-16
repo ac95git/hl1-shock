@@ -101,7 +101,11 @@ something to explore.
 weapon handling and viewmodel hands — and [monsters and bosses](ROADMAP.md#pillar-2-monsters-and-bosses).
 
 The Pulse is the first custom mechanic in the mod that changes how the game plays, and the first Skill
-effect of any kind.
+effect of any kind. **Since 2026-09-16 it is a found Module, not suit hardware**
+([ADR-0013](adr/0013-the-pulse-is-a-found-module.md)): `item_pulsemodule` opens `EGate::PulseModule`,
+and without it the key does nothing, the bar is absent (`PULSE_NONE` on `gmsgPulse`) and every Pulse
+node is a blank pad. Vanilla maps place no pickup, so the Pulse exists there only through
+`give item_pulsemodule` or `skill_open_gates 1`. Untested in game.
 
 ### What exists
 
@@ -552,9 +556,11 @@ consequences are recorded in [adr/0005](adr/0005-the-shield-negates-a-curated-da
 qualifying damage is negated, followed by a Recharge. Lore-wise the suit is mining equipment and the Shield
 is what protects its wearer from falling debris.
 
-**Availability.** Suit hardware, not a Skill — `pev->weapons & (1 << WEAPON_SUIT)`. No Pulse before
+**Availability.** ~~Suit hardware, not a Skill — `pev->weapons & (1 << WEAPON_SUIT)`. No Pulse before
 Anomalous Materials. Skills evolve a verb the player already has rather than granting it, which lets level
-design assume it.
+design assume it.~~ **Superseded 2026-09-16** by [ADR-0013](adr/0013-the-pulse-is-a-found-module.md): the
+Pulse is a found Module, `item_pulsemodule` opens its gate, and level design may assume it only after
+that pickup. Still no Skill's to grant.
 
 **Trigger.** `impulse 150`, handled in `CBasePlayer::ImpulseCommands()`. Deliberately *not* a button bit:
 `usercmd_t.buttons` is an `unsigned short` (`common/usercmd.h:29`) and `common/in_buttons.h` already spends
@@ -875,7 +881,7 @@ neighbour, `prereq`/`prereq2` are gone from `SkillDef`, and with them the connec
 `Requires:` tooltip block and the `skilltree_debug_edges` overlay. Every node sits on the 15×15 board of
 [SKILL_MAP.md](SKILL_MAP.md): 160 ids, all nine regions placed, the three Module-gated regions and the
 Pulse nodes carrying an `EGate` and drawn as blank pads until the server's saved gate bitmask opens them
-(a byte on `gmsgSkillTree`, now 35 bytes; the Pulse gate is open until the Pulse becomes a Module;
+(a byte on `gmsgSkillTree`, now 35 bytes; the Pulse gate was open until the Pulse became a Module on 2026-09-16;
 `skill_open_gates` / `skill_close_gates` are the cheats). Four compile-time checks hold the board: on the
 board, one per cell, no islands, every node reachable from the Suit by flood fill. Built the same day:
 Egon Focus, Overdraw, Last Stand and Glass Cannon; the hub's Max Health and Max Armour stats; and the
@@ -1542,12 +1548,13 @@ has the table with every id and cvar. None of it has been played yet.
   below `suspicion_acquire`. Never on the always-aware profiles, `SF_MONSTER_IGNORE_CONCEALMENT`, or a
   non-hostile; shown as `xAMBUSH` in the `debug_damage` line through the new `DebugDamageAppend`, which
   adds to the melee breakdown rather than replacing it.
-- **Phantom** (23): both Backstab branches of the crowbar call `CBasePlayer::PhantomStart()` when the
-  victim is below Noticed, saving `m_flPhantomUntil`. The silence is `UpdatePlayerSound` zeroing body
+- **Phantom** (23): both Backstab branches of the crowbar call `CBasePlayer::PhantomStart()` when a
+  Backstab on a victim below Noticed kills it (the hit alone was the first shape; Andrei set the kill on
+  2026-09-16), saving `m_flPhantomUntil`. The silence is `UpdatePlayerSound` zeroing body
   noise; the speed rides a physinfo key (`"phs"`, percent) written by `PhantomSync` (`PreThink`) and read
   in `PM_CheckParamters`, multiplying `pmove->maxspeed` before the wish-speed clamp, since
-  `pfnSetClientMaxspeed` can only lower it. `skill_phantom_duration` (2), `skill_phantom_speed_scale`
-  (1.2); cues are `buttons/blip2.wav` at pitch 150 on start and 80 on end, a placeholder shared with
+  `pfnSetClientMaxspeed` can only lower it. `skill_phantom_duration` (4), `skill_phantom_speed_scale`
+  (1.5); cues are `buttons/blip2.wav` at pitch 150 on start and 80 on end, a placeholder shared with
   Cleave's ready blip ([ART_DEBT.md](ART_DEBT.md)).
 - **Cut the Head** (129) and **Silent Kill** (130), the Major, remain unbuilt — the post-aggro step.
 

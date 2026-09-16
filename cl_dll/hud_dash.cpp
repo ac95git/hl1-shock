@@ -17,10 +17,23 @@
 
 #include <stdlib.h>
 
+// Throwaway diagnostic: print the raw physinfo values the readout draws
+// from, so a bar that draws wrong can be blamed on the string or on the
+// draw rather than guessed at (2026-09-16: a bar that repeated to the
+// screen's edge and never drained).  Delete with the bug.
+static void DashDebug()
+{
+	static const char* rgszKeys[] = {DASH_KEY_READY, DASH_KEY_MAX, DASH_KEY_SPEED, DASH_KEY_TIME, DASH_KEY_RECHARGE, DASH_KEY_AIR, "phs", "slj"};
+	for (const char* pszKey : rgszKeys)
+		gEngfuncs.Con_Printf("physinfo %s = \"%s\"\n", pszKey, gEngfuncs.PhysInfo_ValueForKey(pszKey));
+}
+
 bool CHudDash::Init()
 {
 	m_iLastReady = -1;
 	m_flRefillStart = 0;
+
+	gEngfuncs.pfnAddCommand("dash_debug", DashDebug);
 
 	m_iFlags |= HUD_ACTIVE;
 
