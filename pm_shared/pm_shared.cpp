@@ -2923,6 +2923,13 @@ void PM_DropPunchAngle(Vector& punchangle)
 	VectorScale(punchangle, len, punchangle);
 }
 
+// Phantom's speed key (dlls/player.cpp CBasePlayer::PhantomSync writes it,
+// PM_CheckParamters below reads it): the percentage of normal maxspeed to
+// run at, 0 or absent when inactive. Not alongside the Dash's DASH_KEY_*
+// macros in pm_shared.h -- that header is out of scope for this change --
+// so the literal has to match the one PhantomSync writes.
+#define PHANTOM_KEY_SPEED "phs"
+
 /*
 ==============
 PM_CheckParamters
@@ -2944,6 +2951,19 @@ void PM_CheckParamters()
 	if (maxspeed != 0.0)
 	{
 		pmove->maxspeed = V_min(maxspeed, pmove->maxspeed);
+	}
+
+	// Phantom: the Backstab's speed buff, x1.2 by default. pfnSetClientMaxspeed
+	// can only ever LOWER clientmaxspeed against the clamp just above -- the
+	// Matrix's slow uses that route -- so a boost past normal run speed has to
+	// ride the Dash's physinfo-key route instead: the server writes the
+	// percentage, both DLLs read the same key here, and BEFORE the cmd-vector
+	// ratio clamp below so the wish speed rises along with the cap rather than
+	// being clamped straight back down to it.
+	const int iPhantomPct = atoi(pmove->PM_Info_ValueForKey(pmove->physinfo, PHANTOM_KEY_SPEED));
+	if (iPhantomPct > 0)
+	{
+		pmove->maxspeed *= iPhantomPct / 100.0f;
 	}
 
 	// Slow down, I'm pulling it! (a box maybe) but only when I'm standing on ground

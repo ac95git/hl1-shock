@@ -273,6 +273,13 @@ public:
 	bool FlashlightIsOn();
 	void FlashlightTurnOn();
 	void FlashlightTurnOff();
+	// Night Vision (docs/SKILL_TREE.md, "The Night Vision Module") is the
+	// flashlight's replacement once EGate::NightVision is open: same key,
+	// same battery, EF_NIGHTVISION instead of EF_DIMLIGHT so it lights
+	// nothing in the world. Nothing new needs saving for it -- pev->effects
+	// is already an autosaved entvars field, and EF_NIGHTVISION (256,
+	// common/const.h) has sat unused since the base SDK.
+	bool NightVisionIsOn() const { return FBitSet(pev->effects, EF_NIGHTVISION) != 0; }
 
 	void UpdatePlayerSound();
 	void DeathSound() override;
@@ -490,6 +497,19 @@ public:
 	float m_flPhantomUntil = 0;
 	bool PhantomActive() const;
 	void PhantomStart();
+
+	// The speed half rides the Dash's physinfo-key route (pm_shared.cpp
+	// PM_CheckParamters reads it) rather than pev->maxspeed/clientmaxspeed,
+	// which can only ever be lowered against sv_maxspeed -- the Matrix's slow
+	// uses that route, this needs the opposite.  Not saved, like the Dash's
+	// own m_iDashSent*: physinfo carries nothing across a load regardless of
+	// what m_flPhantomUntil says, so -1 is "never sent" and forces the first
+	// PreThink after a spawn or a restore to (re)write the key from scratch.
+	int m_iPhantomSentSpeed = -1;
+	// PreThink, right after DashThink.  Writes the key only on change, and is
+	// the one place that sees the active -> inactive edge (PhantomStart only
+	// ever turns it on), so the end cue and its debug_damage line live here.
+	void PhantomSync();
 
 	// Last Pickup Prompt sent, so it is only resent when it changes.
 	// Transient display state -- deliberately not saved; it is re-derived on

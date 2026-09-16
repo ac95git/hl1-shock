@@ -211,7 +211,7 @@ void CStatusView::Paint(CInventoryPanel* ctx,
     {
         header("MODULES");
         if (bConcealment)
-            row("Concealment", none);
+            row("Concealment", pct(m_stats.concealment));
         if (bDash)
         {
             char buf[16];
@@ -219,7 +219,7 @@ void CStatusView::Paint(CInventoryPanel* ctx,
             row("Dash recharge", bHave ? std::string(buf) : none);
         }
         if (bHornet)
-            row("Hornet replenish", none);
+            row("Hornet replenish", mult(m_stats.hornetReplenish));
     }
 
     // ---- Tooltip on a filled Slot: name, key, description ----

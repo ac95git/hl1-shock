@@ -62,6 +62,7 @@ enum WeaponId
 	// The mod's own weapons start here.  Ids are weapon bits and HUD slots
 	// and are saved with the player: keep them stable once added.
 	WEAPON_KATANA,
+	WEAPON_SUMMON, // the alien Module's first Core weapon; name provisional
 
 	WEAPON_SUIT = 31
 };

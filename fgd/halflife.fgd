@@ -605,6 +605,10 @@
 @PointClass base(Weapon, Targetx) studio("models/w_rpgammo.mdl") = ammo_rpgclip : "Spawns rockets for the RPG." : "http://twhl.info/wiki.php?id=9" []
 @PointClass base(Weapon, Targetx) studio("models/w_gaussammo.mdl") = ammo_gaussclip : "Spawns ammo for the gauss and egon weapons." : "http://twhl.info/wiki.php?id=5" []
 @PointClass base(Weapon, Targetx) studio("models/w_crossbow_clip.mdl") = ammo_crossbow : "Spawns crossbow ammo." : "http://twhl.info/wiki.php?id=8" []
+// One Core, the alien Module's resource (docs/ROADMAP.md, "The alien Module --
+// settled"). Found in the world only and finite, so a map places every Core
+// the player will ever have. World model is a stand-in; see docs/ART_DEBT.md.
+@PointClass base(Weapon, Targetx) studio("models/w_gaussammo.mdl") = item_core : "Core (alien Module ammo)" []
 
 @SolidClass base(Target, ZHLT) = button_target : "Target Button"
 [
@@ -1682,6 +1686,17 @@
 @PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_battery.mdl") = item_battery : "HEV battery" []
 @PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_medkit.mdl") = item_healthkit : "Small Health Kit" []
 @PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_longjump.mdl") = item_longjump : "Longjump Module" []
+// The fifth Module, and the Stealth region's reveal gate (docs/SKILL_TREE.md,
+// "The Night Vision Module"). Replaces the flashlight once found. World model
+// is a stand-in -- w_silencer.mdl reads as a device, but is not this Module's
+// own model; see docs/ART_DEBT.md.
+@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_silencer.mdl") = item_nightvision : "Night Vision Module" []
+// The fourth Module, and the reveal gate for the whole Alien Route
+// (docs/ROADMAP.md, "The alien Module -- settled"). Gives the summon weapon
+// with it. A STAND-IN for the hand-over: the design has the freed alien slave
+// give it after a boss fight, and that NPC does not exist yet. World model is
+// a stand-in too; see docs/ART_DEBT.md.
+@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_sqknest.mdl") = item_alienmodule : "Alien Module" []
 @PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_security.mdl") = item_security : "Security card" []
 @PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_syringe.mdl") = item_syringe : "Health Syringe" []
 // Progression pickups. All three are banked counters rather than Item Types:
@@ -2712,6 +2727,10 @@
 @PointClass base(Weapon, Targetx) studio("models/w_grenade.mdl") = weapon_handgrenade : "Handgrenade Ammo" []
 @PointClass base(Weapon, Targetx) studio("models/w_squeak.mdl") = weapon_snark : "Squeak Grenade" []
 @PointClass base(Weapon, Targetx) studio("models/w_hgun.mdl") = weapon_hornetgun : "Hornet Gun" []
+// The alien Module's first Core weapon: left click summons a ghost slave.
+// Classname and name provisional, models the hivehand's; see docs/ART_DEBT.md.
+// Normally arrives with item_alienmodule rather than being placed.
+@PointClass base(Weapon, Targetx) studio("models/w_hgun.mdl") = weapon_summon : "Summon Weapon" []
 @PointClass size(-16 -16 0, 16 16 64) color(0 128 0) studio("models/w_chainammo.mdl") =  weaponbox : "Weapon/Ammo Container" []
 
 @PointClass base(Weapon, Targetx) = world_items : "World Items" 

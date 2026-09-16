@@ -38,8 +38,9 @@ struct ModuleDef
 	const char* command;     // what its key is bound to, looked up live; nullptr for none
 };
 
-// Night Vision is not built: its Slot fills only when skill_open_gates
-// opens the gate, and its key is the flashlight's, which it replaces.
+// Night Vision is built (item_nightvision, dlls/items.cpp): its Slot fills
+// when the pickup opens EGate::NightVision, or skill_open_gates does the
+// same as a cheat. Its key is the flashlight's, which it replaces.
 // The Alien Module is carried as a weapon, so its key is settled when
 // it is built (docs/STATUS_PANEL.md, "Open").
 inline constexpr ModuleDef k_ModuleDefs[] =

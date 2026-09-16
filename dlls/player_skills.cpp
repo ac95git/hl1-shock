@@ -7,6 +7,9 @@
 #include "player_skills.h"
 #include "game.h"
 #include "skill.h" // gSkillData, for the medkit's heal
+#include "skill_tuning.h" // Hive Replenish and the Hornet Replenish Stat: read the same way the hivehand will
+#include "monsters.h" // Ambush: CBaseMonster, R_HT/R_NM/R_DL, SF_MONSTER_IGNORE_CONCEALMENT
+#include "perception.h" // PlayerConcealmentScale, for the Status page's Concealment line
 #include "UserMessages.h"
 #include <algorithm>
 #include <cstring>
@@ -341,6 +344,20 @@ int PlayerMaxArmor(CBasePlayer* pPlayer)
 }
 
 // =====================================================================
+// PlayerHornetMaxCarry
+// =====================================================================
+int PlayerHornetMaxCarry(CBasePlayer* pPlayer)
+{
+    if (!pPlayer)
+        return HORNET_MAX_CARRY;
+
+    if (!pPlayer->m_skills.HasSkill(ESkillId::HiveCapacity))
+        return HORNET_MAX_CARRY;
+
+    return HORNET_MAX_CARRY + std::max(0, (int)skill_hive_capacity_bonus.value);
+}
+
+// =====================================================================
 // OverdrawSpendArmor
 //   Overdraw (the Energy major): every point of uranium an energy attack
 //   spends also drains armour, at skill_overdraw_armor_per_uranium per
@@ -523,11 +540,59 @@ float PlayerFallTakenScale(CBasePlayer* pPlayer)
 }
 
 // =====================================================================
+// PlayerAmbushScale -- see player_skills.h for the shape of the problem.
+//
+// The tighter tier replaces the looser one rather than stacking: a monster
+// that has not even Noticed the player is also below Spotted, and the
+// design is one bonus per hit, not two added together.
+// =====================================================================
+float PlayerAmbushScale(CBasePlayer* pPlayer, CBaseEntity* pVictim)
+{
+    if (!pPlayer || !pVictim)
+        return 1.0f;
+    if (!pPlayer->m_skills.HasSkill(ESkillId::Ambush))
+        return 1.0f;
+
+    // suspicion_enable 0 pins every meter to 1.0 (UpdateSuspicion), which
+    // already reads as "aware" below -- this early-out is just cheaper.
+    if (suspicion_enable.value == 0)
+        return 1.0f;
+
+    CBaseMonster* pMonster = pVictim->MyMonsterPointer();
+    if (!pMonster || !pMonster->IsAlive())
+        return 1.0f;
+
+    // The same hostility test SyncConcealState uses (dlls/perception.cpp):
+    // a monster fighting something else is still ambushable, a friendly one
+    // never is.
+    const int iRelationship = pMonster->IRelationship(pPlayer);
+    if (iRelationship != R_HT && iRelationship != R_NM && iRelationship != R_DL)
+        return 1.0f;
+
+    // An always-aware profile or a mapper's SF_MONSTER_IGNORE_CONCEALMENT
+    // both mean the meter is not a real answer -- pinned full, acquiring on
+    // sight -- so a per-hit bonus keyed to it would be free damage rather
+    // than a reward for stealth.
+    if (!pMonster->GetPerceptionProfile().bUsesSuspicion)
+        return 1.0f;
+    if (FBitSet(pMonster->pev->spawnflags, SF_MONSTER_IGNORE_CONCEALMENT))
+        return 1.0f;
+
+    if (pMonster->m_flSuspicion < suspicion_notice.value)
+        return std::max(1.0f, skill_ambush_noticed_scale.value);
+    if (pMonster->m_flSuspicion < suspicion_acquire.value)
+        return std::max(1.0f, skill_ambush_spotted_scale.value);
+
+    return 1.0f;
+}
+
+// =====================================================================
 // SendSkillStatsToClient
 //
 // Two maxima, then nine multipliers and shares in thousandths, then the
-// Dash recharge in milliseconds -- CHudAmmo::MsgFunc_SkillStats reads them
-// in this order.  Every value comes from the function the effect itself
+// Dash recharge in milliseconds, then the Concealment share and the hornet
+// replenish multiplier -- CHudAmmo::MsgFunc_SkillStats reads them in this
+// order.  Every value comes from the function the effect itself
 // reads, so the Status page cannot disagree with the game.  A resistance
 // is sent as the share resisted, because the page writes it that way.
 // =====================================================================
@@ -551,6 +616,11 @@ void SendSkillStatsToClient(CBasePlayer* pPlayer)
     WRITE_SHORT(milli(PlayerStandingDamageScale(pPlayer, DMG_ENERGYBEAM)));
     WRITE_SHORT(milli(PlayerStandingDamageScale(pPlayer, DMG_BLAST)));
     WRITE_SHORT(milli(pPlayer->DashRechargeTime()));
+    // The other two Module stats, since 2026-09-16.  Concealment is sent as
+    // the share by which monsters learn slower (a virtue grows with its
+    // label: "+25%", never "x0.75"); hornet replenish as its multiplier.
+    WRITE_SHORT(milli(1.0f - PlayerConcealmentScale(pPlayer)));
+    WRITE_SHORT(milli(PlayerHornetReplenishScale(pPlayer)));
     MESSAGE_END();
 }
 
@@ -572,6 +642,34 @@ float PlayerHealingScale(CBasePlayer* pPlayer)
 float PlayerMedkitHeal(CBasePlayer* pPlayer)
 {
     return gSkillData.healthkitCapacity * PlayerHealingScale(pPlayer);
+}
+
+// =====================================================================
+// PlayerHornetReplenishScale
+//
+// Hive Replenish and the Hornet Replenish Stat nodes, multiplied together
+// like Melee Force and the Melee Damage Stat nodes.  Both cvars are read
+// through skill_tuning.h's CSkillTuning rather than game.h -- see the
+// comment beside skill_hive_replenish_scale there -- even though this
+// function is only ever called from CHgun::Reload's #ifndef CLIENT_DLL
+// block today, so the reads already agree if that ever changes.
+// =====================================================================
+float PlayerHornetReplenishScale(CBasePlayer* pPlayer)
+{
+    if (!pPlayer)
+        return 1.0f;
+
+    const CPlayerSkills& sk = pPlayer->m_skills;
+    float scale = 1.0f;
+
+    if (sk.HasSkill(ESkillId::HiveRegrowth))
+        scale *= std::max(0.0f, g_tuneHiveReplenish.Value());
+
+    const int iStat = sk.CountStat(EStat::HornetReplenish);
+    if (iStat > 0)
+        scale *= 1.0f + iStat * std::max(0.0f, g_tuneHornetReplenishStat.Value());
+
+    return scale;
 }
 
 // =====================================================================

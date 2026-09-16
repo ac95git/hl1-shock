@@ -247,6 +247,21 @@ int CCrowbar::CleaveArc(const Vector& vecSrc, float flDamage, bool bBackstabNode
 				flHit *= std::max(1.0f, skill_backstab_bonus_scale.value);
 		}
 
+		// Phantom: a Backstab on a victim below Noticed buys the Shinobi
+		// link's silent, faster window. Read off THIS victim's own meter,
+		// the same tier Ambush reads (player_skills.cpp PlayerAmbushScale):
+		// uses the meter at all (bUsesSuspicion), not opted out of it
+		// (SF_MONSTER_IGNORE_CONCEALMENT). A Cleave can Backstab several
+		// victims in one swing; the first that qualifies is enough to start
+		// the window, so this is a start call with nothing to double-spend.
+		if (bBackstab && pMonster->GetPerceptionProfile().bUsesSuspicion &&
+			!FBitSet(pMonster->pev->spawnflags, SF_MONSTER_IGNORE_CONCEALMENT) &&
+			pMonster->m_flSuspicion < suspicion_notice.value &&
+			m_pPlayer->m_skills.HasSkill(ESkillId::Phantom))
+		{
+			m_pPlayer->PhantomStart();
+		}
+
 		DebugDamageDetail("cleave -> %s %.0f%s%s%s",
 			STRING(pEntity->pev->classname), flHit,
 			bBackstab ? "  xBACKSTAB" : "",
@@ -544,6 +559,16 @@ bool CCrowbar::Swing(bool fFirst)
 			flDamage *= BackstabScale();
 		if (bBackstabNode)
 			flDamage *= std::max(1.0f, skill_backstab_bonus_scale.value);
+
+		// Phantom: the Shinobi link. Same tier Ambush reads off pVictim's own
+		// meter -- see CleaveArc's copy of this check for why the three tests.
+		if (bBackstab && pVictim->GetPerceptionProfile().bUsesSuspicion &&
+			!FBitSet(pVictim->pev->spawnflags, SF_MONSTER_IGNORE_CONCEALMENT) &&
+			pVictim->m_flSuspicion < suspicion_notice.value &&
+			m_pPlayer->m_skills.HasSkill(ESkillId::Phantom))
+		{
+			m_pPlayer->PhantomStart();
+		}
 
 		// A deflect primes the next melee HIT. Consumed here rather than in
 		// PrimaryAttack so a swing that connects with nothing costs nothing.

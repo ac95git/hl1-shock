@@ -51,6 +51,22 @@ static float ExposureTerm(float flAtZero, float flFrac)
 }
 
 //=========================================================
+// PlayerConcealmentScale -- the Concealment Stat nodes' multiplier on the
+// rate a monster's Suspicion fills.  Read by UpdateSuspicion, and exposed
+// here so the Status page can show the player the same number later.
+//=========================================================
+float PlayerConcealmentScale(CBasePlayer* pPlayer)
+{
+	if (!pPlayer)
+		return 1.0f;
+
+	const int iCount = pPlayer->m_skills.CountStat(EStat::Concealment);
+	const float flScale = 1.0f - iCount * skill_stat_concealment.value;
+
+	return flScale > 0.0f ? flScale : 0.0f;
+}
+
+//=========================================================
 // ConcealmentOf -- how hidden pTarget is from THIS monster right now.
 // 0 is fully exposed, 1 is invisible.
 //
@@ -116,7 +132,22 @@ float CBaseMonster::ConcealmentOf(CBaseEntity* pTarget)
 	// Maps).  The muzzle flash arrives free -- CBasePlayer::Illumination()
 	// already folds m_iWeaponFlash in, so firing in the dark lights the player
 	// for about a second and nothing here has to know that.
-	flExposure *= ExposureTerm(conceal_light_dark.value, pTarget->Illumination() / 255.0f);
+	//
+	// Nightfall halves the dark end's worst-case exposure rather than adding a
+	// second term, so "darkness conceals twice as much" stays exactly what the
+	// light term already means -- a Skill tunes the existing knob, it does not
+	// open a new one.
+	float flDarkEnd = conceal_light_dark.value;
+
+	if (pTarget->IsPlayer())
+	{
+		CBasePlayer* pPlayerTarget = static_cast<CBasePlayer*>(pTarget);
+
+		if (pPlayerTarget->m_skills.HasSkill(ESkillId::Nightfall))
+			flDarkEnd *= skill_nightfall_scale.value;
+	}
+
+	flExposure *= ExposureTerm(flDarkEnd, pTarget->Illumination() / 255.0f);
 
 	if (flExposure < 0.0f)
 		flExposure = 0.0f;
@@ -200,19 +231,69 @@ bool CBaseMonster::UpdateSuspicion(CBaseEntity* pTarget)
 	if (pTarget != NULL)
 	{
 		const float flConcealment = ConcealmentOf(pTarget);
-		m_flSuspicion += (1.0f - flConcealment) * suspicion_fill.value * profile.flFillScale * flDelta;
+
+		// The Concealment Stat nodes scale only the player's OWN fill rate,
+		// scoped by IsPlayer() the same way the rest of Suspicion is
+		// (adr/0009) -- a Skill on the player never touches how fast a
+		// monster learns about some other hostile.
+		float flFillScale = profile.flFillScale;
+
+		if (pTarget->IsPlayer())
+			flFillScale *= PlayerConcealmentScale(static_cast<CBasePlayer*>(pTarget));
+
+		m_flSuspicion += (1.0f - flConcealment) * suspicion_fill.value * flFillScale * flDelta;
 
 		if (m_flSuspicion > 1.0f)
 			m_flSuspicion = 1.0f;
 
 		DebugSuspicionNote(this, flConcealment);
+
+		m_bSuspicionHadTarget = true;
 	}
 	else
 	{
+		// Slip Away -- the seen -> not-seen transition, caught here because
+		// this is the one place that transition is visible: pTarget goes NULL
+		// the instant Look stops passing this monster one.  Checked before the
+		// ordinary drain below so the drop is a step the player can see happen,
+		// not folded invisibly into this frame's decay.  The early returns
+		// above (scripted, acquired, the opt-out profiles) leave the flag
+		// holding its last value rather than clearing it, so a monster that
+		// saw the player, was scripted for a while, and comes out of the
+		// script without them fires this on that first unseen Look -- a
+		// break of contact by any reading.  The acquired branch never reaches
+		// here at all today: nothing drops an enemy until the post-aggro step.
+		if (m_bSuspicionHadTarget && m_flSuspicion >= suspicion_notice.value && m_flSuspicion < suspicion_acquire.value)
+		{
+			// UTIL_PlayerByIndex(1): this mod is single-player, and the only
+			// entity that could have been the seen target is player 1 --
+			// SuspicionDebugPrint already leans on the same assumption.
+			CBaseEntity* pPlayer = UTIL_PlayerByIndex(1);
+
+			if (pPlayer != NULL && pPlayer->IsPlayer() && static_cast<CBasePlayer*>(pPlayer)->m_skills.HasSkill(ESkillId::SlipAway))
+			{
+				const float flBefore = m_flSuspicion;
+				float flFraction = 1.0f - skill_slip_away_fraction.value;
+
+				if (flFraction < 0.0f)
+					flFraction = 0.0f;
+
+				m_flSuspicion *= flFraction;
+
+				if (debug_suspicion.value != 0)
+				{
+					ALERT(at_console, "Slip Away: %s suspicion %.2f -> %.2f\n",
+						STRING(pev->classname), flBefore, m_flSuspicion);
+				}
+			}
+		}
+
 		m_flSuspicion -= suspicion_drain.value * profile.flDrainScale * flDelta;
 
 		if (m_flSuspicion < 0.0f)
 			m_flSuspicion = 0.0f;
+
+		m_bSuspicionHadTarget = false;
 	}
 
 	return m_flSuspicion >= suspicion_acquire.value;

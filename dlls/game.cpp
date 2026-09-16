@@ -807,6 +807,18 @@ cvar_t skill_hive_replenish_scale = {"skill_hive_replenish_scale", "1.5"};
 cvar_t skill_hive_attack_speed_scale = {"skill_hive_attack_speed_scale", "0.75"};
 cvar_t skill_stat_hornet_replenish = {"skill_stat_hornet_replenish", "0.05"};
 
+// The summon weapon and its ghosts -- docs/ROADMAP.md, "The summon weapon --
+// settled".  First guesses, every one; the Route sells more ghosts, longer,
+// sooner, so the three Skills below are the three numbers above.  Pack is a
+// count rather than a scale because the design's 1 -> 2 -> 3 ranks are one
+// node in the tree today.
+cvar_t summon_cooldown = {"summon_cooldown", "3"};
+cvar_t summon_max_ghosts = {"summon_max_ghosts", "1"};
+cvar_t summon_ghost_lifetime = {"summon_ghost_lifetime", "30"};
+cvar_t skill_pack_bonus = {"skill_pack_bonus", "1"};
+cvar_t skill_tether_scale = {"skill_tether_scale", "1.5"};
+cvar_t skill_recall_scale = {"skill_recall_scale", "0.5"};
+
 // Damage debug readout -- see game.h.  Throwaway diagnostic, off by default.
 cvar_t debug_damage = {"debug_damage", "0"};
 // Live Suspicion readout -- see perception.h.  Shares the screen centre with
@@ -1005,6 +1017,13 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_hive_replenish_scale);
 	CVAR_REGISTER(&skill_hive_attack_speed_scale);
 	CVAR_REGISTER(&skill_stat_hornet_replenish);
+
+	CVAR_REGISTER(&summon_cooldown);
+	CVAR_REGISTER(&summon_max_ghosts);
+	CVAR_REGISTER(&summon_ghost_lifetime);
+	CVAR_REGISTER(&skill_pack_bonus);
+	CVAR_REGISTER(&skill_tether_scale);
+	CVAR_REGISTER(&skill_recall_scale);
 
 	CVAR_REGISTER(&debug_damage);
 	CVAR_REGISTER(&debug_suspicion);

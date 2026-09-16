@@ -38,6 +38,12 @@
 extern bool IsBustingGame();
 extern bool IsPlayerBusting(CBaseEntity* pPlayer);
 
+// combat.cpp's debug_damage readout, declared locally rather than by
+// including game.h: this file does not otherwise need it.  Appends onto
+// whatever detail the caller already stashed (a melee swing's own
+// xForce/xBACKSTAB breakdown) instead of replacing it.
+extern void DebugDamageAppend(const char* fmt, ...);
+
 //=========================================================
 // MaxAmmoCarry - pass in a name and this function will tell
 // you the maximum amount of that type of ammunition that a
@@ -100,7 +106,25 @@ void ApplyMultiDamage(entvars_t* pevInflictor, entvars_t* pevAttacker)
 	// keep up to date. A non-player attacker comes back unscaled.
 	const float flAmount = SkillScaleWeaponDamage(pevAttacker, gMultiDamage.amount, gMultiDamage.type);
 
-	gMultiDamage.pEntity->TakeDamage(pevInflictor, pevAttacker, flAmount, gMultiDamage.type);
+	// Ambush: the second chokepoint call, keyed to THIS victim's own meter
+	// rather than the attacker alone, which SkillScaleWeaponDamage never
+	// sees. Every weapon that reaches here is covered: bullets, blast, the
+	// katana wave, and each victim of a Cleave in turn, since CleaveArc
+	// clears and re-applies MultiDamage once per victim. Before TakeDamage
+	// below, which is where SuspicionFromDamage fills the meter this reads,
+	// so the tier is always "at the hit" rather than after it.
+	CBaseEntity* pAmbushAttacker = pevAttacker ? CBaseEntity::Instance(pevAttacker) : nullptr;
+	CBasePlayer* pAmbushPlayer = (pAmbushAttacker && pAmbushAttacker->IsPlayer())
+		? static_cast<CBasePlayer*>(pAmbushAttacker) : nullptr;
+	const float flAmbush = PlayerAmbushScale(pAmbushPlayer, gMultiDamage.pEntity);
+
+	// The Ricochet lesson: name the tier so it can be seen in play. Appended
+	// rather than set, so a melee swing's own xForce/xBACKSTAB breakdown
+	// (crowbar.cpp's DebugDamageDetail, called just before this) survives.
+	if (flAmbush > 1.0f)
+		DebugDamageAppend("  xAMBUSH x%.2f", flAmbush);
+
+	gMultiDamage.pEntity->TakeDamage(pevInflictor, pevAttacker, flAmount * flAmbush, gMultiDamage.type);
 }
 
 
@@ -332,6 +356,10 @@ void W_Precache()
 
 	// hornetgun
 	UTIL_PrecacheOtherWeapon("weapon_hornetgun");
+
+	// the summon weapon, and with it the Cores ammo registry entry that
+	// item_core and MaxAmmoCarry both look up by name
+	UTIL_PrecacheOtherWeapon("weapon_summon");
 
 	if (g_pGameRules->IsDeathmatch())
 	{

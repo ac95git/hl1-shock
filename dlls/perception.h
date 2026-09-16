@@ -93,3 +93,14 @@ inline constexpr PerceptionProfile g_ProfileAlwaysAware{1.0f, 1.0f, false};
 *	run both at once.
 */
 void DebugSuspicionNote(CBaseMonster* pMonster, float flConcealment);
+
+class CBasePlayer;
+
+/**
+*	@brief The Concealment Stat nodes' multiplier on the rate a monster's
+*	Suspicion fills, 1.0 with none held.  Broken out of UpdateSuspicion so the
+*	Status page can report the same number a monster's fill rate actually
+*	uses, rather than recomputing it from the raw Stat count.  Never negative
+*	-- a player cannot make themselves fill a monster's meter backwards.
+*/
+float PlayerConcealmentScale(CBasePlayer* pPlayer);

@@ -28,6 +28,8 @@ struct SkillStatsView
     float energy       = 1.0f;
     float explosive    = 1.0f;
     float dashRecharge = 0.0f;  // seconds per Charge
+    float concealment  = 0.0f;  // share by which monsters learn slower
+    float hornetReplenish = 1.0f; // multiplier on the hivehand's regrowth
 };
 
 // =====================================================================
@@ -76,9 +78,11 @@ private:
     static constexpr int k_SlotGap  = 14;
     static constexpr int k_IconPad  = 10;
 
-    // Concealment and Hornet replenish have no effect in code yet, so their
-    // lines stay hidden even with the gate open (docs/STATUS_PANEL.md).
-    // Flip each when its stat is built, and send its number.
-    static constexpr bool k_ConcealmentBuilt    = false;
-    static constexpr bool k_HornetReplenishBuilt = false;
+    // Both Module stats have their effects since 2026-09-16 (the
+    // Concealment Stat nodes in UpdateSuspicion, the Hornet Replenish nodes
+    // in CHgun::Reload), so their lines show once the gate is open
+    // (docs/STATUS_PANEL.md).  Kept as flags so a stat can be hidden again
+    // without touching the draw.
+    static constexpr bool k_ConcealmentBuilt    = true;
+    static constexpr bool k_HornetReplenishBuilt = true;
 };

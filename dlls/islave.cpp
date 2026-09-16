@@ -25,6 +25,7 @@
 #include "effects.h"
 #include "weapons.h"
 #include "soundent.h"
+#include "player.h" // the summon weapon's ghost is made for a player, at the end of this file
 
 //=========================================================
 // Monster's Anim Events Go Here
@@ -78,6 +79,23 @@ public:
 	void ZapBeam(int side);
 	void BeamGlow();
 
+	// What makes a slave the player's, in one place.  The summon weapon's
+	// ghost is the first customer; the freed alien slave on the roster
+	// (docs/ROADMAP.md, "friendly alien slave") is the second, and the design
+	// says the ally half is shared between them and built once, so it lives
+	// here rather than in whatever creates the slave.
+	//
+	// m_bAlly moves the slave into CLASS_PLAYER_ALLY, which is the whole of
+	// being on the player's side: the relationship table then has it fight
+	// what the player fights and be fought by what fights the player.
+	// m_bVanishOnDeath leaves no corpse -- a ghost is not a body -- and is
+	// separate because a friendly slave that stays is expected to leave one.
+	bool m_bAlly = false;
+	bool m_bVanishOnDeath = false;
+
+	// The teleport-out, and gone.  Also how a ghost's lifetime ends.
+	void Vanish();
+
 	int m_iBravery;
 
 	CBeam* m_pBeam[ISLAVE_MAX_BEAMS];
@@ -109,6 +127,9 @@ TYPEDESCRIPTION CISlave::m_SaveData[] =
 		DEFINE_FIELD(CISlave, m_voicePitch, FIELD_INTEGER),
 
 		DEFINE_FIELD(CISlave, m_hDead, FIELD_EHANDLE),
+
+		DEFINE_FIELD(CISlave, m_bAlly, FIELD_BOOLEAN),
+		DEFINE_FIELD(CISlave, m_bVanishOnDeath, FIELD_BOOLEAN),
 
 };
 
@@ -148,7 +169,10 @@ const char* CISlave::pDeathSounds[] =
 //=========================================================
 int CISlave::Classify()
 {
-	return CLASS_ALIEN_MILITARY;
+	// An ally slave is a CLASS_PLAYER_ALLY and nothing else: the relationship
+	// table does the rest, so being on the player's side is one line here
+	// rather than a set of overrides at every place a slave decides anything.
+	return m_bAlly ? CLASS_PLAYER_ALLY : CLASS_ALIEN_MILITARY;
 }
 
 
@@ -273,6 +297,33 @@ void CISlave::Killed(entvars_t* pevAttacker, int iGib)
 {
 	ClearBeams();
 	CSquadMonster::Killed(pevAttacker, iGib);
+
+	// Death ends a ghost early, with no refund and no body: it goes the way
+	// it arrived rather than falling over.
+	if (m_bVanishOnDeath)
+		Vanish();
+}
+
+//=========================================================
+// Vanish - the teleport-out, and gone.  No corpse, so nothing is left to
+// gib, to be a Disturbance, or to be walked around.
+//=========================================================
+void CISlave::Vanish()
+{
+	ClearBeams();
+
+	// Quake's teleport splash, which needs no sprite of its own; a look of
+	// the mod's own is an ART_DEBT entry (docs/ART_DEBT.md).
+	MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, pev->origin);
+	WRITE_BYTE(TE_TELEPORT);
+	WRITE_COORD(pev->origin.x);
+	WRITE_COORD(pev->origin.y);
+	WRITE_COORD(pev->origin.z);
+	MESSAGE_END();
+
+	UTIL_EmitAmbientSound(ENT(pev), pev->origin, "debris/zap1.wav", 1.0, ATTN_NORM, 0, 100);
+
+	UTIL_Remove(this);
 }
 
 //=========================================================
@@ -854,4 +905,128 @@ void CISlave::ClearBeams()
 	pev->skin = 0;
 
 	STOP_SOUND(ENT(pev), CHAN_WEAPON, "debris/zap4.wav");
+}
+
+//=========================================================
+// monster_ghost_slave -- what the summon weapon summons.
+//
+// The stock alien slave on the player's side, with a lifetime and no corpse
+// (docs/ROADMAP.md, "The summon weapon -- settled").  It fights what it sees;
+// the timer ends it, and death ends it early with no refund.  Following the
+// player at a distance when idle is the design and is NOT built: that is
+// CTalkMonster's behaviour and pulling CTalkMonster in for it would make a
+// ghost a talker.
+//
+// Everything that makes it the player's -- the classification and the bodiless
+// death -- is CISlave's, two flags above, so the friendly alien slave on the
+// roster inherits it rather than having it written twice.  What is this
+// class's own is the leash: the summoner it counts against and the clock.
+//
+// It lives at the end of islave.cpp rather than in summon.cpp because CISlave
+// is declared in this file and nowhere else.
+//=========================================================
+class CGhostSlave : public CISlave
+{
+public:
+	void Spawn() override;
+	void MonsterThink() override;
+
+	bool Save(CSave& save) override;
+	bool Restore(CRestore& restore) override;
+	static TYPEDESCRIPTION m_SaveData[];
+
+	// A ghost is a thing of the fight it was summoned into and does not
+	// follow the player through a level change.
+	int ObjectCaps() override { return CISlave::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+
+	EHANDLE m_hSummoner;        // whose cap this ghost counts against
+	float m_flVanishTime = 0.0f; // when the lifetime is up; 0 for no clock
+};
+
+LINK_ENTITY_TO_CLASS(monster_ghost_slave, CGhostSlave);
+
+TYPEDESCRIPTION CGhostSlave::m_SaveData[] =
+	{
+		DEFINE_FIELD(CGhostSlave, m_hSummoner, FIELD_EHANDLE),
+		DEFINE_FIELD(CGhostSlave, m_flVanishTime, FIELD_TIME),
+};
+
+IMPLEMENT_SAVERESTORE(CGhostSlave, CISlave);
+
+void CGhostSlave::Spawn()
+{
+	// Before the slave's own Spawn: MonsterInit asks Classify, and a ghost
+	// that starts as CLASS_ALIEN_MILITARY is briefly an enemy of the thing
+	// that summoned it.
+	m_bAlly = true;
+	m_bVanishOnDeath = true;
+
+	CISlave::Spawn();
+
+	// The model is the stock slave's, so being drawn through is the whole of
+	// what says this one is not.  A ghost of its own is an ART_DEBT entry.
+	pev->rendermode = kRenderTransTexture;
+	pev->renderamt = 160;
+
+	MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, pev->origin);
+	WRITE_BYTE(TE_TELEPORT);
+	WRITE_COORD(pev->origin.x);
+	WRITE_COORD(pev->origin.y);
+	WRITE_COORD(pev->origin.z);
+	MESSAGE_END();
+
+	UTIL_EmitAmbientSound(ENT(pev), pev->origin, "debris/zap1.wav", 1.0, ATTN_NORM, 0, 120);
+}
+
+void CGhostSlave::MonsterThink()
+{
+	// The clock is read here rather than on a think of its own because a
+	// monster's think IS its AI: taking it over would stop the ghost fighting.
+	if (m_flVanishTime != 0 && gpGlobals->time >= m_flVanishTime)
+	{
+		Vanish();
+		return;
+	}
+
+	CISlave::MonsterThink();
+}
+
+//=========================================================
+// The two calls dlls/summon.cpp makes.  Declared extern there: CISlave and
+// CGhostSlave are visible in this file alone, and the weapon needs no more of
+// them than "make one" and "how many are out".
+//=========================================================
+CBaseEntity* SummonCreateGhost(CBasePlayer* pOwner, const Vector& vecOrigin, float flLifetime)
+{
+	// Facing the way the player faces, so a ghost summoned behind the player
+	// is already looking at what the player is looking at.  No owner: an
+	// owned entity is skipped by traces the player makes, and a ghost is
+	// something the player's own shots should be able to hit.
+	CBaseEntity* pEntity = CBaseEntity::Create("monster_ghost_slave", vecOrigin,
+		Vector(0, pOwner->pev->v_angle.y, 0), NULL);
+	if (pEntity == nullptr)
+		return nullptr;
+
+	CGhostSlave* pGhost = static_cast<CGhostSlave*>(pEntity);
+	pGhost->m_hSummoner = pOwner;
+	pGhost->m_flVanishTime = flLifetime > 0.0f ? gpGlobals->time + flLifetime : 0.0f;
+	return pGhost;
+}
+
+int SummonCountGhosts(CBasePlayer* pOwner)
+{
+	int iCount = 0;
+	CBaseEntity* pEntity = nullptr;
+	while ((pEntity = UTIL_FindEntityByClassname(pEntity, "monster_ghost_slave")) != nullptr)
+	{
+		// A ghost on its way out is already spent: it does not hold a place
+		// in the pack the player is about to fill.
+		if (pEntity->pev->deadflag != DEAD_NO || (pEntity->pev->flags & FL_KILLME) != 0)
+			continue;
+
+		CGhostSlave* pGhost = static_cast<CGhostSlave*>(pEntity);
+		if (static_cast<CBaseEntity*>(pGhost->m_hSummoner) == static_cast<CBaseEntity*>(pOwner))
+			iCount++;
+	}
+	return iCount;
 }

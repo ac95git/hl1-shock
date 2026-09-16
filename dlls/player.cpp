@@ -2127,6 +2127,10 @@ void CBasePlayer::PreThink()
 	// Dash charges coming back, and the numbers the movement code reads.
 	DashThink();
 
+	// Phantom's speed key, the Dash's route: rewritten only on change, and
+	// the one place that sees the window close.
+	PhantomSync();
+
 	if (g_pGameRules && g_pGameRules->FAllowFlashlight())
 		m_iHideHUD &= ~HIDEHUD_FLASHLIGHT;
 	else
@@ -2813,10 +2817,24 @@ void CBasePlayer::UpdatePlayerSound()
 		// as loud crouched as standing.
 		const float flRunSpeed = pev->maxspeed > 0.0f ? pev->maxspeed : 320.0f;
 
+		bool bQuietStance = false;
+
 		if ((pev->flags & FL_DUCKING) != 0)
+		{
 			flBodyNoiseScale = std::max(0.0f, noise_stance_duck.value);
+			bQuietStance = true;
+		}
 		else if (pev->velocity.Length2D() <= flRunSpeed * 0.5f)
+		{
 			flBodyNoiseScale = std::max(0.0f, noise_stance_walk.value);
+			bQuietStance = true;
+		}
+
+		// Soft Step: the crouch and walk scales again, on top of the base
+		// quiet-stance model above.  Running is untouched -- it never sets
+		// bQuietStance, so there is nothing here to multiply.
+		if (bQuietStance && m_skills.HasSkill(ESkillId::SoftStep))
+			flBodyNoiseScale *= std::max(0.0f, skill_soft_step_scale.value);
 	}
 	else
 	{
@@ -3997,7 +4015,12 @@ void CBasePlayer::GiveNamedItem(const char* szName, int defaultAmmo)
 
 bool CBasePlayer::FlashlightIsOn()
 {
-	return FBitSet(pev->effects, EF_DIMLIGHT);
+	// Whichever HEV light source is switched on. The flashlight lights the
+	// baked world (EF_DIMLIGHT); Night Vision lights none of it and only
+	// floods the holder's own screen (cl_dll/flashlight.cpp), so one bit or
+	// the other is ever set -- the battery loop and a save resync only ever
+	// need to know "is the device on", never which.
+	return FBitSet(pev->effects, EF_DIMLIGHT) || NightVisionIsOn();
 }
 
 // ---- Phantom (docs/SKILL_TREE.md, "Stealth") ----
@@ -4009,6 +4032,53 @@ bool CBasePlayer::PhantomActive() const
 void CBasePlayer::PhantomStart()
 {
 	m_flPhantomUntil = gpGlobals->time + std::max(0.0f, skill_phantom_duration.value);
+
+	// The design asked for a cue at both ends of the window. The start half
+	// lives here, at the one call site (the crowbar's two Backstab branches);
+	// PhantomSync below sees the end. Placeholder -- see the report /
+	// docs/ART_DEBT.md: buttons/blip2.wav, already the Skill Tree's own cue
+	// for a timed state returning (CleaveThink's cooldown blip), pitched up
+	// here to read as "starting" rather than "ready".
+	EMIT_SOUND_DYN(ENT(pev), CHAN_ITEM, "buttons/blip2.wav", 0.6, ATTN_NORM, 0, 150);
+
+	// The Ricochet lesson: a timed buff that only shows up as a quieter
+	// footstep needs a readout, not a guess.
+	if (debug_damage.value != 0)
+	{
+		ALERT(at_console, "phantom: start, %.2fs at x%.2f speed\n",
+			std::max(0.0f, skill_phantom_duration.value), std::max(1.0f, skill_phantom_speed_scale.value));
+	}
+}
+
+// The speed half. PreThink, right after DashThink -- the Dash's own pattern:
+// a physinfo key the movement code reads (pm_shared.cpp PM_CheckParamters),
+// rewritten only on change. Also the one place that sees the active ->
+// inactive edge, since PhantomStart only ever turns the window on, so the
+// end cue and its debug_damage line fire from here.
+void CBasePlayer::PhantomSync()
+{
+	const bool bActive = PhantomActive();
+	const int iPct = bActive
+		? static_cast<int>(std::max(1.0f, skill_phantom_speed_scale.value) * 100.0f + 0.5f)
+		: 0;
+
+	if (iPct == m_iPhantomSentSpeed)
+		return;
+
+	// Ending: iPct drops to 0 from a real, previously-sent percentage -- not
+	// from -1, the "never sent" sentinel a fresh spawn or a restore starts
+	// at, which must not play the end cue for a window that was never open
+	// this life.
+	if (iPct == 0 && m_iPhantomSentSpeed > 0)
+	{
+		EMIT_SOUND_DYN(ENT(pev), CHAN_ITEM, "buttons/blip2.wav", 0.5, ATTN_NORM, 0, 80);
+
+		if (debug_damage.value != 0)
+			ALERT(at_console, "phantom: end\n");
+	}
+
+	g_engfuncs.pfnSetPhysicsKeyValue(edict(), "phs", UTIL_dtos1(iPct));
+	m_iPhantomSentSpeed = iPct;
 }
 
 
@@ -4021,11 +4091,18 @@ void CBasePlayer::FlashlightTurnOn()
 
 	if (HasSuit())
 	{
+		// Night Vision replaces the flashlight once its Module is found
+		// (docs/SKILL_TREE.md, "The Night Vision Module"): same key, same
+		// battery, EF_NIGHTVISION instead of EF_DIMLIGHT so it emits no
+		// light the world -- or a monster -- can see.
+		const bool nightVision = m_skills.IsGateOpen(EGate::NightVision);
+
 		EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, SOUND_FLASHLIGHT_ON, 1.0, ATTN_NORM, 0, PITCH_NORM);
-		SetBits(pev->effects, EF_DIMLIGHT);
+		SetBits(pev->effects, nightVision ? EF_NIGHTVISION : EF_DIMLIGHT);
 		MESSAGE_BEGIN(MSG_ONE, gmsgFlashlight, NULL, pev);
 		WRITE_BYTE(1);
 		WRITE_BYTE(m_iFlashBattery);
+		WRITE_BYTE(nightVision ? 1 : 0); // mode: 0 flashlight, 1 night vision
 		MESSAGE_END();
 
 		m_flFlashLightTime = FLASH_DRAIN_TIME + gpGlobals->time;
@@ -4035,11 +4112,18 @@ void CBasePlayer::FlashlightTurnOn()
 
 void CBasePlayer::FlashlightTurnOff()
 {
+	// Whichever device this turns off, for the mode byte below; clearing the
+	// bit that was never set is harmless, so both are cleared unconditionally
+	// rather than branching on which one it was.
+	const bool nightVision = NightVisionIsOn();
+
 	EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, SOUND_FLASHLIGHT_OFF, 1.0, ATTN_NORM, 0, PITCH_NORM);
 	ClearBits(pev->effects, EF_DIMLIGHT);
+	ClearBits(pev->effects, EF_NIGHTVISION);
 	MESSAGE_BEGIN(MSG_ONE, gmsgFlashlight, NULL, pev);
 	WRITE_BYTE(0);
 	WRITE_BYTE(m_iFlashBattery);
+	WRITE_BYTE(nightVision ? 1 : 0);
 	MESSAGE_END();
 
 	m_flFlashLightTime = FLASH_CHARGE_TIME + gpGlobals->time;
@@ -4142,7 +4226,10 @@ void CBasePlayer::ImpulseCommands()
 		break;
 	}
 	case 100:
-		// temporary flashlight for level designers
+		// The flashlight key. Toggles Night Vision instead once its Module
+		// is found (docs/SKILL_TREE.md, "The Night Vision Module") --
+		// FlashlightTurnOn/Off decide which device that is, so this case
+		// never needs to know.
 		if (FlashlightIsOn())
 		{
 			FlashlightTurnOff();
@@ -4884,6 +4971,7 @@ void CBasePlayer::UpdateClientData()
 			MESSAGE_BEGIN(MSG_ONE, gmsgFlashlight, NULL, pev);
 			WRITE_BYTE(1);
 			WRITE_BYTE(m_iFlashBattery);
+			WRITE_BYTE(NightVisionIsOn() ? 1 : 0);
 			MESSAGE_END();
 		}
 

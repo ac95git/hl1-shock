@@ -101,6 +101,10 @@ public:
 #define SNARK_MAX_CARRY 15
 #define HORNET_MAX_CARRY 8
 #define M203_GRENADE_MAX_CARRY 10
+// Cores, the alien Module's resource (docs/ROADMAP.md, "The alien Module --
+// settled").  Found in the world only and finite, so the ceiling is low on
+// purpose: a stock, not a supply.  First guess.
+#define CORE_MAX_CARRY 6
 
 // the maximum amount of ammo each weapon's clip can hold
 #define WEAPON_NOCLIP -1
@@ -139,6 +143,7 @@ public:
 #define TRIPMINE_DEFAULT_GIVE 1
 #define SNARK_DEFAULT_GIVE 5
 #define HIVEHAND_DEFAULT_GIVE 8
+#define SUMMON_DEFAULT_GIVE 3 // Cores handed over with the Module
 
 // The amount of ammo given to a player by an ammo item.
 #define AMMO_URANIUMBOX_GIVE 20
@@ -152,6 +157,7 @@ public:
 #define AMMO_RPGCLIP_GIVE RPG_MAX_CLIP
 #define AMMO_URANIUMBOX_GIVE 20
 #define AMMO_SNARKBOX_GIVE 5
+#define AMMO_COREBOX_GIVE 1 // one Core per item_core: they are counted, not stocked
 
 // bullet types
 typedef enum
@@ -721,6 +727,59 @@ private:
 
 	unsigned short m_usKatanaSwing;
 	unsigned short m_usKatanaArc;
+};
+
+// The summon weapon, v1 -- the alien Module's first Core weapon
+// (docs/ROADMAP.md, "The summon weapon -- settled").  The classname and the
+// display name are provisional; the design leaves both open.
+//
+// Left click summons one ghost for one Core, on a cooldown, up to a maximum
+// out at once.  Right click is the ultimate and is NOT built: it plays the
+// idle and spends nothing.  The models, the sounds and the HUD sprites are
+// the hivehand's, all of them stand-ins (docs/ART_DEBT.md).
+class CSummon : public CBasePlayerWeapon
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+	int iItemSlot() override { return 4; } // the hivehand's bucket, one place along
+	bool GetItemInfo(ItemInfo* p) override;
+
+	void PrimaryAttack() override;
+	void SecondaryAttack() override;
+	bool Deploy() override;
+	void Holster() override;
+	void WeaponIdle() override;
+
+	// Cores are what the weapon spends, but a summon it cannot afford is
+	// refused rather than the weapon being switched away from or refused a
+	// draw -- the ultimate will want the same hand.  The katana's pair of
+	// answers, for the same reason.
+	bool CanDeploy() override { return true; }
+	bool IsUseable() override { return true; }
+
+	bool UseDecrement() override
+	{
+#if defined(CLIENT_WEAPONS)
+		return true;
+#else
+		return false;
+#endif
+	}
+
+private:
+	// Seconds until the next summon, after Recall.  Read on both sides: the
+	// delay it sets is m_flNextPrimaryAttack, which the client predicts.
+	float SummonCooldown();
+
+#ifndef CLIENT_DLL
+	// The server's half of a summon, and the whole of what a summon is: the
+	// cap, the spot and the ghost.  Returns false when nothing was summoned,
+	// in which case no Core is spent.
+	bool TrySummon();
+	// A place near the player a ghost fits standing on ground, or false.
+	bool FindGhostSpot(Vector& vecSpot);
+#endif
 };
 
 enum python_e

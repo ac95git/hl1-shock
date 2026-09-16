@@ -661,3 +661,117 @@ class CItemLongJump : public CItem
 };
 
 LINK_ENTITY_TO_CLASS(item_longjump, CItemLongJump);
+
+// ---------------------------------------------------------
+// The Night Vision Module -- the fifth Module, and the reveal gate for the
+// Stealth region (docs/SKILL_TREE.md, "The Night Vision Module"). Adapted
+// from Opposing Force's: the flashlight stays until this is found, and then
+// this replaces it, closing the flashlight hole in the light term -- no more
+// EF_DIMLIGHT, so a lit corridor and a dark one finally conceal the same.
+//
+// Nothing new is saved. Held is EGate::NightVision being open, which
+// CPlayerSkills already saves with the rest of the gate mask; whether the
+// device is currently switched on rides EF_NIGHTVISION in pev->effects,
+// which the engine saves for free (see FlashlightTurnOn/Off).
+// ---------------------------------------------------------
+class CItemNightVision : public CItem
+{
+	void Spawn() override
+	{
+		Precache();
+		SET_MODEL(ENT(pev), "models/w_silencer.mdl"); // stand-in, reads as a device; see ART_DEBT
+		CItem::Spawn();
+	}
+	void Precache() override
+	{
+		PRECACHE_MODEL("models/w_silencer.mdl");
+	}
+	bool MyTouch(CBasePlayer* pPlayer) override
+	{
+		if (pPlayer->m_skills.IsGateOpen(EGate::NightVision))
+		{
+			return false;
+		}
+
+		if (!pPlayer->HasSuit())
+		{
+			return false;
+		}
+
+		// Night Vision replaces the flashlight; if it is lit at the moment
+		// of pickup, close it so the player is never holding both at once.
+		if (pPlayer->FlashlightIsOn())
+		{
+			pPlayer->FlashlightTurnOff();
+		}
+
+		pPlayer->m_skills.OpenGate(EGate::NightVision);
+		SendSkillTreeToClient(pPlayer);
+
+		AnnouncePickup(pPlayer, false);
+
+		EMIT_SOUND_SUIT(pPlayer->edict(), "!HEV_A1"); // placeholder, as item_longjump's
+
+		return true;
+	}
+};
+
+LINK_ENTITY_TO_CLASS(item_nightvision, CItemNightVision);
+
+// ---------------------------------------------------------
+// The alien Module -- the fourth Module, and the reveal gate for the whole
+// Alien Route, Hive nodes included (docs/ROADMAP.md, "The alien Module --
+// settled").  It is a platform: what it grants is access to weapons that run
+// on Cores, and the summon weapon is the first of them, handed over with it
+// so that no verb of the Module reads as broken on the day it is found.
+//
+// THE STAND-IN.  The design says the freed alien slave hands the Module over
+// after a boss fight.  That NPC does not exist, and neither does the fight, so
+// this pickup stands in for the hand-over until they do; it is not the shape
+// the Module is meant to arrive in and should go when the slave can give it.
+//
+// Nothing new is saved.  Held is EGate::AlienModule being open, which
+// CPlayerSkills already saves with the rest of the gate mask, plus the weapon
+// and the Cores, which the player saves like any other.
+// ---------------------------------------------------------
+class CItemAlienModule : public CItem
+{
+	void Spawn() override
+	{
+		Precache();
+		SET_MODEL(ENT(pev), "models/w_sqknest.mdl"); // stand-in, reads alien; see ART_DEBT
+		CItem::Spawn();
+	}
+	void Precache() override
+	{
+		PRECACHE_MODEL("models/w_sqknest.mdl");
+	}
+	bool MyTouch(CBasePlayer* pPlayer) override
+	{
+		if (pPlayer->m_skills.IsGateOpen(EGate::AlienModule))
+		{
+			return false;
+		}
+
+		if (!pPlayer->HasSuit())
+		{
+			return false;
+		}
+
+		pPlayer->m_skills.OpenGate(EGate::AlienModule);
+		SendSkillTreeToClient(pPlayer);
+
+		// Whole, as the design asks: the Module and its first weapon arrive
+		// together, with a starting stock of Cores (the weapon's own
+		// SUMMON_DEFAULT_GIVE).  Cores are found in the world after that.
+		pPlayer->GiveNamedItem("weapon_summon");
+
+		AnnouncePickup(pPlayer, false);
+
+		EMIT_SOUND_SUIT(pPlayer->edict(), "!HEV_A1"); // placeholder, as item_longjump's
+
+		return true;
+	}
+};
+
+LINK_ENTITY_TO_CLASS(item_alienmodule, CItemAlienModule);

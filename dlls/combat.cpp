@@ -238,6 +238,30 @@ void DebugDamageReport(CBaseEntity* pVictim, entvars_t* pevAttacker, float flDam
 	g_szDamageDetail[0] = '\0';
 }
 
+//=========================================================
+// DebugDamageAppend -- tacks one more tag onto the line DebugDamageDetail
+// already built, rather than replacing it. Ambush is read at the two
+// chokepoints (ApplyMultiDamage, weapons.cpp; the direct-TakeDamage branch
+// of RadiusDamage below), which is downstream of a melee swing's own
+// xForce/xBACKSTAB breakdown -- overwriting it with DebugDamageDetail would
+// lose that. Also safe to call from a chokepoint with nothing stashed yet
+// (bullets, a grenade's direct hit): the buffer is guaranteed empty there,
+// since DebugDamageReport clears it after every TakeDamage it reports on.
+//=========================================================
+void DebugDamageAppend(const char* fmt, ...)
+{
+	if (debug_damage.value == 0)
+		return;
+
+	char szAppend[48];
+	va_list argptr;
+	va_start(argptr, fmt);
+	vsnprintf(szAppend, sizeof(szAppend), fmt, argptr);
+	va_end(argptr);
+
+	strncat(g_szDamageDetail, szAppend, sizeof(g_szDamageDetail) - strlen(g_szDamageDetail) - 1);
+}
+
 #define GERMAN_GIB_COUNT 4
 #define HUMAN_GIB_COUNT 6
 #define ALIEN_GIB_COUNT 4
@@ -1329,8 +1353,22 @@ void RadiusDamage(Vector vecSrc, entvars_t* pevInflictor, entvars_t* pevAttacker
 					// branch: the one above goes through ApplyMultiDamage,
 					// which scales it already, so scaling before the split
 					// would apply the Skills twice.
-					pEntity->TakeDamage(pevInflictor, pevAttacker,
-						SkillScaleWeaponDamage(pevAttacker, flAdjustedDamage, bitsDamageType), bitsDamageType);
+					const float flScaled = SkillScaleWeaponDamage(pevAttacker, flAdjustedDamage, bitsDamageType);
+
+					// Ambush: this branch's own victim is known (pEntity), so
+					// it needs the same second call ApplyMultiDamage makes --
+					// SkillScaleWeaponDamage never sees who was hit. Before
+					// TakeDamage, which is where SuspicionFromDamage fills
+					// the meter this reads, so the tier is always "at the hit".
+					CBaseEntity* pAmbushAttacker = pevAttacker ? CBaseEntity::Instance(pevAttacker) : nullptr;
+					CBasePlayer* pAmbushPlayer = (pAmbushAttacker && pAmbushAttacker->IsPlayer())
+						? static_cast<CBasePlayer*>(pAmbushAttacker) : nullptr;
+					const float flAmbush = PlayerAmbushScale(pAmbushPlayer, pEntity);
+
+					if (flAmbush > 1.0f)
+						DebugDamageAppend("  xAMBUSH x%.2f", flAmbush);
+
+					pEntity->TakeDamage(pevInflictor, pevAttacker, flScaled * flAmbush, bitsDamageType);
 				}
 			}
 		}

@@ -639,6 +639,8 @@ bool CHudAmmo::MsgFunc_SkillStats(const char* pszName, int iSize, void* pbuf)
 	stats.energy       = milli();
 	stats.explosive    = milli();
 	stats.dashRecharge = milli();
+	stats.concealment  = milli();
+	stats.hornetReplenish = milli();
 
 	if (gViewPort && gViewPort->m_pInventoryPanel)
 		gViewPort->m_pInventoryPanel->UpdateSkillStats(stats);

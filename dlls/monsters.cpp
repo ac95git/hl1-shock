@@ -109,6 +109,7 @@ TYPEDESCRIPTION CBaseMonster::m_SaveData[] =
 		// the old level and hand UpdateSuspicion a nonsense delta.
 		DEFINE_FIELD(CBaseMonster, m_flSuspicion, FIELD_FLOAT),
 		DEFINE_FIELD(CBaseMonster, m_flSuspicionTime, FIELD_TIME),
+		DEFINE_FIELD(CBaseMonster, m_bSuspicionHadTarget, FIELD_BOOLEAN),
 };
 
 //IMPLEMENT_SAVERESTORE( CBaseMonster, CBaseToggle );

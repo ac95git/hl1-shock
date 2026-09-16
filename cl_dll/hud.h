@@ -372,6 +372,11 @@ public:
 	bool MsgFunc_FlashBat(const char* pszName, int iSize, void* pbuf);
 
 private:
+	// Night Vision (docs/SKILL_TREE.md, "The Night Vision Module"): the
+	// full-screen noise overlay and the eye-level dlight that make the dark
+	// readable, since the device itself puts no light in the world.
+	void DrawNightVision();
+
 	HSPRITE m_hSprite1;
 	HSPRITE m_hSprite2;
 	HSPRITE m_hBeam;
@@ -381,8 +386,13 @@ private:
 	float m_flBat;
 	int m_iBat;
 	bool m_fOn;
+	int m_iMode = 0; // gmsgFlashlight's third byte: 0 flashlight, 1 night vision
 	float m_fFade;
 	int m_iWidth; // width of the battery innards
+
+	HSPRITE m_hNightVisionOverlay = 0; // sprites/of_nv_b.spr, tiled across the screen
+	struct cvar_s* m_pCvarNvOverlay = nullptr;	   // alpha of the overlay, 0 turns it off
+	struct cvar_s* m_pCvarNvLightRadius = nullptr; // radius of the eye-level dlight
 };
 
 //

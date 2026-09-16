@@ -75,6 +75,9 @@
     <ClCompile Include="..\..\dlls\katana.cpp">
       <Filter>Source Files\_hl\dlls</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\dlls\summon.cpp">
+      <Filter>Source Files\_hl\dlls</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\dlls\egon.cpp">
       <Filter>Source Files\_hl\dlls</Filter>
     </ClCompile>

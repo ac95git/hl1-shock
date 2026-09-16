@@ -350,8 +350,8 @@ enum class EStat : uint8_t
 	MaxHealth       = 5, // the hub: max health +skill_stat_max_health each, as a fraction
 	MaxArmour       = 6, // the hub and the Juggernaut: max armour +skill_stat_max_armor each, as a fraction
 	DashRecovery    = 7, // Shinobi: the Dash comes back sooner, -skill_stat_dash_recovery of its recharge each
-	Concealment     = 8, // Stealth: monsters learn about the player slower.  No effect yet
-	HornetReplenish = 9, // Alien: hornets come back faster.  No effect yet
+	Concealment     = 8, // Stealth: monsters learn about the player slower, skill_stat_concealment each -- CBaseMonster::UpdateSuspicion's fill rate, via PlayerConcealmentScale (dlls/perception.cpp)
+	HornetReplenish = 9, // Alien: hornets come back faster, +skill_stat_hornet_replenish each -- CHgun::Reload's regrowth rate, via PlayerHornetReplenishScale (dlls/player_skills.cpp)
 };
 
 // How many ids have a row in k_SkillDefs.  Bounds every walk over the
@@ -388,10 +388,13 @@ static_assert(k_MaxSkills <= k_SkillIdCeiling,
 // cannot disagree about the message length.
 inline constexpr int k_SkillMaskBytes = (k_SkillIdCeiling + 7) / 8;
 
-// The Status page's numbers message (SendSkillStatsToClient): twelve shorts
-// -- max health, max armour, nine multipliers and shares in thousandths, the
-// Dash recharge in milliseconds.  One constant so both DLLs agree on it.
-inline constexpr int k_SkillStatsBytes = 12 * 2;
+// The Status page's numbers message (SendSkillStatsToClient): fourteen
+// shorts -- max health, max armour, nine multipliers and shares in
+// thousandths, the Dash recharge in milliseconds, then the two other
+// Module stats in thousandths: the Concealment share (how much slower
+// monsters learn) and the hornet replenish multiplier.  One constant so
+// both DLLs agree on it.
+inline constexpr int k_SkillStatsBytes = 14 * 2;
 
 // The board is 15x15 (docs/SKILL_MAP.md).  Cells are checked against
 // this so a typo cannot place a node off the board; the reachability

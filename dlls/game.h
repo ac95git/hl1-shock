@@ -202,6 +202,19 @@ extern cvar_t skill_hive_replenish_scale;    // Hive Replenish: the regrowth rat
 extern cvar_t skill_hive_attack_speed_scale; // Hive Attack Speed: the fire interval, below 1 is faster
 extern cvar_t skill_stat_hornet_replenish;   // each Hornet Replenish Stat node adds this to the rate
 
+// The alien Module's summon weapon and its ghosts (docs/ROADMAP.md, "The
+// summon weapon -- settled").  A summon is resolved entirely on the server --
+// the spot search, the cap and the ghost itself -- so these live here; the
+// cooldown and Recall also have a reading in dlls/skill_tuning.h, because the
+// delay they set is m_flNextPrimaryAttack and the client predicts that.
+// Every number is a first guess.
+extern cvar_t summon_cooldown;        // seconds between summons, before Recall
+extern cvar_t summon_max_ghosts;      // ghosts out at once, before Pack
+extern cvar_t summon_ghost_lifetime;  // seconds a ghost stands, before Tether
+extern cvar_t skill_pack_bonus;       // Pack: ghosts the cap gains
+extern cvar_t skill_tether_scale;     // Tether: multiplies the lifetime
+extern cvar_t skill_recall_scale;     // Recall: multiplies the cooldown, below 1 is sooner
+
 // ---------------------------------------------------------
 // Damage debug readout.  THROWAWAY DIAGNOSTIC -- delete the cvar and both
 // functions once the numbers are settled.

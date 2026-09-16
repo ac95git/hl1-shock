@@ -33,7 +33,11 @@ void LinkUserMessages()
 
 	gmsgCurWeapon = REG_USER_MSG("CurWeapon", 3);
 	gmsgGeigerRange = REG_USER_MSG("Geiger", 1);
-	gmsgFlashlight = REG_USER_MSG("Flashlight", 2);
+	// 3 bytes since the Night Vision Module: on/off, battery, then which
+	// device that is -- 0 flashlight, 1 night vision (docs/SKILL_TREE.md,
+	// "The Night Vision Module"). cl_dll's MsgFunc_Flashlight reads the same
+	// three.
+	gmsgFlashlight = REG_USER_MSG("Flashlight", 3);
 	gmsgFlashBattery = REG_USER_MSG("FlashBat", 1);
 	gmsgHealth = REG_USER_MSG("Health", 2);
 	gmsgDamage = REG_USER_MSG("Damage", 12);

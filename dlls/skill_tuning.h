@@ -75,3 +75,26 @@ inline CSkillTuning g_tuneCleaveSwingTime = {"cleave_swing_time", 0.0f, nullptr}
 // allows.  Neutral for Energy Efficiency is no discount.
 inline CSkillTuning g_tuneKatanaWaveCost = {"katana_wave_cost", 0.0f, nullptr};
 inline CSkillTuning g_tuneEnergyEfficiency = {"skill_energy_efficiency_scale", 1.0f, nullptr};
+
+// The Alien region's Hive nodes (docs/SKILL_TREE.md, "Alien").  Hive
+// Attack Speed multiplies the hivehand's fire interval, which sets
+// m_flNextPrimaryAttack / m_flNextSecondaryAttack and is predicted like
+// Melee Speed.  Hive Replenish and the Hornet Replenish Stat nodes scale
+// the regrowth rate in CHgun::Reload; that loop is server-only today
+// (ammo regrowth is not itself predicted), but they read through here
+// rather than game.h so the reads cannot disagree if that changes.
+// skill_hive_capacity_bonus stays server-side -- see PlayerHornetMaxCarry
+// in dlls/player_skills.cpp -- because the ceiling it raises is never
+// something the client predicts.
+inline CSkillTuning g_tuneHiveAttackSpeed = {"skill_hive_attack_speed_scale", 1.0f, nullptr};
+inline CSkillTuning g_tuneHiveReplenish = {"skill_hive_replenish_scale", 1.0f, nullptr};
+inline CSkillTuning g_tuneHornetReplenishStat = {"skill_stat_hornet_replenish", 0.0f, nullptr};
+
+// The summon's cooldown and Recall, which shortens it.  The summon itself is
+// the server's alone -- the spot, the cap, the ghost -- but the delay it costs
+// is m_flNextPrimaryAttack, so the client has to set the same one or the
+// weapon hitches at the end of every cooldown.  Neutral for the cooldown is 0,
+// the safe side: on a failed lookup the client never refuses a summon the
+// server allows.  Neutral for Recall is no discount.
+inline CSkillTuning g_tuneSummonCooldown = {"summon_cooldown", 0.0f, nullptr};
+inline CSkillTuning g_tuneRecallScale = {"skill_recall_scale", 1.0f, nullptr};

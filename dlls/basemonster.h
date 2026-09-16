@@ -119,6 +119,14 @@ public:
 	float m_flSuspicion = 0.0f;
 	float m_flSuspicionTime = 0.0f; // when the meter was last advanced
 
+	// Whether the PREVIOUS UpdateSuspicion call had a target -- i.e. this
+	// monster could see the player last Look.  Slip Away needs the seen ->
+	// not-seen transition, which a single-sample meter cannot tell apart from
+	// "was never seen" on its own.  Saved alongside the meter for the same
+	// reason: restoring into the middle of a break-of-contact should not
+	// silently lose it.
+	bool m_bSuspicionHadTarget = false;
+
 	bool Save(CSave& save) override;
 	bool Restore(CRestore& restore) override;
 

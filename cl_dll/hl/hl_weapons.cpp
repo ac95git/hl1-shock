@@ -61,6 +61,7 @@ CRpg g_Rpg;
 CGauss g_Gauss;
 CEgon g_Egon;
 CHgun g_HGun;
+CSummon g_Summon;
 CHandGrenade g_HandGren;
 CSatchel g_Satchel;
 CTripmine g_Tripmine;
@@ -488,6 +489,7 @@ void HUD_InitClientWeapons()
 	HUD_PrepEntity(&g_Gauss, &player);
 	HUD_PrepEntity(&g_Egon, &player);
 	HUD_PrepEntity(&g_HGun, &player);
+	HUD_PrepEntity(&g_Summon, &player);
 	HUD_PrepEntity(&g_HandGren, &player);
 	HUD_PrepEntity(&g_Satchel, &player);
 	HUD_PrepEntity(&g_Tripmine, &player);
@@ -626,6 +628,13 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 
 	case WEAPON_HORNETGUN:
 		pWeapon = &g_HGun;
+		break;
+
+	// The summon itself is the server's -- the spot, the cap, the ghost --
+	// but the weapon is predicted anyway, for the animation and the cooldown
+	// it costs; see the note at the head of dlls/summon.cpp.
+	case WEAPON_SUMMON:
+		pWeapon = &g_Summon;
 		break;
 
 	case WEAPON_HANDGRENADE:

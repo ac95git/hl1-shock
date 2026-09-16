@@ -276,6 +276,26 @@ float PlayerBlastTakenScale(CBasePlayer* pPlayer);
 float PlayerEnergyTakenScale(CBasePlayer* pPlayer);
 float PlayerFallTakenScale(CBasePlayer* pPlayer);
 
+// =====================================================================
+// Ambush (Stealth): player damage to a hostile monster, scaled by how
+// unaware IT is at the hit -- read off pVictim's OWN Suspicion meter, not
+// anything on the attacker.  A situational counterpart to
+// PlayerStandingDamageScale rather than a case inside it, because only the
+// chokepoints that know which entity is about to take the hit
+// (ApplyMultiDamage, weapons.cpp; the direct-TakeDamage branch of
+// RadiusDamage, combat.cpp) can supply that victim -- SkillScaleWeaponDamage
+// never sees one.  Both chokepoints run before CBaseMonster::TakeDamage,
+// which is where SuspicionFromDamage fills the meter to full
+// (dlls/perception.cpp), so the tier read here is always the meter as it
+// stood before this hit lands.
+//
+// 1.0 without the Skill, on a non-monster or dead victim, on an
+// always-aware Perception Profile, on SF_MONSTER_IGNORE_CONCEALMENT, on a
+// monster not hostile to the player, or with suspicion_enable 0 -- every
+// case where the meter is not a real answer.
+class CBaseEntity;
+float PlayerAmbushScale(CBasePlayer* pPlayer, CBaseEntity* pVictim);
+
 // Sends the Status page's numbers (docs/STATUS_PANEL.md).  Called at the
 // end of SendSkillTreeToClient, since every change that moves a number is
 // already a skill-tree sync.
@@ -284,3 +304,26 @@ void SendSkillStatsToClient(CBasePlayer* pPlayer);
 // Both places a medkit heals ask this, so the "wastes nothing" test and
 // the heal agree.
 float PlayerMedkitHeal(CBasePlayer* pPlayer);
+
+// =====================================================================
+// The Alien region's Hive nodes (docs/SKILL_TREE.md, "Alien").
+//
+// The hornet carry ceiling: HORNET_MAX_CARRY, plus the Hive Capacity
+// bonus if that Skill is held.  Read wherever the ceiling that actually
+// governs play is enforced -- CHgun::Reload's regrowth loop, and the full
+// refill CHgun::AddToPlayer gives a multiplayer spawn -- the same way
+// PlayerMaxArmor is read at every place that caps or fills armour.
+// Server-side only: skill_hive_capacity_bonus is a game.h cvar, and every
+// caller is already inside hornetgun.cpp's #ifndef CLIENT_DLL.
+// =====================================================================
+int PlayerHornetMaxCarry(CBasePlayer* pPlayer);
+
+// The hivehand's regrowth-rate multiplier: Hive Replenish
+// (skill_hive_replenish_scale, if held) times 1 + count * the Hornet
+// Replenish Stat nodes (skill_stat_hornet_replenish), the Bullet Damage
+// Stat nodes' shape.  Both cvars are read through skill_tuning.h rather
+// than game.h, matching the comment beside them there, so the same
+// function can move to shared/predicted code without a second version.
+// Read in CHgun::Reload, the only place hornets regrow, and exposed here
+// so the Status page can show the same number later.
+float PlayerHornetReplenishScale(CBasePlayer* pPlayer);
