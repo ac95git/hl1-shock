@@ -555,7 +555,8 @@ Three things from **Age of Chivalry**, the Source mod that became Chivalry: Medi
 44-bone ValveBiped viewmodel rig; its eight longsword animations, verbatim (idle_01, draw, holster,
 swing1, swing2, stab, block, deflect — a two-handed moveset, both arms and all fingers animated); and
 the `fpv_good_footman` hand mesh, used because it is the one AoC hand mesh under GoldSrc's vertex limit,
-in a flat orange stand-in colour since the decompile brought no textures and the mod is not installed
+with its upper arms cut off and a texture of the mod's own painted onto it (an HEV glove in the three
+suit variants, by texture bands), since the decompile brought no textures and the mod is not installed
 here. The decompiled longsword mesh rides along as the second submodel of the `blade` bodygroup, for
 comparison only. The katana blade on it is ours.
 

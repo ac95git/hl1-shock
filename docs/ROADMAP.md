@@ -518,7 +518,18 @@ fingers. Shaped in a grilling session the same day:
   `v_katana.mdl`; the repo's `models/v_katana.mdl` restores it): the katana first in its bodygroup so
   body 0 shows it, the trail's three attachments bone-local on the sword bone, the blade's cold and hot
   textures laid out as the six glove-major skin families the client reads, no glove variants, no
-  hitboxes of its own, no code change. The slot table is the crowbar's twelve indices — idle_01 in the three idle slots,
+  hitboxes of its own, no code change. **Fine-tuned after the first in-game look, the same day, before
+  a definitive decision:** the katana slid 2 units out along its axis so the guard clears the right
+  thumb (the thumb's tip reaches 5.3 up the sword bone, the guard's underside sat at 3.5), its handle
+  slimmed to 0.45 of its width below the guard (the Dystopia handle is a flat card 4–6 units wide and
+  the hands close on about 2; `--slide`, `--slim`), the clavicle and upper-arm geometry dropped since
+  Half-Life shows the arm from the elbow, and the footman hands painted as an HEV glove by texture
+  bands in the mod's three glove variants — its texture is one island stacked by height, fingers and
+  hand at the top, forearm, upper arm — so the six families now change gloves and blade both.
+  **Andrei's reading of the animations in game:** the swipe is a Cleave, the overhead a riposte, the
+  stab a Backstab — a verb mapping not yet designed. And the open identity question: the katana as
+  built is a swift blade, the AoC moveset a bulky heavy sword, which is what *slow, bulky, and
+  frightening* above asked for. The slot table is the crowbar's twelve indices — idle_01 in the three idle slots,
   draw, holster, swing1 as attack1, swing2 as attack2 and as the Cleave, stab as attack3 — then block
   and deflect appended as 12 and 13, unplayed until a Guard verb exists. **None of the eight is
   dropped.** Measured: the katana's point reaches 25 units past the grip where the longsword's reaches
