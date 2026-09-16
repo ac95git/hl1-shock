@@ -26,12 +26,19 @@ an empty cell (`.`) is a wall. The suit at (7,7) is held from the start.
  r8   S      .      .      .      .    A      A      A      A    ArmEx  .      .      B      .      B
  r9  [Clev]  S      S      S      .    F-Up   .    Batt     .      .    B      B    FastR    B    [Swap]
          ENERGY (SW)                    JUGGERNAUT (S)                  ALIEN (SE, alien Module)
- r10  E    EnDmg    .      .      E    A      .      A      .      A    N      .    HiveC    .      N
- r11  E      .      E      E      E    A      A      A      A    Ricoc  N      N      N    HiveR   N
- r12 Insul   .    EgonF    .      .    A      .      .      .    PWin   HiveA   .      N      .      .
- r13  E      E      E      .      .    A      .    [JMaj]  Matrx  PRech  N     Pack    N    Tethr   N
- r14  .      .    EnEff    E    [Ovrd]  A    PDsch  PRebd   MoK     .    .      .    Recal    N    [AMaj]
+ r10  E    EnDmg    .      .      E    A      .      A      .    Ricoc  N      .    HiveC    .      N
+ r11  E      .      E      E      E    A      A      A      A      A    N      N      N    HiveR   N
+ r12 Insul   .    EgonF    .      .    A    PWin     .      .    Matrx  HiveA   .      N      .      .
+ r13  E      E      E      .      .    A    PRech    .      .     MoK    N     Pack    N    Tethr   N
+ r14  .      .    EnEff    E    [Ovrd]  A    PRebd  PDsch    .    [JMaj]  .      .    Recal    N    [AMaj]
 ```
+
+**The Juggernaut's south half was redrawn on 2026-09-16**, after the Matrix's first play: Ricochet swapped
+with the Max Armour node above it, so it is a spur beside the Alien door and not on the road to the Matrix;
+Pulse Window and Recharge moved to the west side down column 6, Rebound under them and Discharge east of
+Rebound (the two swapped); and the Matrix trio runs down the east column — Matrix, Matrix on Kill, the
+Major in the far corner — off the armour road at (9,11) and touching no Pulse node. The Matrix is the
+armour road's alone now; the "gated on both strands" reasoning in SKILL_TREE.md is superseded.
 
 `[ ]` a Major, `{ }` the keystone, `( )` the suit. Stat nodes: **S** Melee Damage, **B** Bullet Damage,
 **H** Healing (Medical) / Max Health (hub rows 6), **A** Max Armour, **E** Energy Damage, **D** Dash
@@ -75,8 +82,10 @@ Minor on the way is one of them.
 | Med Expert | 5 | H, Fortitude, (7,4), (7,3), Med Expert |
 | Overheal, Leech | 9 | … Med Expert, (6,2), (5,2), (5,1), Overheal |
 | Last Stand | 11 | … Overheal, (6,0), Last Stand |
-| Ricochet | 6 | A, Battery, (7,10), (7,11), (8,11), Ricochet |
-| Juggernaut Major | 10 | … Ricochet, Window, Recharge, Matrix, Major |
+| Ricochet | 7 | A, Battery, (7,10), (7,11), (8,11), (9,11), Ricochet — since 2026-09-16 |
+| Defense Matrix | 7 | A, Battery, (7,10), (7,11), (8,11), (9,11), Matrix |
+| Juggernaut Major | 9 | … Matrix, Matrix on Kill, Major |
+| Pulse Window | 7 | A, Battery, (7,10), (7,11), (6,11), (5,11), (5,12), Window — or (6,11), Window, 6 |
 | Energy Damage | 11 | … Backstab, (0,7), (0,8), Cleave, (0,10), Energy Damage — through Cleave, the Gargantua road, long on purpose |
 | Overdraw, via Juggernaut | 11 | A, Battery, (7,10), (7,11), (6,11), (5,11), (5,12), (5,13), (5,14), Overdraw |
 | Air Dash | 12 | … Glass Cannon, (0,4), Reprisal, (0,2), (0,1), Air Dash |
@@ -120,10 +129,10 @@ Where two regions actually connect: both border cells filled.
 | Specialist ↔ Stealth | (10,5) ↔ (10,4) Soft Step; (11,5) ↔ (11,4); (12,5) Headhunter ↔ (12,4) Ambush; (14,5) Demolitions ↔ (14,4) |
 | Specialist ↔ Alien | (10,9) ↔ (10,10); (12,9) Fast Reload ↔ (12,10) Hive Capacity; (14,9) Swap Surge ↔ (14,10) |
 | Juggernaut ↔ Energy | (5,10) ↔ (4,10); (5,11) ↔ (4,11); (5,14) ↔ (4,14) Overdraw |
-| Juggernaut ↔ Alien | (9,10) ↔ (10,10); (9,11) Ricochet ↔ (10,11); (9,12) Pulse Window ↔ (10,12) Hive Attack Speed |
+| Juggernaut ↔ Alien | (9,10) Ricochet ↔ (10,10); (9,11) ↔ (10,11); (9,12) Defense Matrix ↔ (10,12) Hive Attack Speed |
 
 A door into a hidden region is a door onto blank pads until its Module is found; a door *from* a hidden
-node (Pulse Window into Alien) is closed until the Pulse Module.
+node (the Defense Matrix into Alien, Pulse Window before 2026-09-16) is closed until the Pulse Module.
 
 ## Placement rules the board follows
 

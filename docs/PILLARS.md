@@ -9,7 +9,8 @@ same commit as the code change.
 This file records **what exists today**. Intended work that has not been built lives in
 [ROADMAP.md](ROADMAP.md), and each pillar below links to its entries there.
 
-**Last updated:** 2026-09-12 (branch `hl-shock`, after the Suit Variant)
+**Last updated:** 2026-09-16 (branch `hl-shock`, the Defense Matrix built on a held Pulse key, and the Status
+tab before it; 2026-09-12 before that, after the Suit Variant)
 
 ## Status legend
 
@@ -25,7 +26,7 @@ This file records **what exists today**. Intended work that has not been built l
 | # | Pillar | Status | One-line state |
 | --- | --- | --- | --- |
 | 1 | [Exploration](#1-exploration) | **Not started** | Its rewards exist — Row Grants, Skill Points, Reset Tokens are all findable entities, and `topmap`, the default test map, places them — but no map yet has spaces to explore *for* them. |
-| 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar. Melee Skills land, and the Backstab gives melee its first positional decision. Numbers untuned. |
+| 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar — and since 2026-09-16 the same key held is the Defense Matrix, the Juggernaut Route's last three nodes, untested in game. Melee Skills land, and the Backstab gives melee its first positional decision. Numbers untuned. |
 | 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. The Dash, the first Module, is built on SHIFT and untested in game. |
 | 4 | [Skill trees](#4-skill-trees) | **Playable** | 52 nodes, **all with effects**: the Melee and Weapon Specialist Routes built whole on the matrix (Stat nodes as their roads, every node one point, a major at the end of each), the Medical and Energy Routes built to all but their open nodes, Ricochet ahead of the Juggernaut, and the Dash and Alien columns waiting for their Modules. Points and Reset Tokens are earned and spent, the tree fits any screen, and nothing in it lies about what it does. Numbers untuned; `topmap`, the default test map, places Skill Points, and the economy is a non-issue. |
 | 5 | [Inventory management](#5-inventory-management) | **Playable** | Grid, drag-drop, and context actions work over a server-owned model. Row Grants are now placeable; Boxes are the remaining gap. |
@@ -162,6 +163,63 @@ draw order, and the tint has to go under every other readout rather than over it
 the fill off its own clock from the duration it was given. A whole Pulse costs three 2-byte messages
 instead of one per frame. `CPlayerPulse::ForgetSentState()`, called where `m_fInitHUD` is handled in
 `UpdateClientData`, forces a resend after the client's HUD is reset so the bar cannot go stale.
+
+**The Defense Matrix — built 2026-09-16, untested in game.** The Juggernaut Route's stance, shaped
+2026-09-13 ([ROADMAP](ROADMAP.md#juggernaut--resilient), [SKILL_TREE](SKILL_TREE.md#juggernaut)), and
+the Route's last three nodes: Defense Matrix (id 157), Matrix on Kill (158) and the Major, Decaying Armor
+(159). All of it lives in `CPlayerPulse` beside the Shield, because it is the same key.
+
+- **Hold the Pulse key for `skill_matrix_hold` (1 s) and the Matrix comes up.** The tap's Shield still
+  fires at the front of the press (`OnPress` is `TryPulse` plus the start of the hold), so a hold begins
+  with the deflect window and the Matrix follows it; the two are separate verbs on one key. One attempt per
+  press: a hold that finds the Matrix on cooldown, or a player with no armour and no Major, gets the denied
+  buzz once rather than every frame. Without the Skill a held key is just a held key.
+- **While it stands, nothing reaches health.** `CBasePlayer::TakeDamage` replaces the armour split: armour
+  pays for the whole hit at `skill_matrix_armor_cost_scale` (0.5) per point of damage, so a 20 hit costs 10
+  AP and 0 HP and a point of armour buys two of health; a hit the pool cannot cover spends the rest on
+  health. **Reworked the same day it was built.** The first shape scaled the stock split's ratio to 5%
+  and could not be read in play even with `debug_damage` on, because the stock split already sends 80% of
+  a hit to armour; moving the last 15% was invisible and no defence at all. Health frozen while the armour
+  figure drains is the readable version. **Armour is the pool** — no second bar, and nothing refills by
+  waiting. Falls and drowning skip armour in the base game and so skip the Matrix without a carve-out.
+- **The slow is the Route's whole cost**, paid only while the protection is on: `pev->maxspeed` is set to
+  `sv_maxspeed` × `skill_matrix_speed_scale` (0.8) through `pfnSetClientMaxspeed`, which the engine hands
+  the movement code as `pmove->clientmaxspeed` and `PM_CheckParamters` clamps against. A cap, not a rule
+  change, so it survives the rule that cut Sprint and High Jump. Applied on change from the state rather
+  than at raise and drop, so a save, a spawn and a cvar edit all come out right.
+- **It stands for `skill_matrix_duration` (6 s) or until zero armour**, whichever first, then waits
+  `skill_matrix_cooldown` (10 s). **The key is held only to raise it**: the first shape dropped the Matrix
+  on release and tied a hand up for its whole life, and Andrei took that out after the first play. A save
+  mid-Matrix comes back with it standing and the right time left, as a Shield or an Infusion does.
+- **Matrix on Kill**: a monster the player kills while it stands restores `skill_matrix_kill_armor` (15) up
+  to `PlayerMaxArmor` and no further. `CBaseMonster::Killed` tells the player through
+  `CBasePlayer::OnMonsterKilled`, once per monster, whatever the weapon; `CLASS_NONE`, `CLASS_PLAYER` and
+  `CLASS_PLAYER_ALLY` do not count, so killing a scientist for armour is not the Route's way to sustain.
+- **Decaying Armor, the Major**: raising the Matrix grants `skill_matrix_grant` (100, set "to be toned
+  down") **above the cap**, on purpose — a grant that respected `PlayerMaxArmor` would do nothing at full
+  armour. The grant fades over the Matrix's own duration — grant over `skill_matrix_duration` per second,
+  derived rather than a knob, so it is gone in the moment the Matrix drops and the two read as one thing
+  (Andrei's tuning after the first play; 10 per second was the first guess) — and is spent like any armour
+  before then, so it is fuel: Overdraw's drain and the Matrix's own share eat it first, and a hit that ate through
+  it shrinks what is left to fade. It is the Energy tie: raise the Matrix, gain a hundred armour, fire the
+  egon into it.
+- **What the player sees and hears.** `gmsgMatrix` carries an `EMatrixState` (none, ready, up, cooldown)
+  and a duration, sent on change like `gmsgPulse`; *none* is a player without the Skill, so they see
+  nothing. With it: **a Matrix bar** right of the Pulse's charge bar in the same vocabulary — full in the
+  suit's colour when ready, white and draining while it stands, dim and refilling on cooldown — and the
+  Concealment icon lays itself out after it. **The screen's edges tint** in the suit's colour while it
+  stands, six bands fading inward (`hud_matrix_tint`, the edge alpha, 110; `hud_matrix_tint_width`, the
+  depth as a fraction of the screen's height, 0.12), so the frame reads as armoured and the middle stays
+  clear. The armour readout goes white at full strength too; its bar still clamps at the cap and the number
+  is what shows the grant above it. Sounds: a suit-coloured light and the slave's zap on raise, the zap
+  again on drop, and **the Pulse's ready chime pitched down when the cooldown ends** — the readiness cue
+  for a player not looking at the bar. All placeholders, in [ART_DEBT.md](ART_DEBT.md). Under
+  `debug_damage` every raise, drop, kill, hit split and the grant's end prints a `matrix:` line.
+- **Where it sits.** Since the same day, the Matrix trio runs down the Juggernaut's east column off the
+  armour road, touching no Pulse node; Ricochet is a spur beside the Alien door, and the Pulse block is on
+  the west side ([SKILL_MAP.md](SKILL_MAP.md)).
+- **Nothing else changes.** No node touches the slow, refill rate and delay are not nodes, and the Status
+  page's Armor efficiency still reports the standing ratio: the Matrix is situational, like Swap Surge.
 
 **The Gauss Katana, v1** — `weapon_katana`, `dlls/katana.cpp`. The mod's first custom weapon, built as
 `CCrowbar` with two hooks overridden rather than as a copy: `BaseDamage()` reads `sk_plr_katana1-3` (60,
@@ -490,7 +548,11 @@ design assume it.
 all 16 usable bits. `usercmd_t.impulse` rides the same per-tick packet, so timing fidelity is identical to a
 button, and it is self-clearing (`dlls/player.cpp:3615`) so the press is edge-triggered for free. Also
 deliberately not a crowbar secondary attack — that would tie a suit ability to one weapon and drag it into
-client prediction, where the player-owned Recharge state does not exist.
+client prediction, where the player-owned Recharge state does not exist. **Since 2026-09-16 the key is
+`+pulse`** (`cl_dll/input.cpp`), a press-and-release pair that sends `PULSE_IMPULSE` (150) on the press and
+`PULSE_RELEASE_IMPULSE` (152) on the release, both in `game_shared/pulse_defs.h`, so the server can time a
+*hold* for the Defense Matrix below; a release that lands in the same frame as its press waits one command
+so the server always sees both. A bare `impulse 150` bind is still a tap and can never raise the Matrix.
 
 **The window always runs its full duration.** Negating something does not close the Shield early, so
 several attackers landing hits in one window are all negated. The Recharge length is decided when the

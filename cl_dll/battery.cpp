@@ -124,6 +124,17 @@ bool CHudBattery::Draw(float flTime)
 	else
 		a = MIN_ALPHA;
 
+	// The Defense Matrix: while it stands the armour readout is white at full
+	// strength, the way the Pulse icon goes white while a Shield stands -- a
+	// different colour rather than a brighter one, so it reads mid-fight.  The
+	// design's one HUD change for the Matrix; the bar still clamps at the cap,
+	// and the number is what shows the Major's grant above it.
+	if (gHUD.m_Pulse.MatrixUp())
+	{
+		r = g = b = 255;
+		a = 255;
+	}
+
 	ScaleColors(r, g, b, a);
 
 	int iOffset = (m_prc1->bottom - m_prc1->top) / 6;

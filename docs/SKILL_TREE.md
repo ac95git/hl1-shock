@@ -43,7 +43,7 @@ are assigned when a node is built, never reused, and **22 and 23 are spoken for*
 
 | Route | Nodes | Root | Major node | Needs |
 | --- | --- | --- | --- | --- |
-| [Juggernaut](#juggernaut) | 11 | Fortitude (8) | +100 decaying armour on Matrix activation | The Pulse Module for its Pulse nodes. **Matrix trio placed hidden 2026-09-15**, no effect yet |
+| [Juggernaut](#juggernaut) | 11 | Fortitude (8) | +100 decaying armour on Matrix activation | The Pulse Module for its Pulse nodes. **Built whole 2026-09-16**: the Matrix trio has its effects, on a `+pulse` hold |
 | [Alien](#alien) | 7 | Hive Capacity (20) | The volley is energy damage | The alien Module; the whole Route is hidden until it. **Placed hidden 2026-09-15**, no effects yet |
 | [Energy](#energy) | 6 + 4 Stat | Energy Damage (54) | Overdraw: energy attacks drain armour for bonus damage | — . **Building since 2026-09-14** |
 | [Melee](#melee) | 6 + 9 Stat | Melee Reach (1) | Cleave | — . **Built 2026-09-14** |
@@ -289,9 +289,9 @@ Matrix, and the armour both lean on. [ROADMAP](ROADMAP.md#juggernaut--resilient)
 | Pulse Recharge | 15 | The Recharge is shorter | — | Exists |
 | Pulse Discharge | 16 | Negated hits vent at the crosshair, as energy | — | Exists |
 | Pulse Rebound | 17 | A deflect skips the Recharge, once per charge | — | Exists |
-| Defense Matrix | new | Hold the Pulse key 1 s: armour takes a far larger share of every hit, the player is slowed 20%, drops on release / 6 s / zero armour, 10 s cooldown. Armour is the pool; nothing refills by waiting | — | New. Gate |
-| Matrix on Kill | new | A kill while the Matrix is up restores some armour | — | New |
-| **Major** | new | **+100 decaying armour on Matrix activation** (numbers to be toned down). The Energy tie | — | New |
+| Defense Matrix | 157 | Hold the Pulse key 1 s: **no damage reaches health**, armour pays for the whole hit at 0.5 AP per point (`skill_matrix_armor_cost_scale`), the player is slowed 20%, stands 6 s or until zero armour, 10 s cooldown. Armour is the pool; nothing refills by waiting | — | **Built 2026-09-16**, reworked the same day: the first shape, a larger share of the stock split, could not be read in play, and holding the key through the six seconds was dropped |
+| Matrix on Kill | 158 | A kill while the Matrix is up restores some armour (15, to the cap) | — | **Built 2026-09-16** |
+| **Major: Decaying Armor** | 159 | **+100 decaying armour on Matrix activation** (numbers to be toned down; fades over the Matrix's 6 s, gone as it drops). The Energy tie | — | **Built 2026-09-16** |
 
 ```mermaid
 graph TD
@@ -302,13 +302,15 @@ graph TD
   PR --> PD[Pulse Discharge 16]
   PR --> PB[Pulse Rebound 17]
   BC --> DM[Defense Matrix]
-  PW --> DM
   DM --> MK[Matrix on Kill]
-  MK --> JM{{"Major: +100 decaying armour"}}
+  MK --> JM{{"Major: Decaying Armor"}}
 ```
 
-The Matrix is gated on both strands on purpose: it is the press *and* the armour. Every Pulse node,
-including the Matrix, is hidden until the player holds the Pulse Module.
+~~The Matrix is gated on both strands on purpose: it is the press *and* the armour.~~ **Superseded
+2026-09-16**, after the first play: the Matrix trio hangs off the armour road alone, down the region's east
+column, and the Pulse block sits on the west side touching none of it (the redraw is in
+[SKILL_MAP.md](SKILL_MAP.md)). Every Pulse node, including the Matrix, is hidden until the player holds the
+Pulse Module.
 
 ---
 
@@ -713,6 +715,6 @@ nodes; a thorough player owns about 71%. The numbers and the reason they were ac
 
 **Melee, 2026-09-14**, whole; it is the worked example. **Weapon Specialist the same day**, node by node
 in five commits, the first Route built on the matrix without a grill: every node was already settled and
-the numbers are first guesses in cvars. Of the rest, the Juggernaut needs a press-and-release Pulse
-command pair; the Dash and Alien Routes each need their Module; Energy and Medical need nothing new. The infrastructure in front of them is done: the four cuts on 2026-09-13,
+the numbers are first guesses in cvars. **The Juggernaut, 2026-09-16**, on the press-and-release Pulse
+command pair it needed. Of the rest, the Dash and Alien Routes each need their Module; Energy and Medical need nothing new. The infrastructure in front of them is done: the four cuts on 2026-09-13,
 the fitted icon draw, the 256-id ceiling, the Stat tier and the layout cvars on 2026-09-14.

@@ -379,6 +379,11 @@ public:
 	// ---- The Pulse ----
 	CPlayerPulse m_pulse;
 
+	// A monster this player's damage killed, from CBaseMonster::Killed.  The
+	// one place a player's kills are seen whatever the weapon; Matrix on Kill
+	// reads it, and anything else that pays on a kill should too.
+	void OnMonsterKilled(CBaseMonster* pVictim) { m_pulse.OnKill(this, pVictim); }
+
 	// ---- The Infusion ----
 	CPlayerInfusion m_infusion;
 

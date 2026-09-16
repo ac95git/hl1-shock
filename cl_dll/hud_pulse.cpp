@@ -18,11 +18,18 @@
 #include <stdio.h>
 
 DECLARE_MESSAGE(m_Pulse, Pulse)
+DECLARE_MESSAGE(m_Pulse, Matrix)
 
 // Mirrors EPulseState in dlls/player_pulse.h.
 #define PULSE_READY 0
 #define PULSE_SHIELD 1
 #define PULSE_RECHARGING 2
+
+// Mirrors EMatrixState in dlls/player_pulse.h.
+#define MATRIX_NONE 0
+#define MATRIX_READY 1
+#define MATRIX_UP 2
+#define MATRIX_COOLDOWN 3
 
 // The Pulse draws in the suit's colour like everything else.
 //
@@ -36,13 +43,22 @@ DECLARE_MESSAGE(m_Pulse, Pulse)
 bool CHudPulse::Init()
 {
 	HOOK_MESSAGE(Pulse);
+	HOOK_MESSAGE(Matrix);
 
 	m_iState = PULSE_READY;
 	m_flStateStart = 0;
 	m_flStateEnd = 0;
+	m_iMatrixState = MATRIX_NONE;
+	m_flMatrixStateStart = 0;
+	m_flMatrixStateEnd = 0;
 
 	// Alpha of the screen tint while a Shield stands; 0 turns it off.
 	m_pCvarTint = CVAR_CREATE("hud_pulse_tint", "48", FCVAR_ARCHIVE);
+
+	// The Defense Matrix's edge tint: the alpha of the outermost band, and the
+	// bands' total depth as a fraction of the screen's height.  0 turns it off.
+	m_pCvarMatrixTint = CVAR_CREATE("hud_matrix_tint", "110", FCVAR_ARCHIVE);
+	m_pCvarMatrixTintWidth = CVAR_CREATE("hud_matrix_tint_width", "0.12", FCVAR_ARCHIVE);
 
 	m_iFlags |= HUD_ACTIVE;
 
@@ -69,6 +85,9 @@ void CHudPulse::Reset()
 	m_iState = PULSE_READY;
 	m_flStateStart = 0;
 	m_flStateEnd = 0;
+	m_iMatrixState = MATRIX_NONE;
+	m_flMatrixStateStart = 0;
+	m_flMatrixStateEnd = 0;
 }
 
 bool CHudPulse::MsgFunc_Pulse(const char* pszName, int iSize, void* pbuf)
@@ -82,6 +101,31 @@ bool CHudPulse::MsgFunc_Pulse(const char* pszName, int iSize, void* pbuf)
 	m_flStateEnd = gHUD.m_flTime + flDuration;
 
 	return true;
+}
+
+// The Defense Matrix, on change only, like the Pulse: the state and how long
+// it lasts, and the bar runs off the client's clock from there.
+bool CHudPulse::MsgFunc_Matrix(const char* pszName, int iSize, void* pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+
+	m_iMatrixState = READ_BYTE();
+	const float flDuration = READ_BYTE() / 10.0f;
+
+	m_flMatrixStateStart = gHUD.m_flTime;
+	m_flMatrixStateEnd = gHUD.m_flTime + flDuration;
+
+	return true;
+}
+
+bool CHudPulse::MatrixUp() const
+{
+	return m_iMatrixState == MATRIX_UP;
+}
+
+bool CHudPulse::MatrixBarShown() const
+{
+	return m_iMatrixState != MATRIX_NONE;
 }
 
 //=========================================================
@@ -115,7 +159,63 @@ int CHudPulse::RightEdge() const
 
 	const int spriteW = m_prc->right - m_prc->left;
 
-	return IconX() + spriteW + spriteW / 4 + BarWidth(spriteW);
+	int x = IconX() + spriteW + spriteW / 4 + BarWidth(spriteW);
+
+	// The Matrix bar, when the player has one to show.
+	if (MatrixBarShown())
+		x += spriteW / 4 + BarWidth(spriteW);
+
+	return x;
+}
+
+//=========================================================
+// The Defense Matrix's edge tint: bands in the suit's colour along all four
+// edges, strongest at the edge and fading inward, so the screen reads as
+// framed while the Matrix stands and the middle stays clear to fight in.
+// FillRGBA draws flat rectangles, so the fade is stepped -- a handful of
+// bands is enough at the alphas involved.  The top and bottom bands run the
+// full width and the side bands fill between them, so no corner is painted
+// twice.
+//=========================================================
+void CHudPulse::DrawMatrixTint() const
+{
+	if (!m_pCvarMatrixTint || m_pCvarMatrixTint->value <= 0)
+		return;
+
+	const int aEdge = (int)V_min(m_pCvarMatrixTint->value, 255.0f);
+	const float flFrac = m_pCvarMatrixTintWidth ? m_pCvarMatrixTintWidth->value : 0.12f;
+	const int depth = (int)(ScreenHeight * V_max(0.0f, V_min(flFrac, 0.5f)));
+	if (depth <= 0)
+		return;
+
+	int r, g, b;
+	UnpackRGB(r, g, b, RGB_SUIT);
+
+	constexpr int k_Bands = 6;
+	const int bandH = V_max(1, depth / k_Bands);
+
+	for (int i = 0; i < k_Bands; ++i)
+	{
+		// Outermost band at full alpha, each one inward a step fainter.
+		const int a = aEdge * (k_Bands - i) / k_Bands;
+		if (a <= 0)
+			continue;
+
+		const int inset = i * bandH;
+
+		// Top and bottom, full width.
+		FillRGBA(0, inset, ScreenWidth, bandH, r, g, b, a);
+		FillRGBA(0, ScreenHeight - inset - bandH, ScreenWidth, bandH, r, g, b, a);
+
+		// Left and right, between them.
+		const int sideY = inset + bandH;
+		const int sideH = ScreenHeight - 2 * sideY;
+		if (sideH > 0)
+		{
+			FillRGBA(inset, sideY, bandH, sideH, r, g, b, a);
+			FillRGBA(ScreenWidth - inset - bandH, sideY, bandH, sideH, r, g, b, a);
+		}
+	}
 }
 
 bool CHudPulse::Draw(float flTime)
@@ -144,6 +244,11 @@ bool CHudPulse::Draw(float flTime)
 
 		FillRGBA(0, 0, ScreenWidth, ScreenHeight, tr, tg, tb, a);
 	}
+
+	// The Defense Matrix frames the screen while it stands; same draw-order
+	// reasoning as the Shield's tint above.
+	if (m_iMatrixState == MATRIX_UP)
+		DrawMatrixTint();
 
 	// ---- Icon and charge bar --------------------------------------------
 	//
@@ -214,6 +319,51 @@ bool CHudPulse::Draw(float flTime)
 	const int fillH = (int)(barH * flFill);
 	if (fillH > 0)
 		FillRGBA(barX, barY + (barH - fillH), barW, fillH, r, g, b, a);
+
+	// ---- The Matrix bar --------------------------------------------------
+	//
+	// Right of the Pulse's bar, only for a player who holds the Skill.  The
+	// same vocabulary as the Pulse's: full in the suit's colour when ready,
+	// white and draining while it stands, dim and refilling on cooldown.
+	if (MatrixBarShown())
+	{
+		int mr, mg, mb;
+		UnpackRGB(mr, mg, mb, RGB_SUIT);
+
+		float flMatrixFill = 1.0f;
+		int ma = 192;
+
+		const float flSpan = m_flMatrixStateEnd - m_flMatrixStateStart;
+		const float flElapsed = (flSpan > 0) ? (flTime - m_flMatrixStateStart) / flSpan : 1.0f;
+		const float flClamped = V_max(0.0f, V_min(flElapsed, 1.0f));
+
+		switch (m_iMatrixState)
+		{
+		case MATRIX_UP:
+			// White, and what is left of the six seconds drains away.
+			mr = mg = mb = 255;
+			flMatrixFill = 1.0f - flClamped;
+			ma = 255;
+			break;
+
+		case MATRIX_COOLDOWN:
+			flMatrixFill = flClamped;
+			ma = 100;
+			break;
+
+		case MATRIX_READY:
+		default:
+			break;
+		}
+
+		const int mbarX = barX + barW + spriteW / 4;
+
+		FillRGBA(mbarX, barY, barW, barH, 24, 24, 24, 100);
+
+		const int mfillH = (int)(barH * flMatrixFill);
+		if (mfillH > 0)
+			FillRGBA(mbarX, barY + (barH - mfillH), barW, mfillH, mr, mg, mb, ma);
+	}
 
 	return true;
 }

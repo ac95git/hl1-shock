@@ -38,6 +38,7 @@
 #include "gamerules.h"
 #include "game.h"
 #include "pm_shared.h"
+#include "pulse_defs.h"
 #include "hltv.h"
 #include "UserMessages.h"
 #include "client.h"
@@ -401,6 +402,10 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 	// so scaling it DOWN is what makes armor better.
 	flRatio *= PlayerArmorRatioScale(this);
 
+	// The Defense Matrix (the Juggernaut Route) rewrites the armour split
+	// below while it stands; read once here so the split and its readout agree.
+	const bool bMatrix = m_pulse.MatrixUp();
+
 	if ((bitsDamageType & DMG_BLAST) != 0 && g_pGameRules->IsMultiplayer())
 	{
 		// blasts damage armor more.
@@ -527,22 +532,63 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 	// Armor.
 	if (0 != pev->armorvalue && (bitsDamageType & (DMG_FALL | DMG_DROWN)) == 0) // armor doesn't protect against fall or drown damage!
 	{
-		float flNew = flDamage * flRatio;
-
+		float flNew;
 		float flArmor;
 
-		flArmor = (flDamage - flNew) * flBonus;
-
-		// Does this use more armor than we have?
-		if (flArmor > pev->armorvalue)
+		if (bMatrix)
 		{
-			flArmor = pev->armorvalue;
-			flArmor *= (1 / flBonus);
-			flNew = flDamage - flArmor;
-			pev->armorvalue = 0;
+			// The Defense Matrix: NOTHING reaches health while it stands, and
+			// armour pays for the whole hit at skill_matrix_armor_cost_scale
+			// per point of damage (0.5: a 20 hit costs 10 AP and 0 HP). Armour
+			// is the pool, and this is what makes it one -- the first shape,
+			// a larger share of the stock split, moved 15% of a hit from health
+			// to armour and could not be read even with debug_damage on, since
+			// the stock split already sends 80% to armour. Health frozen while
+			// the armour figure drains is the readable version, and a point of
+			// armour buying two of health is the defence the Route promised.
+			// A hit the pool cannot cover spends the rest on health and the
+			// Matrix drops at zero on the next Think.
+			const float flCost = std::max(0.05f, skill_matrix_armor_cost_scale.value);
+			flArmor = flDamage * flCost;
+
+			if (flArmor > pev->armorvalue)
+			{
+				const float flCovered = pev->armorvalue / flCost;
+				flArmor = pev->armorvalue;
+				flNew = std::max(0.0f, flDamage - flCovered);
+				pev->armorvalue = 0;
+			}
+			else
+			{
+				flNew = 0;
+				pev->armorvalue -= flArmor;
+			}
+
+			// The Ricochet lesson: a Skill that changes a split quietly needs a
+			// readout, or "did the Matrix do anything" is a guess from the screen.
+			if (debug_damage.value != 0)
+			{
+				ALERT(at_console, "matrix: hit %.1f -> %.1f to health, %.1f off armour, armour now %.1f\n",
+					flDamage, flNew, flArmor, pev->armorvalue);
+			}
 		}
 		else
-			pev->armorvalue -= flArmor;
+		{
+			flNew = flDamage * flRatio;
+
+			flArmor = (flDamage - flNew) * flBonus;
+
+			// Does this use more armor than we have?
+			if (flArmor > pev->armorvalue)
+			{
+				flArmor = pev->armorvalue;
+				flArmor *= (1 / flBonus);
+				flNew = flDamage - flArmor;
+				pev->armorvalue = 0;
+			}
+			else
+				pev->armorvalue -= flArmor;
+		}
 
 		flDamage = flNew;
 	}
@@ -4034,8 +4080,15 @@ void CBasePlayer::ImpulseCommands()
 	// spends all 16 usable bits. usercmd_t.impulse rides the same per-tick
 	// packet, so the timing fidelity is identical to a button, and pev->impulse
 	// is cleared at the end of this function so the press is edge-triggered.
-	case 150:
-		m_pulse.TryPulse(this);
+	// The client's +pulse/-pulse pair sends the press and a second impulse on
+	// release (game_shared/pulse_defs.h), which is how a HOLD is timed for the
+	// Defense Matrix; a bare "impulse 150" is still a tap.
+	case PULSE_IMPULSE:
+		m_pulse.OnPress(this);
+		break;
+
+	case PULSE_RELEASE_IMPULSE:
+		m_pulse.OnRelease(this);
 		break;
 
 	// The Dash.  Nothing to do here: the movement code has already read the

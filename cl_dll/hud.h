@@ -496,6 +496,7 @@ public:
 	void Reset() override;
 	bool Draw(float flTime) override;
 	bool MsgFunc_Pulse(const char* pszName, int iSize, void* pbuf);
+	bool MsgFunc_Matrix(const char* pszName, int iSize, void* pbuf);
 
 	// Right edge of the Pulse icon and its charge bar, in screen pixels.
 	// Anything laid out after the Pulse -- the Concealment icon -- starts from
@@ -503,10 +504,26 @@ public:
 	// Pulse moves.
 	int RightEdge() const;
 
+	// The Defense Matrix stands, as the server last said.  The armour readout
+	// tints on it (CHudBattery); this element draws its bar and the edge tint.
+	bool MatrixUp() const;
+
 private:
 	int m_iState = 0;         // EPulseState, mirrored from the server
 	float m_flStateStart = 0; // client time the current state began
 	float m_flStateEnd = 0;   // client time it is due to end
+
+	int m_iMatrixState = 0;         // EMatrixState, from gmsgMatrix, sent on change
+	float m_flMatrixStateStart = 0; // client time it began
+	float m_flMatrixStateEnd = 0;   // client time it is due to end
+
+	struct cvar_s* m_pCvarMatrixTint = nullptr;
+	struct cvar_s* m_pCvarMatrixTintWidth = nullptr;
+
+	// The Matrix bar sits right of the Pulse's; drawn only for a player who
+	// holds the Skill, and RightEdge grows by it then.
+	bool MatrixBarShown() const;
+	void DrawMatrixTint() const;
 
 	// Icon, borrowed from the armour readout. Handle is fetched lazily in
 	// Draw because the sprites are not loaded yet at VidInit time -- see

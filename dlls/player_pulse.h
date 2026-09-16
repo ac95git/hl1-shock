@@ -17,6 +17,7 @@
 #pragma once
 
 class CBasePlayer;
+class CBaseMonster;
 
 //=========================================================
 // CPlayerPulse
@@ -77,13 +78,52 @@ struct CPlayerPulse
 	// like m_iSentState, and cleared with it.
 	bool m_bFollowUpIconSent = false;
 
+	// ---- The Defense Matrix (the Juggernaut Route) ----
+	//
+	// The Pulse key HELD for a second raises it; from then on it keeps its
+	// own time.  While it stands nothing reaches health -- armour pays for
+	// every hit -- the player is slowed, and the Major grants decaying armour
+	// above the cap.  Armour is the pool -- there is no second bar and nothing
+	// refills by waiting.  Not a Shield: CONTEXT.md keeps that word for the
+	// field a tap raises, and the tap still fires at the front of every hold.
+
+	// Persistent.  A save mid-Matrix comes back with it standing and the
+	// right time left, like a Shield or an Infusion does.
+	float m_flMatrixReadyTime = 0; // cooldown end; zero or past means ready
+	float m_flMatrixGrant = 0;     // decaying armour still standing from the Major
+	bool  m_bMatrixUp = false;
+	float m_flMatrixEndTime = 0;
+
+	// Transient.  The hold only matters until the Matrix comes up.
+	bool  m_bHeld = false;         // the Pulse key is down
+	float m_flPressTime = 0;       // when it went down
+	bool  m_bHoldSpent = false;    // this press has had its Matrix attempt
+	float m_flMatrixLastThink = 0; // for the grant's decay
+	bool  m_bMatrixReadyCue = false; // a cooldown is running that has not chimed yet
+	int   m_iSentMatrix = -1;      // last EMatrixState pushed to the client; -1 forces
+	float m_flAppliedMaxspeed = -1; // last maxspeed handed to the engine; -1 forces
+
 	// Takes the player because Rebounds start full, and how many that is
 	// depends on their Skills.
 	void Clear(CBasePlayer* pPlayer);
 
 	// Makes the next sync send unconditionally.  Called when the client's HUD
 	// is reset, so the bar cannot be left showing a stale state.
-	void ForgetSentState() { m_iSentState = -1; m_bFollowUpIconSent = false; }
+	void ForgetSentState() { m_iSentState = -1; m_bFollowUpIconSent = false; m_iSentMatrix = -1; }
+
+	// The Matrix stands right now.  CBasePlayer::TakeDamage reads it at the
+	// armour split; the readout tints on it.
+	bool MatrixUp() const { return m_bMatrixUp; }
+
+	// The Pulse key, from ImpulseCommands.  The press is the tap's Shield
+	// (TryPulse) and the start of a hold; the release ends the hold, and
+	// nothing else -- a standing Matrix runs on.  See game_shared/pulse_defs.h.
+	void OnPress(CBasePlayer* pPlayer);
+	void OnRelease(CBasePlayer* pPlayer);
+
+	// Matrix on Kill: a monster the player killed while the Matrix stands
+	// gives armour back.  From CBaseMonster::Killed through the player.
+	void OnKill(CBasePlayer* pPlayer, CBaseMonster* pVictim);
 
 	// A Shield is standing and has not yet fallen.
 	bool ShieldActive() const { return m_bShieldUp; }
@@ -122,6 +162,15 @@ private:
 	void SyncClient(CBasePlayer* pPlayer);
 	// Keeps the Follow-Up's primed icon in step with the window.
 	void SyncFollowUpIcon(CBasePlayer* pPlayer);
+
+	// The Matrix's share of Think: the hold, the drop rules, the grant's
+	// decay, the slow, and the sync.
+	void MatrixThink(CBasePlayer* pPlayer);
+	void RaiseMatrix(CBasePlayer* pPlayer);
+	void DropMatrix(CBasePlayer* pPlayer, const char* pszReason);
+	void DecayMatrixGrant(CBasePlayer* pPlayer);
+	void ApplyMatrixSpeed(CBasePlayer* pPlayer);
+	void SyncMatrix(CBasePlayer* pPlayer);
 };
 
 //=========================================================
@@ -133,6 +182,19 @@ enum EPulseState
 	PULSE_READY = 0,      // armed, nothing running
 	PULSE_SHIELD = 1,     // a Shield is standing
 	PULSE_RECHARGING = 2, // waiting to be armed again
+};
+
+//=========================================================
+// What the client's Matrix bar is showing.  Sent as a byte on gmsgMatrix
+// with a duration in tenths; mirrored in cl_dll/hud_pulse.cpp.  NONE is a
+// player without the Skill, so the client draws no bar at all for them.
+//=========================================================
+enum EMatrixState
+{
+	MATRIX_NONE = 0,     // no Defense Matrix Skill: nothing to show
+	MATRIX_READY = 1,    // can be raised
+	MATRIX_UP = 2,       // standing; the duration is what is left of it
+	MATRIX_COOLDOWN = 3, // dropped; the duration is what is left of the wait
 };
 
 //=========================================================

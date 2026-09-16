@@ -47,7 +47,7 @@ inline constexpr ModuleDef k_ModuleDefs[] =
 	//  gate                  slot              name            description                                                                    sprite           command
 	{ EGate::NightVision, ESlot::Head,     "Night Vision", "Sees in the dark. Replaces the flashlight.",                                   "dmg_gas",       "impulse 100" },
 	{ EGate::DashModule,  ESlot::Body,     "Dash",         "A burst along the movement keys, from the ground; Air Dash takes it into the air along the aim.", "item_longjump", "impulse 151" },
-	{ EGate::PulseModule, ESlot::LeftArm,  "Pulse",        "Raises a Shield for a moment. A hit inside the Pulse Window is negated.",    "autoaim_c",     "impulse 150" },
+	{ EGate::PulseModule, ESlot::LeftArm,  "Pulse",        "Raises a Shield for a moment. A hit inside the Pulse Window is negated.",    "autoaim_c",     "+pulse"      },
 	{ EGate::AlienModule, ESlot::RightArm, "Alien Module", "A platform for alien weapons that run on Cores.",                              "d_hornet",      nullptr       },
 };
 

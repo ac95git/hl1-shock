@@ -8,7 +8,7 @@ build on, and list the questions that have to be answered before the first line 
 is built, its content moves into PILLARS.md and the entry here is deleted — this file only ever shrinks
 from the top.
 
-**Last updated:** 2026-09-16 (branch `hl-shock` — the Status page shaped in a grill and built the same day: the Modules as fixed Slots on a doll of the suit, and the build's final stats beside them, in STATUS_PANEL.md; its entry moved to PILLARS pillar 5). Before that, 2026-09-14 (the Skill Tree becomes a matrix: Stat nodes as roads, every node one point, not completable, settled in SKILL_TREE.md and the Melee Route built whole on it the same day; the fitted node icon draw, the 256-id ceiling and the layout cvars too; later the same day, without a grill, the Weapon Specialist Route whole, the katana's blade as energy, Fast Reload on the shotgun, the move-wait leak fixed, the edge-adjacency overlay; the day before, all seven Routes shaped, the Dash and alien Modules with them, the katana reworked on paper, four Skills cut)
+**Last updated:** 2026-09-16 (branch `hl-shock` — the Defense Matrix built as shaped, with Matrix on Kill and Decaying Armor, on a `+pulse`/`-pulse` pair that times the hold; the Juggernaut is whole and its entry below is the record; earlier the same day the Status page shaped in a grill and built: the Modules as fixed Slots on a doll of the suit, and the build's final stats beside them, in STATUS_PANEL.md; its entry moved to PILLARS pillar 5). Before that, 2026-09-14 (the Skill Tree becomes a matrix: Stat nodes as roads, every node one point, not completable, settled in SKILL_TREE.md and the Melee Route built whole on it the same day; the fitted node icon draw, the 256-id ceiling and the layout cvars too; later the same day, without a grill, the Weapon Specialist Route whole, the katana's blade as energy, Fast Reload on the shotgun, the move-wait leak fixed, the edge-adjacency overlay; the day before, all seven Routes shaped, the Dash and alien Modules with them, the katana reworked on paper, four Skills cut)
 
 ## Shape legend
 
@@ -1755,9 +1755,14 @@ to build on, so that curation starts from the code rather than from the note.
 
 #### Juggernaut — resilient
 
-**Shape: Shaped 2026-09-13**, in a grilling session. **Low mobility, high defense**, and it holds the whole
-of the Pulse: the timing branch that exists, the Defense Matrix that replaces the passive branch, and the
-armour both lean on.
+**Shape: Built 2026-09-16, whole, untested in game.** The Defense Matrix, Matrix on Kill and Decaying Armor
+were built as settled below, every number a first guess in a cvar
+([instructions/04](../instructions/04-CUSTOM-FEATURES.md)); what exists is in
+[PILLARS pillar 2](PILLARS.md#2-enhanced-combat). The Pulse key became a `+pulse`/`-pulse` pair, the
+"honest shape" named under *What it costs to build*, carrying the press and the release as two impulses so
+the hold is timed on the server. The text below is kept as the reasoning. Shaped 2026-09-13, in a grilling
+session. **Low mobility, high defense**, and it holds the whole of the Pulse: the timing branch that
+exists, the Defense Matrix that replaces the passive branch, and the armour both lean on.
 
 ##### The Defense Matrix — settled
 
@@ -1778,7 +1783,7 @@ through three shapes in one session and came out as none of them. What it is:
   (`pm_shared/pm_shared.cpp:1144`, `:2940`), and the server sets that value per player. A cap change, not
   a rule change, which is why it survives the rule that cut Sprint and High Jump. To be measured in play.
 - **It drops on release, at 6 seconds, or at zero armour**, whichever first. **10-second cooldown** after it
-  drops.
+  drops. *Amended 2026-09-16 in play: not on release. The hold only raises it; it keeps its own time.*
 - **The HUD tints the armour readout while it is up**, and nothing else changes.
 
 Rejected on the way, so they are not proposed again: a passive pool that refills after 10 seconds without
@@ -1838,28 +1843,50 @@ price.
 **The Follow-Up (18) stays where it is**, gated on Crowbar Force and Pulse Recharge. It is now a Melee ×
 Juggernaut link, which is exactly what a cross-gated node is for.
 
-##### What it costs to build
+##### ~~What it costs to build~~ Built 2026-09-16
 
 - **A decaying armour grant has to sit above the cap.** Every armour ceiling goes through `PlayerMaxArmor`
   (the rule in [instructions/04](../instructions/04-CUSTOM-FEATURES.md)); a grant that respects it does
   nothing for a player at full armour, so the grant is explicitly allowed above it and decays back down.
   The armour bar is drawn against the maximum the client is sent (`gmsgBattery`'s second short), so an
-  over-cap value needs a HUD answer; the tint is the start of one.
+  over-cap value needs a HUD answer; the tint is the start of one. **Built**: the grant is tracked as its
+  own float beside the armour and fades over the Matrix's duration; a hit that eats through it shrinks
+  what is left to fade, so it is fuel rather than a refill. The bar clamps at the cap and the number shows the excess.
 - **The hold.** The Pulse is an impulse, which is edge-triggered and self-clearing; "held for one second"
   needs the press *and* the release, which an impulse does not carry. Either the client sends a second
   impulse on release, or the Pulse moves to a `+pulse` / `-pulse` command pair like `+inventory`. The
-  second is the honest shape.
+  second is the honest shape. **Built as both**: `+pulse`/`-pulse` on the client, sending impulse 150 on
+  the press and 152 on the release (`game_shared/pulse_defs.h`), so the timing stays a button's and a bare
+  `impulse 150` bind is still a tap. A release in the same frame as its press waits one command.
 - **The share.** Armor Expert already scales `ARMOR_RATIO` (the share that gets *past* armour) through a
   cvar; the Matrix is a second, larger scale on the same number while it is up, applied in the same place.
+  **Built that way, and reworked the same day after the first play**: scaling the stock split from 20% to
+  5% through could not be read even with `debug_damage` on, since 80% of a hit already went to armour, and
+  it was no defence. Now **nothing reaches health while the Matrix stands** and armour pays for the whole
+  hit at `skill_matrix_armor_cost_scale` (0.5) per point — health frozen, the armour figure draining, a
+  point of armour worth two of health. The alternative, a flat damage cut on top of the stock split, was
+  not tried: it would have been readable only on the armour number too.
 - **The slow** is one `pfnSetClientMaxspeed` call on raise and one on drop, restored on spawn and on
-  restore.
+  restore. **Built** as a cap applied on change from the state, so spawn, restore and a cvar edit need no
+  bookkeeping of their own.
 
 ##### Still open
 
 - Every number: the share, the slow (20% is the starting guess), 6 s, 10 s, the grant (100 is "to be
-  toned down"), its decay, Ricochet's chance per rank, Matrix on Kill's amount.
-- The major node's name, and the Matrix's own icon.
+  toned down"), Ricochet's chance per rank, Matrix on Kill's amount (15, a first guess). All cvars now.
+  ~~Its decay~~ is derived: the grant fades over the Matrix's duration, gone as it drops (tuned in play
+  2026-09-16 from a 10-per-second first guess).
+- ~~The major node's name~~ (**Decaying Armor** in the table since 2026-09-15), and the Matrix's own icon.
 - Whether Ricochet's tracer is the gauss's or its own.
+- ~~Whether a save mid-Matrix should come back with it standing.~~ It does, since the key is no longer
+  held through it (Andrei, 2026-09-16, after the first play: the hold only raises the Matrix, which then
+  keeps its own time). Up and its end time are saved.
+- The Matrix's sounds and its raise light are placeholders ([ART_DEBT.md](ART_DEBT.md)). ~~The Matrix has
+  no readout of its own beyond the white armour figure~~ — since the first play it has a bar beside the
+  Pulse's, an edge tint while up and a ready chime; see PILLARS.
+- **The layout was redrawn after the first play** (Andrei, 2026-09-16): Ricochet off the road to the
+  Matrix, the Pulse block west, the Matrix trio east and disconnected from it. In
+  [SKILL_MAP.md](SKILL_MAP.md).
 
 #### Medical
 
@@ -2319,7 +2346,8 @@ Facts found while sizing a bigger tree, so they are not found twice.
 - **The other three hub corners.** Follow-Up takes the Melee–Juggernaut corner; the Juggernaut–Specialist,
   Specialist–Medical and Medical–Melee corners are open for cross-Route Skills.
 - ~~**Which Route is built first.**~~ Melee, then Weapon Specialist, both on 2026-09-14. Of the five
-  left, Energy and Medical need nothing new; the Juggernaut needs the `+pulse`/`-pulse` pair; the Dash
+  left, Energy and Medical need nothing new; ~~the Juggernaut needs the `+pulse`/`-pulse` pair~~ (built
+  with the Matrix, 2026-09-16); the Dash
   Route and the Alien Route each need their Module first.
 - ~~The Dash Route's name.~~ **Shinobi**, 2026-09-15.
 - ~~Does the Dash Route keep bullet time?~~ Dropped, 2026-09-13.

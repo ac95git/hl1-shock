@@ -189,6 +189,15 @@ others. If it is cut instead, this entry goes with it.
 | Deflect | `weapons/cbar_hit1/2.wav`, randomised + pitched | crowbar hitting a wall |
 | Recharge complete | `player/recharged.wav` | **imported from Team Fortress 2** (2026-09-15), its `sound/player/recharged.wav` downmixed to mono; ships in the repo's `sound/`. Replaced the wall charger's `items/suitchargeok1.wav` |
 | Pressed while Recharging | `items/suitchargeno1.wav` | wall charger, denied |
+| Defense Matrix comes up (`k_MatrixSoundRaise`, 2026-09-16) | `weapons/electro4.wav` | the alien slave's zap — the electrical timbre the tap could not use, because the Matrix has no deflect landing a tenth of a second after it |
+| Defense Matrix drops (`k_MatrixSoundDrop`) | `weapons/electro5.wav` | the same zap set |
+| Matrix on Kill (`k_MatrixSoundKill`) | `items/suitchargeok1.wav`, quiet | wall charger, "ok" — armour coming back |
+| Matrix ready again | `player/recharged.wav` at pitch 80 | the Pulse's own ready chime, pitched down so the two readiness cues are told apart by ear |
+| Matrix raise, the light | a `TE_DLIGHT` in the suit's colour, held a second | the Shield's own light, longer; deliberately not its rings, so the two verbs on the key do not look alike |
+
+The Matrix wants a sound that says *stance*: something coming up and staying up, not a discharge, and a
+drop that is unmistakably the same thing powering down. It should share nothing with the Pulse's set,
+since a Shield fires at the front of every hold and the Matrix follows it a second later.
 
 These were arrived at by elimination rather than design. The first attempt used `weapons/electro4.wav` and
 `weapons/electro6.wav`; the deflect landed a fraction of a second after the Pulse in the same timbre and

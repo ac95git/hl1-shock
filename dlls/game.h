@@ -144,6 +144,15 @@ extern cvar_t pulse_followup_time;
 extern cvar_t pulse_followup_damage;
 extern cvar_t pulse_followup_knockback;
 
+// The Defense Matrix (the Juggernaut Route).  See dlls/player_pulse.cpp.
+extern cvar_t skill_matrix_hold;
+extern cvar_t skill_matrix_duration;
+extern cvar_t skill_matrix_cooldown;
+extern cvar_t skill_matrix_armor_cost_scale;
+extern cvar_t skill_matrix_speed_scale;
+extern cvar_t skill_matrix_kill_armor;
+extern cvar_t skill_matrix_grant;
+
 // The Infusion.  Named for the mechanic rather than the Health Syringe, so a
 // later source of one does not inherit syringe-flavoured cvar names.
 extern cvar_t infusion_rate;

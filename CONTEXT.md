@@ -171,6 +171,20 @@ next swing that connects, so missing costs nothing; a Cleave swing spends it on 
 once. Any weapon on the melee roster carries it, and it shows at the screen edge while primed.
 _Avoid_: riposte, counter, punish, parry attack
 
+**Defense Matrix** (the **Matrix** for short):
+The Juggernaut Route's stance. The Pulse key *held* for a second raises it, and from then on it keeps its
+own time; while it stands nothing reaches health — armour pays for every hit — and the player is slowed. It
+drops when its time is up or at zero armour, then waits out a cooldown. Armour is its pool — there is no second bar, and nothing refills by
+waiting. The tap's Shield still fires at the front of every hold; the two are separate verbs on one key.
+**Not a Shield**: that word is the field a Pulse raises, and the Matrix must not be called one in code,
+docs or commits.
+_Avoid_: shield, stance mode, bubble, fortify, bulwark
+
+**Decaying Armor**:
+The Juggernaut's Major, and the armour it grants when the Matrix comes up: a fixed amount above the
+armour cap that fades on its own and is spent like any armour before then. Fuel, not a refill.
+_Avoid_: overshield, temporary armour, bonus armour
+
 ### The Dash
 
 **Dash**:

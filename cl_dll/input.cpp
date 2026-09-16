@@ -20,6 +20,7 @@
 
 #include "vgui_TeamFortressViewport.h"
 #include "filesystem_utils.h"
+#include "pulse_defs.h"
 
 
 extern bool g_iAlive;
@@ -541,6 +542,29 @@ void IN_InventoryUp()
 	}
 }
 
+// The Pulse key.  A press sends PULSE_IMPULSE, a release PULSE_RELEASE_IMPULSE,
+// so the server can time a hold for the Defense Matrix (game_shared/pulse_defs.h).
+//
+// A tap can begin and end inside one frame, and there is one impulse slot
+// per command.  If the press is still queued when the release arrives, the
+// release waits for the next command instead of overwriting it -- otherwise
+// the server would see a release with no press, or a press with no release
+// and take the tap for a hold.
+static bool s_bPulseReleasePending = false;
+
+void IN_PulseDown()
+{
+	in_impulse = PULSE_IMPULSE;
+}
+
+void IN_PulseUp()
+{
+	if (in_impulse == PULSE_IMPULSE)
+		s_bPulseReleasePending = true;
+	else
+		in_impulse = PULSE_RELEASE_IMPULSE;
+}
+
 void IN_MLookUp()
 {
 	KeyUp(&in_mlook);
@@ -736,6 +760,14 @@ void DLLEXPORT CL_CreateMove(float frametime, struct usercmd_s* cmd, int active)
 
 	cmd->impulse = in_impulse;
 	in_impulse = 0;
+
+	// A Pulse release that arrived in the same frame as its press goes out
+	// with the next command, so the server sees both.  See IN_PulseUp.
+	if (s_bPulseReleasePending)
+	{
+		s_bPulseReleasePending = false;
+		in_impulse = PULSE_RELEASE_IMPULSE;
+	}
 
 	cmd->weaponselect = g_weaponselect;
 	g_weaponselect = 0;
@@ -985,6 +1017,8 @@ void InitInput()
 	gEngfuncs.pfnAddCommand("-showscores", IN_ScoreUp);
 	gEngfuncs.pfnAddCommand("+inventory", IN_InventoryDown);
 	gEngfuncs.pfnAddCommand("-inventory", IN_InventoryUp);
+	gEngfuncs.pfnAddCommand("+pulse", IN_PulseDown);
+	gEngfuncs.pfnAddCommand("-pulse", IN_PulseUp);
 	gEngfuncs.pfnAddCommand("+graph", IN_GraphDown);
 	gEngfuncs.pfnAddCommand("-graph", IN_GraphUp);
 	gEngfuncs.pfnAddCommand("+break", IN_BreakDown);

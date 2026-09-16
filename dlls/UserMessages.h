@@ -79,6 +79,10 @@ inline int gmsgPickupPrompt = 0;
 // from the duration, so a Recharge costs three messages rather than one a frame.
 inline int gmsgPulse = 0;
 
+// Defense Matrix state: 2 bytes (up, duration in tenths of a second).  Sent
+// only on a change, like the Pulse's; the armour readout tints while it is up.
+inline int gmsgMatrix = 0;
+
 // Concealment state: 1 byte (EConcealState).  Sent only on a threshold
 // crossing -- the whole point of quantising a continuous meter to three states
 // is that the wire sees three events rather than a value every frame.

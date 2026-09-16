@@ -9,8 +9,8 @@ row\col,0,1,2,3,4,5,6,7,8,9,10,11,12,13,14
 7,Melee Damage,Backstab (33),Melee Damage,Melee Reach (1),Melee Damage,Melee Force (2),Melee Damage,SUIT (start),Bullet Damage,Marksman (35),Bullet Damage,Quick Draw (36),Bullet Damage,Bullet Damage,Weapon Mastery (4)
 8,Melee Damage,,,,,Max Armour,Max Armour,Max Armour,Max Armour,Armor Expert (9),,,Bullet Damage,,Bullet Damage
 9,Cleave (34) [Major],Melee Damage,Melee Damage,Melee Damage,,Follow-Up (18),,Battery Capacity (13),,,Bullet Damage,Bullet Damage,Fast Reload (3),Bullet Damage,Swap Surge (39) [Major]
-10,Energy Damage,Energy Damage (54) (Skill),,,Energy Damage,Max Armour,,Max Armour,,Max Armour,Hornet Replenish,,Hive Capacity (20),,Hornet Replenish
-11,Energy Damage,,Energy Damage,Energy Damage,Energy Damage,Max Armour,Max Armour,Max Armour,Max Armour,Ricochet (64),Hornet Replenish,Hornet Replenish,Hornet Replenish,Hive Replenish (21),Hornet Replenish
-12,Insulation (58),,Egon Focus (55),,,Max Armour,,,,Pulse Window (12),Hive Attack Speed,,Hornet Replenish,,
-13,Energy Damage,Energy Damage,Energy Damage,,,Max Armour,,Juggernaut Major,Defense Matrix,Pulse Recharge (15),Hornet Replenish,Pack,Hornet Replenish,Tether,Hornet Replenish
-14,,,Energy Efficiency (56),Energy Damage,Overdraw (59) [Major],Max Armour,Pulse Discharge (16),Pulse Rebound (17),Matrix on Kill,,,,Recall,Hornet Replenish,Alien Major
+10,Energy Damage,Energy Damage (54) (Skill),,,Energy Damage,Max Armour,,Max Armour,,Ricochet (64),Hornet Replenish,,Hive Capacity (20),,Hornet Replenish
+11,Energy Damage,,Energy Damage,Energy Damage,Energy Damage,Max Armour,Max Armour,Max Armour,Max Armour,Max Armour,Hornet Replenish,Hornet Replenish,Hornet Replenish,Hive Replenish (21),Hornet Replenish
+12,Insulation (58),,Egon Focus (55),,,Max Armour,Pulse Window (12),,,Defense Matrix (157),Hive Attack Speed,,Hornet Replenish,,
+13,Energy Damage,Energy Damage,Energy Damage,,,Max Armour,Pulse Recharge (15),,,Matrix on Kill (158),Hornet Replenish,Pack,Hornet Replenish,Tether,Hornet Replenish
+14,,,Energy Efficiency (56),Energy Damage,Overdraw (59) [Major],Max Armour,Pulse Rebound (17),Pulse Discharge (16),,Decaying Armor (159) [Major],,,Recall,Hornet Replenish,Alien Major

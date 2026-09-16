@@ -192,6 +192,17 @@ Raising `skill_points_start` is the way to work on the tree UI without hunting f
 | `skill_last_stand_low_health` | 50 | Below this health, an Infusion's healing is doubled while Last Stand or Glass Cannon is held |
 | `skill_last_stand_heal_scale` | 2 | The multiplier applied below that threshold |
 | `skill_glass_cannon_max_health` | 50 | Glass Cannon's maximum health, the ceiling after every other health bonus |
+| `skill_matrix_hold` | 1.0 | Seconds the Pulse key (`+pulse`) is held before the Defense Matrix comes up |
+| `skill_matrix_duration` | 6 | Seconds the Matrix stands once raised; the key is not held through it |
+| `skill_matrix_cooldown` | 10 | Seconds after a drop before the Matrix can be raised again |
+| `skill_matrix_armor_cost_scale` | 0.5 | While the Matrix is up nothing reaches health and armour pays this much per point of damage; 0.5 makes a point of armour worth two of health |
+| `skill_matrix_speed_scale` | 0.8 | The player's maxspeed as a fraction of `sv_maxspeed` while the Matrix is up — the slow |
+| `skill_matrix_kill_armor` | 15 | Matrix on Kill restores this much armour per kill while up, up to `PlayerMaxArmor` |
+| `skill_matrix_grant` | 100 | Decaying Armor grants this much armour, above the cap, when the Matrix comes up. It fades over `skill_matrix_duration`, so it is gone as the Matrix drops; the rate is derived, not a knob |
+
+Two client cvars go with the Matrix, both `FCVAR_ARCHIVE` in `cl_dll/hud_pulse.cpp`: `hud_matrix_tint`
+(110), the alpha of the outermost edge band while it stands, 0 for none, and `hud_matrix_tint_width`
+(0.12), the bands' depth as a fraction of the screen's height.
 
 Two rules that are easy to break:
 

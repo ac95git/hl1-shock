@@ -544,7 +544,7 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 
 	// 12: the Pulse, in the Juggernaut's far corner.  Gated on the Pulse
 	// Module, which is open until that Module exists.
-	{ ESkillId::PulseWindow,     "Pulse Window",     "+0.15 s Shield window",                             "autoaim_c",      9,  12, 1,  ENodeTier::Minor,  EStat::None,  EGate::PulseModule },
+	{ ESkillId::PulseWindow,     "Pulse Window",     "+0.15 s Shield window",                             "autoaim_c",      6,  12, 1,  ENodeTier::Minor,  EStat::None,  EGate::PulseModule },
 
 	// 13: the hub's south rim Minor
 	{ ESkillId::BatteryCapacity, "Battery Capacity", "+50 max AP",                               "item_battery",   7,  9,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
@@ -554,9 +554,13 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 
 	// 15-17: the Pulse continued.  Discharge and Rebound keep the Major-sized
 	// frame by decision.
-	{ ESkillId::PulseRecharge,   "Pulse Recharge",   "-33% Pulse recharge",                 "flash_empty",    9,  13, 1,  ENodeTier::Medium, EStat::None,  EGate::PulseModule },
-	{ ESkillId::PulseDischarge,  "Pulse Discharge",  "Negated hits vent as energy at the crosshair.",                 "d_egon",         6,  14, 1,  ENodeTier::Major,  EStat::None,  EGate::PulseModule },
-	{ ESkillId::PulseRebound,    "Pulse Rebound",    "A deflect skips the Recharge, once per normal Recharge.", "flash_beam", 7, 14, 1, ENodeTier::Major, EStat::None,  EGate::PulseModule },
+	// The Pulse block moved to the region's west side on 2026-09-16 -- Window
+	// and Recharge down column 6, Rebound under them, Discharge east of
+	// Rebound -- and no longer touches the Matrix trio, which is the armour
+	// road's alone now (docs/SKILL_MAP.md).
+	{ ESkillId::PulseRecharge,   "Pulse Recharge",   "-33% Pulse recharge",                 "flash_empty",    6,  13, 1,  ENodeTier::Medium, EStat::None,  EGate::PulseModule },
+	{ ESkillId::PulseDischarge,  "Pulse Discharge",  "Negated hits vent as energy at the crosshair.",                 "d_egon",         7,  14, 1,  ENodeTier::Major,  EStat::None,  EGate::PulseModule },
+	{ ESkillId::PulseRebound,    "Pulse Rebound",    "A deflect skips the Recharge, once per normal Recharge.", "flash_beam", 6, 14, 1, ENodeTier::Major, EStat::None,  EGate::PulseModule },
 
 	// 18: the Melee x Juggernaut link, in the hub's south-west corner cell.
 	// A melee payoff for a Pulse deflect; it does nothing for a player who
@@ -676,7 +680,9 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 
 	// 64: Ricochet, the Juggernaut's east side, one step from the Alien door.
 	// Server-side, in the player's TakeDamage: bullets only, armour required.
-	{ ESkillId::Ricochet,        "Ricochet",         "20% of bullets bounce back at the shooter; needs AP.", "d_tracktrain", 9, 11, 1, ENodeTier::Medium, EStat::None, EGate::None },
+	// Moved up to (9,10) on 2026-09-16, off the road to the Matrix: a spur
+	// beside the Alien door, bought for itself.
+	{ ESkillId::Ricochet,        "Ricochet",         "20% of bullets bounce back at the shooter; needs AP.", "d_tracktrain", 9, 10, 1, ENodeTier::Medium, EStat::None, EGate::None },
 
 	// 65: the suit.  Cost 0, held from spawn, kept through a Reset, never
 	// bought (ADR-0012).  The one row the cost-one assert exempts.  No icon
@@ -728,7 +734,7 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// 95-104: the Juggernaut's armour column and its top rows (docs/SKILL_MAP.md, Juggernaut)
 	STAT_ARMOUR(StatArmour05, 7, 10),
 	STAT_ARMOUR(StatArmour06, 5, 10),
-	STAT_ARMOUR(StatArmour07, 9, 10),
+	STAT_ARMOUR(StatArmour07, 9, 11), // (9,10) until 2026-09-16, when it swapped with Ricochet
 	STAT_ARMOUR(StatArmour08, 5, 11),
 	STAT_ARMOUR(StatArmour09, 6, 11),
 	STAT_ARMOUR(StatArmour10, 7, 11),
@@ -828,10 +834,12 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// (dlls/player_skills.cpp), so these are shown and buyable today like
 	// the rest of the Pulse's nodes -- the gate comes out entirely when the
 	// Pulse becomes a Module.
-	{ ESkillId::DefenseMatrix,   "Defense Matrix",   "Hold Pulse 1 s: armor takes far more of each hit, -20% speed; ends on release, 6 s or 0 AP; 10 s cooldown.", "suit_full", 8, 13, 1, ENodeTier::Medium, EStat::None, EGate::PulseModule },
-	{ ESkillId::MatrixOnKill,    "Matrix on Kill",   "A kill during the Matrix restores AP.", "item_battery",   8, 14, 1, ENodeTier::Medium, EStat::None, EGate::PulseModule },
-	// name provisional: SKILL_TREE.md's Juggernaut major has none yet
-	{ ESkillId::JuggernautMajor, "Decaying Armor",   "Activating the Matrix grants +100 decaying AP.", "dmg_rad", 7, 13, 1, ENodeTier::Major, EStat::None, EGate::PulseModule },
+	// The trio runs down the east column since 2026-09-16 -- Matrix, Matrix on
+	// Kill, the Major in the far corner -- off the armour road at (9,11) and
+	// touching no Pulse node.
+	{ ESkillId::DefenseMatrix,   "Defense Matrix",   "Hold Pulse 1 s: for 6 s hits cost AP only, 0.5 AP per point, none reaches HP; -20% speed. Ends at 0 AP; 10 s cooldown.", "suit_full", 9, 12, 1, ENodeTier::Medium, EStat::None, EGate::PulseModule },
+	{ ESkillId::MatrixOnKill,    "Matrix on Kill",   "A kill during the Matrix restores +15 AP.", "item_battery",   9, 13, 1, ENodeTier::Medium, EStat::None, EGate::PulseModule },
+	{ ESkillId::JuggernautMajor, "Decaying Armor",   "Raising the Matrix grants +100 AP over the cap, fading over its 6 s.", "dmg_rad", 9, 14, 1, ENodeTier::Major, EStat::None, EGate::PulseModule },
 };
 
 #undef SKILL_RESERVED

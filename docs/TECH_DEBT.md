@@ -409,7 +409,9 @@ fires, with nothing in the code to explain why.
 Note also that bits 0–15 are now **fully allocated**, so there is no room for another button.
 `IN_ALT1` (bit 14) and `IN_CANCEL` (bit 6) are set by the client and read by nothing in `dlls/`,
 making them the only reclaimable bits. This is why the Pulse uses `impulse 150` rather than a
-button bit — see [PILLARS.md](PILLARS.md) pillar 2.
+button bit — see [PILLARS.md](PILLARS.md) pillar 2 — and why its `+pulse`/`-pulse` pair (2026-09-16)
+sends a second impulse on release rather than reading a button: the Defense Matrix needs the hold, and
+there is no bit to carry it.
 
 ### Recommended Next Steps
 1. Either reclaim a dead bit for `IN_INVENTORY` so it genuinely transmits, or drop it to a plain

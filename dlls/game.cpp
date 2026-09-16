@@ -683,6 +683,29 @@ cvar_t pulse_followup_time = {"pulse_followup_time", "2.0"};
 cvar_t pulse_followup_damage = {"pulse_followup_damage", "3.0"};
 cvar_t pulse_followup_knockback = {"pulse_followup_knockback", "500"};
 
+// The Defense Matrix -- the Juggernaut Route's stance (docs/SKILL_TREE.md).
+// Hold the Pulse key for skill_matrix_hold seconds and it comes up; while it
+// is up, armour takes a far larger share of every hit and the player is
+// slowed.  It drops on release, at skill_matrix_duration, or at zero armour,
+// then waits skill_matrix_cooldown.  Every number is a first guess.
+cvar_t skill_matrix_hold = {"skill_matrix_hold", "1.0"};
+cvar_t skill_matrix_duration = {"skill_matrix_duration", "6"};
+cvar_t skill_matrix_cooldown = {"skill_matrix_cooldown", "10"};
+// While it is up nothing reaches health and armour pays for the whole hit at
+// this much per point of damage (CBasePlayer::TakeDamage).  0.5: a 20 hit
+// costs 10 AP and 0 HP, so a point of armour buys two of health.  Reworked
+// 2026-09-16 from a larger share of the stock split, which could not be read.
+cvar_t skill_matrix_armor_cost_scale = {"skill_matrix_armor_cost_scale", "0.5"};
+// The slow: the player's maxspeed as a fraction of sv_maxspeed while up.  The
+// Route's whole cost, paid only while the protection is on.
+cvar_t skill_matrix_speed_scale = {"skill_matrix_speed_scale", "0.8"};
+// Matrix on Kill: armour restored, up to the maximum, per kill while up.
+cvar_t skill_matrix_kill_armor = {"skill_matrix_kill_armor", "15"};
+// Decaying Armor (the Major): armour granted on activation, above the cap.
+// It fades over skill_matrix_duration, so it is gone as the Matrix drops; the
+// rate is derived, not a knob.  100 was set "to be toned down".
+cvar_t skill_matrix_grant = {"skill_matrix_grant", "100"};
+
 // The Infusion -- see docs/PILLARS.md pillar 3.  40 HP over 10 seconds is more
 // than two medkits, and the duration is what pays for it: none of it lands if
 // the player does not survive the ten seconds, and it cannot answer burst
@@ -913,6 +936,14 @@ void GameDLLInit()
 	CVAR_REGISTER(&pulse_followup_time);
 	CVAR_REGISTER(&pulse_followup_damage);
 	CVAR_REGISTER(&pulse_followup_knockback);
+
+	CVAR_REGISTER(&skill_matrix_hold);
+	CVAR_REGISTER(&skill_matrix_duration);
+	CVAR_REGISTER(&skill_matrix_cooldown);
+	CVAR_REGISTER(&skill_matrix_armor_cost_scale);
+	CVAR_REGISTER(&skill_matrix_speed_scale);
+	CVAR_REGISTER(&skill_matrix_kill_armor);
+	CVAR_REGISTER(&skill_matrix_grant);
 
 	CVAR_REGISTER(&backstab_damage_scale);
 	CVAR_REGISTER(&backstab_arc_dot);

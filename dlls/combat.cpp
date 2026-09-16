@@ -30,6 +30,7 @@
 #include "weapons.h"
 #include "func_break.h"
 #include "player_skills.h" // SkillScaleWeaponDamage
+#include "player.h"		   // CBasePlayer::OnMonsterKilled
 #include "game.h"		   // debug_damage and the readout below
 
 #include "schedule.h" // Schedule_t::pName, for the monster aim readout
@@ -802,6 +803,17 @@ void CBaseMonster::Killed(entvars_t* pevAttacker, int iGib)
 	}
 
 	Remember(bits_MEMORY_KILLED);
+
+	// Tell the player about a kill of theirs.  Once, guarded by the memory
+	// above, and before the gib branch returns early.  Grenades and the
+	// katana's wave arrive with the player as attacker, so every weapon
+	// reaches this without a per-weapon hook.
+	if (pevAttacker)
+	{
+		CBaseEntity* pAttacker = CBaseEntity::Instance(pevAttacker);
+		if (pAttacker && pAttacker->IsPlayer())
+			((CBasePlayer*)pAttacker)->OnMonsterKilled(this);
+	}
 
 	// clear the deceased's sound channels.(may have been firing or reloading when killed)
 	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "common/null.wav", 1, ATTN_NORM);
