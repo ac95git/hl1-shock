@@ -499,6 +499,36 @@ anywhere) — that reasoning applies here unchanged. Whether the crowbar's own s
 for a heavy weapon, or the Dystopia swings get retargeted onto the stock rig, is the first thing v1 in
 game will answer. Still a candidate for [Evolutions](#weapon-evolutions).
 
+**The longsword moveset — probe built 2026-09-16, not yet judged.** Age of Chivalry's `v_longsword`
+viewmodel (decompiled by Andrei to `E:\CustomAssets\models\decompiled\aoc\v_longsword`) carries a
+two-handed moveset that may suit the katana better than the crowbar's one-armed swings: idle, draw,
+holster, two swings, a stab, a block and a deflect, on a 44-bone ValveBiped rig with both arms and
+fingers. Shaped in a grilling session the same day:
+
+- **The animations come to us; the katana is not re-skinned onto another rig for its own sake.** The
+  literal request — Half-Life's hands and the katana weighted onto the longsword's bones — was the least
+  accessible reading and was set aside.
+- **First, a probe, judged in HLMV only.** `E:\CustomAssets\scripts\katana_aoc.py` compiles the
+  longsword's rig and all eight animations *as decompiled*, nothing retargeted, with AoC's footman hands
+  (the only AoC hand mesh under GoldSrc's 2048-vertex submodel limit; the knight's is 4,200) in flat
+  stand-in colours and a `blade` bodygroup holding the decompiled longsword and the katana blade, so the
+  same swing is seen with the sword it was made for and with ours. Output
+  `E:\CustomAssets\models\src\v_katana_aoc\v_katana_aoc.mdl`; ships nowhere, no attachments, hitboxes
+  or glove skins. The slot table is the crowbar's twelve indices — idle_01 in the three idle slots,
+  draw, holster, swing1 as attack1, swing2 as attack2 and as the Cleave, stab as attack3 — then block
+  and deflect appended as 12 and 13, unplayed until a Guard verb exists. **None of the eight is
+  dropped.** Measured: the katana's point reaches 25 units past the grip where the longsword's reaches
+  45; each swing is 76 frames at 35 fps, about 0.35 s of wind-up, 0.4 s of cut and 1.4 s of return.
+- **Deferred until the probe is judged, in this order.** *The hands:* either AoC's footman mesh painted
+  as an HEV glove (no texture came out of the decompile and the mod is not installed here, so it is
+  painted from the UV layout), or Valve's own gauss hands — the stock two-armed 32-bone rig, the
+  crowbar's eleven bones under the same names plus a left arm — with the animations retargeted onto
+  them by orientation matching, and a solver pass pinning the left hand to the grip if it floats.
+  *The timing:* the animation trimmed to the weapon's settled 0.6 s slash and 0.25 s wave (start near
+  the cut, raise the fps, keep the return for the last swing to play out), or the weapon slowed to the
+  animation with a hit delay; explicitly left open in both directions.
+- **Credit:** an [ART_DEBT.md](ART_DEBT.md) entry like the Cleave swing's, licence unchecked.
+
 ### Weapon evolutions
 
 **Shape: Shaped, and the answer is already in the codebase.**

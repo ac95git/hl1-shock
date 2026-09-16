@@ -6,7 +6,8 @@ entry names what is wrong with the stand-in, so the replacement is judged agains
 
 Also here: assets **imported from other mods**, which are not wrong but are not ours. Each of those
 entries names the source and the two ways out — credit it and keep it, or replace it — so that neither
-is forgotten at release. The first is *The Cleave swing — imported from Half-Life: Extended*.
+is forgotten at release. The first is *The Cleave swing — imported from Half-Life: Extended*; the
+second, *The longsword moveset — imported from Age of Chivalry*, is a probe that ships nowhere yet.
 
 Distinct from [TECH_DEBT.md](TECH_DEBT.md): that register is about code that needs fixing. This one is
 about assets that need making.
@@ -539,6 +540,42 @@ this entry is not a call to replace it; it is a call to settle its status before
 ### Done when
 Either README.md credits Half-Life: Extended for the animation under a licence that allows it, or
 `CROWBAR_CLEAVE` plays an animation made for this mod. Until one of those, this asset does not ship.
+
+## The longsword moveset — imported from Age of Chivalry
+
+### Scope
+`E:\CustomAssets\models\src\v_katana_aoc\` — the probe compiled by `E:\CustomAssets\scripts\katana_aoc.py`
+on 2026-09-16 from Andrei's Crowbar decompile of Age of Chivalry's `v_longsword.mdl` at
+`E:\CustomAssets\models\decompiled\aoc\v_longsword\`. Nothing in the repo's `models/` and nothing in the
+install; it exists to be judged in HLMV (ROADMAP.md, *The longsword moveset*).
+
+### What it is
+Three things from **Age of Chivalry**, the Source mod that became Chivalry: Medieval Warfare: the
+44-bone ValveBiped viewmodel rig; its eight longsword animations, verbatim (idle_01, draw, holster,
+swing1, swing2, stab, block, deflect — a two-handed moveset, both arms and all fingers animated); and
+the `fpv_good_footman` hand mesh, used because it is the one AoC hand mesh under GoldSrc's vertex limit,
+in a flat orange stand-in colour since the decompile brought no textures and the mod is not installed
+here. The decompiled longsword mesh rides along as the second submodel of the `blade` bodygroup, for
+comparison only. The katana blade on it is ours.
+
+### Why it is here
+If the moveset is kept, the animations ship on the katana in some form — as decompiled or retargeted
+onto Valve's hands, timed to the weapon or the weapon to them — and either way they are another team's
+work. The footman hands would ship only on the painted-HEV-glove route, and the longsword mesh never.
+Licence unchecked; author not named anywhere in this repo.
+
+### The two ways out
+1. **Keep and credit.** Find Age of Chivalry's licence and the animator's credit (its Steam store page,
+   ModDB page and readme), confirm reuse is allowed, and add an attribution line to README.md naming
+   the mod, the animations and, if it ships, the hand mesh. Then delete this entry.
+2. **Replace.** The animations were the whole point; replacing them means the mod's own two-handed
+   swings, which *What the Cleave swipe taught* in MODEL_WORKFLOW.md is the brief for. The hands have a
+   replacement already: Valve's gauss hands, on the retarget route in ROADMAP.md.
+
+### Done when
+Either README.md credits Age of Chivalry under a licence that allows it, or nothing from the decompile
+is in a shipped model. Until one of those, the probe stays a probe. If the moveset is rejected in HLMV,
+delete this entry with the probe.
 
 ## The Skill Tree — the circuit: substrate, traces and frames
 
