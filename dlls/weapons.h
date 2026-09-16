@@ -532,6 +532,20 @@ public:
 	void Reload() override;
 	void WeaponIdle() override;
 
+	// The silencer -- the first Evolution (docs/ROADMAP.md, "Weapon
+	// evolutions"), found as item_silencer and permanent: CBasePlayer's
+	// m_bSilencerFound is the durable state, and pev->body is derived from
+	// it on every Deploy.  The submodel, the quiet volume and the dim flash
+	// were all in the base game behind one commented line.
+	bool Silenced() const { return pev->body == 1; }
+	// Plays the attach animation on a glock in hand; the item calls it.
+	void AttachSilencer();
+
+	// pev->body reaches the client's predicted copy through weapon_data_t's
+	// iuser1, which the glock never used for anything else.
+	void GetWeaponData(weapon_data_t& data) override;
+	void SetWeaponData(const weapon_data_t& data) override;
+
 	bool UseDecrement() override
 	{
 #if defined(CLIENT_WEAPONS)

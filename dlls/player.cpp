@@ -37,6 +37,7 @@
 #include "decals.h"
 #include "gamerules.h"
 #include "game.h"
+#include "perception.h"
 #include "pm_shared.h"
 #include "pulse_defs.h"
 #include "hltv.h"
@@ -84,6 +85,7 @@ TYPEDESCRIPTION CBasePlayer::m_playerSaveData[] =
 		DEFINE_FIELD(CBasePlayer, m_flLastStandUntil, FIELD_TIME),
 		DEFINE_FIELD(CBasePlayer, m_flLastStandReadyTime, FIELD_TIME),
 		DEFINE_FIELD(CBasePlayer, m_flPhantomUntil, FIELD_TIME),
+		DEFINE_FIELD(CBasePlayer, m_bSilencerFound, FIELD_BOOLEAN),
 
 		DEFINE_FIELD(CBasePlayer, m_afButtonLast, FIELD_INTEGER),
 		DEFINE_FIELD(CBasePlayer, m_afButtonPressed, FIELD_INTEGER),
@@ -4843,6 +4845,27 @@ void CBasePlayer::UpdateClientData()
 	// walks the monsters near the player and a three-state readout cannot show
 	// anything finer.
 	SyncConcealState();
+
+	// debug_schedule: the monster under the crosshair (dlls/perception.cpp).
+	DebugScheduleReport(this);
+
+	// debug_invisible: unseen and unheard.  Polled so it takes effect the
+	// moment it is set and releases the moment it is cleared; the flag and
+	// the switch are only touched on a change, so the notarget cheat still
+	// works on its own when this is 0.
+	{
+		static bool s_bInvisible;
+		const bool bWant = debug_invisible.value != 0;
+		if (bWant != s_bInvisible)
+		{
+			s_bInvisible = bWant;
+			if (bWant)
+				pev->flags |= FL_NOTARGET;
+			else
+				pev->flags &= ~FL_NOTARGET;
+			m_fNoPlayerSound = bWant;
+		}
+	}
 
 	// The skill_unlock_all debugging aid, polled so it takes effect the
 	// moment it is set and again after a Reset while it stays set.  The

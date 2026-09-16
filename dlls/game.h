@@ -173,6 +173,10 @@ extern cvar_t suspicion_fill;
 extern cvar_t suspicion_drain;
 extern cvar_t suspicion_notice;
 extern cvar_t suspicion_acquire;
+extern cvar_t suspicion_witness;     // a witness's jump, and the give-up's
+extern cvar_t suspicion_floor;       // the permanent floor after either
+extern cvar_t disturbance_volume;    // a body's hearing radius, in units
+extern cvar_t disturbance_duration;  // and how long it stays in the sound list
 extern cvar_t noise_stance_duck;
 extern cvar_t noise_stance_walk;
 extern cvar_t conceal_angle_edge;
@@ -190,6 +194,7 @@ extern cvar_t skill_nightfall_scale;      // Nightfall: the light term's dark en
 extern cvar_t skill_slip_away_fraction;   // Slip Away: the share of Suspicion lost on a break of contact
 extern cvar_t skill_ambush_spotted_scale; // Ambush: on a victim below Spotted
 extern cvar_t skill_ambush_noticed_scale; // Ambush: on a victim below Noticed (replaces, not stacks)
+extern cvar_t skill_shroud_scale;         // Shroud: a flat multiplier on the fill for the holder
 extern cvar_t skill_phantom_duration;     // Phantom: seconds of silence and speed after an unseen Backstab
 extern cvar_t skill_phantom_speed_scale;  // Phantom: the player's maxspeed during it
 
@@ -233,7 +238,8 @@ extern cvar_t debug_damage;
 
 // Live Suspicion readout -- see dlls/perception.h.  Also throwaway, and it
 // shares the screen centre with debug_damage.
-extern cvar_t debug_suspicion;
+extern cvar_t debug_schedule;  // the monster under the crosshair: state, squad role, schedule, task, meter; the last kill and Search
+extern cvar_t debug_invisible; // no monster can see or hear the player
 
 // ---------------------------------------------------------
 // Monster aim debug.  THROWAWAY DIAGNOSTIC -- delete it with the post-aggro

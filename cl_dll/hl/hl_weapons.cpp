@@ -223,7 +223,15 @@ void CBasePlayerWeapon::SendWeaponAnim(int iAnim, int body, float framerate)
 {
 	m_pPlayer->pev->weaponanim = iAnim;
 
-	HUD_SendWeaponAnim(iAnim, body, false, framerate);
+	// The server's copy (dlls/weapons.cpp) ignores `body` and writes the
+	// weapon's own pev->body, so the viewmodel shows whatever submodel the
+	// weapon holds.  This copy used the argument, which most callers leave at
+	// its default of 0 -- WeaponIdle in every weapon does -- so a predicted
+	// idle on the silenced pistol rendered without the silencer while draw,
+	// reload and fire (re-sent with pev->body after prediction) kept it.
+	// Match the server: pev->body is the truth on both sides.
+	(void)body;
+	HUD_SendWeaponAnim(iAnim, pev->body, false, framerate);
 }
 
 /*

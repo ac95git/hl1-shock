@@ -74,8 +74,38 @@ bool CGlock::GetItemInfo(ItemInfo* p)
 
 bool CGlock::Deploy()
 {
-	// pev->body = 1;
+	// The silenced submodel, once the silencer has been found.  Server only:
+	// the client's copy of the player has no idea what has been found, and
+	// gets the body through SetWeaponData every frame instead.
+#ifndef CLIENT_DLL
+	pev->body = m_pPlayer->m_bSilencerFound ? 1 : 0;
+#endif
 	return DefaultDeploy("models/v_9mmhandgun.mdl", "models/p_9mmhandgun.mdl", GLOCK_DRAW, "onehanded");
+}
+
+void CGlock::AttachSilencer()
+{
+	pev->body = 1;
+
+	// The server normally lets the client predict its own animations and
+	// skips sending them; nothing on the client predicts this one, so force
+	// it through.
+	m_ForceSendAnimations = true;
+	SendWeaponAnim(GLOCK_ADD_SILENCER);
+	m_ForceSendAnimations = false;
+
+	m_flNextPrimaryAttack = m_flNextSecondaryAttack = GetNextAttackDelay(3.0);
+	m_flTimeWeaponIdle = UTIL_WeaponTimeBase() + 3.0;
+}
+
+void CGlock::GetWeaponData(weapon_data_t& data)
+{
+	data.iuser1 = pev->body;
+}
+
+void CGlock::SetWeaponData(const weapon_data_t& data)
+{
+	pev->body = data.iuser1;
 }
 
 void CGlock::SecondaryAttack()
@@ -144,7 +174,9 @@ void CGlock::GlockFire(float flSpread, float flCycleTime, bool fUseAutoAim)
 	Vector vecDir;
 	vecDir = m_pPlayer->FireBulletsPlayer(1, vecSrc, vecAiming, Vector(flSpread, flSpread, flSpread), 8192, BULLET_PLAYER_9MM, 0, 0, m_pPlayer->pev, m_pPlayer->random_seed);
 
-	PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), fUseAutoAim ? m_usFireGlock1 : m_usFireGlock2, 0.0, g_vecZero, g_vecZero, vecDir.x, vecDir.y, 0, 0, (m_iClip == 0) ? 1 : 0, 0);
+	// bparam2 carries the silencer to the event, which picks the quiet
+	// report and skips the muzzle flash (cl_dll/ev_hldm.cpp).
+	PLAYBACK_EVENT_FULL(flags, m_pPlayer->edict(), fUseAutoAim ? m_usFireGlock1 : m_usFireGlock2, 0.0, g_vecZero, g_vecZero, vecDir.x, vecDir.y, 0, 0, (m_iClip == 0) ? 1 : 0, Silenced() ? 1 : 0);
 
 	m_flNextPrimaryAttack = m_flNextSecondaryAttack = GetNextAttackDelay(flCycleTime);
 

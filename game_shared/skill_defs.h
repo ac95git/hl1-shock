@@ -283,8 +283,8 @@ enum class ESkillId : int
 	SoftStep            = 126, // the entry: crouched and walking body noise halved again
 	Nightfall           = 127, // darkness conceals twice as much
 	SlipAway            = 128, // breaking line of sight drops Suspicion by a third
-	CutTheHead          = 129, // killing a squad leader drops the squad's Suspicion
-	SilentKill          = 130, // the major: a kill below Spotted is unseen and unheard
+	CutTheHead          = 129, // CUT 2026-09-17: killing the leader already dissolves the squad.  Reserved forever
+	SilentKill          = 130, // the major: a kill below Spotted is unheard -- no Disturbance.  Ears only
 
 	// The region's roads: the Concealment Stat nodes.
 	StatConceal01       = 131,
@@ -326,7 +326,10 @@ enum class ESkillId : int
 	MatrixOnKill        = 158, // a kill while the Matrix is up restores some armour
 	JuggernautMajor     = 159, // the major: decaying armour on Matrix activation.  Name provisional
 
-	_Count              = 160, // keep last
+	// ---- Stealth, 2026-09-17: Cut the Head's replacement, in its cell ----
+	Shroud              = 160, // a flat x0.8 on every monster's fill rate against the holder.  Name provisional
+
+	_Count              = 161, // keep last
 };
 
 // ---------------------------------------------------------
@@ -793,8 +796,8 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	{ ESkillId::SoftStep,        "Soft Step",        "-50% body noise crouched or walking",     "flash_empty",    10, 4, 1, ENodeTier::Minor,  EStat::None, EGate::NightVision },
 	{ ESkillId::Nightfall,       "Nightfall",        "x2 concealment from darkness",         "dmg_cold",       12, 0, 1, ENodeTier::Medium, EStat::None, EGate::NightVision },
 	{ ESkillId::SlipAway,        "Slip Away",        "Breaking line of sight while Noticed drops Suspicion by a third.", "autoaim_c", 12, 3, 1, ENodeTier::Medium, EStat::None, EGate::NightVision },
-	{ ESkillId::CutTheHead,      "Cut the Head",     "Killing a squad leader drops the squad's Suspicion to the notice floor.", "d_skull", 13, 2, 1, ENodeTier::Medium, EStat::None, EGate::NightVision },
-	{ ESkillId::SilentKill,      "Silent Kill",      "A kill below Spotted leaves no witness, no Disturbance, no squad alert.", "d_crossbow", 14, 0, 1, ENodeTier::Major, EStat::None, EGate::NightVision },
+	SKILL_RESERVED(CutTheHead), // cut 2026-09-17; Shroud (160, at the end of the table) has its cell
+	{ ESkillId::SilentKill,      "Silent Kill",      "A kill below Spotted is unheard: no body is found, nobody searches.", "d_crossbow", 14, 0, 1, ENodeTier::Major, EStat::None, EGate::NightVision },
 
 	// The region's roads: 10 Concealment Stat nodes.
 	STAT_CONCEAL(StatConceal01, 10, 0),
@@ -842,6 +845,11 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	{ ESkillId::DefenseMatrix,   "Defense Matrix",   "Hold Pulse 1 s: for 6 s hits cost AP only, 0.5 AP per point, none reaches HP; -20% speed. Ends at 0 AP; 10 s cooldown.", "suit_full", 9, 12, 1, ENodeTier::Medium, EStat::None, EGate::PulseModule },
 	{ ESkillId::MatrixOnKill,    "Matrix on Kill",   "A kill during the Matrix restores +15 AP.", "item_battery",   9, 13, 1, ENodeTier::Medium, EStat::None, EGate::PulseModule },
 	{ ESkillId::JuggernautMajor, "Decaying Armor",   "Raising the Matrix grants +100 AP over the cap, fading over its 6 s.", "dmg_rad", 9, 14, 1, ENodeTier::Major, EStat::None, EGate::PulseModule },
+
+	// ---- 160: Stealth's Shroud, 2026-09-17, in Cut the Head's cell (13,2).
+	// A flat x0.8 on the fill for the holder (PlayerConcealmentScale); a
+	// stillness term was rejected because no Stealth node rewards waiting.
+	{ ESkillId::Shroud,          "Shroud",           "Monsters learn about you 20% slower.", "dmg_drown", 13, 2, 1, ENodeTier::Medium, EStat::None, EGate::NightVision },
 };
 
 #undef SKILL_RESERVED

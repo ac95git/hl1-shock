@@ -1691,6 +1691,11 @@
 // is a stand-in -- w_silencer.mdl reads as a device, but is not this Module's
 // own model; see docs/ART_DEBT.md.
 @PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_silencer.mdl") = item_nightvision : "Night Vision Module" []
+// The silencer -- the first Evolution (docs/ROADMAP.md, "Weapon evolutions").
+// Found once, permanent: every pistol the player holds from then on fires quiet
+// and dim. Needs nothing, not even the pistol. Placed where the level wants
+// the Stealth loop's second half -- stab, swap, silenced headshot -- to begin.
+@PointClass size(-16 -16 0, 16 16 36) base(Weapon, Targetx) studio("models/w_silencer.mdl") = item_silencer : "Silencer (pistol Evolution)" []
 // The fourth Module, and the reveal gate for the whole Alien Route
 // (docs/ROADMAP.md, "The alien Module -- settled"). Gives the summon weapon
 // with it. A STAND-IN for the hand-over: the design has the freed alien slave

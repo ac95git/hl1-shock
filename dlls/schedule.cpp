@@ -1081,6 +1081,10 @@ void CBaseMonster::StartTask(Task_t* pTask)
 	}
 	case TASK_GET_PATH_TO_LASTPOSITION:
 	{
+		// A searcher turning for home found nothing; the grunt says so.
+		if (IsSearching())
+			OnSearchDone();
+
 		m_vecMoveGoal = m_vecLastPosition;
 
 		if (MoveToLocation(m_movementActivity, 2, m_vecMoveGoal))
@@ -1097,6 +1101,24 @@ void CBaseMonster::StartTask(Task_t* pTask)
 	}
 	case TASK_GET_PATH_TO_BESTSOUND:
 	{
+		// A dispatched Search knows where it is going; a curiosity does not.
+		// PBestSound answers "nearest", which for a searcher just sent to a
+		// body is as likely to be the player's own footstep -- and a member
+		// the leader pushed this schedule onto may have heard nothing at all.
+		if (m_flSearchTargetTime > 0.0f && gpGlobals->time - m_flSearchTargetTime < 2.0f)
+		{
+			if (MoveToLocation(m_movementActivity, 2, m_vecSearchTarget))
+			{
+				TaskComplete();
+			}
+			else
+			{
+				ALERT(at_aiconsole, "GetPathToSearchTarget failed!!\n");
+				TaskFail();
+			}
+			break;
+		}
+
 		CSound* pSound;
 
 		pSound = PBestSound();
@@ -1356,6 +1378,29 @@ Task_t* CBaseMonster::GetTask()
 //=========================================================
 Schedule_t* CBaseMonster::GetSchedule()
 {
+	// The Search (docs/PERCEPTION.md).  A body in earshot, no enemy, and a
+	// profile that cares: ask whether this monster is the one to go -- a
+	// loner always is, a squad member only if its leader picks it -- and if
+	// so run the SDK's own investigate schedule to it.  Everyone else falls
+	// through to the vanilla hear-and-turn below.  Before the state switch so
+	// every Trained monster gets it whichever GetSchedule override it came
+	// through; the grunt, assassin, alien grunt and slave all end up here for
+	// IDLE and ALERT.
+	//
+	// Gated on this think's Listen having heard one -- the condition AND the
+	// type bit, both of which only Listen writes.  The audible list is only
+	// valid after a Listen; a monster whose Listen has not run yet (no client
+	// in its PVS) has a stale or zeroed list, and slot 0 links to itself.
+	if ((m_MonsterState == MONSTERSTATE_IDLE || m_MonsterState == MONSTERSTATE_ALERT) &&
+		HasConditions(bits_COND_HEAR_SOUND) && (m_afSoundTypes & bits_SOUND_DISTURBANCE) != 0 &&
+		m_hEnemy == NULL && m_pCine == NULL && GetPerceptionProfile().bListensForDisturbance)
+	{
+		CSound* pDisturbance = PAudibleSoundOfType(bits_SOUND_DISTURBANCE);
+
+		if (pDisturbance != NULL && TryClaimSearch(pDisturbance->m_vecOrigin))
+			return GetScheduleOfType(SCHED_INVESTIGATE_SOUND);
+	}
+
 	switch (m_MonsterState)
 	{
 	case MONSTERSTATE_PRONE:

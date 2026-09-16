@@ -1455,7 +1455,7 @@ would have to mean "everything you do to things that are alive" to contain it.
 them. It fills a per-monster meter at a rate set by four multiplied terms — how central the player is in
 that monster's own cone, how far away as a fraction of that monster's own sight range, whether the player is
 crouched or moving slowly, and how brightly lit they are — and only becomes hostile when the meter fills.
-Every number is a cvar, `debug_suspicion 1` shows the live meters, and `suspicion_enable 0` restores vanilla
+Every number is a cvar, `debug_schedule 1` shows the meter of the monster under the crosshair, and `suspicion_enable 0` restores vanilla
 acquisition exactly so the two can be compared in play.
 
 Seven things about it are worth knowing rather than rediscovering:
@@ -1540,7 +1540,7 @@ has the table with every id and cvar. None of it has been played yet.
 - **Slip Away** (128) adds a saved `m_bSuspicionHadTarget` to `CBaseMonster`, remembering whether the last
   `Look` had a target. On the seen→unseen edge, with the meter between `suspicion_notice` and
   `suspicion_acquire`, it is multiplied by 1 − `skill_slip_away_fraction` (0.33), once — logged under
-  `debug_suspicion`. The single-player assumption is `UTIL_PlayerByIndex(1)`.
+  `debug_schedule`. The single-player assumption is `UTIL_PlayerByIndex(1)`.
 - **Ambush** (22) reads the *victim's* own meter at both damage chokepoints (`ApplyMultiDamage` in
   `weapons.cpp`, the direct branch of `RadiusDamage` in `combat.cpp`), through `PlayerAmbushScale`
   (`dlls/player_skills.cpp`) beside `SkillScaleWeaponDamage`, before `TakeDamage` fills the meter:
@@ -1580,10 +1580,31 @@ flashlight's own icon, which is a genuine confusion risk and is recorded in
 whether a corner icon is read in time mid-approach, are questions only play answers — `hud_conceal 0` turns
 it off for comparison.
 
-**A kill costs nothing, and nothing gives up.** Kill one grunt of four from behind and the other three do
-not react: deaths and corpses are imperceptible, so every kill is already a Silent Kill and the Major has
-nothing to be against. And once a monster acquires the player it keeps them forever — no give-up, no
-Search, no Post, no squad channel. Both halves are settled and unbuilt; see the next step.
+**Nothing gives up.** Once a monster acquires the player it keeps them forever — no give-up, and no
+captain's notice propagation. Settled and unbuilt; see the next step.
+
+### The cost of a kill — built 2026-09-17, untested in game
+
+Step 5f of the post-aggro step, built the day it was settled, none of it played yet:
+
+- **Witnesses.** Every hostile with a meter that had a line to the victim as it died jumps to 0.75, turns
+  to the body and speaks; from there it drains to a permanent 0.3 floor, cleared only by a level change.
+  Player-dealt kills only. `PerceptionOnKilled` in `dlls/perception.cpp`, from `CBaseMonster::Killed`.
+- **The Disturbance.** The death spot enters the sound list as a new sound bit for 20 seconds at 512
+  units, heard only by the Trained profiles through a flag on the profile struct.
+- **The Search.** The SDK's own investigate schedule: walk to the body, idle ten seconds, walk back. A
+  squad's leader sends its nearest free member and pushes the schedule onto it; a loner goes itself, so a
+  leaderless group arrives as a mob ([ADR-0014](adr/0014-a-body-draws-one-squad-member-or-every-loner.md)).
+- **Silent Kill** is now real: on a victim below Spotted no Disturbance is inserted. Witnesses in sight
+  still react.
+- **The grunt speaks** three new lines composed from vanilla words in `sound/sentences.txt`, copied to the
+  install by hand: on witnessing, on sending, on turning for home.
+- **With it:** the silencer as `item_silencer`, found and permanent, the first Evolution; Headhunter
+  ignoring the grunt's helmet; Shroud (id 160) in Cut the Head's cell; Ambush ×1.5 / ×2;
+  `suspicion_fill` 2.0.
+
+What to watch first: whether the searcher walks to the body or past it, whether the mob reads as rabble
+or as a bug, and whether the witness window from cover is long enough for the stab-swap-headshot.
 
 ### Next step
 

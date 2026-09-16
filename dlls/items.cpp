@@ -719,6 +719,57 @@ class CItemNightVision : public CItem
 LINK_ENTITY_TO_CLASS(item_nightvision, CItemNightVision);
 
 // ---------------------------------------------------------
+// The silencer -- the first Evolution, settled 2026-09-17 (docs/ROADMAP.md,
+// "Weapon evolutions"), pulled forward by the Stealth pillar because the
+// predator loop's intended play -- stab, swap, silenced headshot on the
+// witness -- has no second half without it.  Found, and permanent: the
+// pickup sets one saved flag on the player, and every pistol deploys
+// silenced from then on.  A pistol in hand plays the attach animation the
+// SDK shipped in v_9mmhandgun.mdl and never used.
+//
+// Needs nothing -- not the suit, not the pistol.  A player who finds it
+// before the pistol gets the silencer on the pistol when it comes.
+// ---------------------------------------------------------
+class CItemSilencer : public CItem
+{
+	void Spawn() override
+	{
+		Precache();
+		SET_MODEL(ENT(pev), "models/w_silencer.mdl"); // the real thing, for once
+		CItem::Spawn();
+	}
+	void Precache() override
+	{
+		PRECACHE_MODEL("models/w_silencer.mdl");
+	}
+	bool MyTouch(CBasePlayer* pPlayer) override
+	{
+		if (pPlayer->m_bSilencerFound)
+		{
+			return false;
+		}
+
+		pPlayer->m_bSilencerFound = true;
+
+		// In hand: attach it now, with the animation.  Holstered or not yet
+		// found: the next Deploy derives the body from the flag.
+		CBasePlayerItem* pActive = pPlayer->m_pActiveItem;
+		if (pActive != NULL && FClassnameIs(pActive->pev, "weapon_9mmhandgun"))
+		{
+			((CGlock*)pActive)->AttachSilencer();
+		}
+
+		AnnouncePickup(pPlayer, false);
+
+		EMIT_SOUND_SUIT(pPlayer->edict(), "!HEV_A1"); // placeholder, as item_nightvision's
+
+		return true;
+	}
+};
+
+LINK_ENTITY_TO_CLASS(item_silencer, CItemSilencer);
+
+// ---------------------------------------------------------
 // The alien Module -- the fourth Module, and the reveal gate for the whole
 // Alien Route, Hive nodes included (docs/ROADMAP.md, "The alien Module --
 // settled").  It is a platform: what it grants is access to weapons that run

@@ -41,6 +41,7 @@
 #include "soundent.h"
 #include "effects.h"
 #include "customentity.h"
+#include "player.h"
 
 int g_fGruntQuestion; // true if an idle grunt asked a question. Cleared when someone answers.
 
@@ -129,6 +130,12 @@ public:
 	// A trained soldier: quicker to notice, slower to forget. One of the four
 	// primaries stealth is tuned against -- see docs/PERCEPTION.md.
 	const PerceptionProfile& GetPerceptionProfile() override { return g_ProfileTrained; }
+
+	// The Search's three lines, all composed from words the grunt already
+	// has (sound/sentences.txt, the TOP MOD groups at the end).
+	void OnWitnessedKill() override;
+	void OnSearchDispatched() override;
+	void OnSearchDone() override;
 	void HandleAnimEvent(MonsterEvent_t* pEvent) override;
 	bool FCanCheckAttacks() override;
 	bool CheckMeleeAttack1(float flDot, float flDist) override;
@@ -357,6 +364,38 @@ void CHGrunt::JustSpoke()
 {
 	CTalkMonster::g_talkWaitTime = gpGlobals->time + RANDOM_FLOAT(1.5, 2.0);
 	m_iSentence = HGRUNT_SENT_NONE;
+}
+
+//=========================================================
+// The Search's lines (docs/PERCEPTION.md, "The captain's channel").  Each
+// goes through the shared speaking gate like every other grunt line, so of
+// three grunts reacting in the same second, one is heard -- vanilla's rule.
+//=========================================================
+void CHGrunt::OnWitnessedKill()
+{
+	if (FOkToSpeak())
+	{
+		SENTENCEG_PlayRndSz(ENT(pev), "HG_WITNESS", HGRUNT_SENTENCE_VOLUME, GRUNT_ATTN, 0, m_voicePitch);
+		JustSpoke();
+	}
+}
+
+void CHGrunt::OnSearchDispatched()
+{
+	if (FOkToSpeak())
+	{
+		SENTENCEG_PlayRndSz(ENT(pev), "HG_SEND", HGRUNT_SENTENCE_VOLUME, GRUNT_ATTN, 0, m_voicePitch);
+		JustSpoke();
+	}
+}
+
+void CHGrunt::OnSearchDone()
+{
+	if (FOkToSpeak())
+	{
+		SENTENCEG_PlayRndSz(ENT(pev), "HG_NOSIGN", HGRUNT_SENTENCE_VOLUME, GRUNT_ATTN, 0, m_voicePitch);
+		JustSpoke();
+	}
 }
 
 //=========================================================
@@ -607,8 +646,22 @@ void CHGrunt::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir,
 	// check for helmet shot
 	if (ptr->iHitgroup == 11)
 	{
+		// Headhunter ignores the helmet (docs/SKILL_TREE.md, "Stealth",
+		// settled 2026-09-17): without this a 9mm round at 8 ricochets off
+		// the 20 the helmet absorbs and the stab-then-silenced-headshot play
+		// leaves a live grunt.  The one head armour in the roster, so the
+		// skip lives here and nowhere else.  The leader's commander head never
+		// had a helmet.
+		bool bHeadhunter = false;
+		if (pevAttacker != NULL)
+		{
+			CBaseEntity* pAttacker = CBaseEntity::Instance(pevAttacker);
+			if (pAttacker != NULL && pAttacker->IsPlayer())
+				bHeadhunter = ((CBasePlayer*)pAttacker)->m_skills.HasSkill(ESkillId::Headhunter);
+		}
+
 		// make sure we're wearing one
-		if (GetBodygroup(1) == HEAD_GRUNT && (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_BLAST | DMG_CLUB)) != 0)
+		if (!bHeadhunter && GetBodygroup(1) == HEAD_GRUNT && (bitsDamageType & (DMG_BULLET | DMG_SLASH | DMG_BLAST | DMG_CLUB)) != 0)
 		{
 			// absorb damage
 			flDamage -= 20;

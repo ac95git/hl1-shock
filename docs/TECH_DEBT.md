@@ -1,5 +1,51 @@
 # Technical Debt Register
 
+## Every Save Overruns A 64-Byte Stack Buffer In The Save Writer — OPEN, DIAGNOSED 2026-09-17
+
+Seen by Andrei on 2026-09-17 as a Debug-build stack check on changing the video resolution in game:
+*"stack around the variable 'entityArray' was corrupted"*. A resolution change makes the engine save the
+level and reload it, so this is the save path, not the renderer, and not the inventory or Skill Tree
+sprites the symptom first suggested. **Deferred by Andrei to a later session; documented here so it is
+fixed from this diagnosis rather than rediscovered.**
+
+### Scope
+`dlls/util.cpp`, `CSave::WriteFields`, the `FIELD_BOOLEAN` branch; `dlls/saverestore.h`,
+`MAX_ENTITYARRAY`; `dlls/player_skills.cpp`, the `m_bUnlocked256` save entry.
+
+### The bug
+`WriteFields` declares two locals, `int entityArray[MAX_ENTITYARRAY]` and `byte boolArray[MAX_ENTITYARRAY]`,
+with `MAX_ENTITYARRAY` 64. The entity-array branch at least warns when a field is larger than that (and
+then overruns anyway). The `FIELD_BOOLEAN` branch, an upstream addition, has **no check at all**: it copies
+`fieldSize` bools into `boolArray` and writes them out.
+
+`CPlayerSkills` saves its unlocked array as one `FIELD_BOOLEAN` field of `k_SkillIdCeiling` entries — 256
+since the ceiling was raised on 2026-09-14 (`game_shared/skill_defs.h`, "The id ceiling"). So every save
+of the player writes 256 bytes through a 64-byte stack buffer, 192 bytes past its end, over `entityArray`
+and whatever else sits there. That is every quicksave, autosave, level transition and video restart since
+that date. A Release build has no stack check and simply corrupts the frame silently; the save file itself
+is written correctly, because `WriteData` is handed the right length.
+
+Nothing else in the codebase saves a bool array larger than 64, and no entity array exceeds 64 either
+(`m_rgpPlayerItems` is `MAX_ITEM_TYPES`, the squad's is 4, the Nihilanth's spheres are `N_SPHERES`).
+
+### Why This Is Debt
+A 192-byte stack smash in the one function every save runs through. That it has not visibly broken a save
+yet is luck about what happens to be on the stack below the buffer.
+
+### Recommended Next Steps
+1. Size the bool staging buffer to the field, not to `MAX_ENTITYARRAY`: write the bools straight out in
+   chunks of 64 through the existing buffer, or stage into a buffer of `fieldSize` bytes (a
+   `std::vector<byte>` or a `static byte[k_SkillIdCeiling]`-sized local; the largest bool field in the
+   codebase is the 256-entry tree). One function, no format change: `WriteData` already receives the true
+   length, so the file is byte-for-byte what it is today.
+2. Make the entity-array branch's `ALERT` a hard clamp as well, so the next oversized array cannot overrun
+   either.
+3. Verify with a Debug build: quicksave, change resolution, cross a level transition — no stack check.
+
+### Acceptance Criteria For Closure
+A Debug build saves and reloads through a quicksave, a video restart and a level transition with no stack
+check, and a save written before the fix loads with the same unlocked tree after it.
+
 ## The Dash Readout Repeats Across The Screen And Never Drains — OPEN, NOT REPRODUCED
 
 Seen once by Andrei on 2026-09-16, on the build after the Stealth wave (9d9ca70): the Dash bar after the

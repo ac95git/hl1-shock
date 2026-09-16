@@ -783,3 +783,32 @@ The pickup on the floor says *this is the Pulse* before the tooltip does.
 ### Done when
 `item_alienmodule`, `item_core` and `weapon_summon` each have a look of their own, and a Core reads on the
 HUD as something other than gauss ammo.
+
+## The Search and the silencer — voices, a shared pickup model, a pickup sound
+
+### Scope
+`dlls/hgrunt.cpp` (the three `OnSearch*` lines), `dlls/perception.cpp` and `dlls/squadmonster.cpp` (the
+witness and dispatch hooks the other Trained monsters leave silent), `dlls/items.cpp` `CItemSilencer`,
+`sound/sentences.txt`.
+
+### Current stand-ins
+
+| Use | Asset | Borrowed from |
+| --- | --- | --- |
+| The grunt's witness, send and no-sign lines | `HG_WITNESS`, `HG_SEND`, `HG_NOSIGN`, composed from vanilla's `hgrunt/` word files | the vocoder vocabulary; no new audio |
+| The assassin, alien grunt and alien slave witnessing or searching | nothing — they go in silence | — |
+| The silencer pickup's world model | `models/w_silencer.mdl` | the real thing — but `item_nightvision` stands in on the same model |
+| The silencer pickup's sound | `!HEV_A1` | the Night Vision Module's placeholder |
+
+### What's wrong with them
+- Two different pickups on one model. The silencer *is* `w_silencer.mdl`, so it is the Night Vision
+  Module's stand-in that has to move, not this one.
+- Three of the four soldiers that search do it mute, which makes a dispatched alien grunt look like a
+  wander rather than a Search. The grunt has a vocabulary; the others have grunts and hisses that could
+  carry the same three moments.
+- The composed lines are limited to words Valve recorded. "Man down" does not exist; "we got casualties"
+  is the nearest.
+
+### Done when
+The Night Vision Module has a model of its own, the silencer pickup has a sound of its own, and a
+searching alien makes a noise when it is sent and when it gives up.

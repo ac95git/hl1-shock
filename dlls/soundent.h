@@ -31,6 +31,13 @@
 #define bits_SOUND_MEAT (1 << 4)	// gib or pork chop
 #define bits_SOUND_DANGER (1 << 5)	// pending danger. Grenade that is about to explode, explosive barrel that is damaged, falling crate
 #define bits_SOUND_GARBAGE (1 << 6) // trash cans, banana peels, old fast food bags.
+// A body.  Inserted where a player-dealt kill happened, for the Disturbance's
+// duration, and heard only by Perception Profiles that opt in (soldiers, not
+// zombies).  Classified as a SOUND, not a scent, so that hearing it buys the
+// whole existing hear-and-turn machinery for free; the Search that answers it
+// is the SDK's own investigate schedule.  docs/PERCEPTION.md, "Death,
+// witnesses, and the Disturbance".
+#define bits_SOUND_DISTURBANCE (1 << 7)
 
 #define bits_ALL_SOUNDS 0xFFFFFFFF
 

@@ -498,6 +498,12 @@ public:
 	bool PhantomActive() const;
 	void PhantomStart();
 
+	// ---- The silencer, the first Evolution ----
+	// Found once (item_silencer) and permanent: every pistol the player
+	// holds from then on deploys silenced (CGlock::Deploy).  Saved.  The
+	// weapon's own pev->body is derived from this, never the other way.
+	bool m_bSilencerFound = false;
+
 	// The speed half rides the Dash's physinfo-key route (pm_shared.cpp
 	// PM_CheckParamters reads it) rather than pev->maxspeed/clientmaxspeed,
 	// which can only ever be lowered against sv_maxspeed -- the Matrix's slow

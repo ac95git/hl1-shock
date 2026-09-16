@@ -23,6 +23,8 @@
 #include "saverestore.h"
 #include "squadmonster.h"
 #include "plane.h"
+#include "game.h"
+#include "perception.h"
 
 //=========================================================
 // Save/Restore
@@ -168,7 +170,11 @@ void CSquadMonster::SquadRemove(CSquadMonster* pRemove)
 		{
 			for (int i = 0; i < MAX_SQUAD_MEMBERS - 1; i++)
 			{
-				if (pSquadLeader->m_hSquadMember[i] == this)
+				// Vanilla compared against `this` -- the leader, which is never
+				// in its own member list -- so a dead member was never cleared
+				// and every walk over the squad kept finding the corpse.
+				// Found 2026-09-17 when the Search was handed to the victim.
+				if (pSquadLeader->m_hSquadMember[i] == pRemove)
 				{
 					pSquadLeader->m_hSquadMember[i] = NULL;
 					break;
@@ -274,6 +280,90 @@ void CSquadMonster::SquadMakeEnemy(CBaseEntity* pEnemy)
 	}
 }
 
+
+//=========================================================
+//
+// SquadDispatchSearch - a squad sends ONE member to a body.
+//
+// The predator's reward for a clean kill is the next isolated target, so the
+// rest hold where they stand.  Runs on the leader.  Whoever it picks has the
+// investigate schedule pushed onto it directly, because a member out of
+// earshot of the Disturbance would otherwise never learn it was sent.
+//
+//=========================================================
+CSquadMonster* CSquadMonster::SquadDispatchSearch(const Vector& vecDisturbance)
+{
+	if (!IsLeader())
+		return NULL;
+
+	// Someone is already on a body: the same one, or a fresh one that can
+	// wait until they are back.  One searcher at a time keeps the rest at
+	// their posts.
+	CSquadMonster* pCurrent = (CSquadMonster*)((CBaseEntity*)m_hSearcher);
+
+	if (pCurrent != NULL && pCurrent->IsAlive() && pCurrent->IsSearching())
+		return pCurrent;
+
+	// This body has been answered already and its searcher is back.
+	if (m_flLastSearchTime > 0.0f &&
+		gpGlobals->time - m_flLastSearchTime <= disturbance_duration.value &&
+		(m_vecLastSearch - vecDisturbance).Length() < 64.0f)
+		return NULL;
+
+	CSquadMonster* pNearest = NULL;
+	float flNearest = 0.0f;
+
+	for (int i = 0; i < MAX_SQUAD_MEMBERS; i++)
+	{
+		CSquadMonster* pMember = MySquadMember(i);
+
+		if (pMember == NULL || !pMember->IsAlive())
+			continue;
+
+		// A member killed this frame still passes IsAlive for one think --
+		// BecomeDead hands the corpse half its health and only the death task
+		// sets the dead flag -- and it is the nearest thing to its own body.
+		if (pMember->m_IdealMonsterState == MONSTERSTATE_DEAD)
+			continue;
+
+		// Free means: not fighting, not performing, and awake enough to walk.
+		if (pMember->m_hEnemy != NULL || pMember->m_pCine != NULL)
+			continue;
+		if (pMember->m_MonsterState != MONSTERSTATE_IDLE && pMember->m_MonsterState != MONSTERSTATE_ALERT)
+			continue;
+
+		const float flDist = (pMember->pev->origin - vecDisturbance).Length();
+
+		if (pNearest == NULL || flDist < flNearest)
+		{
+			pNearest = pMember;
+			flNearest = flDist;
+		}
+	}
+
+	if (pNearest == NULL)
+		return NULL;
+
+	m_hSearcher = pNearest;
+	m_vecLastSearch = vecDisturbance;
+	m_flLastSearchTime = gpGlobals->time;
+
+	pNearest->m_vecSearchTarget = vecDisturbance;
+	pNearest->m_flSearchTargetTime = gpGlobals->time;
+
+	if (pNearest != this)
+	{
+		// The send line, then the schedule pushed straight onto the member:
+		// its own GetSchedule may not run for seconds if nothing interrupts
+		// what it is doing, and it may never have heard the body at all.
+		OnSearchDispatched();
+		pNearest->ChangeSchedule(pNearest->GetScheduleOfType(SCHED_INVESTIGATE_SOUND));
+	}
+
+	DebugScheduleNoteSearch(this, pNearest);
+
+	return pNearest;
+}
 
 //=========================================================
 //

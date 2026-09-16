@@ -68,6 +68,15 @@ struct PerceptionProfile
 	*	profile, never a bypass -- a dark room works on a zombie too, just less.
 	*/
 	bool bUsesSuspicion;
+
+	/**
+	*	@brief true means this monster hears a Disturbance -- a body -- and can
+	*	be sent to look at it.  Soldiers, not zombies: bodies mean something to
+	*	the four Trained primaries and nothing to a headcrab, and keeping the
+	*	rest deaf keeps the 64-entry sound pool clear during a Xen fight.  A
+	*	future NPC opts in by picking a profile and nothing else.
+	*/
+	bool bListensForDisturbance;
 };
 
 // The profiles themselves.  Defined here as C++17 inline variables rather than
@@ -77,24 +86,31 @@ struct PerceptionProfile
 // to link against a definition that only exists in the server build.
 
 //! The conservative default.  Every monster gets this unless it says otherwise.
-inline constexpr PerceptionProfile g_ProfileDefault{1.0f, 1.0f, true};
+inline constexpr PerceptionProfile g_ProfileDefault{1.0f, 1.0f, true, false};
 
-//! Quicker to notice, slower to forget.  Human grunts, assassins, alien grunts
-//! and alien slaves -- the four primaries stealth is tuned against.
-inline constexpr PerceptionProfile g_ProfileTrained{1.5f, 0.5f, true};
+//! Quicker to notice, slower to forget, and the only ones who go looking at a
+//! body.  Human grunts, assassins, alien grunts and alien slaves -- the four
+//! primaries stealth is tuned against.
+inline constexpr PerceptionProfile g_ProfileTrained{1.5f, 0.5f, true, true};
 
 //! Machines, aircraft, and the things with no eyes to fool.  Vanilla acquisition.
-inline constexpr PerceptionProfile g_ProfileAlwaysAware{1.0f, 1.0f, false};
-
-/**
-*	@brief Debug view.  Records one monster's live meter for the periodic
-*	readout, and prints it when the interval is up.  Off unless debug_suspicion
-*	is set.  Shares the screen centre with the debug_damage readout, so do not
-*	run both at once.
-*/
-void DebugSuspicionNote(CBaseMonster* pMonster, float flConcealment);
+inline constexpr PerceptionProfile g_ProfileAlwaysAware{1.0f, 1.0f, false, false};
 
 class CBasePlayer;
+
+/**
+*	@brief Debug view.  Centre-prints the monster under the player's crosshair
+*	-- state, squad role, schedule and task, meter, Concealment and floor --
+*	four times a second while debug_schedule is set, plus the last kill and
+*	the last Search dispatch for a few seconds after each.  For watching a
+*	Search happen.  Same screen centre as the other debug_* readouts; run one
+*	at a time.  Replaced debug_suspicion on 2026-09-17.
+*/
+void DebugScheduleReport(CBasePlayer* pPlayer);
+
+//! The two events the readout carries; each also goes to the console.
+void DebugScheduleNoteKill(CBaseMonster* pVictim, int cWitnesses, bool bSilentKill);
+void DebugScheduleNoteSearch(CBaseMonster* pDispatcher, CBaseMonster* pSearcher);
 
 /**
 *	@brief The Concealment Stat nodes' multiplier on the rate a monster's
@@ -104,3 +120,10 @@ class CBasePlayer;
 *	-- a player cannot make themselves fill a monster's meter backwards.
 */
 float PlayerConcealmentScale(CBasePlayer* pPlayer);
+
+/**
+*	@brief The name of the SDK's investigate schedule, which is the Search.
+*	Compared by name rather than by pointer because the table lives in
+*	defaultai.cpp and the Search is recognised from three other files.
+*/
+inline constexpr const char* SEARCH_SCHEDULE_NAME = "InvestigateSound";

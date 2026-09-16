@@ -179,7 +179,7 @@ that already describes what it changes.
 | --- | --- | --- |
 | 1 | **Docs** | PERCEPTION.md, the CONTEXT.md terms, the two corrections, the CLAUDE.md index row. **Done 2026-08-31.** No code. |
 | 2 | **The Backstab** | `CanBackstab()`, the curated exclusion list, `FInRearArc`, two cvars, `adr/0010`, and the headshot entry under [pillar 2](#headshots-and-how-they-reconcile-with-this). **Done 2026-08-31.** |
-| 3 | **Suspicion** | Perception Profile, the meter, the `Look` gate, the `debug_suspicion` view, `SF_MONSTER_IGNORE_CONCEALMENT`, `adr/0009`. **Done 2026-09-01.** |
+| 3 | **Suspicion** | Perception Profile, the meter, the `Look` gate, the `debug_suspicion` view (replaced by `debug_schedule` 2026-09-17), `SF_MONSTER_IGNORE_CONCEALMENT`, `adr/0009`. **Done 2026-09-01.** |
 | 4 | ~~**The readout**~~ | `gmsgConceal` plus `CHudConceal`, following `CHudPulse`'s send-on-change pattern. **Done 2026-09-02.** |
 | 5 | **[The post-aggro step](#the-post-aggro-step)** | Everything that happens *after* a monster acquires the player. Attempted 2026-09-02 and reverted; **re-sliced 2026-09-17**, cost of a kill first (witnesses, the Disturbance, the Search), then the give-up, then the captain's channel — see below. Aim-versus-facing is dropped. |
 | 6 | ~~**Noise**~~ | A deliberate multiplier on the computed noise volume for crouching and walking. **Done 2026-09-02**, pulled forward: without it a crouched player could not get within crowbar reach without being heard, so the Backstab's own approach did not work. |
@@ -269,8 +269,8 @@ vanilla map. The order, each commit independently playable:
 
 | | | Settled |
 | --- | --- | --- |
-| **5f** | **Witnesses, the Disturbance, the Search.** The cost of a kill | 2026-09-17, below |
-| **5b** | **The give-up**, contact-keyed, into the same Search | 2026-09-17, below |
+| **5f** | **Witnesses, the Disturbance, the Search.** The cost of a kill | 2026-09-17, below. **Built the same day**, with the silencer item, the Headhunter helmet skip, Shroud, and the Ambush and fill cvar changes. **Untested: [STEALTH_CHECKLIST.md](STEALTH_CHECKLIST.md) blocks every row under this pillar until it has results** |
+| **5b** | **The give-up**, contact-keyed, into the same Search | 2026-09-17, below. Not built; its lines (`HG_LOST`) are already in `sound/sentences.txt` |
 | **5e** | **The captain's channel** — notice propagation | 2026-09-17, below |
 | 5g | The level-change reset | 2026-08-31, [PERCEPTION.md](PERCEPTION.md#losing-the-player--the-give-up-settled-2026-09-17-not-built) |
 | ~~5c, 5d~~ | ~~The Search, Posts~~ | Absorbed into 5f: the SDK already has both |

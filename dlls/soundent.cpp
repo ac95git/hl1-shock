@@ -51,7 +51,7 @@ void CSound::Reset()
 //=========================================================
 bool CSound::FIsSound()
 {
-	if ((m_iType & (bits_SOUND_COMBAT | bits_SOUND_WORLD | bits_SOUND_PLAYER | bits_SOUND_DANGER)) != 0)
+	if ((m_iType & (bits_SOUND_COMBAT | bits_SOUND_WORLD | bits_SOUND_PLAYER | bits_SOUND_DANGER | bits_SOUND_DISTURBANCE)) != 0)
 	{
 		return true;
 	}

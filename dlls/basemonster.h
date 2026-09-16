@@ -127,6 +127,25 @@ public:
 	// silently lose it.
 	bool m_bSuspicionHadTarget = false;
 
+	// The lowest the meter drains to for the rest of the level, once this
+	// monster has witnessed a kill (or, from 5b, given up a chase).  Saved
+	// like the meter; cleared only by a level change.  Just under the
+	// readout's Noticed line, so the room is primed while the icon stays dim.
+	float m_flSuspicionFloor = 0.0f;
+
+	// Where a dispatched Search is going, and when it was dispatched.  Read
+	// by TASK_GET_PATH_TO_BESTSOUND for a couple of seconds after dispatch
+	// so the searcher walks to the body rather than to whatever sound happens
+	// to be nearest when the task starts.  Not saved: schedules are not.
+	Vector m_vecSearchTarget;
+	float m_flSearchTargetTime = 0.0f;
+
+	// The last Disturbance this monster answered as a DISPATCHER -- a loner
+	// for itself, a leader for its squad -- so one body is answered once
+	// while its sound is still in the list.  Not saved, like the sound list.
+	Vector m_vecLastSearch;
+	float m_flLastSearchTime = 0.0f;
+
 	bool Save(CSave& save) override;
 	bool Restore(CRestore& restore) override;
 
@@ -214,6 +233,35 @@ public:
 	// not set m_hEnemy, so without this a monster the player shot would wait
 	// out its own meter before fighting back.
 	void SuspicionFromDamage(entvars_t* pevAttacker);
+
+	// Sets the meter to at least flValue, without touching the floor.  A
+	// witness's 0.75, and the give-up's.  Never lowers it.
+	void SuspicionJump(float flValue);
+
+	// The cost of a kill.  Called from Killed for player-dealt deaths only:
+	// every hostile with a meter that can see THIS (the victim) becomes a
+	// witness, and the death spot enters the sound list as a Disturbance
+	// unless the killer's Silent Kill applies.  docs/PERCEPTION.md.
+	void PerceptionOnKilled(entvars_t* pevAttacker);
+
+	// The Search.  Called from GetSchedule in IDLE and ALERT when a
+	// Disturbance is audible: answers whether THIS monster is the one to go.
+	// A squad's leader picks its nearest member; a loner goes itself.
+	bool TryClaimSearch(const Vector& vecDisturbance);
+
+	// true while running the Search (the SDK's investigate schedule).
+	bool IsSearching();
+
+	// Speech hooks, no-ops here; the grunt fills them in.  Called on every
+	// witness; on the leader when it sends someone else; on the searcher when
+	// it turns for home.
+	virtual void OnWitnessedKill() {}
+	virtual void OnSearchDispatched() {}
+	virtual void OnSearchDone() {}
+
+	// The audible sound of the given type, if any, regardless of which one
+	// PBestSound would call nearest.
+	CSound* PAudibleSoundOfType(int iType);
 
 	void HandleAnimEvent(MonsterEvent_t* pEvent) override;
 

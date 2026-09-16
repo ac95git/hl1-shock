@@ -292,6 +292,15 @@ piling onto the same cover (`:544-558`, `:588`).
 `m_hSquadLeader` (`:145-181`) and there is no promotion anywhere in the SDK. The survivors keep fighting
 individually but can no longer share enemy information, coordinate slots, or be given an enemy by anyone.
 
+**Killing a member never removed it from the leader's list — fixed 2026-09-17.** `SquadRemove`'s
+member branch compared each slot against `this`, the leader, which is never in its own member list, so
+the slot was never cleared and every walk over the squad kept finding the corpse: `SquadCount` counted
+it, `SquadMakeEnemy` gave it an enemy, and the Search dispatch picked it as the nearest free member to
+its own body — it *is* at distance zero, and `IsAlive` still passes for one think after death, because
+`BecomeDead` hands the corpse half its health and only the death task sets the dead flag. The comparison
+now uses the member being removed. Base-game bug; the dispatch also refuses a monster whose ideal state
+is already DEAD, as does the witness loop.
+
 ### Death and corpses
 
 **Nothing perceives a death.** `CBaseMonster::Killed` (`dlls/combat.cpp:588`) notifies only `pev->owner`,
@@ -450,19 +459,25 @@ scripted AI still receives the condition it expects, fleeing still works, and an
 tracks the player at full speed. The change is surgical because everything downstream of acquisition is left
 alone. The ADR has the four rejected placements and what each would have broken.
 
-### The debug view — built 2026-09-01
+### The debug view — built 2026-09-01, replaced 2026-09-17
 
-`debug_suspicion 1` centre-prints the four highest live meters, four times a second, with a bar, the raw
-value, the Concealment that produced it, and an `N` past `suspicion_notice`:
+`debug_schedule 1` centre-prints the monster under the crosshair, four times a second — name, state and
+squad role, schedule and task, the meter, the Concealment it computes for the player, its floor — and,
+for eight seconds after each, the last kill and the last Search dispatch:
 
 ```
-hgrunt    [======....]0.62 c0.38 N
-zombie    [=.........]0.08 c0.71
+hgrunt  Alert  leader/3
+InvestigateSound  #5/12 task 27
+susp 0.75  c0.38  floor 0.30
+kill: hgrunt, 2 wit, Disturbance
+search: hgrunt -> hgrunt
 ```
 
 Built alongside the meter rather than after it, because every number above is a first guess and a meter
-nobody can see is a meter nobody can tune. It shares the screen centre with `debug_damage`, so the two
-should not be run together.
+nobody can see is a meter nobody can tune. The first version, `debug_suspicion`, printed the four highest
+meters in the room with a bar each; once the Search existed the question changed from "who is noticing
+me" to "what is that one doing", and the room view was decommissioned for this one on 2026-09-17. It
+shares the screen centre with `debug_damage` and `debug_monster_aim`, so run one at a time.
 
 **Why it is abbreviated, which is not cosmetic.** `ClientPrint` sends a user message, and the engine caps a
 user message at **192 bytes** — overflow does not truncate, it drops the server with `SZ_GetSpace`. The
@@ -541,7 +556,14 @@ fight; the give-up is what makes the loop restartable. The reasons and the inten
 - **One number, the jump.** A witness, and a monster giving up, both land at `suspicion_witness` (0.75) —
   Noticed, not Spotted — and drain from there to a permanent `suspicion_floor` (0.3). One rule, not two.
 
-### Death, witnesses, and the Disturbance — settled 2026-09-17, not built
+### Death, witnesses, and the Disturbance — settled and built 2026-09-17, untested in game
+
+`CBaseMonster::PerceptionOnKilled` (`dlls/perception.cpp`), from `CBaseMonster::Killed`, while the
+victim's origin is still where it fell. `debug_schedule 1` shows each kill with its witness count and
+whether a Disturbance was inserted, on screen for eight seconds and in the console. `bits_SOUND_DISTURBANCE` is `1 << 7` in `dlls/soundent.h`, in
+`FIsSound()`'s mask; `Listen` ORs it into the personal mask for a profile with `bListensForDisturbance`,
+and lets it through any schedule whose sound mask admits combat sound, so no vanilla schedule table
+needed an edit.
 
 Two mechanisms doing two different jobs, both **for player-dealt kills only**. Monster-on-monster deaths
 produce neither, or every marines-versus-aliens set piece would fill the sound pool with grunts searching
@@ -586,7 +608,16 @@ quiet gun is the silencer, now a found Evolution.
 Watch `MAX_WORLD_SOUNDS`: it is 64 for the whole world. The duration is modest and the insert is
 player-kills-only for that reason.
 
-### The Search is the SDK's own — settled 2026-09-17, not built
+### The Search is the SDK's own — settled and built 2026-09-17, untested in game
+
+Built as three pieces. `CBaseMonster::GetSchedule` (`dlls/schedule.cpp`) asks `TryClaimSearch` when a
+Disturbance is audible in IDLE or ALERT with no enemy, before the state switch, so every Trained monster
+reaches it whichever override it came through. `CSquadMonster::SquadDispatchSearch` is the leader's pick,
+and it **pushes the schedule onto the member it chose** with `ChangeSchedule`, because a member out of
+earshot would otherwise never learn it was sent. `TASK_GET_PATH_TO_BESTSOUND` walks to the dispatched
+target for two seconds after dispatch rather than to whatever sound is nearest, and
+`TASK_GET_PATH_TO_LASTPOSITION` fires the "no sign" line when the schedule is the Search. One body is
+answered once per dispatcher while its sound could still be in the list.
 
 `slInvestigateSound` (`dlls/defaultai.cpp:285`): stop, `TASK_STORE_LASTPOSITION`, path to the best sound,
 walk, idle ten seconds, path back to the stored position, walk, clear. **A Search and a return to Post in
@@ -604,8 +635,8 @@ next isolated target, walking to the corpse the player is standing beside.
 arrives as a mob. Kept deliberately — [ADR-0014](adr/0014-a-body-draws-one-squad-member-or-every-loner.md)
 has the rejected alternative and why.
 
-A searcher that hears a second Disturbance mid-walk restarts the schedule from where it stands, so its
-walk-back position drifts. The vanilla schedule drifts the same way; recorded, not fixed.
+The drift worry from the grill turned out not to apply: the investigate schedule's own sound mask admits
+only danger sounds, so a searcher is not restarted by a second body or by footsteps, only by a grenade.
 
 ### Losing the player — the give-up, settled 2026-09-17, not built
 
@@ -659,8 +690,14 @@ to the commander head, the beret (`dlls/squadmonster.cpp:437`, commented by Valv
 the helmet clause in `CHGrunt::TraceAttack` fires only for the plain grunt head. So in vanilla the
 sergeant is the one in the beret, and he is the one grunt a pistol headshot always worked on.
 
-**Sentences** are composed from words the grunt already has, in a new mod `sentences.txt`; the picks are
-in [ROADMAP.md](ROADMAP.md#the-post-aggro-step).
+**Sentences** are composed from words the grunt already has, in `sound/sentences.txt` — a full copy of
+vanilla's, because the engine takes the mod's file *instead of* valve's, with the TOP MOD groups at the
+end: `HG_WITNESS`, `HG_SEND`, `HG_NOSIGN` (built, spoken by the grunt's three `OnSearch*` hooks) and
+`HG_LOST` (for 5b and 5e, not yet spoken). Copied to the install by hand like `sprites/`. The assassin,
+alien grunt and alien slave search in silence; [ART_DEBT.md](ART_DEBT.md) records it.
+
+**The notice propagation itself is not built.** Only the leader's dispatch and the free dissolution exist
+today.
 
 ### Perception Profiles — built 2026-09-01
 
@@ -867,6 +904,16 @@ Concealment table halves, on the reasoning that stealth is meant to work behind 
 dark, and crouching cover to cover in front of a lit grunt is generous enough for a full Concealment
 investment. Per-profile scales stay constants unless the ratio itself proves wrong.
 
-A debug view of live Suspicion values shipped with the meter rather than after it — `debug_suspicion`,
-described above. Two [TECH_DEBT.md](TECH_DEBT.md) entries already ask for debug visualization of custom
+A debug view shipped with the meter rather than after it. **`debug_schedule 1`** (2026-09-17, replacing
+`debug_suspicion`) centre-prints the monster under the crosshair four times a second: name, state and
+squad role (`leader/3`, `member`, `loner`), the schedule's name with the task index and task id, the
+meter, the Concealment that monster computes for the player right now, its floor, and whether it holds an
+enemy. Under that, for eight seconds after each, the last kill (`kill: hgrunt, 2 wit, Disturbance` or
+`silent`) and the last Search dispatch (`search: hgrunt -> hgrunt`), shown whether or not anything is
+under the crosshair, and echoed to the console with Slip Away's drops. Built for watching a Search happen
+— who was sent and what it is running. It shares the screen centre with the other `debug_*` readouts, so
+run one at a time. **`debug_invisible 1`** (2026-09-17) makes the player unseen and unheard
+by every monster: the `notarget` flag, which `Look` skips outright, plus the SDK's own `m_fNoPlayerSound`
+switch, which nothing else turns on. Being shot still counts. For standing beside a Search and watching
+it. Set it back to 0 and both release at once. Two [TECH_DEBT.md](TECH_DEBT.md) entries already ask for debug visualization of custom
 systems, and a meter nobody can see is a meter nobody can tune.

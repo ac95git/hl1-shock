@@ -19,8 +19,11 @@
 #include "player.h"
 #include "game.h"
 #include "perception.h"
+#include "soundent.h"
+#include "squadmonster.h"
 #include "UserMessages.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -61,9 +64,30 @@ float PlayerConcealmentScale(CBasePlayer* pPlayer)
 		return 1.0f;
 
 	const int iCount = pPlayer->m_skills.CountStat(EStat::Concealment);
-	const float flScale = 1.0f - iCount * skill_stat_concealment.value;
+	float flScale = 1.0f - iCount * skill_stat_concealment.value;
+
+	// Shroud: the roads over again in one node, multiplied rather than added
+	// so it is worth the same whatever else is held.
+	if (pPlayer->m_skills.HasSkill(ESkillId::Shroud))
+		flScale *= std::max(0.0f, skill_shroud_scale.value);
 
 	return flScale > 0.0f ? flScale : 0.0f;
+}
+
+//=========================================================
+// SuspicionJump -- set the meter to at least flValue.  A witness's 0.75, and
+// (from 5b) the give-up's.  Never lowers it, and never touches the floor:
+// the floor is a separate write by whoever decides the room is primed.
+//=========================================================
+void CBaseMonster::SuspicionJump(float flValue)
+{
+	if (flValue > 1.0f)
+		flValue = 1.0f;
+
+	if (m_flSuspicion < flValue)
+		m_flSuspicion = flValue;
+
+	m_flSuspicionTime = gpGlobals->time;
 }
 
 //=========================================================
@@ -246,8 +270,6 @@ bool CBaseMonster::UpdateSuspicion(CBaseEntity* pTarget)
 		if (m_flSuspicion > 1.0f)
 			m_flSuspicion = 1.0f;
 
-		DebugSuspicionNote(this, flConcealment);
-
 		m_bSuspicionHadTarget = true;
 	}
 	else
@@ -266,8 +288,7 @@ bool CBaseMonster::UpdateSuspicion(CBaseEntity* pTarget)
 		if (m_bSuspicionHadTarget && m_flSuspicion >= suspicion_notice.value && m_flSuspicion < suspicion_acquire.value)
 		{
 			// UTIL_PlayerByIndex(1): this mod is single-player, and the only
-			// entity that could have been the seen target is player 1 --
-			// SuspicionDebugPrint already leans on the same assumption.
+			// entity that could have been the seen target is player 1.
 			CBaseEntity* pPlayer = UTIL_PlayerByIndex(1);
 
 			if (pPlayer != NULL && pPlayer->IsPlayer() && static_cast<CBasePlayer*>(pPlayer)->m_skills.HasSkill(ESkillId::SlipAway))
@@ -280,7 +301,7 @@ bool CBaseMonster::UpdateSuspicion(CBaseEntity* pTarget)
 
 				m_flSuspicion *= flFraction;
 
-				if (debug_suspicion.value != 0)
+				if (debug_schedule.value != 0)
 				{
 					ALERT(at_console, "Slip Away: %s suspicion %.2f -> %.2f\n",
 						STRING(pev->classname), flBefore, m_flSuspicion);
@@ -290,6 +311,13 @@ bool CBaseMonster::UpdateSuspicion(CBaseEntity* pTarget)
 
 		m_flSuspicion -= suspicion_drain.value * profile.flDrainScale * flDelta;
 
+		// The floor: a monster that has seen a kill (or given up a chase)
+		// never forgets all the way for the rest of the level.  Applied to
+		// the drain only -- a fresh monster has a floor of 0 and this is a
+		// no-op for it.
+		if (m_flSuspicion < m_flSuspicionFloor)
+			m_flSuspicion = m_flSuspicionFloor;
+
 		if (m_flSuspicion < 0.0f)
 			m_flSuspicion = 0.0f;
 
@@ -297,6 +325,189 @@ bool CBaseMonster::UpdateSuspicion(CBaseEntity* pTarget)
 	}
 
 	return m_flSuspicion >= suspicion_acquire.value;
+}
+
+//=========================================================
+// PerceptionOnKilled -- the cost of a kill.  docs/PERCEPTION.md, "Death,
+// witnesses, and the Disturbance".
+//
+// Player-dealt kills only, for the same reason the damage rule and the gate
+// are scoped that way -- and more so here: every marines-versus-aliens set
+// piece would otherwise fill the 64-entry sound pool with grunts searching
+// bodies they shot themselves.
+//
+// Two mechanisms doing two jobs.  SEEING the kill is a direct write, once, to
+// whoever had a line to the victim as it died.  FINDING the body is a sound
+// that lasts a while and that only the Trained profiles hear; the Search
+// that answers it is dispatched from GetSchedule when it is heard.
+//
+// Called from CBaseMonster::Killed, so THIS is the victim and its origin is
+// still where it fell.  The victim's own meter is what it was before the
+// killing hit -- TakeDamage calls Killed before SuspicionFromDamage -- which
+// is the same reading Ambush took on the way in.
+//=========================================================
+void CBaseMonster::PerceptionOnKilled(entvars_t* pevAttacker)
+{
+	if (!pevAttacker || suspicion_enable.value == 0)
+		return;
+
+	CBaseEntity* pAttacker = CBaseEntity::Instance(pevAttacker);
+
+	if (!pAttacker || !pAttacker->IsPlayer())
+		return;
+
+	CBasePlayer* pPlayer = static_cast<CBasePlayer*>(pAttacker);
+
+	// --- Seeing the kill ---------------------------------------------------
+	// A witness is any hostile with a meter that can see the VICTIM, squad or
+	// not.  The test is on the victim rather than the player on purpose: a
+	// witness that saw the body drop but cannot see the player sits at 0.75
+	// with nothing filling it, which is the "sufficiently concealed" case the
+	// loop is made of.
+	int cWitnesses = 0;
+
+	CBaseEntity* pEnt = NULL;
+	while ((pEnt = UTIL_FindEntityInSphere(pEnt, pev->origin, 2048)) != NULL)
+	{
+		if (pEnt == this || pEnt->IsPlayer())
+			continue;
+
+		CBaseMonster* pMonster = pEnt->MyMonsterPointer();
+
+		if (!pMonster || !pMonster->IsAlive())
+			continue;
+
+		// Killed this same frame -- a grenade's other victims -- and still
+		// passing IsAlive until its death task runs.  Not a witness.
+		if (pMonster->m_IdealMonsterState == MONSTERSTATE_DEAD)
+			continue;
+
+		// A monster that does not run the meter has nothing to jump; a
+		// scripted one is performing, not perceiving; one already hunting
+		// the player is pinned full anyway.
+		if (!pMonster->GetPerceptionProfile().bUsesSuspicion)
+			continue;
+		if ((pMonster->pev->spawnflags & SF_MONSTER_IGNORE_CONCEALMENT) != 0)
+			continue;
+		if (pMonster->m_pCine != NULL)
+			continue;
+		if (pMonster->m_hEnemy == pPlayer)
+			continue;
+
+		const int iRelationship = pMonster->IRelationship(pPlayer);
+
+		if (iRelationship != R_NM && iRelationship != R_HT && iRelationship != R_DL)
+			continue;
+
+		if (!pMonster->FVisible(this))
+			continue;
+
+		pMonster->SuspicionJump(suspicion_witness.value);
+
+		if (pMonster->m_flSuspicionFloor < suspicion_floor.value)
+			pMonster->m_flSuspicionFloor = suspicion_floor.value;
+
+		// It knows where the body is, and turns to it.  No enemy is set, so
+		// the LKP is a note rather than a target until acquisition.
+		pMonster->m_vecEnemyLKP = pev->origin;
+		pMonster->MakeIdealYaw(pev->origin);
+
+		pMonster->OnWitnessedKill();
+		cWitnesses++;
+	}
+
+	// --- Finding the body --------------------------------------------------
+	// Silent Kill is about the ears only: on a victim below Spotted no sound
+	// is inserted, so a squadmate around the corner never knows.  A squadmate
+	// in sight reacted in full above; soldiers are not blind, and the answer
+	// to the one who saw is the silenced headshot.  The weapon's own noise is
+	// untouched -- a gunshot is a sound that led to the kill, not one that
+	// results from it.
+	const bool bSilentKill = pPlayer->m_skills.HasSkill(ESkillId::SilentKill) &&
+							 m_flSuspicion < suspicion_acquire.value;
+
+	if (!bSilentKill)
+	{
+		CSoundEnt::InsertSound(bits_SOUND_DISTURBANCE, pev->origin,
+			(int)disturbance_volume.value, disturbance_duration.value);
+	}
+
+	DebugScheduleNoteKill(this, cWitnesses, bSilentKill);
+}
+
+//=========================================================
+// The Search -- who answers a Disturbance.
+//
+// A squad sends one: the leader picks its nearest free member, and the rest
+// hold where they are, turned toward the body by the ordinary hear-and-turn.
+// A loner goes itself, so a leaderless group arrives as a mob -- deliberate,
+// docs/adr/0014.  Either way one Disturbance is answered once: the dispatcher
+// remembers where it last sent someone and refuses the same spot again while
+// the sound could still be in the list.
+//=========================================================
+bool CBaseMonster::IsSearching()
+{
+	return m_pSchedule != NULL && m_pSchedule->pName != NULL &&
+		   0 == strcmp(m_pSchedule->pName, SEARCH_SCHEDULE_NAME);
+}
+
+static bool SearchAlreadyAnswered(const CBaseMonster* pDispatcher, const Vector& vecDisturbance)
+{
+	if (pDispatcher->m_flLastSearchTime <= 0.0f)
+		return false;
+
+	if (gpGlobals->time - pDispatcher->m_flLastSearchTime > disturbance_duration.value)
+		return false;
+
+	return (pDispatcher->m_vecLastSearch - vecDisturbance).Length() < 64.0f;
+}
+
+bool CBaseMonster::TryClaimSearch(const Vector& vecDisturbance)
+{
+	CSquadMonster* pSquad = MySquadMonsterPointer();
+
+	if (pSquad == NULL || !pSquad->InSquad())
+	{
+		// A loner.  Goes itself, once per body.
+		if (SearchAlreadyAnswered(this, vecDisturbance))
+			return false;
+
+		m_vecLastSearch = vecDisturbance;
+		m_flLastSearchTime = gpGlobals->time;
+		m_vecSearchTarget = vecDisturbance;
+		m_flSearchTargetTime = gpGlobals->time;
+		return true;
+	}
+
+	return pSquad->MySquadLeader()->SquadDispatchSearch(vecDisturbance) == pSquad;
+}
+
+//=========================================================
+// PAudibleSoundOfType -- a sound of the given type in this think's audible
+// list, or NULL.  PBestSound answers "nearest", which is the wrong question
+// for a body: the player's own footstep is often nearer.
+//=========================================================
+CSound* CBaseMonster::PAudibleSoundOfType(int iType)
+{
+	int iSound = m_iAudibleList;
+
+	// The audible chain runs through fields on the shared sound pool that
+	// every monster's Listen rewrites, so a stale list can loop.  Bounded by
+	// the pool size: no valid chain is longer.
+	for (int cSteps = 0; iSound != SOUNDLIST_EMPTY && cSteps < MAX_WORLD_SOUNDS; cSteps++)
+	{
+		CSound* pSound = CSoundEnt::SoundPointerForIndex(iSound);
+
+		if (pSound == NULL)
+			break;
+
+		if ((pSound->m_iType & iType) != 0)
+			return pSound;
+
+		iSound = pSound->m_iNextAudible;
+	}
+
+	return NULL;
 }
 
 //=========================================================
@@ -414,36 +625,20 @@ void CBasePlayer::SyncConcealState()
 }
 
 //=========================================================
-// The debug view.
+// The debug view -- debug_schedule.
 //
-// Built alongside the meter rather than after it, because a meter nobody can
-// see is a meter nobody can tune -- and every number in the model above is a
-// first guess.  Throwaway diagnostic; delete it with debug_suspicion.
-//
-// Monsters think at different times and Look is called from each of them, so
-// this cannot print from one place at one moment.  Instead each monster leaves
-// its latest reading in a small table keyed by entity index, and whichever
-// call finds the interval expired renders the whole table at once.
+// Built alongside the model rather than after it, because a meter nobody can
+// see is a meter nobody can tune -- and every number above is a first guess.
+// The first version, debug_suspicion, printed the four highest meters in the
+// room; it was decommissioned on 2026-09-17 for this one, which reads the
+// monster under the crosshair instead and carries the two events the room
+// view could not: the last kill (witnesses, Disturbance or not) and the last
+// Search dispatch.  Throwaway diagnostic.
 //=========================================================
-#define SUSPICION_DEBUG_SLOTS 8
-#define SUSPICION_DEBUG_INTERVAL 0.25f
-#define SUSPICION_DEBUG_STALE 1.0f
-
-struct SuspicionDebugEntry
-{
-	int iEntIndex;
-	float flSuspicion;
-	float flConcealment;
-	float flStamp;
-	char szName[20];
-};
-
-static SuspicionDebugEntry g_rgSuspicionDebug[SUSPICION_DEBUG_SLOTS];
-static float g_flNextSuspicionPrint;
 
 //=========================================================
 // Strip the "monster_" that every one of these classnames starts with, so
-// four readings fit on four lines of a centre print.
+// a reading fits on a line of a centre print.
 //=========================================================
 static const char* ShortMonsterName(const char* pszClassname)
 {
@@ -453,119 +648,141 @@ static const char* ShortMonsterName(const char* pszClassname)
 	return pszClassname;
 }
 
-static void SuspicionDebugPrint()
+// The two events, kept for a few seconds so they can be read after the
+// moment has passed.  Whole-world, like the sound list they describe.
+#define SCHEDULE_DEBUG_EVENT_SHOWN 8.0f
+
+struct ScheduleDebugEvent
 {
-	CBaseEntity* pPlayer = UTIL_PlayerByIndex(1);
+	float flTime;
+	char szText[44];
+};
 
-	if (!pPlayer)
+static ScheduleDebugEvent g_LastKill;
+static ScheduleDebugEvent g_LastSearch;
+
+void DebugScheduleNoteKill(CBaseMonster* pVictim, int cWitnesses, bool bSilentKill)
+{
+	if (debug_schedule.value == 0 || !pVictim)
 		return;
 
-	// Highest first, so the monster closest to acquiring the player is the one
-	// at the top of the readout whichever order the table happens to be in.
-	int rgOrder[SUSPICION_DEBUG_SLOTS];
-	int cShown = 0;
+	g_LastKill.flTime = gpGlobals->time;
+	snprintf(g_LastKill.szText, sizeof(g_LastKill.szText), "kill: %.10s, %d wit, %s",
+		ShortMonsterName(STRING(pVictim->pev->classname)), cWitnesses,
+		bSilentKill ? "silent" : "Disturbance");
 
-	for (int i = 0; i < SUSPICION_DEBUG_SLOTS; i++)
-	{
-		if (g_rgSuspicionDebug[i].iEntIndex == 0 ||
-			gpGlobals->time - g_rgSuspicionDebug[i].flStamp > SUSPICION_DEBUG_STALE)
-			continue;
+	ALERT(at_console, "%s\n", g_LastKill.szText);
+}
 
-		int j = cShown++;
-		while (j > 0 && g_rgSuspicionDebug[rgOrder[j - 1]].flSuspicion < g_rgSuspicionDebug[i].flSuspicion)
-		{
-			rgOrder[j] = rgOrder[j - 1];
-			j--;
-		}
-		rgOrder[j] = i;
-	}
-
-	if (cShown == 0)
+void DebugScheduleNoteSearch(CBaseMonster* pDispatcher, CBaseMonster* pSearcher)
+{
+	if (debug_schedule.value == 0 || !pDispatcher || !pSearcher)
 		return;
 
-	if (cShown > 4)
-		cShown = 4;
+	g_LastSearch.flTime = gpGlobals->time;
+	snprintf(g_LastSearch.szText, sizeof(g_LastSearch.szText), "search: %.10s -> %.10s%s",
+		ShortMonsterName(STRING(pDispatcher->pev->classname)),
+		ShortMonsterName(STRING(pSearcher->pev->classname)),
+		pDispatcher == pSearcher ? " (self)" : "");
+
+	ALERT(at_console, "%s\n", g_LastSearch.szText);
+}
+
+//=========================================================
+// DebugScheduleReport -- the monster under the crosshair, and the events.
+//
+// Built for watching the Search: who was sent, what it is running, which
+// task it is on, and what its meter reads, without reading the AI console.
+// Squad role is the thing the squad code never shows -- the beret marks a
+// leader, nothing marks a loner, and loners are the ones that mob a body.
+//=========================================================
+void DebugScheduleReport(CBasePlayer* pPlayer)
+{
+	if (debug_schedule.value == 0 || !pPlayer)
+		return;
+
+	static float s_flNextPrint;
+
+	// New map: the clock restarts, so a stale stamp would park this in the
+	// future.  Same guard DebugSuspicionNote uses.
+	if (s_flNextPrint > gpGlobals->time + 1.0f)
+		s_flNextPrint = 0.0f;
+
+	if (gpGlobals->time < s_flNextPrint)
+		return;
+
+	s_flNextPrint = gpGlobals->time + 0.25f;
+
+	UTIL_MakeVectors(pPlayer->pev->v_angle);
+	const Vector vecSrc = pPlayer->GetGunPosition();
+
+	TraceResult tr;
+	UTIL_TraceLine(vecSrc, vecSrc + gpGlobals->v_forward * 4096, dont_ignore_monsters, pPlayer->edict(), &tr);
+
+	CBaseEntity* pHit = CBaseEntity::Instance(tr.pHit);
+	CBaseMonster* pMonster = pHit ? pHit->MyMonsterPointer() : NULL;
+
+	if (pMonster != NULL && pMonster->IsPlayer())
+		pMonster = NULL;
 
 	// ClientPrint sends a user message and the engine caps one at 192 bytes.
-	// Overflow does not truncate -- it drops the server with SZ_GetSpace. Four
-	// abbreviated rows fit; four spelled-out ones did not, which is a crash
-	// that only appeared once four monsters could see the player at once.
+	// Overflow does not truncate -- it drops the server with SZ_GetSpace.
+	// Bounded by the buffer, so an extra field can only truncate.
 	char szReport[176];
 	szReport[0] = '\0';
 
-	for (int i = 0; i < cShown; i++)
+	if (pMonster != NULL)
 	{
-		const SuspicionDebugEntry& entry = g_rgSuspicionDebug[rgOrder[i]];
+		static const char* pStateNames[] = {"None", "Idle", "Combat", "Alert", "Hunt", "Prone", "Scripted", "PlayDead", "Dead"};
+		const char* pszState = (int)pMonster->m_MonsterState < (int)ARRAYSIZE(pStateNames) ? pStateNames[pMonster->m_MonsterState] : "?";
 
-		char szBar[11];
-		const int cFilled = (int)(entry.flSuspicion * 10.0f + 0.5f);
-		for (int c = 0; c < 10; c++)
-			szBar[c] = c < cFilled ? '=' : '.';
-		szBar[10] = '\0';
+		char szRole[16];
+		CSquadMonster* pSquad = pMonster->MySquadMonsterPointer();
+		if (pSquad == NULL)
+			strcpy(szRole, "-");
+		else if (!pSquad->InSquad())
+			strcpy(szRole, "loner");
+		else if (pSquad->IsLeader())
+			snprintf(szRole, sizeof(szRole), "leader/%d", pSquad->SquadCount());
+		else
+			strcpy(szRole, "member");
 
-		char szLine[56];
-		snprintf(szLine, sizeof(szLine), "%-10.10s[%s]%.2f c%.2f%s\n",
-			ShortMonsterName(entry.szName),
-			szBar,
-			entry.flSuspicion,
-			entry.flConcealment,
-			entry.flSuspicion >= suspicion_notice.value ? " N" : "");
-
-		strncat(szReport, szLine, sizeof(szReport) - strlen(szReport) - 1);
-	}
-
-	ClientPrint(pPlayer->pev, HUD_PRINTCENTER, szReport);
-}
-
-void DebugSuspicionNote(CBaseMonster* pMonster, float flConcealment)
-{
-	if (debug_suspicion.value == 0 || !pMonster)
-		return;
-
-	const int iEntIndex = ENTINDEX(pMonster->edict());
-
-	// gpGlobals->time restarts on a new map, which would otherwise park the
-	// next print arbitrarily far in the future and leave every stale entry
-	// looking fresh (time - stamp goes negative).  Start over instead.
-	if (g_flNextSuspicionPrint > gpGlobals->time + SUSPICION_DEBUG_INTERVAL)
-	{
-		g_flNextSuspicionPrint = 0.0f;
-		memset(g_rgSuspicionDebug, 0, sizeof(g_rgSuspicionDebug));
-	}
-
-	// One slot per monster, so a crowd cannot push the interesting reading out
-	// of the table between prints.  Falling back to the stalest slot means the
-	// monsters still being looked at survive and the ones that walked off do
-	// not.
-	int iSlot = -1;
-	int iStalest = 0;
-
-	for (int i = 0; i < SUSPICION_DEBUG_SLOTS; i++)
-	{
-		if (g_rgSuspicionDebug[i].iEntIndex == iEntIndex)
+		const char* pszSchedule = "no schedule";
+		int iTask = -1;
+		int cTasks = 0;
+		if (pMonster->m_pSchedule)
 		{
-			iSlot = i;
-			break;
+			pszSchedule = pMonster->m_pSchedule->pName ? pMonster->m_pSchedule->pName : "unnamed";
+			Task_t* pTask = pMonster->GetTask();
+			iTask = pTask ? pTask->iTask : -1;
+			cTasks = pMonster->m_pSchedule->cTasks;
 		}
 
-		if (g_rgSuspicionDebug[i].flStamp < g_rgSuspicionDebug[iStalest].flStamp)
-			iStalest = i;
+		// Concealment as THIS monster computes it for the player right now,
+		// which is what the old room view showed as c0.38.  Zero when the
+		// monster is dead: a corpse computes nothing.
+		const float flConcealment = pMonster->IsAlive() ? pMonster->ConcealmentOf(pPlayer) : 0.0f;
+
+		snprintf(szReport, sizeof(szReport),
+			"%.10s  %s  %s\n%.28s  #%d/%d task %d\nsusp %.2f  c%.2f  floor %.2f%s\n",
+			ShortMonsterName(STRING(pMonster->pev->classname)), pszState, szRole,
+			pszSchedule, pMonster->m_iScheduleIndex + 1, cTasks, iTask,
+			pMonster->m_flSuspicion, flConcealment, pMonster->m_flSuspicionFloor,
+			pMonster->m_hEnemy != NULL ? "  enemy" : "");
 	}
 
-	if (iSlot == -1)
-		iSlot = iStalest;
-
-	SuspicionDebugEntry& entry = g_rgSuspicionDebug[iSlot];
-	entry.iEntIndex = iEntIndex;
-	entry.flSuspicion = pMonster->m_flSuspicion;
-	entry.flConcealment = flConcealment;
-	entry.flStamp = gpGlobals->time;
-	strncpy(entry.szName, STRING(pMonster->pev->classname), sizeof(entry.szName) - 1);
-	entry.szName[sizeof(entry.szName) - 1] = '\0';
-
-	if (gpGlobals->time >= g_flNextSuspicionPrint)
+	// The events, while fresh, whether or not anything is under the crosshair.
+	if (g_LastKill.flTime > 0.0f && gpGlobals->time - g_LastKill.flTime < SCHEDULE_DEBUG_EVENT_SHOWN)
 	{
-		g_flNextSuspicionPrint = gpGlobals->time + SUSPICION_DEBUG_INTERVAL;
-		SuspicionDebugPrint();
+		strncat(szReport, g_LastKill.szText, sizeof(szReport) - strlen(szReport) - 1);
+		strncat(szReport, "\n", sizeof(szReport) - strlen(szReport) - 1);
 	}
+	if (g_LastSearch.flTime > 0.0f && gpGlobals->time - g_LastSearch.flTime < SCHEDULE_DEBUG_EVENT_SHOWN)
+	{
+		strncat(szReport, g_LastSearch.szText, sizeof(szReport) - strlen(szReport) - 1);
+	}
+
+	if (szReport[0] != '\0')
+		ClientPrint(pPlayer->pev, HUD_PRINTCENTER, szReport);
 }
+

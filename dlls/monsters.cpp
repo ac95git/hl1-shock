@@ -110,6 +110,7 @@ TYPEDESCRIPTION CBaseMonster::m_SaveData[] =
 		DEFINE_FIELD(CBaseMonster, m_flSuspicion, FIELD_FLOAT),
 		DEFINE_FIELD(CBaseMonster, m_flSuspicionTime, FIELD_TIME),
 		DEFINE_FIELD(CBaseMonster, m_bSuspicionHadTarget, FIELD_BOOLEAN),
+		DEFINE_FIELD(CBaseMonster, m_flSuspicionFloor, FIELD_FLOAT),
 };
 
 //IMPLEMENT_SAVERESTORE( CBaseMonster, CBaseToggle );
@@ -139,6 +140,19 @@ bool CBaseMonster::Restore(CRestore& restore)
 	// If we don't have an enemy, clear conditions like see enemy, etc.
 	if (m_hEnemy == NULL)
 		m_afConditions = 0;
+
+	// A level change launders a room's alert state; a plain save/load does
+	// not (docs/PERCEPTION.md, "Losing the player").  The two run through
+	// this same Restore and are told apart by the landmark, exactly as
+	// CBasePlayer::Restore tells them apart.  Only the floor and the meter
+	// here -- pushing an enemyless monster back to IDLE is 5g's.
+	SAVERESTOREDATA* pSaveData = (SAVERESTOREDATA*)gpGlobals->pSaveData;
+	if (pSaveData != NULL && 0 != pSaveData->fUseLandmark)
+	{
+		m_flSuspicionFloor = 0.0f;
+		if (m_hEnemy == NULL)
+			m_flSuspicion = 0.0f;
+	}
 
 	return status;
 }
@@ -211,11 +225,25 @@ void CBaseMonster::Listen()
 
 	iMySounds = ISoundMask();
 
+	// A body is heard by the profiles that care about bodies, and nobody
+	// else -- the Perception Profile says so, rather than every Trained
+	// monster's ISoundMask having to.  See docs/PERCEPTION.md.
+	if (GetPerceptionProfile().bListensForDisturbance)
+		iMySounds |= bits_SOUND_DISTURBANCE;
+
 	if (m_pSchedule)
 	{
 		//!!!WATCH THIS SPOT IF YOU ARE HAVING SOUND RELATED BUGS!
 		// Make sure your schedule AND personal sound masks agree!
-		iMySounds &= m_pSchedule->iSoundMask;
+		int iScheduleSounds = m_pSchedule->iSoundMask;
+
+		// A Disturbance passes wherever combat sound passes, so the vanilla
+		// schedule tables need no per-schedule edit for it: a schedule that
+		// lets a gunshot interrupt it lets a body interrupt it.
+		if ((iScheduleSounds & bits_SOUND_COMBAT) != 0)
+			iScheduleSounds |= bits_SOUND_DISTURBANCE;
+
+		iMySounds &= iScheduleSounds;
 	}
 
 	iSound = CSoundEnt::ActiveList();

@@ -839,6 +839,11 @@ void CBaseMonster::Killed(entvars_t* pevAttacker, int iGib)
 			((CBasePlayer*)pAttacker)->OnMonsterKilled(this);
 	}
 
+	// The cost of a kill: witnesses, and the body as a sound.  Player-dealt
+	// only, and scoped inside.  Here, while the origin is still where it
+	// fell -- dlls/perception.cpp.
+	PerceptionOnKilled(pevAttacker);
+
 	// clear the deceased's sound channels.(may have been firing or reloading when killed)
 	EMIT_SOUND(ENT(pev), CHAN_WEAPON, "common/null.wav", 1, ATTN_NORM);
 	m_IdealMonsterState = MONSTERSTATE_DEAD;

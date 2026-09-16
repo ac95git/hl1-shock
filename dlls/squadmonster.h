@@ -69,6 +69,16 @@ public:
 	// squad member info
 	int m_iMySlot; // this is the behaviour slot that the monster currently holds in the squad.
 
+	// The member the leader last sent to a Disturbance.  Valid only for the
+	// leader; not saved, like the schedule it refers to.
+	EHANDLE m_hSearcher;
+
+	// The leader's half of the Search (docs/PERCEPTION.md): pick the nearest
+	// free member -- the leader included -- to go and look at a body, hand it
+	// the spot, and return it; NULL when nobody is free or this body has
+	// already been answered.  Called on the leader by whichever member heard.
+	CSquadMonster* SquadDispatchSearch(const Vector& vecDisturbance);
+
 	bool CheckEnemy(CBaseEntity* pEnemy) override;
 	void StartMonster() override;
 	void VacateSlot();

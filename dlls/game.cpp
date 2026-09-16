@@ -736,11 +736,14 @@ cvar_t backstab_arc_dot = {"backstab_arc_dot", "-0.5"};
 // acquisition mid-game without a rebuild.  0 restores the base game exactly.
 cvar_t suspicion_enable = {"suspicion_enable", "1"};
 // Meter units per second at full exposure, before the Perception Profile's
-// scale.  1 means a monster staring at a standing, lit, point-blank player
-// takes about a second to acquire them -- and the same monster looking at a
-// crouched player in a dark doorway at range takes the better part of a
-// minute, because the Concealment terms multiply.
-cvar_t suspicion_fill = {"suspicion_fill", "1.0"};
+// scale.  At 2 a Trained monster staring at a standing, lit, point-blank
+// player takes about a third of a second to acquire them, and a fully
+// invested Stealth player crouched in front of a lit grunt at mid range has
+// about three seconds, cover to cover -- and the same monster looking at a
+// crouched player in a dark doorway at range takes minutes, because the
+// Concealment terms multiply.  1.0 until 2026-09-17; doubled with the words
+// "stealth should function behind unaware enemies and in darkness".
+cvar_t suspicion_fill = {"suspicion_fill", "2.0"};
 // Units per second while the player is not visible.  Roughly three seconds
 // from full to forgotten.
 cvar_t suspicion_drain = {"suspicion_drain", "0.35"};
@@ -750,6 +753,22 @@ cvar_t suspicion_drain = {"suspicion_drain", "0.35"};
 // mark it; the HUD element that uses it is the next commit.
 cvar_t suspicion_notice = {"suspicion_notice", "0.35"};
 cvar_t suspicion_acquire = {"suspicion_acquire", "1.0"};
+
+// The post-aggro step, settled 2026-09-17 (docs/ROADMAP.md).  A monster that
+// watches a squadmate die jumps to this -- Noticed, not Spotted: in the open
+// the difference from acquisition is a sixth of a second, from cover it is the
+// beat the predator loop is made of.
+cvar_t suspicion_witness = {"suspicion_witness", "0.75"};
+// ...and from there drains as normal, but never again below this for the
+// rest of the level.  Just UNDER suspicion_notice on purpose: the readout
+// reports Noticed at or above the line, and a floor on the line would leave
+// the icon amber forever.
+cvar_t suspicion_floor = {"suspicion_floor", "0.3"};
+// The Disturbance: a body, as a sound.  Volume is a hearing radius in units
+// (a room); duration is modest because the pool is 64 for the whole world and
+// the carcass scent already takes 30.
+cvar_t disturbance_volume = {"disturbance_volume", "512"};
+cvar_t disturbance_duration = {"disturbance_duration", "20"};
 
 // The four Concealment terms.  Each is the exposure fraction at the WORST end
 // of that term -- at the rim of the cone, at the limit of sight, crouched, in
@@ -793,9 +812,14 @@ cvar_t skill_nightfall_scale = {"skill_nightfall_scale", "0.5"};
 cvar_t skill_slip_away_fraction = {"skill_slip_away_fraction", "0.33"};
 // Ambush: player damage to a monster, by how unaware it is at the hit, read
 // off the victim's own meter.  Below suspicion_acquire the first; below
-// suspicion_notice the second instead, not on top.
-cvar_t skill_ambush_spotted_scale = {"skill_ambush_spotted_scale", "1.25"};
-cvar_t skill_ambush_noticed_scale = {"skill_ambush_noticed_scale", "1.5"};
+// suspicion_notice the second instead, not on top.  1.25 / 1.5 until
+// 2026-09-17; raised so a silenced round in the head of a witness at Noticed
+// (8 x 3 head x 1.5 Headhunter x 1.5) kills a grunt -- docs/SKILL_TREE.md.
+cvar_t skill_ambush_spotted_scale = {"skill_ambush_spotted_scale", "1.5"};
+cvar_t skill_ambush_noticed_scale = {"skill_ambush_noticed_scale", "2.0"};
+// Shroud: a flat multiplier on the fill for the holder -- the ten Concealment
+// roads over again in one node.  Took Cut the Head's cell on 2026-09-17.
+cvar_t skill_shroud_scale = {"skill_shroud_scale", "0.8"};
 // Phantom: a Backstab KILL on a monster below Noticed buys this many seconds
 // of silent movement at this multiple of the run speed.  2 s at x1.2 on a
 // Backstab hit was the first shape; Andrei set the kill, 4 s and x1.5 on
@@ -823,12 +847,19 @@ cvar_t skill_recall_scale = {"skill_recall_scale", "0.5"};
 
 // Damage debug readout -- see game.h.  Throwaway diagnostic, off by default.
 cvar_t debug_damage = {"debug_damage", "0"};
-// Live Suspicion readout -- see perception.h.  Shares the screen centre with
-// debug_damage, so do not run both at once.
-cvar_t debug_suspicion = {"debug_suspicion", "0"};
 // Monster aim readout -- see game.h.  Also throwaway, and it also shares the
 // screen centre, so run only one debug_* readout at a time.
 cvar_t debug_monster_aim = {"debug_monster_aim", "0"};
+// The monster under the crosshair: its state, squad role, schedule, task,
+// meter and Concealment, plus the last kill and the last Search dispatch --
+// see perception.h.  Replaced debug_suspicion 2026-09-17.  Same screen
+// centre as debug_damage and debug_monster_aim, same one-at-a-time rule.
+cvar_t debug_schedule = {"debug_schedule", "0"};
+// The player cannot be seen or heard by any monster: FL_NOTARGET (what the
+// notarget cheat sets; Look skips the player outright) plus m_fNoPlayerSound
+// (the SDK's own silent-movement switch, which nothing else turns on).  Being
+// shot still counts.  For standing next to a Search and watching it.
+cvar_t debug_invisible = {"debug_invisible", "0"};
 
 static bool SV_InitServer()
 {
@@ -998,6 +1029,11 @@ void GameDLLInit()
 	CVAR_REGISTER(&suspicion_drain);
 	CVAR_REGISTER(&suspicion_notice);
 	CVAR_REGISTER(&suspicion_acquire);
+	CVAR_REGISTER(&suspicion_witness);
+	CVAR_REGISTER(&suspicion_floor);
+	CVAR_REGISTER(&disturbance_volume);
+	CVAR_REGISTER(&disturbance_duration);
+	CVAR_REGISTER(&skill_shroud_scale);
 	CVAR_REGISTER(&noise_stance_duck);
 	CVAR_REGISTER(&noise_stance_walk);
 	CVAR_REGISTER(&conceal_angle_edge);
@@ -1028,7 +1064,8 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_recall_scale);
 
 	CVAR_REGISTER(&debug_damage);
-	CVAR_REGISTER(&debug_suspicion);
+	CVAR_REGISTER(&debug_schedule);
+	CVAR_REGISTER(&debug_invisible);
 	CVAR_REGISTER(&debug_monster_aim);
 
 	// REGISTER CVARS FOR SKILL LEVEL STUFF
