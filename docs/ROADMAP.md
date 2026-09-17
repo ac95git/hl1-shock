@@ -8,7 +8,12 @@ build on, and list the questions that have to be answered before the first line 
 is built, its content moves into PILLARS.md and the entry here is deleted — this file only ever shrinks
 from the top.
 
-**Last updated:** 2026-09-16 (branch `hl-shock` — one wave from five parallel agents on the Juggernaut
+**Last updated:** 2026-09-17 (the game shaped as a whole in a 29-question grill and reconciled here:
+[The shape of the game](#the-shape-of-the-game) is new and is read first; stealth is swallowed by combat;
+the double jump is a sixth Module, the base Dash works in the air and the directional Air Dash is gated
+behind the double jump; the Pulse gains a half-damage tail; the Hook drops to low priority; mining,
+Stations and Transmissions are shaped; the bosses have places and the Nihilanth a fight. No code). Before
+that, 2026-09-16 (branch `hl-shock` — one wave from five parallel agents on the Juggernaut
 foundation, reviewed and built together: the Stealth region's effects and the Night Vision Module that
 reveals them, moved into PILLARS pillar 6; the Hive nodes, into pillar 2; the Alien Route's first slice —
 Cores, the alien Module, `monster_ghost_slave` and the summon's left click — into pillars 2 and 3, with the
@@ -39,6 +44,12 @@ enemy perception, player movement, weapon choice and level layout at the same ti
 would make that pillar mean "everything you do to things that are alive", which is a category and not a
 pillar. It gets a row in the PILLARS.md summary at **Not started**, the same as Exploration.
 
+**Amended 2026-09-17: stealth is swallowed by combat.** The reasoning above was about where the *work*
+files, and that stands — the section below keeps its name and PILLARS.md keeps its section 6. What changed
+is the ranking: the mod is exploration first, by far, then RPG, then combat, and stealth is one of the
+three ways to solve an encounter (fight it, sneak it, go around it), not something ranked beside them. See
+[The shape of the game](#the-shape-of-the-game).
+
 **Modules do not become a pillar.** A Module is a thing you find that changes what you can do, which is
 what pillar 3 already is; the Pulse is the shape it takes, and the Modules tab is a pillar 5 concern. Making
 it a pillar would split "things you find" across two of them. It is the largest single entry under Custom
@@ -49,19 +60,101 @@ Stations are pillar 1; sounds and icons are not roadmap items at all — see [Ar
 
 ## Contents
 
+- [The shape of the game](#the-shape-of-the-game) — settled 2026-09-17; the rules every entry below answers to
 - [The prediction problem](#the-prediction-problem) — solved for weapons, still open for movement
 - [Maps](#maps) — the other one
 - [Pillar 6: Stealth](#pillar-6-stealth)
 - [Pillar 2: Weapons](#pillar-2-weapons)
-- [Pillar 2: Monsters and bosses](#pillar-2-monsters-and-bosses)
+- [Pillar 2: Monsters and bosses](#pillar-2-monsters-and-bosses) — the cult, the maddened, Xen hell and where the bosses sit, 2026-09-17
 - [Pillar 2: Decapitation](#pillar-2-decapitation) — a design to port, already read
 - [Pillar 3: Modules](#pillar-3-modules)
 - [Pillar 4: Routes](#pillar-4-routes) — builds; all seven Routes shaped; four Skills cut
-- [Pillar 1: Transmissions](#pillar-1-transmissions)
-- [Pillar 1: The world](#pillar-1-the-world)
+- [Pillar 1: Transmissions](#pillar-1-transmissions) — text entries in a fourth tab; audio later
+- [Pillar 1: The world](#pillar-1-the-world) — the facility, Xen, mining and Shards, Stations
 - [Art and audio](#art-and-audio)
 - [Proposed vocabulary](#proposed-vocabulary)
 - [Open questions](#open-questions)
+
+---
+
+## The shape of the game
+
+**Shape: Shaped 2026-09-17**, in a grilling session on the game as a whole rather than on a feature. The
+full record, story included, is `docs/GAME_VISION.md` — a local working file that is deliberately not
+committed. This section carries what the entries below depend on, so the roadmap stands without it.
+
+### The rules
+
+- **Work with what the engine offers, never fight it.** It has already decided: a lo-fi monitor instead of
+  render-to-texture, `env_global` for anything that crosses maps, hub and spokes over a web, patterns over
+  swarms, a time freeze as staging rather than as a mechanic.
+- **Exploration first, by far; then RPG; then combat.** Stealth is inside combat.
+- **Run, think, shoot, live.** Houndeyes, bullsquids, vortigaunts and grunts charging the player is still
+  the game. Stealth adds variety and pays off for most of the game, not all of it.
+- **Modules gate the critical path; Skills never do.** The tree is not completable, so no build may be
+  needed to finish. Builds open optional spaces and make answers forgiving.
+- **Gates are declared.** A *hard* gate is rare, exists only where the story would break, is sealed by
+  construction and looks impassable (no power, flooded, sealed) — never a ledge a little too high. A
+  *soft* gate is everything else: an intended key plus at least one deliberate alternative (a build, a
+  resource spend, an observation), and unintended bypasses are left in. Scarcity prices a bypass. Every
+  gate gets one line in the map brief: `hard`, or `soft: intended X, alternative Y`.
+- **The game remembers from the first map.** Endings are multiple and read choices and secrets; designing
+  them is deliberately the last step. Until then the rule is only this: a moment that might matter sets a
+  named `env_global`. One entity now; a retrofit into finished maps later.
+- **One telegraph language: a flash, then the discharge.** Unstable crystal teaches it in the first ten
+  minutes; the slave's zap, the reactor's lasers, the Nihilanth's patterns and the last Pulse reuse it.
+- **Start weak, and scarcity is placement and carrying, not damage numbers.** Enemy health and player
+  damage stay near vanilla, which protects every tuning pass already made. Hour one is melee and the Pulse
+  against enemies that are fair in melee; a sidearm early only by luck; **soldiers are the arsenal**, so a
+  clean kill pays a full weapon; energy and alien weapons are late, authored finds. Ammunition is rare on
+  the critical path and present in secrets.
+
+### The premise, as far as the entries need it
+
+A parallel universe that touches Half-Life's only through Xen. A facility that **mines Xen crystal and
+processes it into technology**; the suit is adaptive equipment that is *fed* processed crystal, and
+[Skill nodes are that fuel](#settled-2026-09-17--the-fuel-the-processors-the-air-dash-gate). The
+Nihilanth is a collective that seeded the crystals long ago, has a case, and can do no more through them
+than **plant ideas**. The player is a miner — silent, named, attuned by exposure, hearing it more clearly
+with every node. Management knew about the exposure cases and buried them.
+
+Human enemies are **soldiers** (the bulk, with Xen creatures), a **cult** with a leader, and **the
+maddened**; see [Monsters and bosses](#pillar-2-monsters-and-bosses).
+
+### The structure
+
+- **Hub and spokes, in both halves.** Wings are mostly linear chains of maps that end by opening a shortcut
+  home. Wings open by **Modules** and by **restored infrastructure** — power to a zone, an elevator, a
+  pumped shaft — each one named global state, so the hub visibly comes alive. A wing is a finishable
+  project; **the hub plus wing one is the vertical slice of the whole game.**
+- **The spine.** A cold open in the deep shaft (the player cuts the **Heart** — provisional name — out of
+  an arranged crystal chamber and sends it up; a stray cultist is the first fight), a ride as the prologue,
+  the experiment watched on a monitor in a cafeteria, an escape unarmed or with only the Pulse. First half:
+  restore the facility for the survivors at the hub. A brief Xen excursion, then the player runs the rig a
+  second time on a doctored plan and **the whole facility is taken to Xen**. Second half: collect the
+  pieces to go home, in a **soft order** — steered, but a Module *or a creative bypass* opens each. Then
+  **the reactor**, then the Nihilanth, at the hub.
+- **The reactor** is the facility's own, torn loose and venting, visible from the hub all half: the last
+  restored infrastructure and the clearest hard gate, a platforming gauntlet of lasers, platforms and
+  damaging walls, more frantic with height. It needs the Dash; the double jump unlocks the true difficulty
+  curve; Air Dash the fastest lines. Stock entities only (`env_laser`, `func_train`, `trigger_hurt`,
+  `multi_manager`) — the most mapper-heavy, least programmer-heavy set piece in the game. Routing its power
+  is what brings the Nihilanth.
+- **After the teleport the soldiers are stranded too**: three-way fights, thinning as pieces are collected,
+  and the only source of conventional ammunition in Xen. 5f already keeps monster-on-monster kills out of
+  witnesses and Disturbances, which is this case. Xenian presence escalates by pieces held, one global.
+- **The hazard course** is a separate map launched like vanilla's, the company's safety induction, curated
+  around the Pulse and the mining loop. Built late, grown out of `topmap`. The campaign still teaches each
+  Module where it is found.
+
+### What it made urgent, and what it did not
+
+Exploration is ranked first and PILLARS has it at **Not started**. What this session exposed as missing,
+roughly in the order the vertical slice needs it: the [Pulse's tail](#the-pulses-tail--settled-2026-09-17-not-built)
+and the base Dash in the air (both small); [Transmissions](#pillar-1-transmissions) as text in a fourth
+tab; [deposits, shards and Stations](#mining-and-crystal-shards); the maddened miner; the slave boss and
+the hub's vortigaunt; the hub and wing one as maps. Not urgent: the Hook, the double jump (second half),
+everything in Xen, the endings.
 
 ---
 
@@ -81,7 +174,8 @@ What that leaves:
 | Feature | Where it lives | Still blocked on |
 | --- | --- | --- |
 | Dash | [Modules](#pillar-3-modules) | `pm_shared/` — but the long jump's physics-key route reaches it |
-| Hook | [Modules](#pillar-3-modules) | `pm_shared/` — same route |
+| Hook | [Modules](#pillar-3-modules) | `pm_shared/` — same route. Low priority since 2026-09-17 |
+| Double jump | [Modules](#pillar-3-modules), new 2026-09-17 | `pm_shared/` — same route: a physics key gating a second impulse in `PM_Jump`, the long jump's own shape |
 | Sprint speed (`SprintSpeed`, id 6) | cut from the tree for good, 2026-09-13 | nothing — cut by design, see the [Routes](#pillar-4-routes) |
 | High jump (`HighJump`, id 5) | cut from the tree for good, 2026-09-13 | nothing — cut by design, see the [Routes](#pillar-4-routes) |
 | ~~Crowbar swing speed (`CrowbarSpeed`, id 11)~~ | **built 2026-09-14** as Melee Speed, with the Melee Route | nothing — the halving rule was dropped and the Skill is in the tree |
@@ -146,6 +240,15 @@ See [The world](#pillar-1-the-world) for what the maps should eventually contain
 **Shape: Building. Steps 1–4 and 6 are done — everything that decides whether the player is noticed, and
 telling them about it. Step 5, everything after acquisition, is all that remains, and it was re-sliced on
 2026-09-17 around one decision: stealth is predator first.**
+
+**Finish, then freeze — settled 2026-09-17 with [the shape of the game](#the-shape-of-the-game).** Stealth
+is one way to solve an encounter, inside combat, not a pillar ranked beside exploration. So: verify 5f,
+build 5b, 5e and 5g — they are what stops the loop being sticky, and 5g matters more than it did now that
+the game is hub and spokes and level transitions are constant — and then **no new stealth features until
+real maps exist**. Every open question below is waiting on a map, not on code. What stealth gained in that
+session is content, not features: ritual rooms (cultists busy, backs turned, perception live), the
+military wing with the assassin at its end, the maddened as the untrained-profile tutorial enemy, and
+soft gates a Stealth build can ghost. It already accommodates alien grunts and vortigaunts.
 
 **Predator first — settled 2026-09-17.** The loop the pillar is judged on is *unseen, kill, unseen again*.
 Ghosting a room stays possible and is not the measure, because every Stealth node that exists rewards a
@@ -377,8 +480,10 @@ building.
 
 ### Open questions
 
-- Is stealth **optional** everywhere, or are there encounters designed to be unwinnable head-on? The
-  answer changes level design more than it changes code, and nothing settled above touches it.
+- ~~Is stealth **optional** everywhere, or are there encounters designed to be unwinnable head-on?~~
+  **Answered 2026-09-17: optional, with declared exceptions, and nothing is unwinnable head-on.** This is a
+  run, think, shoot, live game; bosses, sieges and plain charging fights are fights, marked with the
+  mapper's spawnflag. Everything else can be solved quietly, loudly or by going around.
 - **How dark is dark?** Vanilla Half-Life maps are lit for readability rather than for hiding, so the light
   term may do almost nothing until there are custom maps with dark places in them. What light level counts
   as concealing is a question only [Maps](#maps) can answer. **Tuning the light term was explicitly deferred
@@ -409,7 +514,13 @@ other mods — rather than author from scratch, and to accept placeholder qualit
 
 #### The Carbon Pickaxe
 
-Replaces the crowbar. Heavier, slower, hits harder.
+~~Replaces the crowbar.~~ Heavier, slower, hits harder.
+
+**The starting tool, and the mining tool — settled 2026-09-17.** The player is a miner: the pickaxe is
+what they hold in the cold open, check in at the end of the shift, and get back within the first 5–10
+minutes; the crowbar becomes a find. It is also the only thing that breaks a
+[deposit](#mining-and-crystal-shards), which is what keeps it worth three Cells once the katana exists.
+The maddened miners carry one too.
 
 The mechanic is trivial — it is `dlls/crowbar.cpp` with different numbers and a different model. The cost
 is entirely in what the crowbar's name is load-bearing for:
@@ -729,9 +840,12 @@ textures; recorded in [ART_DEBT.md](ART_DEBT.md) for later.
 **Shape: Idea. A roster was listed on 2026-09-12, to be explored one entry at a time; the Panthereye is
 first and is the only one explored so far.**
 
-Import and reuse existing monsters with light polish, with occasional custom AI. **Kingpin**, a cut
+Import and reuse existing monsters with light polish, with occasional custom AI. ~~**Kingpin**, a cut
 Half-Life monster, was named as a candidate before the roster and is not on it; it stays here until
-someone says whether it was dropped.
+someone says whether it was dropped.~~ **Kingpin is the boss of Xen hell**, 2026-09-17, and the roster
+gained the human side the same day: [the cult, the maddened](#the-cult-and-the-maddened) and
+[Xen hell's cut monsters](#xen-hell-and-the-cut-monsters). Where each boss sits is under
+[Where the bosses sit](#where-the-bosses-sit).
 
 ### The roster
 
@@ -744,7 +858,12 @@ someone says whether it was dropped.
 | [Alien slave boss](#the-alien-slave-boss) | Boss, freed to become the friendly slave | `CISlave` | Idea |
 | [Assassin boss](#the-assassin-boss) | Boss | `CHAssassin` | Idea |
 | [Alien grunt boss](#the-alien-grunt-boss) | Boss | `CAGrunt` | Idea |
-| [Nihilanth](#the-nihilanth) | Boss | `CNihilanth`, new model | Idea |
+| [Nihilanth](#the-nihilanth) | Boss | `CNihilanth`, new model | **Shaped** 2026-09-17: a pattern fight |
+| [The maddened](#the-cult-and-the-maddened) | Enemy | A melee human: zombie-class schedules on a worker model; a loner grunt for security | **Shaped** 2026-09-17 |
+| [Cultists](#the-cult-and-the-maddened) | Enemy, passive in ritual scenes | The maddened, plus a ritual spawn state | **Shaped** 2026-09-17 |
+| [Cult leader](#the-cult-and-the-maddened) | Boss | A melee human | Idea |
+| [Kingpin](#xen-hell-and-the-cut-monsters) | Boss | `valve/models/kingpin.mdl`; no AI | Idea |
+| [Xen hell's residents](#xen-hell-and-the-cut-monsters) | Enemies | Half-Life's cut models; no AI | Idea |
 
 This also answers the old question of what a boss "moveset" meant: all four bosses are an existing monster
 given **custom attacks**, and two add something more (a dash, and turning into an ally). None is a puzzle.
@@ -1303,6 +1422,12 @@ boss knowing its health floor has been reached and firing a target instead of dy
 - **How do the items arrive?** Handed straight into the Inventory, where a full Grid refuses them, or left in
   a Box, which is not built yet.
 - Custom attacks: none written down yet.
+- **Placed 2026-09-17: he ends wing one**, in the mine levels, having come through the tear at its deep
+  end. Early, because everything downstream needs him: the hub's vortigaunt, the hand-over machine, the
+  second half's advisor. His fight is where the Pulse is *tested* (his zaps are energy, his claws are on the
+  Shield's list), not where it is won — the Pulse is found in the first minutes. Freed, **he gives the
+  alien Module**, confirmed the same day; after the teleport he and the surviving staff advise on the
+  pieces.
 
 ### The assassin boss
 
@@ -1315,10 +1440,16 @@ grenades. A dash is a horizontal jump on the same event pattern.
 **"Dash" is already a Module's name.** Either the assassin's move gets a different word, or the fight is
 where the player first sees the Dash, and possibly where they win it.
 
+**Placed 2026-09-17: the military's specialist, at the end of the military wing** — the stealth systems'
+hardest test, ending in a fight with someone better at it than the player. The Dash Module being won
+here is proposed, not confirmed.
+
 ### The alien grunt boss
 
 **Shape: Idea.** An alien grunt with custom attacks. Nothing beyond that is recorded. It shares a base with
 the [melee alien grunt](#melee-alien-grunt), so whichever is built second gets the other's groundwork.
+**Placed 2026-09-17: ends a Xen wing and guards a piece** — the collective's soldier caste at its peak,
+and the test of whatever build the player has made.
 
 ### The Nihilanth
 
@@ -1332,7 +1463,92 @@ it (`AbsorbSphere`, `dlls/nihilanth.cpp:984`). New attacks go into `NextActivity
 (`float`, `walk_r/l/u/d`, `recharge`, `attack1_open`, `attack1`, `attack2`, `die1`,
 `dlls/nihilanth.cpp:469-839`).
 
-Open: does "custom attacks" keep the sphere puzzle, or turn it into a straight fight like the other three?
+~~Open: does "custom attacks" keep the sphere puzzle, or turn it into a straight fight like the other
+three?~~ **Answered 2026-09-17: neither. A pattern fight, and the sphere puzzle is gone.**
+
+**The fight — shaped 2026-09-17.** It was asked for as a bullet hell. A first-person player sees a quarter
+of the sky and the engine's projectiles are full networked entities against a 900-edict default, so it is
+**patterns, not swarms**: a small vocabulary of readable shapes, each telegraphed (a flash, then the
+discharge), each with an answer from the base kit. Skills make an answer forgiving and are never needed.
+
+| Pattern | Answer | Note |
+| --- | --- | --- |
+| A wall with a gap, sweeping the arena | Dash through the gap; Phase through the wall | Drawn on the client around one server projectile, which is how the katana's wave already works |
+| Ground marks that detonate | Leave; double jump the shockwave | |
+| Slow sweeping beams | Break line of sight behind wreckage; dash across | They track where the player *was* |
+| Homing spheres, few | A timed Pulse | Vanilla's `CNihilanthHVR`, kept as a deflectable projectile. Rehearses the finisher |
+
+It is a **siege of the hub**, not an arena he waits in: he arrives because the player routed
+[the reactor's](#the-shape-of-the-game) power to the rig. Three phases. **The ships**: he is distant,
+firing walls and beams, and alien ships heal him with crystals; the player crosses the torn-up facility
+and cuts them down — Air Dash and Reprisal chains for a Shinobi, the katana's wave at range for anyone
+else. **Direct**: marks and spheres join, and he can be hurt. **The scripted ending**: the player is
+pushed away, vortigaunts teleport in and fire, time freezes, and the one live input is the Pulse key — the
+volley vents as one beam at the crosshair. That is the Pulse redirect the [Alien Route](#alien) moved out
+of the loop to "one scripted set piece at the end of the game", here.
+
+**The freeze is staging, not the mechanic this roadmap rejected twice.** The vortigaunts hold a charged
+zap (they already charge visibly), projectiles have their velocity zeroed, the sound drops out, the screen
+may tint. Nothing scales time.
+
+After it he gives the backstory, in flashbacks. What follows is one of several endings, deliberately the
+last thing to be designed.
+
+### The cult and the maddened
+
+**Shape: Shaped 2026-09-17.** The human enemies that are not soldiers. Both come from one fact: the
+Nihilanth's reach through the crystals stops at **planting ideas**, so nobody is a puppet. These are staff
+who spent years around crystal, heard the voice, and did something with it.
+
+- **The maddened** are miners with pickaxes and some security members. A maddened miner is a melee human —
+  the zombie's schedule set is the cheapest base, on a worker model that does not exist yet
+  ([ART_DEBT.md](ART_DEBT.md) when built) — **backstabbable**, with an **untrained Perception Profile**:
+  slow to notice, lethal up close. They are the fair melee enemy of the first hour and the stealth tutorial
+  before the soldiers arrive. A maddened security member is a grunt that spawns as a loner, which 5f
+  already treats differently (the mob rule).
+- **The cult** is the organised form, with a leader. **Hostile everywhere, with one exception: ritual
+  scenes**, where cultists stay passive until the player is noticed or crosses a map trigger.
+- **The ritual has to be the cultist's own state**, not a `scripted_sequence`: Suspicion is frozen while a
+  script holds a monster ([PERCEPTION.md](PERCEPTION.md), the `m_pCine` row), so a scripted ritual could
+  never notice anyone. A keyvalue the monster spawns with, a looping schedule, woken by `Use` from the
+  trigger — the [feeding Panthereye's](#how-the-bullsquid-feeds) answer, and worth building once for both.
+- **The leader is a boss**, from the deep shifts, met once in a scripted scene before the fight: a
+  monologue, then pickaxe against pickaxe. **The corrupted director** is the leader's highest-placed
+  follower and **is not a fight** — found at the rig's console, dead or still listening.
+- A true neutral faction (walk among them until provoked) was rejected: relationships are a static class
+  table, neutral-until-provoked exists only as Barney's per-monster hack, and a faction-wide version is a
+  second social layer on top of an untested 5f. One ritual room gives the feeling at a fraction of the cost.
+
+### Xen hell and the cut monsters
+
+**Shape: Idea.** The bottom of Xen, where the collective keeps what it has used up, populated by
+Half-Life's cut monsters. On this machine, in `valve/models/`: `friendly.mdl` (Mr. Friendly),
+`kingpin.mdl`, `stukabat.mdl`, `snapbug.mdl`, `archer.mdl`, `protozoa.mdl`, `boid.mdl`, `chumtoad.mdl`;
+`panthereye.mdl` in `hl_extended`. **All are models without AI**, so each is the
+[Panthereye's](#panthereye) cost again: read the sequences with `utils/mdltool/mdlinfo.py`, then write the
+monster. **Kingpin is its boss** and guards a piece. Stukabats and any other flyer matter beyond Xen hell:
+see [aerial melee](#settled-2026-09-17--the-fuel-the-processors-the-air-dash-gate).
+
+### Where the bosses sit
+
+**Settled 2026-09-17 as a base, open to small permutations.** Each ends a wing of the hub-and-spoke
+[structure](#the-shape-of-the-game), and each tests one system — a boss that tests nothing is a big enemy.
+
+| # | Boss | Where | Tests |
+| --- | --- | --- | --- |
+| 1 | Alien slave boss | Ends wing one, the mine levels | The Pulse |
+| 2 | Assassin boss | Ends the military wing | Stealth, the Dash |
+| 3 | Cult leader | Ends the first half, in the shrine around the cold open's chamber | Melee |
+| — | The director | Not a fight | — |
+| 4 | Alien grunt boss | Ends a Xen wing, guards a piece | The build |
+| 5 | Kingpin | Xen hell, guards a piece | Aerial and ranged |
+| — | The third Xen wing | **Open**: a gauntlet, a Xen sabotage operation, or pure exploration | — |
+| 6 | The reactor | After every piece; a platforming gauntlet, no monster | Movement |
+| 7 | The Nihilanth | The hub | Everything |
+
+**The fallback:** the story needs only 1, 3 and 7, and that is the build order. The other three can ship
+as tough variants of their base monster and gain custom attacks later, which is this section's approach
+anyway.
 
 ### Shared by all of them
 
@@ -1352,7 +1568,8 @@ Two things this pillar should not rediscover:
   is useless against — which may be the point, but should be a choice.
 
 ~~Open: is a boss a **combat** encounter or a **puzzle**?~~ The roster answers it for three of the four:
-the slave, assassin and alien grunt bosses are fights. The Nihilanth is the one still open, above.
+the slave, assassin and alien grunt bosses are fights. ~~The Nihilanth is the one still open, above.~~
+The Nihilanth is a pattern fight, 2026-09-17, above.
 
 ---
 
@@ -1584,14 +1801,23 @@ can never assume, and because the same comfort goal is met better inside the Pul
 
 | Module | What it does | Replaces |
 | --- | --- | --- |
-| **Pulse** | The existing Pulse, no longer available from the start. **Built 2026-09-16, untested in game**: `item_pulsemodule` opens its gate, and without it the key, the bar and every Pulse node are absent ([ADR-0013](adr/0013-the-pulse-is-a-found-module.md)). The pickup is a stand-in like the alien Module's | Suit hardware — the Pulse came with the suit at Anomalous Materials until 2026-09-16 |
-| **Dash** | A short, fast movement burst. | **The long jump module**, which serves the same purpose |
-| **Hook** | A grappling hook, in the manner of Opposing Force's barnacle grapple. | — |
+| **Pulse** | The existing Pulse, no longer available from the start — **but found in the first minutes (settled 2026-09-17)**: it is mining safety gear, kept in wall cabinets for crystal that flashes and then discharges, taken during the escape from the cafeteria and for a few minutes the player's only verb. It gains [a half-damage tail](#the-pulses-tail--settled-2026-09-17-not-built). **Built 2026-09-16, untested in game**: `item_pulsemodule` opens its gate, and without it the key, the bar and every Pulse node are absent ([ADR-0013](adr/0013-the-pulse-is-a-found-module.md)). The pickup is a stand-in like the alien Module's | Suit hardware — the Pulse came with the suit at Anomalous Materials until 2026-09-16 |
+| **Dash** | A short, fast movement burst. Built 2026-09-15. **Works in the air from the start — settled 2026-09-17, not built**: along the movement keys, the ground Dash's own rule, because a Dash glued to the ground cannot cross a gap. The *directional* dash stays the [Shinobi Major](#the-dash-route-name-pending) | **The long jump module**, which serves the same purpose |
+| **Hook** | A grappling hook, in the manner of Opposing Force's barnacle grapple. **Low priority since 2026-09-17**: kept as an alternative for navigation and combat, and nothing in the game is designed to need it | — |
+| **Double jump** | A second jump in the air. **New 2026-09-17, the sixth Module**, found later in Xen, filling the **legs Slot** the Status page left open. It also unlocks the Air Dash node. Where exactly it is found is open (the vortigaunt's first hand-over after the teleport was proposed) | — |
 | **The alien Module** (unnamed) | A platform for alien weapons that run on **Cores**; the summon weapon is its first. **Built 2026-09-16, untested in game, via a stand-in pickup** — the freed alien slave's actual hand-over is not built. | — |
 | **Night Vision** | Opposing Force's night vision, adapted from `E:\Projects\halflife-op4-updated`. Gates the Stealth region of the Skill Tree. **Built 2026-09-16, untested in game.** | **The flashlight**, which stays until the Module is found |
 
 The Opposing Force grapple code will be added to the project for reference; nothing about the Hook should
-be designed against guesses until it is.
+be designed against guesses until it is. With the air Dash, the long jump, the double jump and the Air
+Dash, the player has four aerial tools where there were none when the Hook was pencilled in, and it is the
+most expensive of them (predicted rope physics, a viewmodel, anchor entities). **It may make any space
+easier and may be needed by none.** The one form worth the cost is a *pull* — a flyer down into katana
+reach — rather than a swing.
+
+**The double jump knowingly amends the 2026-09-13 cut of High Jump.** That cut had two halves: reaching is
+a Module's job, and the normal jump rules stay untouched. The first survives; the second now ends the
+moment the player finds the legs Module. High Jump stays `SKILL_RESERVED` — it is a Module, not a Skill.
 
 The fourth Module was added 2026-09-13 and is designed under the [Alien Route](#alien); it is the one
 Module carried as a *weapon*, which is a precedent for the Hook's "weapon or verb" question below.
@@ -1630,7 +1856,9 @@ Pulse:
 **Settled 2026-09-12:**
 
 - **The unskilled Pulse is the Pulse as it is today** — the timed press. Neither branch changes what the
-  Module does before a Skill is spent.
+  Module does before a Skill is spent. **Amended 2026-09-17**: the base Pulse gains
+  [a tail](#the-pulses-tail--settled-2026-09-17-not-built), so that a player who is not into precise
+  parrying is not put off the mod's first verb.
 - **The branches are not exclusive, but investing in both is meant to be inefficient.** No lockout rule,
   no new line style in the tree: the tree stays AND-only, and the cost of spreading points across both is
   carried by pricing. A player who goes deep in one branch should be clearly better served than one who
@@ -1655,6 +1883,28 @@ evolve a verb the player already has rather than granting it, which lets level d
 Module, level design may assume it only after its acquisition point. ~~That wants an ADR when it is
 built~~ **Built 2026-09-16 with [ADR-0013](adr/0013-the-pulse-is-a-found-module.md).**
 
+### The Pulse's tail — settled 2026-09-17, not built
+
+The deflect window stays (`pulse_window`, 0.25 s, full negation). The Pulse then **persists to one second
+in total, and the tail takes half damage.** The rules that keep the skill ceiling where it is:
+
+1. **Only the window is a deflect.** The short recharge (`pulse_recharge_hit`), the Discharge, the Rebound,
+   the Follow-Up's prime and the [shelled headcrab's](#shelled-headcrab) punish window all stay on it. A
+   hit taken in the tail is a miss with a discount: half damage, and the long recharge.
+2. **The tail uses the Shield's damage list** ([ADR-0005](adr/0005-the-shield-negates-a-curated-damage-list.md)).
+   Falls and drowning are not on it and are not halved.
+3. **Pulse Window (12) widens the negate part inside the second**; it does not extend the total. The node
+   converts tail into window.
+4. **The two states look and sound different** — a dimmer ring, a duller sound — so "I parried" and "I
+   braced" are told apart without a number. [ART_DEBT.md](ART_DEBT.md) already records the first Pulse
+   sounds failing because two cues shared a timbre a tenth of a second apart.
+5. **The tail runs exactly to the moment a hold raises the [Defense Matrix](#juggernaut--resilient)**
+   (the key held for one second). Window, tail, Matrix: one motion, where today there is an unprotected gap.
+
+Mashing the key buys about a second of cover per four-second cycle, most of it at half — roughly 12%
+average reduction at today's `pulse_recharge_miss` of 3 s. A cushion, not a build. Two new cvars: the
+tail's length and its scale.
+
 ### Open questions
 
 - ~~**What the pool absorbs.**~~ ~~**How the pool recharges.**~~ ~~**How the pool is shown.**~~ **Answered
@@ -1672,7 +1922,10 @@ built~~ **Built 2026-09-16 with [ADR-0013](adr/0013-the-pulse-is-a-found-module.
   tap of shift, in the direction of movement, ground only until the Route's major node puts it in the air.
   Walk is rebound.
 - **Is the Hook a weapon or a verb?** Opposing Force's grapple occupies a weapon slot. A Module as defined
-  above is a verb, which argues for its own key — to be read against the reference code.
+  above is a verb, which argues for its own key — to be read against the reference code. Low priority
+  since 2026-09-17; nothing waits on the answer.
+- **Where is the double jump found**, and where the Dash? Proposed 2026-09-17, neither confirmed: the
+  double jump as the vortigaunt's first hand-over after the teleport, the Dash from the assassin boss.
 - ~~**Vanilla maps place `item_longjump`.**~~ **Answered 2026-09-15:** it keeps its classname and gives
   both the long jump and the Dash.
 - ~~**Acquisition** — walk-over like the long jump, or the Pickup Prompt the suit moved to?~~
@@ -1729,6 +1982,36 @@ and wants an ADR when the first Route lands.
   The Backstab's current tuning (49.5 against a grunt's 50, so that a one-shot is *not* reliable at full
   melee investment) still describes the early tree. It does not describe the endgame, which is meant to
   one-shot things that are not grunts.
+
+### Settled 2026-09-17 — the fuel, the processors, the Air Dash gate
+
+From the grill on [the game as a whole](#the-shape-of-the-game). No code.
+
+- **The tree has a fiction, and it was already drawn.** The facility processes crystal into technology;
+  the suit is adaptive equipment that changes when fed processed crystal; **a Skill node is that fuel.**
+  SKILL_PANEL.md's circuit, the processor as the only start and power spreading by adjacency already say
+  it. `item_skillpoint` is a processed crystal cell, the facility's product (a model and a name,
+  [ART_DEBT.md](ART_DEBT.md)); a gated region reads `No signal` because the suit cannot route fuel to
+  hardware that is not installed; a Reset Token is a reflash, which is why it refunds. **Power and
+  attunement are one curve**: every node makes the Nihilanth's voice clearer.
+- **Fuel processors: a bounded way to make a point.** Some [Stations](#stations) turn a large stack of
+  [crystal shards](#mining-and-crystal-shards) into **one Skill Point, once**, and are then spent. The
+  mapper counts each among the 100 findable points — some 10–15 of them — so the settled economy is
+  untouched; only the delivery changes. An open conversion at any Station was rejected: deposits are
+  finite, but the ceiling would then depend on how each player splits shards between ammunition and points.
+- **The directional Air Dash is gated behind the double jump Module.** With the base Dash working in the
+  air, the upward dash is the one tool that out-reaches the double jump, and bought in the first half it
+  would open every vertical gate in the game. The gate is already a per-row field (`EGate gate` in
+  `k_SkillDefs`), so this is one new `EGate` value on one row inside a region gated by `DashModule` — the
+  per-node gate the [Alien Route](#alien) set aside comes back as a table edit, not as machinery. Until the
+  double jump exists the node is sealed; `skill_unlock_all` and `skill_open_gates` still reach it.
+- **Aerial melee is a stated fantasy**: the upward dash with the katana in hand, against controllers, alien
+  ships and other flyers in late Xen. **Reprisal already is the reset** — a one-shot melee kill refills a
+  Dash, so in the air it chains. What it needs is flyers the katana one-shots, which is tuning, and
+  stukabats are on the [cut-monster list](#xen-hell-and-the-cut-monsters).
+- **Modules gate, Skills never do**, so no Route is needed to finish. What a Route buys is which
+  [soft gates](#the-shape-of-the-game) open cheaply: a Juggernaut tanks a hazard corridor, a Stealth build
+  ghosts a guarded shortcut, an Energy build cuts a crystal barrier. Routes are key rings.
 
 ### Built 2026-09-15, the same day
 
@@ -2098,7 +2381,9 @@ frail, and outclassed by the ghosts. Not decided; recorded.
 
 **The whole Route is hidden until the player gains the Module.** Hive nodes included: a player who found the
 Hivehand hours earlier does not see them until the slave's hand-over. A gate per node (each Skill naming the
-weapon that reveals it) was considered and set aside for the single gate.
+weapon that reveals it) was considered and set aside for the single gate. (It stays set aside *here*. The
+Shinobi region has the first node gated differently from its neighbours, 2026-09-17: the Air Dash, behind
+the double jump.)
 
 ##### Still open
 
@@ -2188,6 +2473,13 @@ where the armour is spent.
 grill shaped its Module. Was called *Agility* until that collided with the Suit Variant codename
 ([CONTEXT.md](../CONTEXT.md#the-suit)), which keeps the word. *"Ninja"*, the glass-cannon dash-and-slash
 build, is the one candidate name so far.
+
+**Amended 2026-09-17, not built.** Two lines below are superseded: "Ground only at first" and "In the air,
+only through the Route". **The base Dash works in the air from the start**, along the movement keys like
+the ground Dash, because a Dash glued to the ground cannot cross a gap. The Major keeps what made it a
+Major — in the air it goes **where the player aims, upward included** — and is
+[gated behind the double jump Module](#settled-2026-09-17--the-fuel-the-processors-the-air-dash-gate).
+The code change is the ground check coming off the base Dash and staying on the aim-direction branch.
 
 ##### The Dash — settled here, for the [Modules](#pillar-3-modules) entry
 
@@ -2456,7 +2748,23 @@ Gargantua in visibly different ways, one of them with a knife.
 
 ## Pillar 1: Transmissions
 
-**Shape: Idea.** Logs found in the level, played back by the player.
+**Shape: Shaped 2026-09-17.** ~~Logs found in the level, played back by the player.~~ **Text entries
+first, audio later.**
+
+- **The game is built with text entries**: collectible, banked, and readable at any time from **a new tab
+  of the Inventory Panel that accommodates information** — the fourth, beside the Grid, Upgrades and
+  Status. They occupy no Cells, the Reset Token pattern argued for below.
+- **Audio logs and subtitles are wanted, as a later step.** The text layer is built so that a recording can
+  attach to an entry when that step comes, and the entry's text is then its transcript — which is also the
+  answer to the engine having no subtitle system.
+- **They carry information**: codes, names, where a deposit lies, the player's own suppressed medical file.
+  A missed entry never blocks the critical path — a [hard gate](#the-shape-of-the-game) never hangs on
+  one. Some set a global when read, for the endings.
+- **Show, don't tell comes first.** The world carries the big facts (arranged crystal, a guard on a sealed
+  tunnel, the hub lighting up); entries carry the specific ones.
+- The same tab can hold the advisors' current guidance — which pieces are still missing — instead of an
+  objectives system.
+- **The Nihilanth's contact is never an entry.** Not banked, not re-readable; it happens and is gone.
 
 The closest existing machinery: Half-Life's sentence system (`sentences.txt` and the `!SENTENCE` form used
 throughout, e.g. the Syringe's `!HEV_HEAL7`), `ambient_generic` for placed sound sources, and
@@ -2475,6 +2783,9 @@ Which means a Transmissions list is a new tab or a new panel, not an Inventory c
 
 ### Open questions
 
+**All four answered 2026-09-17, above** — replayable, banked to a tab, text standing in for subtitles,
+informative. Kept for the record.
+
 - Are Transmissions **replayable** after the first listen, or heard once? Replayable implies a list UI;
   once implies they are pure flavour and a much smaller feature.
 - Do they play **in the world** (the player triggers a terminal and it plays aloud, interruptible by
@@ -2489,9 +2800,19 @@ Which means a Transmissions list is a new tab or a new panel, not an Inventory c
 
 ## Pillar 1: The world
 
-**Shape: Idea.** Everything here is blocked on [Maps](#maps), and most of it *is* maps.
+**Shape: Shaped in structure 2026-09-17; the places themselves are Ideas.** ~~Everything here is blocked
+on [Maps](#maps)~~ and most of it *is* maps. The structure — hub and spokes, hard and soft gates, restored
+infrastructure as global states, the reactor, the hazard course — is under
+[The shape of the game](#the-shape-of-the-game).
 
 ### The facility
+
+**Settled 2026-09-17:** a hub with wings; shortcuts home at each wing's end; zones opened by Modules and by
+restored infrastructure (power, elevators, pumps), each an `env_global` so a switch thrown in one map opens
+a door in another. It brims with secrets, and **ammunition, deposits, entries and Skill Points live in them
+rather than on the critical path** — exploring is how the player arms themselves. After the midpoint the
+same hub stands in Xen and the same wings are torn open, so the second half reuses geometry the player
+knows. Wing identities are open.
 
 Secret areas, vents, shortcuts, elevators and trains. Structurally this is level design rather than code —
 Half-Life already ships `func_train`, `func_tracktrain`, `func_door`, `func_plat`, `func_button` and
@@ -2518,12 +2839,44 @@ it is done.
 
 ### Xen and underground Xen
 
-No detail recorded beyond the intent to build them as areas. Underground Xen is not a place Half-Life has,
-so it is original level design rather than a revisit.
+~~No detail recorded beyond the intent to build them as areas.~~ **Shaped in outline 2026-09-17.** A brief
+excursion before the midpoint (one or two maps, an errand for the survivors' plan, arriving at the far end
+of the anchor: the same arranged crystal, intact and enormous). After the teleport, Xen wings off the same
+hub, one per piece, in a soft order, with Xenian presence escalating by pieces held. Xen introduces
+platforming on the Dash, then the double jump; `trigger_gravity` is a free fourth tool. **Underground Xen
+is Xen hell** — the bottom, [the cut monsters](#xen-hell-and-the-cut-monsters), Kingpin — and is original
+level design rather than a revisit. How many pieces (three proposed) and the third wing's ending are open.
+
+### Mining and crystal shards
+
+**Shape: Shaped 2026-09-17.** The mod's resource loop — small, finite, authored.
+
+- **Deposits** are placed by hand, mostly off the critical path, and never respawn; a few dozen in the
+  game. **Only a mining tool breaks one**, and the [pickaxe](#the-carbon-pickaxe) is that tool.
+  `func_breakable` already keys special rules on the crowbar's damage type, so this is an extension of an
+  existing rule rather than a new system.
+- They drop **crystal shards**, an ordinary stackable Item Type in the Grid. Shards are the input to
+  [Stations](#stations).
+- **Unstable deposits flash and then discharge.** Mining and the Pulse in the same seconds, and a hazard on
+  nobody's side: a discharge hurts whatever is near, so a player who knows the rhythm can lure a zombie
+  past a vein. A flash is a sprite or a light; a discharge is a timed beam and a hurt. It is also the
+  parry's first tutor — no enemy, a fully readable telegraph.
+- **The risk, named.** Harvesting loops rot immersive sims: once walls can be hit for loot, players stop
+  looking at rooms and start looking for nodes. A deposit here is *a secret that happens to be made of
+  crystal*. If mining ever feels like farming, the fix is fewer deposits, not more systems.
+- Shards as a second faucet of Skill Points was rejected except for the bounded
+  [fuel processors](#settled-2026-09-17--the-fuel-the-processors-the-air-dash-gate).
+
+Open: shard stack size and how many Cells; whether any second-half deposit is remembered for the endings
+(stripping Xen's crystal, which the Xenians are desperate for).
 
 ### Stations
 
-**Shape: Idea.** Crafting and recycling stations placed in levels, with item inputs and item outputs.
+**Shape: Shaped 2026-09-17.** Crafting and recycling stations placed in levels, with item inputs and item
+outputs. **The input is [crystal shards](#mining-and-crystal-shards)**; the outputs are what the player
+cannot find enough of — Cores (which the [Alien Route](#alien) already said a Station would make),
+energy ammunition, perhaps a Syringe. Some are **fuel processors** that make one Skill Point, once. The
+choice a Station poses is ammunition now or power for good.
 
 The precedent is exact: `func_recharge` (`dlls/h_battery.cpp:64`) and `func_healthcharger`
 (`dlls/healthkit.cpp:157`) are wall-mounted entities with a `+use` interaction, a finite budget, a sound
@@ -2543,8 +2896,10 @@ the output on the floor.
 
 ### Open questions
 
-- Is recycling **item → materials** (a new resource type, and therefore a new identity space) or
-  **item → item**? The first is a much larger feature than it looks; the second needs no new nouns.
+- ~~Is recycling **item → materials** (a new resource type, and therefore a new identity space) or
+  **item → item**?~~ **Answered 2026-09-17: item → item.** Crystal is the one material and it is an Item
+  Type — no new identity space, no new UI, no save change. Whether Stations also *recycle* (break an
+  unwanted item down into shards) is not decided.
 - Are recipes **known** from the start, found as [Transmissions](#pillar-1-transmissions), or discovered by
   experiment?
 - Are Stations **fixed in the world** (a reason to backtrack, which the persistence design already
@@ -2596,7 +2951,7 @@ is designed, and may well change name first.
 | Provisional term | Proposed meaning | Notes |
 | --- | --- | --- |
 | **Module** | A mechanic the player does not start with, found partway through the game and kept for good — never swapped. | Deliberately echoes "the longjump module", which is the model. Graduates to CONTEXT.md when the first one is built. |
-| **Dash**, **Hook** | Two of the three Modules; the Pulse is the third. Dash replaces the long jump. | Plain, and hard to improve on. |
+| **Dash**, **Hook** | Two of the six Modules (Pulse, Dash, Hook, the alien Module, Night Vision, Double jump). ~~Dash replaces the long jump~~ — it comes with it since 2026-09-15. The Hook is low priority since 2026-09-17. | Plain, and hard to improve on. |
 | **Shinobi** | The Route built on the Dash Module. | Named 2026-09-15; *Ninja* was the candidate, *Agility* stays with the suit. |
 | **Night Vision** | The fifth Module: replaces the flashlight when found, gates the Stealth region. | Settled 2026-09-15. Adapted from Opposing Force. |
 | **Overdraw** | The Energy Route's Major: energy attacks drain armour as well, for bonus damage. | Named 2026-09-15. |
@@ -2610,6 +2965,14 @@ is designed, and may well change name first.
 | **Seam** | The shared border of two Routes' regions, where a cross-Route build pays in the neighbour's stat. | Settled 2026-09-15. Avoid *bridge*, *link* (a link is an effect that reads another Route). |
 | **Keystone** | A Skill Tree node with a real downside. Glass Cannon is the first. | Settled 2026-09-15, Path of Exile's word kept on purpose. Avoid *curse*, *trade-off node*. |
 | **Trace** | A drawn connector in the Skill Tree: thin between neighbours, thick for a Skill's gate, lit when powered. | Presentation term, 2026-09-15. Avoid *edge* in player-facing text (kept in code and the debug overlay). |
+| **The Heart** | The purest crystal of the anchor under the mine, cut free by the player in the cold open and seated in the rig. | Provisional, 2026-09-17. The grill called it the *keystone*; **Keystone** is taken, two rows up. |
+| **Deposit**, **Shard** | A hand-placed, finite crystal formation only a mining tool breaks; the stackable item it drops, the input to Stations. | 2026-09-17. Avoid *ore*, *node* (a node is in the Skill Tree), *resource*. |
+| **Fuel processor** | A Station that turns a stack of Shards into one Skill Point, once. | 2026-09-17. |
+| **Tail** | The half-damage remainder of a Pulse after its deflect window, to one second in total. | 2026-09-17. **Not a Shield** and not a deflect; "brace" is the player-facing verb candidate. |
+| **Double jump** | The sixth Module; fills the legs Slot. | 2026-09-17. Name as plain as Dash and Hook; a fiction name for the hardware is open. |
+| **Wing**, **Piece** | A spoke of the hub; one of the things collected in the second half to take the facility home. | 2026-09-17. How many Pieces is open (three proposed). |
+| **Hard gate**, **Soft gate** | Sealed by construction and looking it; or an intended key plus at least one deliberate alternative. | 2026-09-17. Map-brief terms, not player-facing. |
+| **The maddened**, **the cult** | Staff who heard the voice and broke; the organised ones, with a leader. Neither is controlled — the Nihilanth only plants ideas. | 2026-09-17. Avoid *zombie*, *infected*, *thrall*. |
 | ~~**Stat node**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#skills) on 2026-09-14, when the Melee Route built the first nine. | |
 | **Defense Matrix** | The Juggernaut Route's stance: the Pulse key held for a second raises it, armour takes a far larger share of every hit while it is up, the player is slowed. Drops on release, at 6 s, or at zero armour. | Settled 2026-09-13. **Not a Shield** — that word is the Pulse's field in CONTEXT.md. |
 | ~~**Core**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#the-alien-route) on 2026-09-16, when Cores were built as a real ammo type. | |
@@ -2643,11 +3006,19 @@ Ranked by how much else is waiting on the answer.
 4. ~~**Does the Carbon Pickaxe replace the crowbar entirely?**~~ **Answered 2026-09-13: no.** The crowbar
    stays as the all-rounder in a melee roster; the crowbar-named Skills are renamed once, to generic melee
    names, for the roster. See the [Melee Route](#melee).
-5. **Is stealth optional everywhere?** Level design consequence, not a code one, and the answer shapes
-   every encounter.
-6. **Recycling: item → materials, or item → item?** The first introduces a whole new identity space
-   alongside `WeaponId` and `EItemTypeId` ([ADR-0002](adr/0002-two-identity-spaces-for-weapons-and-items.md)).
+5. ~~**Is stealth optional everywhere?**~~ **Answered 2026-09-17: yes, with declared exceptions** — bosses,
+   sieges and plain charging fights. See [Stealth](#pillar-6-stealth).
+6. ~~**Recycling: item → materials, or item → item?**~~ **Answered 2026-09-17: item → item**; crystal
+   Shards are an Item Type. See [Stations](#stations).
 7. ~~**What was the boss moveset example?**~~ **Answered 2026-09-12 by the roster**: four bosses, each an
    existing monster with custom attacks. See [Monsters and bosses](#pillar-2-monsters-and-bosses).
 8. **Sounds — offering help or asking for it?** *"here I have little experience and I can help"* reads
-   both ways, and the two readings imply very different plans.
+   both ways, and the two readings imply very different plans. Audio logs being deferred behind text
+   entries (2026-09-17) takes the pressure off, not the question.
+9. **The endings.** Multiple, read from choices and secrets, and deliberately the last thing designed
+   (2026-09-17). Nothing waits on it except the rule that a moment which might matter sets a global.
+10. **How many Pieces, and what are the wings?** Three Pieces were proposed and not confirmed; no wing in
+    either half has an identity yet, and the vertical slice — the hub and wing one — needs the first.
+11. **Where are the Dash and the double jump found?** Proposed: the assassin boss, and the vortigaunt's
+    first hand-over after the teleport.
+12. **The names**: the player, the facility, the company, the Heart, and whether *miner* is the final word.
