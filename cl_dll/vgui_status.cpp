@@ -48,6 +48,11 @@ static std::string KeyForCommand(const char* command)
     if (!command)
         return std::string();
 
+    // The engine matches a binding with its '+' already stripped, so "+pulse"
+    // is looked up as "pulse" (cl_dll/input.cpp does the same).
+    if (command[0] == '+')
+        ++command;
+
     const char* key = gEngfuncs.Key_LookupBinding(command);
     std::string name = (key && key[0]) ? key : "unbound";
     for (char& c : name)

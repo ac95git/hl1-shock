@@ -522,6 +522,7 @@ public:
 	// the first frame after a restore.
 	int m_iPromptKind = 0;
 	int m_iPromptId = 0;
+	int m_iPromptClass = 0; // EPromptClass, when a usable entity won instead of a pickup
 
 	// ---- The Concealment readout ----
 	//

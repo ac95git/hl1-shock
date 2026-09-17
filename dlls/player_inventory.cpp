@@ -754,20 +754,95 @@ static bool ClassifyPickup(CBaseEntity* pEnt, EEntryKind& outKind, int& outId)
 			return true;
 		}
 
-		// Otherwise only Item Types are pickups. Everything is walk-over now,
-		// so the prompt's jobs are lifting a thing off a shelf the player
-		// cannot step onto and explaining a full Grid. The longjump module is
-		// a CItem too, and is not carried, so it gets no prompt.
+		// Item Types are carried in the Grid and named from their own table.
+		// Everything is walk-over now, so the prompt's jobs are lifting a
+		// thing off a shelf the player cannot step onto and explaining a
+		// full Grid.
 		const EItemTypeId type = ItemTypeFromClassname(STRING(pEnt->pev->classname));
-		if (type == EItemTypeId::None)
-			return false;
+		if (type != EItemTypeId::None)
+		{
+			outKind = EEntryKind::Item;
+			outId = static_cast<int>(type);
+			return true;
+		}
 
-		outKind = EEntryKind::Item;
-		outId = static_cast<int>(type);
+		// The rest are taken and not carried -- a Skill Point, a Module -- and
+		// the Prompt names them from its own table.
+		static const struct
+		{
+			const char* classname;
+			EPromptClass promptClass;
+		} k_pickups[] = {
+			{"item_skillpoint", EPromptClass::SkillPoint},
+			{"item_resettoken", EPromptClass::ResetToken},
+			{"item_rowgrant", EPromptClass::RowGrant},
+			{"item_longjump", EPromptClass::LongJump},
+			{"item_nightvision", EPromptClass::NightVision},
+			{"item_silencer", EPromptClass::Silencer},
+			{"item_alienmodule", EPromptClass::AlienModule},
+			{"item_pulsemodule", EPromptClass::PulseModule},
+		};
+
+		EPromptClass promptClass = EPromptClass::Item;
+		for (const auto& row : k_pickups)
+		{
+			if (FClassnameIs(pEnt->pev, row.classname))
+			{
+				promptClass = row.promptClass;
+				break;
+			}
+		}
+
+		outKind = EEntryKind::Pickup;
+		outId = static_cast<int>(promptClass);
+		return true;
+	}
+
+	if (dynamic_cast<CBasePlayerAmmo*>(pEnt))
+	{
+		outKind = EEntryKind::Pickup;
+		outId = static_cast<int>(FClassnameIs(pEnt->pev, "item_core") ? EPromptClass::Core : EPromptClass::Ammo);
 		return true;
 	}
 
 	return false;
+}
+
+// What is this usable entity called? Anything a use press can act on gets a
+// Prompt, so the fallback is Generic rather than None.
+static EPromptClass ClassifyUsable(CBaseEntity* pEnt)
+{
+	static const struct
+	{
+		const char* classname;
+		EPromptClass promptClass;
+	} k_classes[] = {
+		{"func_button", EPromptClass::Button},
+		{"func_rot_button", EPromptClass::Button},
+		{"button_target", EPromptClass::Button},
+		{"momentary_rot_button", EPromptClass::Valve},
+		{"func_door", EPromptClass::Door},
+		{"func_door_rotating", EPromptClass::Door},
+		{"func_healthcharger", EPromptClass::HealthStation},
+		{"func_recharge", EPromptClass::HevCharger},
+		{"monster_scientist", EPromptClass::Scientist},
+		{"monster_sitting_scientist", EPromptClass::Scientist},
+		{"monster_barney", EPromptClass::Guard},
+		{"func_pushable", EPromptClass::Movable},
+		{"func_tankcontrols", EPromptClass::MountedGun},
+	};
+
+	// A corpse keeps its use caps and has nothing to say.
+	if (pEnt->MyMonsterPointer() != nullptr && !pEnt->IsAlive())
+		return EPromptClass::None;
+
+	for (const auto& row : k_classes)
+	{
+		if (FClassnameIs(pEnt->pev, row.classname))
+			return row.promptClass;
+	}
+
+	return EPromptClass::Generic;
 }
 
 LookedAtPickup FindLookedAtPickup(CBasePlayer* pPlayer)
@@ -807,10 +882,12 @@ LookedAtPickup FindLookedAtPickup(CBasePlayer* pPlayer)
 		flMaxDot = flDot;
 
 		// A usable entity that wins means a use press goes to it, not to any
-		// pickup behind it -- so report nothing.
+		// pickup behind it -- so there is nothing to take, and the Prompt
+		// names the usable instead.
 		out.pEntity = pickup ? pObject : nullptr;
 		out.kind = pickup ? kind : EEntryKind::Empty;
 		out.id = pickup ? id : 0;
+		out.usable = pickup ? EPromptClass::None : ClassifyUsable(pObject);
 	}
 
 	return out;
@@ -825,18 +902,21 @@ void UpdatePickupPrompt(CBasePlayer* pPlayer)
 
 	const int kind = look.Valid() ? static_cast<int>(look.kind) : 0;
 	const int id = look.Valid() ? look.id : 0;
+	const int promptClass = look.Valid() ? 0 : static_cast<int>(look.usable);
 
 	// Only on change: the prompt is stable for as long as the player keeps
 	// looking at the same thing, so there is nothing to resend each frame.
-	if (kind == pPlayer->m_iPromptKind && id == pPlayer->m_iPromptId)
+	if (kind == pPlayer->m_iPromptKind && id == pPlayer->m_iPromptId && promptClass == pPlayer->m_iPromptClass)
 		return;
 
 	pPlayer->m_iPromptKind = kind;
 	pPlayer->m_iPromptId = id;
+	pPlayer->m_iPromptClass = promptClass;
 
 	MESSAGE_BEGIN(MSG_ONE, gmsgPickupPrompt, NULL, pPlayer->pev);
 	WRITE_BYTE((unsigned char)kind);
 	WRITE_BYTE((unsigned char)id);
+	WRITE_BYTE((unsigned char)promptClass); // EPromptClass; only when there is nothing to take
 	MESSAGE_END();
 }
 
@@ -857,7 +937,12 @@ bool TryTakeLookedAtPickup(CBasePlayer* pPlayer)
 
 	CItem* pItem = dynamic_cast<CItem*>(look.pEntity);
 	if (!pItem)
-		return false;
+	{
+		// Ammunition is not a CItem. Its touch is the whole of taking it, and
+		// leaves the box where it is when the pool is already full.
+		DispatchTouch(ENT(look.pEntity->pev), ENT(pPlayer->pev));
+		return true;
+	}
 
 	if (!pItem->AcquireBy(pPlayer))
 	{

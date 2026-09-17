@@ -67,6 +67,12 @@ enum class EEntryKind : uint8_t
 	// than carried and no Entry of this kind is ever created or saved.
 	// id is an ESuitVariant -- see game_shared/suit_defs.h.
 	Suit   = 3,
+
+	// Never an Entry either.  A pickup that is taken but not carried in the
+	// Grid -- a Skill Point, a Module, ammunition -- named by the Prompt like
+	// everything else a use press acts on.
+	// id is an EPromptClass -- see game_shared/prompt_defs.h.
+	Pickup = 4,
 };
 
 // ---------------------------------------------------------

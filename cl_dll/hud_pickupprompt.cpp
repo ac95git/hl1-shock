@@ -1,12 +1,15 @@
 //=========================================================
 // hud_pickupprompt.cpp
 //
-// The Pickup Prompt: the text under the crosshair naming what the
-// player is looking at and can take.
+// The Prompt: the text under the crosshair naming what the player is
+// looking at and what a use press does to it.  The Pickup Prompt, for
+// what can be taken, is its oldest case; since 2026-09-17 every ordinary
+// usable entity gets one too (docs/ROADMAP.md, Pillar 1: Records).
 //
-// The server decides what is being looked at and sends only (kind, id) --
-// the display name is resolved here from the shared Item Type table, so no
-// strings cross the wire. See docs/PILLARS.md and
+// The server decides what is being looked at and sends only
+// (kind, id, class) -- the text is resolved here from the shared Item Type
+// and Prompt class tables, so no strings cross the wire. See
+// docs/PILLARS.md and
 // docs/adr/0002-two-identity-spaces-for-weapons-and-items.md.
 //=========================================================
 
@@ -15,7 +18,9 @@
 #include "parsemsg.h"
 #include "ammohistory.h"
 #include "inventory_defs.h"
+#include "prompt_defs.h"
 #include "suit_defs.h"
+#include <ctype.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -27,6 +32,7 @@ bool CHudPickupPrompt::Init()
 
 	m_iKind = 0;
 	m_iId = 0;
+	m_iClass = 0;
 
 	gHUD.AddHudElem(this);
 	return true;
@@ -41,6 +47,7 @@ void CHudPickupPrompt::Reset()
 {
 	m_iKind = 0;
 	m_iId = 0;
+	m_iClass = 0;
 	m_iFlags &= ~HUD_ACTIVE;
 }
 
@@ -50,9 +57,11 @@ bool CHudPickupPrompt::MsgFunc_PickupHint(const char* pszName, int iSize, void* 
 
 	m_iKind = READ_BYTE();
 	m_iId = READ_BYTE();
+	m_iClass = READ_BYTE();
 
-	// (0,0) means the player is no longer looking at anything takeable.
-	if (m_iKind == 0)
+	// All zero means the player is no longer looking at anything a use press
+	// would act on.
+	if (m_iKind == 0 && m_iClass == 0)
 		m_iFlags &= ~HUD_ACTIVE;
 	else
 		m_iFlags |= HUD_ACTIVE;
@@ -95,21 +104,51 @@ static bool PrettyWeaponName(int weaponId, char* out, int outSize)
 	return true;
 }
 
+//=========================================================
+// "[E] Press": the action behind the key +use is really bound to, looked
+// up every time so a rebind never shows a stale key.  The engine matches a
+// binding with its '+' already stripped, so the lookup is for "use".
+//=========================================================
+static void FormatAction(const char* action, char* out, int outSize)
+{
+	const char* key = gEngfuncs.Key_LookupBinding("use");
+
+	char keyBuf[32];
+	snprintf(keyBuf, sizeof(keyBuf), "%s", (key && key[0]) ? key : "unbound");
+	for (char* c = keyBuf; *c != '\0'; ++c)
+		*c = (char)toupper((unsigned char)*c);
+
+	snprintf(out, outSize, "[%s] %s", keyBuf, action);
+}
+
 bool CHudPickupPrompt::Draw(float flTime)
 {
 	if ((gHUD.m_iHideHUDDisplay & (HIDEHUD_ALL | HIDEHUD_WEAPONS)) != 0)
 		return true;
 
-	if (m_iKind == 0)
+	if (m_iKind == 0 && m_iClass == 0)
 		return true;
 
 	char nameBuf[64];
 	const char* name = nullptr;
+	const char* action = k_PromptTakeAction;
 
-	if (static_cast<EEntryKind>(m_iKind) == EEntryKind::Weapon)
+	if (m_iKind == 0)
+	{
+		// Used, not taken. A class may have no title: the action stands alone.
+		const PromptClassDef& def = GetPromptClass(m_iClass);
+		name = def.title;
+		action = def.action;
+	}
+	else if (static_cast<EEntryKind>(m_iKind) == EEntryKind::Weapon)
 	{
 		if (PrettyWeaponName(m_iId, nameBuf, sizeof(nameBuf)))
 			name = nameBuf;
+	}
+	else if (static_cast<EEntryKind>(m_iKind) == EEntryKind::Pickup)
+	{
+		// Taken but never carried, so the Prompt's own table names it.
+		name = GetPromptClass(m_iId).title;
 	}
 	else if (static_cast<EEntryKind>(m_iKind) == EEntryKind::Suit)
 	{
@@ -124,22 +163,30 @@ bool CHudPickupPrompt::Draw(float flTime)
 			name = def->displayName;
 	}
 
-	if (!name)
+	// A pickup that cannot be named is not prompted for, as before.
+	if (!action || (!name && m_iKind != 0))
 		return true;
 
-	// Centred under the crosshair. Two lines: what it is, and how to take it.
-	static const char* k_hint = "Press USE to take";
+	// Centred under the crosshair. Two lines: what it is, and what a use
+	// press does to it.
+	char hint[64];
+	FormatAction(action, hint, sizeof(hint));
 
 	int nameW = 0, nameH = 0;
 	int hintW = 0, hintH = 0;
-	GetConsoleStringSize(name, &nameW, &nameH);
-	GetConsoleStringSize(k_hint, &hintW, &hintH);
+	if (name)
+		GetConsoleStringSize(name, &nameW, &nameH);
+	GetConsoleStringSize(hint, &hintW, &hintH);
 
 	const int centreX = ScreenWidth / 2;
-	const int topY = ScreenHeight / 2 + 32;
+	int y = ScreenHeight / 2 + 32;
 
-	DrawConsoleString(centreX - nameW / 2, topY, name);
-	DrawConsoleString(centreX - hintW / 2, topY + nameH + 2, k_hint);
+	if (name)
+	{
+		DrawConsoleString(centreX - nameW / 2, y, name);
+		y += nameH + 2;
+	}
+	DrawConsoleString(centreX - hintW / 2, y, hint);
 
 	return true;
 }

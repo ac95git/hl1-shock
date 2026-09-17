@@ -1313,6 +1313,14 @@ Remaining:
 - The ammo readout overflows its panel when the player carries many ammo types; it needs a taller panel,
   a scroll, or two columns. Deferred to a UI pass.
 - The Pickup Prompt is unstyled — it uses the engine console font pending a visual style for the mod.
+- **The Prompt, since 2026-09-18, verified in game**: the Pickup Prompt widened to everything a use press
+  acts on. A title and `[KEY] Action` with the key `+use` is really bound to — buttons, valves, use-only
+  doors, the two chargers, scientists, guards, pushables, mounted guns, and a bare `Use` for anything else
+  (`game_shared/prompt_defs.h`). Pickups that never reach the Grid (Skill Point, Reset Token, Row Grant,
+  the Modules, the silencer, the Core) and ammunition are named and taken by a use press too, as
+  `EEntryKind::Pickup`, which like `Suit` is never an Entry. Ammunition still reads a generic
+  *Ammunition*. It is slice 1 of [Records](ROADMAP.md#pillar-1-records); no mapper override, suppress or
+  state lines yet.
 - **Untested:** dropping an exhaustible weapon (satchel, tripmine, snark, hand grenade). Their ammo is the
   item itself and lives in the pool rather than a clip, so the clip-transfer on drop does nothing for them.
   Nothing should be lost, but it is the one weapon class whose drop path has not been exercised.

@@ -1,0 +1,97 @@
+#pragma once
+
+// ---------------------------------------------------------
+// The Prompt: what a usable thing is called, and what a use press does
+// to it.
+//
+// Everything that can be interacted with says so on screen -- a title,
+// and the action under it (docs/ROADMAP.md, Pillar 1: Records).  The
+// Pickup Prompt is the oldest case and names what it shows from the
+// Item Type and weapon tables; this table is for everything else a use
+// press can act on.
+//
+// The server classifies the entity (ClassifyUsable, player_inventory.cpp)
+// and sends the class; the client resolves it here, so no strings cross
+// the wire.  A class is neither saved nor kept between maps, so the
+// values may be renumbered freely.
+//
+// Compiled into both DLLs, so the two sides cannot disagree.
+// ---------------------------------------------------------
+
+#include <cstdint>
+
+enum class EPromptClass : uint8_t
+{
+	None = 0,      // nothing usable is being looked at
+	Generic,       // usable, and nothing below names it
+	Button,        // func_button, func_rot_button, button_target
+	Valve,         // momentary_rot_button
+	Door,          // a use-only func_door / func_door_rotating
+	HealthStation, // func_healthcharger
+	HevCharger,    // func_recharge
+	Scientist,     // monster_scientist, monster_sitting_scientist
+	Guard,         // monster_barney
+	Movable,       // func_pushable
+	MountedGun,    // func_tankcontrols
+
+	// Taken rather than used: the pickups that never reach the Grid, so the
+	// Item Type table cannot name them.  Sent as EEntryKind::Pickup's id.
+	SkillPoint,   // item_skillpoint
+	ResetToken,   // item_resettoken
+	RowGrant,     // item_rowgrant
+	LongJump,     // item_longjump
+	NightVision,  // item_nightvision
+	Silencer,     // item_silencer
+	AlienModule,  // item_alienmodule
+	PulseModule,  // item_pulsemodule
+	Core,         // item_core
+	Ammo,         // any other CBasePlayerAmmo
+	Item,         // any other CItem
+
+	_Count, // keep last
+};
+
+struct PromptClassDef
+{
+	const char* title;  // nullptr: draw the action alone
+	const char* action; // follows the bound use key: "[E] Press"
+};
+
+// One row per EPromptClass, in enum order.
+static const PromptClassDef k_PromptClassDefs[] = {
+	{nullptr, nullptr},          // None
+	{nullptr, "Use"},            // Generic
+	{"Button", "Press"},         // Button
+	{"Valve", "Turn"},           // Valve
+	{"Door", "Open"},            // Door
+	{"Health station", "Heal"},  // HealthStation
+	{"HEV charger", "Charge"},   // HevCharger
+	{"Scientist", "Talk"},       // Scientist
+	{"Security guard", "Talk"},  // Guard
+	{"Movable object", "Pull"},  // Movable
+	{"Mounted gun", "Operate"},  // MountedGun
+	{"Skill Point", "Take"},         // SkillPoint
+	{"Reset Token", "Take"},         // ResetToken
+	{"Row Grant", "Take"},           // RowGrant
+	{"Long Jump Module", "Take"},    // LongJump
+	{"Night Vision Module", "Take"}, // NightVision
+	{"Silencer", "Take"},            // Silencer
+	{"Alien Module", "Take"},        // AlienModule
+	{"Pulse Module", "Take"},        // PulseModule
+	{"Core", "Take"},                // Core
+	{"Ammunition", "Take"},          // Ammo
+	{"Item", "Take"},                // Item
+};
+
+static_assert(sizeof(k_PromptClassDefs) / sizeof(k_PromptClassDefs[0]) == static_cast<int>(EPromptClass::_Count),
+	"k_PromptClassDefs needs one row per EPromptClass");
+
+// What every takeable thing says under its name.
+static const char* const k_PromptTakeAction = "Take";
+
+inline const PromptClassDef& GetPromptClass(int promptClass)
+{
+	if (promptClass <= 0 || promptClass >= static_cast<int>(EPromptClass::_Count))
+		return k_PromptClassDefs[0];
+	return k_PromptClassDefs[promptClass];
+}

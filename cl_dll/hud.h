@@ -474,9 +474,10 @@ private:
 
 //
 //-----------------------------------------------------
-// Pickup Prompt: names what the crosshair is over, when it can be taken.
+// The Prompt: names what the crosshair is over and what a use press does to
+// it -- a pickup (the Pickup Prompt), or any ordinary usable entity.
 // Driven entirely by the server (see UpdatePickupPrompt); the client only
-// resolves the id into a display name.
+// resolves the ids into display text.
 //
 class CHudPickupPrompt : public CHudBase
 {
@@ -490,6 +491,7 @@ public:
 private:
 	int m_iKind = 0; // EEntryKind; 0 means nothing is being looked at
 	int m_iId = 0;   // WeaponId or EItemTypeId
+	int m_iClass = 0; // EPromptClass; set when the thing is used rather than taken
 };
 
 //

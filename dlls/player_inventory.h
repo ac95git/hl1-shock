@@ -11,6 +11,7 @@
 #pragma once
 
 #include "inventory_defs.h"
+#include "prompt_defs.h"
 
 //=========================================================
 // CPlayerInventory
@@ -203,18 +204,23 @@ struct LookedAtPickup
 	int          id      = 0;  // WeaponId or EItemTypeId
 	CBaseEntity* pEntity = nullptr;
 
+	// What won the aim test instead, when it was an ordinary usable entity.
+	// Only the Prompt reads it: there is nothing to take, so Valid() is false.
+	EPromptClass usable = EPromptClass::None;
+
 	bool Valid() const { return pEntity != nullptr && kind != EEntryKind::Empty; }
 };
 
 // The single answer to "what would a use press take?".
 //
 // Deliberately also considers ordinary usable entities (buttons, doors,
-// chargers) so that when one of those wins the aim test this returns nothing.
-// The Pickup Prompt and the take therefore cannot disagree, and pressing use
-// near a button never silently grabs a medkit instead.
+// chargers) so that when one of those wins the aim test there is nothing to
+// take, and the winner is named in `usable`. The Prompt and the press
+// therefore cannot disagree, and pressing use near a button never silently
+// grabs a medkit instead.
 LookedAtPickup FindLookedAtPickup(CBasePlayer* pPlayer);
 
-// Sends the Pickup Prompt when the looked-at pickup changes. Call each frame.
+// Sends the Prompt when what the player is looking at changes. Call each frame.
 void UpdatePickupPrompt(CBasePlayer* pPlayer);
 
 // Takes whatever the prompt is naming. Returns false if there is nothing to

@@ -2851,7 +2851,14 @@ later without changing it.
 Each slice judgeable in game on its own. None of it is stealth, so
 [STEALTH_CHECKLIST.md](STEALTH_CHECKLIST.md) does not block it.
 
-1. **The Prompt, widened** — defaults by class, the real key. No Records. Judged in any vanilla map.
+1. ~~**The Prompt, widened** — defaults by class, the real key. No Records. Judged in any vanilla map.~~
+   **Built and verified in game 2026-09-18**: `game_shared/prompt_defs.h` is the table, the server
+   classifies in `dlls/player_inventory.cpp`, the message gained a third byte. The mod's own pickups that
+   never reach the Grid (Skill Point, Reset Token, Row Grant, the Modules, the silencer, the Core) and all
+   ammunition get a Prompt and a use press takes them, through a new `EEntryKind::Pickup`. **Left over:
+   ammunition reads a generic *Ammunition* and should get its own names**; no override, suppress or state
+   lines yet (slices 3 and 4); still the console font. Found on the way: `Key_LookupBinding` wants the
+   command without its `+`, which had the Status page's Pulse tooltip reading `[UNBOUND]` — fixed.
 2. **Records, the core** — the file and parser, the found-set and its sync, the world entity and its
    glint, the reader, the tab. The first code pillar 1 has ever had.
 3. **`record_grant`, Guidance, `record_lock`**, and the first-read target.
