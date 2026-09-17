@@ -25,7 +25,7 @@ flashlight's key (`impulse 100`), which it replaces.
 | Element | Settled |
 | --- | --- |
 | **Slots** | Five, **fixed**: a Module always sits in its own Slot and nothing is dragged. A Slot is where a Module lives on the suit, not a loadout |
-| **Assignment** | **Head** Night Vision · **Body** Dash · **Left arm** Pulse · **Right arm** the Alien Module · **Legs** undecided |
+| **Assignment** | **Head** Night Vision · **Body** Dash · **Left arm** Pulse · **Right arm** the Alien Module · **Legs** ~~undecided~~ the double jump Module (settled 2026-09-17, not built) |
 | **Frames** | Five boxed frames arranged as a body — head above, arms either side of the body, legs below — drawn with rects. A suit silhouette sprite behind them is the target ([ART_DEBT.md](ART_DEBT.md#the-status-page--suit-silhouette-and-module-glyphs)) |
 | **Filled Slot** | The Module's **monochrome glyph, tinted the suit colour**, one motif per Module matching its Route's glyph on the tree: eye (Night Vision), wind (Dash), shield (Pulse), hive (Alien). Existing HUD sprites stand in until the glyphs exist |
 | **Empty Slot** | A **dim, unlabelled frame**. No name, no icon, no hint — the player sees that a Slot is empty, never what fills it |
@@ -90,8 +90,13 @@ static data, server-owned derived data).
 
 ## Open
 
-- **The leg Slot** has no Module. It draws as an empty frame until one is decided.
-- **The Hook** is outside this design, and gets its Slot, or none, when it is designed.
+- ~~**The leg Slot** has no Module.~~ **Decided 2026-09-17: the double jump**, the sixth Module, found
+  later in Xen ([ROADMAP.md](ROADMAP.md#pillar-3-modules)). Until it is built the Slot draws as the empty
+  frame it is today; when it is, it wants a row in `module_defs.h`, a glyph, and a tooltip naming the jump
+  key.
+- **The Hook** is outside this design, and gets its Slot, or none, when it is designed. Low priority since
+  2026-09-17, and with the legs taken all five Slots are spoken for — a sixth Slot, or none, is the
+  question it will have to answer.
 - ~~**The Alien Module's key.**~~ **Resolved 2026-09-16**: it is `weapon_summon`, an ordinary weapon, so its
   tooltip names whatever is bound to primary attack, the same as any other weapon's Slot would.
 

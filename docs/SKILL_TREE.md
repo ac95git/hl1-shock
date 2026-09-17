@@ -537,6 +537,23 @@ graph TD
 Every Dash node is hidden until the player holds the Dash Module; Sure Footing is always shown. No bullet
 time: dropped.
 
+**Settled 2026-09-17, not built** ([ROADMAP](ROADMAP.md#settled-2026-09-17--the-fuel-the-processors-the-air-dash-gate)):
+
+- **The base Dash works in the air from the start**, along the movement keys like the ground Dash — a Dash
+  glued to the ground cannot cross a gap. "Ground only until the major node" above is superseded.
+- **The Major becomes the *directional* dash**: in the air it goes where the player aims, upward included.
+  The tooltip changes with it; the id (112) and the cell do not.
+- **The Major is gated behind the double jump Module**, the sixth Module, found later in Xen. The upward
+  dash is the one tool that out-reaches the double jump, and bought early it would open every vertical
+  gate in the game. One new `EGate` value on one row of `k_SkillDefs`; the rest of the region stays on
+  `EGate::DashModule`. It is the first node gated differently from its neighbours, so "Hidden means
+  impassable" now seals a single pad inside an open region. It strands one cell: the Dash Recovery Stat
+  node at (1,0) is reachable only through the Air Dash ([SKILL_MAP.md](SKILL_MAP.md)), so it waits on the
+  double jump as well unless it is moved.
+- **A Skill node is processed crystal fed to the suit** — the fiction the circuit was already drawing.
+  Some Stations are fuel processors that make one Skill Point, once, from crystal Shards; each is counted
+  among the 100 findable points, so the economy below is untouched.
+
 ---
 
 ## Medical

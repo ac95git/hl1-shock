@@ -9,7 +9,10 @@ same commit as the code change.
 This file records **what exists today**. Intended work that has not been built lives in
 [ROADMAP.md](ROADMAP.md), and each pillar below links to its entries there.
 
-**Last updated:** 2026-09-16 (branch `hl-shock`, one wave from five parallel agents on the Juggernaut
+**Last updated:** 2026-09-17 (no code: the game was shaped as a whole and
+[ROADMAP.md](ROADMAP.md#the-shape-of-the-game) reconciled to it. Here that changes only framing — the
+pillars are ranked, exploration has a definition, and stealth is a way to solve an encounter rather than a
+pillar ranked beside combat). Before that, 2026-09-16 (branch `hl-shock`, one wave from five parallel agents on the Juggernaut
 foundation: the Stealth region's effects and the Night Vision Module that reveals it, the Hive nodes, and
 the Alien Route's first slice — Cores, a ghost, the summon's left click; none of it verified in game yet.
 Earlier the same day, the Defense Matrix built on a held Pulse key, and the Status tab before it; 2026-09-12
@@ -25,6 +28,11 @@ before that, after the Suit Variant)
 | **Done** | Behaviour is final and covered by the acceptance criteria in this document. |
 
 ## Summary
+
+**Ranked 2026-09-17: exploration first, by far; then RPG (pillars 3, 4 and 5); then combat (pillar 2, with
+pillar 6 inside it).** The numbers below are names, not the ranking — and the first-ranked pillar is the
+one at **Not started**. It is still a run, think, shoot, live game: stealth is one of three ways to solve
+an encounter (fight it, sneak it, go around it). See [ROADMAP.md](ROADMAP.md#the-shape-of-the-game).
 
 | # | Pillar | Status | One-line state |
 | --- | --- | --- | --- |
@@ -51,8 +59,13 @@ Nothing. No custom code touches level traversal, discovery, secrets, map flow, o
 
 ### What's missing
 
-The pillar has no definition yet, let alone an implementation. Open questions that need answering before any
-code is worth writing:
+~~The pillar has no definition yet, let alone an implementation.~~ **It has a definition since
+2026-09-17**, in [ROADMAP.md](ROADMAP.md#the-shape-of-the-game): a hub with wings that open by Modules
+and by restored infrastructure, hard and soft gates, and secrets that hold the ammunition, the crystal
+deposits, the text entries and the Skill Points — exploring is how the player arms themselves. The hub
+plus wing one is the vertical slice. None of it is built. The three questions below are answered there:
+both; new entities (deposits, Stations, collectible entries) *and* new maps; no HUD affordance beyond an
+information tab in the Inventory Panel. Kept for the record:
 
 - Is exploration rewarded through **items** (pillar 3), **skill points** (pillar 4), or both?
 - Does it need new entities (discoverable caches, lore pickups, optional-area triggers), new map work, or
@@ -1449,6 +1462,11 @@ Added as a pillar 2026-08-02. It is not filed under enhanced combat because it i
 combat — it moves enemy perception, player movement, weapon choice and level layout at once, and pillar 2
 would have to mean "everything you do to things that are alive" to contain it.
 
+**Amended 2026-09-17: stealth is swallowed by combat.** That paragraph is about where the work files, and
+the section stays. In the ranking stealth is not beside combat but inside it — one way to solve an
+encounter, optional with declared exceptions, in a game where monsters charging the player is still the
+core loop. Investing in it pays off for most of the game, not all of it.
+
 ### What exists
 
 **Concealment and Suspicion, since 2026-09-01.** A monster no longer acquires the player the frame it sees
@@ -1617,6 +1635,11 @@ propagation. Aim-versus-facing is dropped. With it come the silenced pistol as a
 skip on Headhunter, because the intended play — stab, swap, silenced headshot on the witness — did not add
 up without them. It is written up in [PERCEPTION.md part 2](PERCEPTION.md#part-2--the-model-this-mod-adds),
 and [ROADMAP.md](ROADMAP.md#the-post-aggro-step) holds the order, the numbers and the sentences.
+
+**Finish, then freeze — 2026-09-17.** [STEALTH_CHECKLIST.md](STEALTH_CHECKLIST.md) first; then 5b, 5e and
+5g, which stop the loop being sticky; then no new stealth features until real maps exist. What stealth
+needs after that is content — ritual rooms, the military wing, soft gates a Stealth build can ghost — not
+code.
 
 **The Backstab is built and is filed under [pillar 2](#2-enhanced-combat)**, because it came out positional
 — awareness does not gate it — which makes it a melee mechanic rather than a stealth one. It was this

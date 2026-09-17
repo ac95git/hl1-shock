@@ -92,6 +92,13 @@ Minor on the way is one of them.
 | Silent Kill | 14 | … Quick Draw, (12,7), (12,6), Headhunter, Ambush, Slip Away, (12,2), (12,1), Nightfall, (13,0), Silent Kill |
 | Alien Major | 15 | … Fast Reload, Hive Capacity, (12,11), (12,12), (12,13), Tether, (14,13), Major |
 
+**The Air Dash is gated twice since 2026-09-17** (settled, not built): by the Dash Module like its region,
+and by the double jump Module on its own row, so it stays a blank pad after the rest of Shinobi opens. It
+is nearly the end of its road: the one cell behind it is the Dash Recovery Stat node at (1,0), whose only
+neighbour is the Air Dash, so that node waits on the double jump too. Accepted, or (1,0) moves when the
+gate is built — a placement question, not yet put. See
+[SKILL_TREE.md](SKILL_TREE.md#shinobi--the-dash-route).
+
 The other way into Energy, (1,9) → (1,10), is the same length: (1,9) is reached only from Cleave. The
 Juggernaut door at (5,11) → (4,11) is 7 from the suit and leads to Egon Focus and Overdraw, not to Energy
 Damage, so a Juggernaut who wants the energy roads still walks in from the top-right.
