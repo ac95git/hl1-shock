@@ -50,6 +50,7 @@ static constexpr InvNavEntry k_NavTabs[] = {
     { "Inventory", EInventoryTab::Inventory },
     { "Upgrades",  EInventoryTab::Upgrades  },
     { "Status",    EInventoryTab::Status    },
+    { "Records",   EInventoryTab::Records   },
 };
 
 // =====================================================================
@@ -675,9 +676,14 @@ void CInventoryPanel::paintBackground()
         m_skillTreeView.Paint(this, x0, y0, areaW, areaH,
             m_pSmallFont, m_pTitleFont);
     }
-    else
+    else if (m_eActiveTab == EInventoryTab::Status)
     {
         m_statusView.Paint(this, x0, y0, areaW, areaH,
+            m_pSmallFont, m_pTitleFont);
+    }
+    else
+    {
+        m_recordsView.Paint(this, x0, y0, areaW, areaH,
             m_pSmallFont, m_pTitleFont);
     }
 
@@ -798,6 +804,7 @@ void CInventoryPanel::mousePressed(vgui::MouseCode code, vgui::Panel* panel)
             m_gridView.CancelDrag();
             m_skillTreeView.HandleMouseMove(-1, -1);
             m_statusView.HandleMouseMove(-1, -1);
+            m_recordsView.HandleMouseMove(-1, -1);
             m_skillTreeView.CancelResetConfirm();
             m_skillTreeView.CancelDrag();
             return;
@@ -822,6 +829,8 @@ void CInventoryPanel::mousePressed(vgui::MouseCode code, vgui::Panel* panel)
         m_gridView.HandleMousePress(this, localx, localy, m_entries);
     else if (m_eActiveTab == EInventoryTab::Upgrades)
         m_skillTreeView.HandleMousePress(this, localx, localy);
+    else if (m_eActiveTab == EInventoryTab::Records)
+        m_recordsView.HandleMousePress(this, localx, localy);
 }
 
 void CInventoryPanel::mouseReleased(vgui::MouseCode code, vgui::Panel* panel)
@@ -852,6 +861,8 @@ void CInventoryPanel::cursorMoved(int x, int y, vgui::Panel* panel)
         m_gridView.HandleMouseMove(localx, localy);
     else if (m_eActiveTab == EInventoryTab::Upgrades)
         m_skillTreeView.HandleMouseMove(localx, localy);
+    else if (m_eActiveTab == EInventoryTab::Records)
+        m_recordsView.HandleMouseMove(localx, localy);
     else
         m_statusView.HandleMouseMove(localx, localy);
 }

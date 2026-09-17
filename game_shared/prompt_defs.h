@@ -33,6 +33,7 @@ enum class EPromptClass : uint8_t
 	Guard,         // monster_barney
 	Movable,       // func_pushable
 	MountedGun,    // func_tankcontrols
+	Record,        // the `record` entity, in either of its two forms
 
 	// Taken rather than used: the pickups that never reach the Grid, so the
 	// Item Type table cannot name them.  Sent as EEntryKind::Pickup's id.
@@ -70,6 +71,7 @@ static const PromptClassDef k_PromptClassDefs[] = {
 	{"Security guard", "Talk"},  // Guard
 	{"Movable object", "Pull"},  // Movable
 	{"Mounted gun", "Operate"},  // MountedGun
+	{"Record", "Read"},          // Record
 	{"Skill Point", "Take"},         // SkillPoint
 	{"Reset Token", "Take"},         // ResetToken
 	{"Row Grant", "Take"},           // RowGrant

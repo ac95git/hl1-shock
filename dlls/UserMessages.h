@@ -69,6 +69,15 @@ inline int gmsgSkillStats = 0;
 // Inventory sync: variable-length, sent in chunks (see SendInventoryToClient)
 inline int gmsgInventory = 0;
 
+// Records found-set: one bit per Record id, fixed at k_RecordMaskBytes.  A
+// Record's text never crosses the wire -- the client reads records.txt --
+// so this mask is the whole of what the server tells it (SyncPlayerRecords).
+inline int gmsgRecords = 0;
+
+// The reader: SHORT, the Record it is showing, or 0 to shut it.  Sent on the
+// use press that opens it and on the damage that closes it, never per frame.
+inline int gmsgRecordRead = 0;
+
 // Pickup prompt: 2 bytes (entry kind, id). Sent only when the looked-at
 // pickup changes; (0,0) clears it. The client resolves the display name from
 // the shared Item Type table, so no strings go over the wire.

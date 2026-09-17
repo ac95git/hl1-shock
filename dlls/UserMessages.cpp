@@ -19,6 +19,7 @@
 #include "shake.h"
 #include "UserMessages.h"
 #include "skill_defs.h"
+#include "record_defs.h"
 
 void LinkUserMessages()
 {
@@ -105,6 +106,13 @@ void LinkUserMessages()
 	gmsgSkillStats = REG_USER_MSG("SkillStats", k_SkillStatsBytes);
 
 	gmsgInventory = REG_USER_MSG("Inventory", -1);
+
+	// Fixed size for the same reason as SkillTree: a client and server that
+	// disagreed about k_MaxRecords would misread the found-set silently,
+	// and the found-set is what opens a record_lock.
+	gmsgRecords = REG_USER_MSG("Records", k_RecordMaskBytes);
+
+	gmsgRecordRead = REG_USER_MSG("RecordRead", 2);
 
 	gmsgPickupPrompt = REG_USER_MSG("PickupHint", 3);
 

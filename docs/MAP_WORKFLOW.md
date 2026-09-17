@@ -10,6 +10,18 @@ the four VHLT tools → played → edited in J.A.C.K., exported back to `.map` �
 build product, like the DLLs. The `.map` is what `git` sees, and it is plain text, which is what makes
 everything below possible.
 
+**`topmap` is deliberately outside that loop** (Andrei, 2026-09-18). It is the working test map, under
+constant edit, and J.A.C.K. exports straight into `topmod/maps/` — so versioning it would add a
+copy-back step to every single save for a map nobody ships. It lives in the mod directory only.
+`maps/topmap.map` was brought into the repo that day and taken straight back out; **do not re-add it.**
+A map that is finished, or that the agent is expected to write or read, goes in the repo as
+`proving.map` does. (`proving.max` is J.A.C.K.'s rolling backup of the previous save, not a source
+format — it is in the repo by accident and can go.)
+
+**Never edit a `.map` under `topmod/maps/` while J.A.C.K. is open.** It saves over the file from its own
+in-memory copy and the edit vanishes without a word — which is exactly how four entities were lost on
+2026-09-18. Check `Get-Process jack` first.
+
 ## Facts that bind the work
 
 - **The source is Valve 220 text.** A `.map` is a list of entities; the first is `worldspawn` and holds
@@ -20,7 +32,10 @@ everything below possible.
 - **The compile is four programs run in order** from J.A.C.K.'s folder, `D:\Apps\J.A.C.K.\halflife\`:
   `hlcsg`, `hlbsp`, `hlvis`, `hlrad`, each taking the map path without extension, all with `-low`, CSG
   also with `-wadautodetect`. They write `<name>.log` beside the map, and that log is the record of what
-  happened. J.A.C.K.'s Run Map dialog runs the same four; a shell can run them by hand.
+  happened. J.A.C.K.'s Run Map dialog runs the same four; a shell can run them by hand — but **only with
+  the current drive set to `D:`**, because `worldspawn`'s `wad` paths are drive-relative
+  (`/apps/steam/...`) and CSG resolves them against the shell's drive, not the map's. From PowerShell,
+  `Push-Location D:\` first. A clean `topmap` compile is a few seconds, RAD included.
 - **CSG and BSP alone give a playable, fullbright map in seconds.** Skip VIS and RAD while the layout is
   still moving. RAD with no `light` entities gives a black map, not a fullbright one.
 - **A leak fails the compile.** BSP reports `LEAK` and writes `<name>.lin`; J.A.C.K.'s *Map → Load

@@ -830,6 +830,8 @@ static EPromptClass ClassifyUsable(CBaseEntity* pEnt)
 		{"monster_barney", EPromptClass::Guard},
 		{"func_pushable", EPromptClass::Movable},
 		{"func_tankcontrols", EPromptClass::MountedGun},
+		{"record", EPromptClass::Record},
+		{"record_brush", EPromptClass::Record},
 	};
 
 	// A corpse keeps its use caps and has nothing to say.

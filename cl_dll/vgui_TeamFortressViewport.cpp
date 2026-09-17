@@ -34,6 +34,8 @@
 #include <VGUI_App.h>
 #include <VGUI_BuildGroup.h>
 
+#include <algorithm> // std::min, for the Record reader's size
+
 #include "hud.h"
 #include "cl_util.h"
 #include "camera.h"
@@ -520,6 +522,7 @@ TeamFortressViewport::TeamFortressViewport(int x, int y, int wide, int tall) : P
 	m_pClassMenu = NULL;
 	m_pScoreBoard = NULL;
 	m_pInventoryPanel = NULL;
+	m_pRecordReaderPanel = NULL;
 	m_pSpectatorPanel = NULL;
 	m_pCurrentMenu = NULL;
 	m_pCurrentCommandMenu = NULL;
@@ -582,6 +585,7 @@ TeamFortressViewport::TeamFortressViewport(int x, int y, int wide, int tall) : P
 	CreateSpectatorMenu();
 	CreateScoreBoard();
 	CreateInventory();
+	CreateRecordReader();
 	// Init command menus
 	m_iNumMenus = 0;
 	m_iCurrentTeamNumber = m_iUser1 = m_iUser2 = m_iUser3 = 0;
@@ -632,6 +636,11 @@ void TeamFortressViewport::Initialize()
 	if (m_pInventoryPanel)
 	{
 		m_pInventoryPanel->Initialize();
+	}
+	if (m_pRecordReaderPanel)
+	{
+		// A level change must not leave a page from the last map on screen.
+		m_pRecordReaderPanel->ShowRecord(k_RecordIdNone);
 	}
 	if (m_pSpectatorPanel)
 	{
@@ -1385,6 +1394,32 @@ void TeamFortressViewport::CreateInventory()
 	m_pInventoryPanel = new CInventoryPanel(xdent, ydent, ((ScreenWidth - (xdent * 2) + 16) / 32) * 32 + 32, ScreenHeight - (ydent * 2));
 	m_pInventoryPanel->setParent(this);
 	m_pInventoryPanel->setVisible(false);
+}
+
+//======================================================================
+// The world's Record reader.
+//
+// Centred.  Reading is assumed to happen out of combat, so the page goes
+// where a page is comfortable to read rather than tucked into a corner to
+// keep the fight visible; damage closing it is what covers the case where
+// the assumption turns out to be wrong.
+//======================================================================
+void TeamFortressViewport::CreateRecordReader()
+{
+	const int w = std::min(ScreenWidth * 2 / 5, 460);
+	const int h = std::min(ScreenHeight * 3 / 5, 420);
+	const int x = (ScreenWidth - w) / 2;
+	const int y = (ScreenHeight - h) / 2;
+
+	m_pRecordReaderPanel = new CRecordReaderPanel(x, y, w, h);
+	m_pRecordReaderPanel->setParent(this);
+	m_pRecordReaderPanel->setVisible(false);
+}
+
+void TeamFortressViewport::ShowRecordReader(int id)
+{
+	if (m_pRecordReaderPanel)
+		m_pRecordReaderPanel->ShowRecord(id);
 }
 
 //======================================================================

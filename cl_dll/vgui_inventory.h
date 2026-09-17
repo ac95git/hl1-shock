@@ -12,13 +12,14 @@
 #include "vgui_inventory_grid.h"
 #include "vgui_skilltree.h"
 #include "vgui_status.h"
+#include "vgui_records.h"
 
 class CInventoryPanel;
 
 // ------------------------------------------------------------------
 // Which right-hand view is active
 // ------------------------------------------------------------------
-enum class EInventoryTab { Inventory, Upgrades, Status };
+enum class EInventoryTab { Inventory, Upgrades, Status, Records };
 
 // ------------------------------------------------------------------
 // InvEntryView
@@ -117,6 +118,8 @@ class CInventoryPanel : public vgui::Panel, public vgui::CDefaultInputSignal
     friend class CInventoryGridView;
     friend class CSkillTreeView;
     friend class CStatusView;
+    friend class CRecordsView;
+    friend class CRecordReaderView; // the Records tab paints through it
 
 private:
     vgui::Label*  m_pLabel;
@@ -141,13 +144,14 @@ private:
     // ---- Tab state ----
     EInventoryTab m_eActiveTab = EInventoryTab::Inventory;
     struct IRect { int x; int y; int w; int h; };
-    static constexpr int k_NumNavBtns = 3;
+    static constexpr int k_NumNavBtns = 4;
     IRect m_navBtnRects[k_NumNavBtns] = {};
 
     // ---- Sub-views ----
     CInventoryGridView m_gridView;
     CSkillTreeView     m_skillTreeView;
     CStatusView        m_statusView;
+    CRecordsView       m_recordsView;
 
     CInventoryContextMenu* m_pContextMenu;
 
@@ -187,6 +191,10 @@ public:
 
     // The Status page's numbers (call from the SkillStats UserMessage handler)
     void UpdateSkillStats(const SkillStatsView& stats) { m_statusView.UpdateStats(stats); }
+
+    // A Record read in the world leaves the tab on that same page, so a
+    // player who opens the panel afterwards is where they just were.
+    void ShowRecord(int id) { m_recordsView.ShowRecord(id); }
 
     void CloseContextMenu();
 

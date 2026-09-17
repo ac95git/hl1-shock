@@ -126,6 +126,8 @@ public:
 	bool MsgFunc_Inventory(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_SkillTree(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_SkillStats(const char* pszName, int iSize, void* pbuf);
+	bool MsgFunc_Records(const char* pszName, int iSize, void* pbuf);
+	bool MsgFunc_RecordRead(const char* pszName, int iSize, void* pbuf);
 
 	void SlotInput(int iSlot);
 	void UserCmd_Slot1();

@@ -93,7 +93,9 @@ HLDLL_OBJS = \
 	$(HLDLL_OBJ_DIR)/player_infusion.o \
 	$(HLDLL_OBJ_DIR)/player_inventory.o \
 	$(HLDLL_OBJ_DIR)/player_pulse.o \
+	$(HLDLL_OBJ_DIR)/player_records.o \
 	$(HLDLL_OBJ_DIR)/player_skills.o \
+	$(HLDLL_OBJ_DIR)/record.o \
 	$(HLDLL_OBJ_DIR)/python.o \
 	$(HLDLL_OBJ_DIR)/rat.o \
 	$(HLDLL_OBJ_DIR)/roach.o \

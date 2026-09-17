@@ -18,6 +18,7 @@
 #include "pm_materials.h"
 #include "player_skills.h"
 #include "player_inventory.h"
+#include "player_records.h"
 #include "player_pulse.h"
 #include "player_infusion.h"
 
@@ -382,6 +383,9 @@ public:
 
 	// ---- Inventory ----
 	CPlayerInventory m_inventory;
+
+	// ---- Records: the suit's memory of what it has read ----
+	CPlayerRecords m_records;
 
 	// ---- The Pulse ----
 	CPlayerPulse m_pulse;

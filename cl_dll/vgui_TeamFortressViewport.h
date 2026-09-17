@@ -548,6 +548,7 @@ public:
 	int		CreateCommandMenu( const char * menuFile, bool direction, int yOffset, bool flatDesign, float flButtonSizeX, float flButtonSizeY, int xOffset );
 	void	CreateScoreBoard( void );
 	void	CreateInventory( void );
+	void	CreateRecordReader( void );
 	CommandButton * CreateCustomButton( char *pButtonText, char * pButtonName, int  iYOffset );
 	CCommandMenu *	CreateDisguiseSubmenu( CommandButton *pButton, CCommandMenu *pParentMenu, const char *commandText, int iYOffset, int iXOffset = 0 );
 
@@ -572,6 +573,10 @@ public:
 	void HideScoreBoard( void );
 	void ShowInventory( void );
 	void HideInventory( void );
+
+	// The world's Record reader. id == 0 shuts it. Driven entirely by the
+	// server (gmsgRecordRead): the press opens it, damage closes it.
+	void ShowRecordReader( int id );
 	// void HideInventory( void );
 	bool IsScoreBoardVisible( void );
 	// bool IsInventoryVisible( void );
@@ -635,6 +640,7 @@ public:
 	CClassMenuPanel	*m_pClassMenu;
 	ScorePanel		*m_pScoreBoard;
 	CInventoryPanel	*m_pInventoryPanel;
+	CRecordReaderPanel *m_pRecordReaderPanel;
 	SpectatorPanel *		m_pSpectatorPanel;
 	char			m_szServerName[ MAX_SERVERNAME_LENGTH ];
 };

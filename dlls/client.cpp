@@ -635,6 +635,66 @@ void ClientCommand(edict_t* pEntity)
 			SendInventoryToClient(player);
 		}
 	}
+	else if (FStrEq(pcmd, "record_spawn"))
+	{
+		// Cheat-gated testing aid: drop a Record on the floor in front of the
+		// player, so a Record can be read without a map that places one. The
+		// same entity a mapper uses, spawned the same way -- there is no
+		// second code path here to go stale.
+		if (0 != g_psv_cheats->value)
+		{
+			const int id = (CMD_ARGC() >= 2) ? atoi(CMD_ARGV(1)) : 1;
+
+			edict_t* pent = CREATE_NAMED_ENTITY(MAKE_STRING("record"));
+			if (FNullEnt(pent))
+			{
+				ClientPrint(pev, HUD_PRINTCONSOLE, "record_spawn: could not create a record entity.\n");
+			}
+			else
+			{
+				UTIL_MakeVectors(player->pev->v_angle);
+				VARS(pent)->origin = player->pev->origin + player->pev->view_ofs + gpGlobals->v_forward * 48;
+
+				char szId[16];
+				snprintf(szId, sizeof(szId), "%d", id);
+
+				KeyValueData kvd;
+				kvd.szClassName = (char*)"record";
+				kvd.szKeyName = (char*)"record_id";
+				kvd.szValue = szId;
+				kvd.fHandled = 0;
+				DispatchKeyValue(pent, &kvd);
+
+				DispatchSpawn(pent);
+				VARS(pent)->angles.y = player->pev->v_angle.y + 180; // facing the player
+
+				ClientPrint(pev, HUD_PRINTCONSOLE,
+					UTIL_VarArgs("Spawned a record with record_id %d.\n", id));
+
+				SyncPlayerRecords(player);
+			}
+		}
+		else
+		{
+			ClientPrint(pev, HUD_PRINTCONSOLE, "record_spawn needs sv_cheats 1.\n");
+		}
+	}
+	else if (FStrEq(pcmd, "record_forget"))
+	{
+		// Cheat-gated: empty the suit's memory so the same Record can be read
+		// -- and its glow watched going out -- more than once per playthrough.
+		if (0 != g_psv_cheats->value)
+		{
+			CloseRecordReader(player); // before Clear, which forgets the reader is open
+			player->m_records.Clear();
+			SyncPlayerRecords(player);
+			ClientPrint(pev, HUD_PRINTCONSOLE, "Records forgotten.\n");
+		}
+		else
+		{
+			ClientPrint(pev, HUD_PRINTCONSOLE, "record_forget needs sv_cheats 1.\n");
+		}
+	}
 	else if (FStrEq(pcmd, "spectate")) // clients wants to become a spectator
 	{
 		// always allow proxies to become a spectator

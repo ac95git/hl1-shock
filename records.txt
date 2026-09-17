@@ -1,0 +1,152 @@
+// records.txt -- the mod's Records (docs/ROADMAP.md, "Pillar 1: Records").
+//
+// The repo copy is the source of truth.  Copy it to the mod directory by
+// hand after every change, like sprites/hud.txt and the FGD.  It is read
+// by the client alone; `records_reload` re-reads it without a map load.
+//
+// FORMAT -- keyed blocks, line-based, in the manner of titles.txt:
+//
+//   <string id>
+//   {
+//       id        <number, 1..511 -- this IS the saved bit>
+//       category  <the tab groups by this; "Guidance" is pinned on top>
+//       title     <what the tab and the reader's heading show>
+//       source    <one line: where the document physically is>
+//       revocable <0 or 1; Guidance only, and nothing reads it until slice 3>
+//       body
+//       ...every line until the closing brace, verbatim...
+//   }
+//
+// A blank line inside a body is a paragraph break.  *Stars* mark the one
+// emphasis, drawn in the suit's colour -- for codes, and for *[REDACTED]*.
+// Keep an emphasised span off the end of a long line: the wrap does not
+// know about it, and a span broken across two lines reads as two stars.
+//
+// THE ID IS SAVED.  Once a Record has been played, its id is stable
+// forever and is never reused -- the Skill rule.  Ids run to 511.
+//
+// Records are SHORT.  They are read in real time in an unsafe world, so a
+// long document is a series found apart, not one wall of text.
+
+// ---------------------------------------------------------------------
+// Guidance -- ordinary Records in a pinned category, handed over and
+// taken back by record_grant (slice 3).  Written in the advisor's voice.
+// ---------------------------------------------------------------------
+
+guidance_first_steps
+{
+	id        1
+	category  Guidance
+	title     Find a way down
+	source    Advisory
+	revocable 1
+	body
+	The service shafts on this level are sealed. There is another way down
+	through the maintenance side, if the pumps are off.
+
+	Find the pump control first.
+}
+
+// ---------------------------------------------------------------------
+// Notices -- printed, posted, institutional.  The voice of the place.
+// ---------------------------------------------------------------------
+
+notice_access_west
+{
+	id        2
+	category  Notice
+	title     Restricted Access -- West Corridor
+	source    Posted notice, west corridor
+	body
+	Beyond this point, personnel must carry current clearance. Doors on this
+	corridor are on the maintenance lock and will not answer a badge.
+
+	Maintenance override for this corridor is *4471*. Do not write it down.
+}
+
+notice_pump_room
+{
+	id        3
+	category  Notice
+	title     Pump Room -- Standing Order
+	source    Laminated card, pump control
+	body
+	Do not start the pumps with the lower gallery occupied. The gallery
+	floods to waist height in under a minute and the stair gate closes on
+	the same interlock.
+
+	If you cannot see the gallery, assume it is occupied.
+}
+
+// ---------------------------------------------------------------------
+// Logs -- somebody's own words, written for themselves.
+// ---------------------------------------------------------------------
+
+log_night_shift
+{
+	id        4
+	category  Log
+	title     Night Shift, Third Entry
+	source    Notebook, security desk
+	body
+	Third night running that the west corridor lights come up on their own
+	about an hour before shift end. Logged it twice. Nobody has been down to
+	look.
+
+	Day shift says it is the timer. The timer is in the box in front of me
+	and it has not been touched since I got here.
+}
+
+log_after_the_alarm
+{
+	id        5
+	category  Log
+	title     After the Alarm
+	source    Notebook, security desk
+	body
+	They came through and took the recordings. Not the equipment, the
+	recordings. The man doing it had the authority to and would not say
+	whose.
+
+	I asked what we tell the families and he said that was being handled.
+}
+
+// ---------------------------------------------------------------------
+// Transmissions -- what was radioed, intercepted, or later voiced.  The
+// category the whole feature was once named after.
+// ---------------------------------------------------------------------
+
+transmission_containment
+{
+	id        6
+	category  Transmission
+	title     Containment Advisory
+	source    Intercepted, facility band
+	body
+	-- repeat, all stations. Surface contact is suspended until further
+	notice. Do not attempt to reach the gate.
+
+	Casualty figures are *[REDACTED]* pending review. Any personnel
+	reaching the upper levels are to be held at the checkpoint, not
+	escorted out.
+
+	Message ends.
+}
+
+// ---------------------------------------------------------------------
+// Medical -- the files the place kept on its own people.
+// ---------------------------------------------------------------------
+
+medical_exposure_note
+{
+	id        7
+	category  Medical
+	title     Exposure Note -- Unnamed Subject
+	source    Medical file, infirmary
+	body
+	Subject presented with none of the expected symptoms. Bloodwork clean at
+	twelve hours and clean again at forty.
+
+	Attending has recorded the result as an error in the sampling. A second
+	sample was not taken. Subject was returned to duty.
+}

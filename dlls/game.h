@@ -50,6 +50,13 @@ extern cvar_t inv_rows_start;
 extern cvar_t inv_rows_max;
 extern cvar_t item_debug;
 
+// Records: the unread glow -- shell thickness on a loose document, halo
+// scale on a brush one, 0 on either turning that form off -- and how far
+// the player may drift before the reader shuts.
+extern cvar_t record_glow_shell;
+extern cvar_t record_glow_halo;
+extern cvar_t record_read_range;
+
 // Skill Tree economy
 extern cvar_t skill_points_start;
 extern cvar_t skill_reset_tokens_start;

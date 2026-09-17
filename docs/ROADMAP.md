@@ -2818,8 +2818,12 @@ title (*Battery*, *Terminal*, *Door lock*) and the action or actions under it (`
   "Record registered" line in the suit's voice. Bank-and-notify was rejected as the walk-over problem one
   step removed; a pause was rejected because GoldSrc only offers the console's.
 - **Both forms stay in the world** — the suit scans, nothing is taken — and re-open on every use.
-  **An unread Record has a soft glint or glow**, the progression pickups' dynamic light
-  (`cl_dll/entity.cpp`), which goes out once registered. If it glints, it is unread. The found-set lights
+  **An unread Record glows**, and the glow goes out once registered. If it glows, it is unread. The
+  word was settled 2026-09-18, in build: *glint* was tried and describes the wrong thing — a glint is a
+  spark catching the light, and this is the document itself softly lit. The progression pickups' dynamic
+  light (`cl_dll/entity.cpp`) was the first attempt and was **rejected**: a dlight lights the room, which
+  reads as a beacon. A loose document wears a `kRenderFxGlowShell`; a brush one, which the studio
+  renderer never sees, gets a `kRenderGlow` halo sprite. The found-set lights
   it, so the entity has no state of its own to save.
 
 ### The tab
@@ -2859,8 +2863,21 @@ Each slice judgeable in game on its own. None of it is stealth, so
    ammunition reads a generic *Ammunition* and should get its own names**; no override, suppress or state
    lines yet (slices 3 and 4); still the console font. Found on the way: `Key_LookupBinding` wants the
    command without its `+`, which had the Status page's Pulse tooltip reading `[UNBOUND]` — fixed.
-2. **Records, the core** — the file and parser, the found-set and its sync, the world entity and its
-   glint, the reader, the tab. The first code pillar 1 has ever had.
+2. ~~**Records, the core** — the file and parser, the found-set and its sync, the world entity and its
+   glow, the reader, the tab. The first code pillar 1 has ever had.~~ **Built and verified in game
+   2026-09-18.** `records.txt` at the repo root, copied to the mod directory by hand like `sprites/`,
+   parsed line-by-line by `cl_dll/records.cpp` (a tokeniser eats the blank lines that make paragraphs)
+   and reloadable in place with `records_reload`. The found-set is `CPlayerRecords`
+   (`dlls/player_records.*`), 512 ids, saved as a `"RECORDS"` block and synced as a 64-byte mask.
+   `dlls/record.cpp` is the entity, under two classnames — `record` and `record_brush` — because an FGD
+   cannot declare one class both `@PointClass` and `@SolidClass`; a loose document drops to the floor
+   unless its Fixed spawnflag is set. The reader is one implementation
+   (`cl_dll/vgui_record_reader.h`) with two hosts: a centred panel that takes **no input at all**, so the
+   player keeps moving and looking while reading, and the Records tab. Prompt row is *Record* / `Read`.
+   Cheats: `record_spawn <id>`, `record_forget`. Found on the way: **the glow is the object, not the
+   room** (three attempts — see "Reading one"), and tuning cvars have to be re-read on a clock, because a
+   look cannot be judged through a console command. Left over: the Prompt names a generic *Record*
+   rather than the document's title, which wants slice 4's overrides.
 3. **`record_grant`, Guidance, `record_lock`**, and the first-read target.
 4. **The mapper's controls** — the three prompt keyvalues, the FGD (and its sync rule), CONTEXT terms, the
    ADR-0011 exception, PILLARS pillar 1, an ART_DEBT line for the stand-in document model.

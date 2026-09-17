@@ -478,6 +478,30 @@ cvar_t inv_rows_max = {"inv_rows_max", "9"};
 // waiting for a use press, refused) and when a dropped item re-arms.
 cvar_t item_debug = {"item_debug", "0"};
 
+// Records (docs/ROADMAP.md, "Pillar 1: Records").
+//
+// An unread Record GLOWS -- the word was settled 2026-09-18, after "glint"
+// was tried and found to describe the wrong thing: a glint is a spark
+// catching the light, and what this wants is the document itself softly
+// lit.  It is emphatically not a light in the room; a dynamic light was
+// the first attempt and lit the whole corner, which is a beacon.
+//
+// Two forms, two mechanisms, because there is no one effect that suits
+// both.  A loose document is a studio model and wears a kRenderFxGlowShell
+// (the buster egon's effect, dlls/multiplay_gamerules.cpp) -- the object
+// itself glows.  A fixed source is brushwork, which the studio renderer
+// never sees, so it gets a soft halo sprite at its centre instead.
+// Either at 0 turns that form's glow off.  Both are re-read twice a second
+// by the Record itself (CRecord::GlowThink), so tuning a value shows up in
+// front of you -- a look cannot be judged through a console command.
+cvar_t record_glow_shell = {"record_glow_shell", "25"};
+cvar_t record_glow_halo = {"record_glow_halo", "0.35"};
+
+// How far the player can drift from a Record before the reader shuts.  A
+// little past use reach (INV_PICKUP_RADIUS, 64), so stepping back from a
+// terminal to read does not slam the page shut, but walking off does.
+cvar_t record_read_range = {"record_read_range", "112"};
+
 // Skill Tree economy.  Both default to zero: every Skill Point and every
 // Reset Token is found in the world.  Deliberately uncapped -- the ceiling on
 // each is how many pickups a map places, and a cap would let a found pickup
@@ -929,6 +953,10 @@ void GameDLLInit()
 	CVAR_REGISTER(&inv_rows_start);
 	CVAR_REGISTER(&inv_rows_max);
 	CVAR_REGISTER(&item_debug);
+
+	CVAR_REGISTER(&record_glow_shell);
+	CVAR_REGISTER(&record_glow_halo);
+	CVAR_REGISTER(&record_read_range);
 
 	CVAR_REGISTER(&skill_points_start);
 	CVAR_REGISTER(&skill_reset_tokens_start);

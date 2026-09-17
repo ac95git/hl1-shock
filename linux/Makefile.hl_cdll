@@ -75,6 +75,8 @@ HL1_OBJS = \
 	$(HL1_OBJ_DIR)/vgui_inventory.o \
 	$(HL1_OBJ_DIR)/vgui_inventory_grid.o \
 	$(HL1_OBJ_DIR)/vgui_skilltree.o \
+	$(HL1_OBJ_DIR)/records.o \
+	$(HL1_OBJ_DIR)/vgui_records.o \
 	$(HL1_OBJ_DIR)/vgui_status.o \
 	$(HL1_OBJ_DIR)/vgui_ClassMenu.o \
 	$(HL1_OBJ_DIR)/vgui_CustomObjects.o \

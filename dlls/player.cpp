@@ -532,6 +532,13 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 	// keep track of amount of damage last sustained
 	m_lastDamageAmount = flDamage;
 
+	// A hit that actually landed shuts the reader. Reading happens in real
+	// time in an unsafe world, and the Record was registered by the press
+	// that opened it, so nothing is lost by closing it (docs/ROADMAP.md,
+	// "Pillar 1: Records"). Below everything that can refuse the damage, so
+	// a Shield or a Ricochet that turned the hit away does not interrupt.
+	CloseRecordReader(this);
+
 	// Armor.
 	if (0 != pev->armorvalue && (bitsDamageType & (DMG_FALL | DMG_DROWN)) == 0) // armor doesn't protect against fall or drown damage!
 	{
@@ -2117,6 +2124,10 @@ void CBasePlayer::PreThink()
 	// sends a message when the answer changes.
 	UpdatePickupPrompt(this);
 
+	// Shut the reader once the player has walked away from the document.
+	// One distance test, and only while a page is open.
+	RecordReaderThink(this);
+
 	// Close a Shield whose window has run out, and complete a finished Recharge.
 	m_pulse.Think(this);
 
@@ -3405,6 +3416,12 @@ bool CBasePlayer::Save(CSave& save)
 	if (!InfusionSave(m_infusion, save))
 		return false;
 
+	// The suit's memory of what it has read. Appended after the blocks that
+	// already existed, so a save written before Records still reads: ReadFields
+	// matches by name in order and rewinds on a mismatch.
+	if (!RecordsSave(m_records, save))
+		return false;
+
 	return save.WriteFields("PLAYER", this, m_playerSaveData, ARRAYSIZE(m_playerSaveData));
 }
 
@@ -3652,6 +3669,12 @@ bool CBasePlayer::Restore(CRestore& restore)
 	// would make the "PLAYER" read below fail.  Consume it with no fields:
 	// every entry in it is skipped, and nothing is written anywhere.
 	restore.ReadFields("REGEN", nullptr, nullptr, 0);
+
+	// Records: after the legacy REGEN consume, because a save predating
+	// Records has REGEN in exactly this position and a save that has Records
+	// has no REGEN at all. Either way the mismatched read rewinds and the
+	// found-set is simply empty.
+	RecordsRestore(m_records, restore);
 
 	bool status = restore.ReadFields("PLAYER", this, m_playerSaveData, ARRAYSIZE(m_playerSaveData));
 
@@ -4839,6 +4862,9 @@ void CBasePlayer::UpdateClientData()
 		InitStatusBar();
 		// Send the initial skill-tree state to the newly connected client.
 		SendSkillTreeToClient(this);
+
+		// And the found-set, which also lights this map's unread Records.
+		SyncPlayerRecords(this);
 	}
 
 	// The Concealment readout.  Runs on its own 10Hz clock inside, because it
@@ -5000,6 +5026,9 @@ void CBasePlayer::UpdateClientData()
 
 		// Resend the full skill-tree state so the client reflects the loaded save.
 		SendSkillTreeToClient(this);
+
+		// And the found-set: a Record read before the save must still be dark.
+		SyncPlayerRecords(this);
 	}
 
 	// Update Flashlight

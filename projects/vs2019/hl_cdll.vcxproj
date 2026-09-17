@@ -167,6 +167,8 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClCompile Include="..\..\cl_dll\vgui_inventory.cpp" />
     <ClCompile Include="..\..\cl_dll\vgui_inventory_grid.cpp" />
     <ClCompile Include="..\..\cl_dll\vgui_skilltree.cpp" />
+    <ClCompile Include="..\..\cl_dll\records.cpp" />
+    <ClCompile Include="..\..\cl_dll\vgui_records.cpp" />
     <ClCompile Include="..\..\cl_dll\vgui_status.cpp" />
     <ClCompile Include="..\..\cl_dll\vgui_MOTDWindow.cpp" />
     <ClCompile Include="..\..\cl_dll\vgui_SchemeManager.cpp" />
@@ -204,6 +206,7 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClInclude Include="..\..\game_shared\inventory_defs.h" />
     <ClInclude Include="..\..\game_shared\skill_defs.h" />
     <ClInclude Include="..\..\game_shared\prompt_defs.h" />
+    <ClInclude Include="..\..\game_shared\record_defs.h" />
     <ClInclude Include="..\..\game_shared\module_defs.h" />
     <ClCompile Include="..\..\game_shared\vgui_checkbutton2.cpp" />
     <ClCompile Include="..\..\game_shared\vgui_grid.cpp" />
@@ -247,6 +250,9 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClInclude Include="..\..\cl_dll\vgui_inventory.h" />
     <ClInclude Include="..\..\cl_dll\vgui_inventory_grid.h" />
     <ClInclude Include="..\..\cl_dll\vgui_skilltree.h" />
+    <ClInclude Include="..\..\cl_dll\records.h" />
+    <ClInclude Include="..\..\cl_dll\vgui_record_reader.h" />
+    <ClInclude Include="..\..\cl_dll\vgui_records.h" />
     <ClInclude Include="..\..\cl_dll\vgui_status.h" />
     <ClInclude Include="..\..\cl_dll\vgui_SchemeManager.h" />
     <ClInclude Include="..\..\cl_dll\vgui_ScorePanel.h" />

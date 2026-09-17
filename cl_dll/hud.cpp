@@ -30,6 +30,7 @@
 #include "demo_api.h"
 #include "vgui_ScorePanel.h"
 #include "suit_defs.h"
+#include "records.h"
 #include <keydefs.h>
 
 #include "const.h"
@@ -340,6 +341,9 @@ void CHud::Init()
 	HOOK_COMMAND("-commandmenu", CloseCommandMenu);
 	HOOK_COMMAND("ForceCloseCommandMenu", ForceCloseCommandMenu);
 	HOOK_COMMAND("special", InputPlayerSpecial);
+
+	// records_reload, so records.txt can be rewritten and judged in place.
+	RecordsInit();
 
 	HOOK_MESSAGE(ValClass);
 	HOOK_MESSAGE(TeamNames);

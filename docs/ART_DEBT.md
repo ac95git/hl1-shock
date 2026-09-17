@@ -812,3 +812,39 @@ witness and dispatch hooks the other Trained monsters leave silent), `dlls/items
 ### Done when
 The Night Vision Module has a model of its own, the silencer pickup has a sound of its own, and a
 searching alien makes a noise when it is sent and when it gives up.
+
+## Records — the document model, the unread glow, and no sound at all
+
+### Scope
+`dlls/record.cpp`, `game_shared/record_defs.h` (`RECORD_PLACEHOLDER_MODEL`, `RECORD_GLOW_SPRITE`), the
+`record` entity's `model` keyvalue default in `fgd/halflife.fgd`.
+
+### Current stand-ins
+
+| Use | Asset | Borrowed from |
+| --- | --- | --- |
+| A loose document's world model | `models/w_security.mdl` | the security card pickup — the flattest thing vanilla ships |
+| The unread glow, loose form | `kRenderFxGlowShell`, pale blue, `record_glow_shell` 25 | the buster egon's shell (`dlls/multiplay_gamerules.cpp`) |
+| The unread glow, brush form | `sprites/glow01.spr` at `kRenderGlow`, `record_glow_halo` 0.35 | vanilla's general-purpose glow sprite |
+| Reading a Record | nothing — it is silent | — |
+
+### What's wrong with them
+- **A security card is not a document.** It is a flat rectangle, which is the only property being
+  borrowed, and it already means *this opens a door* in Half-Life — the exact wrong reading for a thing
+  whose whole job is to be read. It is meant to look wrong.
+- **The glow is one colour for every Record**, so a Transmission and a Medical file are indistinguishable
+  until they are read. Whether category should carry colour is an open question, not a decision.
+- **Nothing makes a sound.** Opening the reader, registering a Record and closing it are all silent, so
+  the one moment worth confirming — *this is now in the suit's memory* — is carried by a line of text at
+  the foot of the page and nothing else.
+
+### What to look for
+A document prop that reads as paper or as a slate from across a room: a clipboard, a folder, a loose
+sheaf, a handheld terminal. It has to be legible at a glance lying flat on a desk, which is where most of
+them will be placed, and it has to look different from every pickup the player can take — a Record is
+never taken. The fixed form needs no model, but a terminal's *screen* is brushwork the mapper builds, so
+a matching texture set would pay for itself.
+
+### Done when
+A Record on a desk reads as something to read before the Prompt says so, and registering one makes a
+sound in the suit's voice.

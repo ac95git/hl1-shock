@@ -1735,6 +1735,38 @@
 ]
 
 //
+// Records (docs/ROADMAP.md, "Pillar 1: Records")
+//
+// A Record read in the world. Two forms, ONE class: leave the model blank
+// for a loose document -- a stand-in world model, until the real one exists
+// -- or tie the entity to brushwork for a fixed source: a terminal, a wall
+// notice, a roster. Both are read with +use, both stay where they are, and
+// both re-open on every press.
+//
+// record_id is the number in records.txt, which holds the text. The text is
+// NEVER in the map: it is a data file, so rewriting prose costs no compile.
+// The id is saved, so once a Record has been played its id is fixed forever
+// and is never reused.
+//
+// An unread Record glows. The glow goes out when the suit registers it,
+// and the entity itself remembers nothing -- the player's found-set does.
+//
+@PointClass size(-8 -8 0, 8 8 8) base(Targetname, Angles) studio() = record : "Record (readable document)"
+[
+	record_id(integer) : "Record id (records.txt)" : 1
+	model(studio) : "Model" : "models/w_security.mdl" : "The loose document's world model. It defaults to a stand-in -- a security card is the flattest thing vanilla ships, and it is meant to look wrong until the document model exists (docs/ART_DEBT.md). Blank falls back to the same stand-in."
+	spawnflags(Flags) =
+	[
+		1 : "Fixed (do not drop to floor)" : 0
+	]
+]
+
+@SolidClass base(Targetname) = record_brush : "Record (fixed source: terminal, notice, roster)"
+[
+	record_id(integer) : "Record id (records.txt)" : 1
+]
+
+//
 // lights
 //
 

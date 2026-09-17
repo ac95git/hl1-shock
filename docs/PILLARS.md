@@ -36,7 +36,7 @@ an encounter (fight it, sneak it, go around it). See [ROADMAP.md](ROADMAP.md#the
 
 | # | Pillar | Status | One-line state |
 | --- | --- | --- | --- |
-| 1 | [Exploration](#1-exploration) | **Not started** | Its rewards exist — Row Grants, Skill Points, Reset Tokens are all findable entities, and `topmap`, the default test map, places them — but no map yet has spaces to explore *for* them. |
+| 1 | [Exploration](#1-exploration) | **In progress** | Its rewards exist — Row Grants, Skill Points, Reset Tokens are all findable entities, and `topmap`, the default test map, places them. Since 2026-09-18 it has its first code: the Prompt on everything usable, and Records read in the world and kept in a fourth Inventory tab. What it still lacks is a map with spaces to explore *for* any of it. |
 | 2 | [Enhanced combat](#2-enhanced-combat) | **Playable** | The Pulse is complete and plays well — Shield, Recharge, Discharge, three Skills, readiness bar — and since 2026-09-16 the same key held is the Defense Matrix, the Juggernaut Route's last three nodes, untested in game. Melee Skills land, and the Backstab gives melee its first positional decision. The hivehand's three Hive nodes (capacity, replenish, fire rate) followed the same day, also untested. Numbers untuned. |
 | 3 | [Custom items](#3-custom-items) | **Playable** | The Health Syringe works end to end — Item Type, world entity, the Infusion, a status icon and a Skill. No map places one yet. The Dash, the first Module, is built on SHIFT and untested in game. The Night Vision and alien Modules followed on 2026-09-16, also untested. |
 | 4 | [Skill trees](#4-skill-trees) | **Playable** | 52 nodes, **all with effects**: the Melee and Weapon Specialist Routes built whole on the matrix (Stat nodes as their roads, every node one point, a major at the end of each), the Medical and Energy Routes built to all but their open nodes, Ricochet ahead of the Juggernaut, and the Dash and Alien columns waiting for their Modules. Points and Reset Tokens are earned and spent, the tree fits any screen, and nothing in it lies about what it does. Numbers untuned; `topmap`, the default test map, places Skill Points, and the economy is a non-issue. |
@@ -47,15 +47,33 @@ an encounter (fight it, sneak it, go around it). See [ROADMAP.md](ROADMAP.md#the
 
 ## 1. Exploration
 
-**Status: Not started**
+**Status: In progress**
 
-**Planned:** [Records](ROADMAP.md#pillar-1-records) and the Prompt, [the world](ROADMAP.md#pillar-1-the-world)
-— the facility, interactable props, Xen, and Stations. All of it downstream of
-[maps](ROADMAP.md#maps).
+**Planned:** the rest of [Records](ROADMAP.md#pillar-1-records) — `record_grant`, Guidance, `record_lock`,
+the mapper's Prompt keyvalues — and [the world](ROADMAP.md#pillar-1-the-world): the facility,
+interactable props, Xen, and Stations. That last part is still downstream of [maps](ROADMAP.md#maps).
 
 ### What exists
 
-Nothing. No custom code touches level traversal, discovery, secrets, map flow, or navigation aids.
+**The Prompt** (2026-09-18). Everything a use press can act on says what it is and what the press will
+do — a title and `[E] Action`, in the Pickup Prompt's vicinity, in the engine's console font. Defaults
+by class (`game_shared/prompt_defs.h`); the server classifies, the client resolves, no strings cross the
+wire. The mod's own pickups that never reach the Grid, and all ammunition, are taken by a use press
+through it. Ammunition still reads a generic *Ammunition*; mapper overrides and suppression are not
+built.
+
+**Records** (2026-09-18) — the first code this pillar has ever had. Documents read in the world with
+`+use`: a `record` (a model) or a `record_brush` (a terminal, a notice, a roster), both of which stay
+where they are and re-open on every press. Reading is deliberately not walk-over, an exception to
+[ADR-0011](adr/0011-pickups-are-walk-over.md) with its own reason. The text is `records.txt` in the mod
+directory, read by the client alone and reloadable in place with `records_reload`; the server owns a
+saved found-set of 512 ids and syncs it as a mask. An unread Record glows and goes dark once registered
+— a glow shell on a model, a halo sprite on brushwork, never a light in the room. The reader opens on
+the press, takes no input so the player keeps moving, and closes on damage or on walking away
+(`record_read_range`). A fourth **Records** tab in the Inventory Panel lists what has been read, by
+category with Guidance pinned, and shows the same reader.
+
+What no custom code touches yet: level traversal, secrets, map flow, navigation aids.
 
 ### What's missing
 

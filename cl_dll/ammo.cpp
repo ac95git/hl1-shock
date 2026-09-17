@@ -29,6 +29,7 @@
 #include "ammohistory.h"
 #include "vgui_TeamFortressViewport.h"
 #include "com_weapons.h"
+#include "records.h"
 
 WEAPON* gpActiveSel; // NULL means off, 1 means just the menu bar, otherwise
 					 // this points to the active weapon menu item
@@ -244,6 +245,8 @@ DECLARE_MESSAGE(m_Ammo, ItemPickup);
 DECLARE_MESSAGE(m_Ammo, Inventory);
 DECLARE_MESSAGE(m_Ammo, SkillTree);
 DECLARE_MESSAGE(m_Ammo, SkillStats);
+DECLARE_MESSAGE(m_Ammo, Records);
+DECLARE_MESSAGE(m_Ammo, RecordRead);
 
 DECLARE_COMMAND(m_Ammo, Slot1);
 DECLARE_COMMAND(m_Ammo, Slot2);
@@ -279,6 +282,8 @@ bool CHudAmmo::Init()
 	HOOK_MESSAGE(Inventory);
 	HOOK_MESSAGE(SkillTree);
 	HOOK_MESSAGE(SkillStats);
+	HOOK_MESSAGE(Records);
+	HOOK_MESSAGE(RecordRead);
 
 	HOOK_COMMAND("slot1", Slot1);
 	HOOK_COMMAND("slot2", Slot2);
@@ -609,6 +614,48 @@ bool CHudAmmo::MsgFunc_SkillTree(const char* pszName, int iSize, void* pbuf)
 
 	if (gViewPort && gViewPort->m_pInventoryPanel)
 		gViewPort->m_pInventoryPanel->UpdateSkillTree(unlockedMask, skillPoints, resetTokens, openGates);
+
+	return true;
+}
+
+// The Records found-set: one bit per Record id and nothing else, because a
+// Record's text is the client's own (cl_dll/records.cpp).  A size mismatch
+// means the two sides disagree about k_MaxRecords, so drop it rather than
+// misread a set that decides which locks open.
+bool CHudAmmo::MsgFunc_Records(const char* pszName, int iSize, void* pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+
+	if (iSize != k_RecordMaskBytes)
+		return true;
+
+	unsigned char mask[k_RecordMaskBytes];
+	for (int i = 0; i < k_RecordMaskBytes; ++i)
+		mask[i] = (unsigned char)READ_BYTE();
+
+	gRecords.SetMask(mask);
+
+	return true;
+}
+
+// The reader: the Record it is showing, or 0 to shut it.  The server owns
+// this -- the press opens it, damage closes it -- so there is nothing to
+// decide here.
+bool CHudAmmo::MsgFunc_RecordRead(const char* pszName, int iSize, void* pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+
+	const int id = READ_SHORT();
+
+	if (gViewPort)
+	{
+		gViewPort->ShowRecordReader(id);
+
+		// The tab follows the world: a player who opens the panel after
+		// reading something is already on that page.
+		if (id != k_RecordIdNone && gViewPort->m_pInventoryPanel)
+			gViewPort->m_pInventoryPanel->ShowRecord(id);
+	}
 
 	return true;
 }

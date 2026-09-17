@@ -187,7 +187,9 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClCompile Include="..\..\dlls\player_infusion.cpp" />
     <ClCompile Include="..\..\dlls\player_inventory.cpp" />
     <ClCompile Include="..\..\dlls\player_pulse.cpp" />
+    <ClCompile Include="..\..\dlls\player_records.cpp" />
     <ClCompile Include="..\..\dlls\player_skills.cpp" />
+    <ClCompile Include="..\..\dlls\record.cpp" />
     <ClCompile Include="..\..\dlls\python.cpp" />
     <ClCompile Include="..\..\dlls\rat.cpp" />
     <ClCompile Include="..\..\dlls\roach.cpp" />
@@ -287,6 +289,7 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClInclude Include="..\..\dlls\player_infusion.h" />
     <ClInclude Include="..\..\dlls\player_inventory.h" />
     <ClInclude Include="..\..\dlls\player_pulse.h" />
+    <ClInclude Include="..\..\dlls\player_records.h" />
     <ClInclude Include="..\..\dlls\player_skills.h" />
     <ClInclude Include="..\..\dlls\saverestore.h" />
     <ClInclude Include="..\..\dlls\schedule.h" />
@@ -315,6 +318,7 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClInclude Include="..\..\game_shared\inventory_defs.h" />
     <ClInclude Include="..\..\game_shared\skill_defs.h" />
     <ClInclude Include="..\..\game_shared\prompt_defs.h" />
+    <ClInclude Include="..\..\game_shared\record_defs.h" />
     <ClInclude Include="..\..\pm_shared\pm_debug.h" />
     <ClInclude Include="..\..\pm_shared\pm_defs.h" />
     <ClInclude Include="..\..\pm_shared\pm_info.h" />
