@@ -69,7 +69,7 @@ Stations are pillar 1; sounds and icons are not roadmap items at all — see [Ar
 - [Pillar 2: Decapitation](#pillar-2-decapitation) — a design to port, already read
 - [Pillar 3: Modules](#pillar-3-modules)
 - [Pillar 4: Routes](#pillar-4-routes) — builds; all seven Routes shaped; four Skills cut
-- [Pillar 1: Transmissions](#pillar-1-transmissions) — text entries in a fourth tab; audio later
+- [Pillar 1: Records](#pillar-1-records) — Ready: the Prompt on everything usable, then Records read with +use and kept in a fourth tab; audio later
 - [Pillar 1: The world](#pillar-1-the-world) — the facility, Xen, mining and Shards, Stations
 - [Art and audio](#art-and-audio)
 - [Proposed vocabulary](#proposed-vocabulary)
@@ -151,7 +151,7 @@ maddened**; see [Monsters and bosses](#pillar-2-monsters-and-bosses).
 
 Exploration is ranked first and PILLARS has it at **Not started**. What this session exposed as missing,
 roughly in the order the vertical slice needs it: the [Pulse's tail](#the-pulses-tail--settled-2026-09-17-not-built)
-and the base Dash in the air (both small); [Transmissions](#pillar-1-transmissions) as text in a fourth
+and the base Dash in the air (both small); [the Prompt and Records](#pillar-1-records) in a fourth
 tab; [deposits, shards and Stations](#mining-and-crystal-shards); the maddened miner; the slave boss and
 the hub's vortigaunt; the hub and wing one as maps. Not urgent: the Hook, the double jump (second half),
 everything in Xen, the endings.
@@ -2746,25 +2746,119 @@ Gargantua in visibly different ways, one of them with a knife.
 
 ---
 
-## Pillar 1: Transmissions
+## Pillar 1: Records
 
-**Shape: Shaped 2026-09-17.** ~~Logs found in the level, played back by the player.~~ **Text entries
-first, audio later.**
+**Shape: Ready. Shaped 2026-09-17 in two grills** — the game as a whole, then this feature on its own —
+**and the first commit is obvious: [the Prompt](#the-prompt).** Renamed from *Transmissions* the same day:
+the feature stopped being audio logs, and a clipboard is not transmitted. **Entry** was the working word
+and is taken ([CONTEXT.md](../CONTEXT.md): one occupant of an Inventory), so the thing is a **Record**,
+the tab is **Records**, the suit **registers** a Record in its memory, and *Transmission* narrows to a
+category of Record — what was radioed, intercepted or, later, voiced.
 
-- **The game is built with text entries**: collectible, banked, and readable at any time from **a new tab
-  of the Inventory Panel that accommodates information** — the fourth, beside the Grid, Upgrades and
-  Status. They occupy no Cells, the Reset Token pattern argued for below.
-- **Audio logs and subtitles are wanted, as a later step.** The text layer is built so that a recording can
-  attach to an entry when that step comes, and the entry's text is then its transcript — which is also the
-  answer to the engine having no subtitle system.
-- **They carry information**: codes, names, where a deposit lies, the player's own suppressed medical file.
-  A missed entry never blocks the critical path — a [hard gate](#the-shape-of-the-game) never hangs on
-  one. Some set a global when read, for the endings.
-- **Show, don't tell comes first.** The world carries the big facts (arranged crystal, a guard on a sealed
-  tunnel, the hub lighting up); entries carry the specific ones.
-- The same tab can hold the advisors' current guidance — which pieces are still missing — instead of an
-  objectives system.
-- **The Nihilanth's contact is never an entry.** Not banked, not re-readable; it happens and is gone.
+**Text first, audio later.** Audio logs and subtitles are wanted as a later step; a Record's format leaves
+room for a `sound` field, and its body is then the transcript — which is also the answer to the engine
+having no subtitle system. **Show, don't tell comes first**: the world carries the big facts, Records the
+specific ones. **The Nihilanth's contact is never a Record** — not registered, not re-readable.
+
+### The Prompt
+
+**A rule for the whole game, 2026-09-17: everything that can be interacted with gets text on screen** — a
+title (*Battery*, *Terminal*, *Door lock*) and the action or actions under it (`[E] Take`,
+`[E] Enter code 4471`). It generalises the Pickup Prompt and keeps its best property.
+
+- **It appears in the vicinity, exactly as the Pickup Prompt does**: inside use reach
+  (`INV_PICKUP_RADIUS`, 64, matching `PLAYER_SEARCH_RADIUS`) and the narrow view cone.
+  `FindLookedAtPickup` (`dlls/player_inventory.cpp`) mirrors `PlayerUse`'s aim test and **already weighs
+  every usable entity** — when one wins it reports nothing, so that a use press at a button never grabs the
+  medkit behind it. The rule is mostly reporting that winner. The server still answers "what would a use
+  press do here?" once, so the Prompt and the press cannot disagree.
+- **Titles default by class** (*Button* / `Press`, *Health station* / `Heal`, *HEV charger* / `Charge`, a
+  scientist / `Talk`), **a mapper overrides them** with `prompt_title` and `prompt_action` on any entity
+  (*Pump control* / `Start pumps` — short strings fit a 192-byte message), **and can suppress the Prompt**.
+  Suppression is not optional: vanilla's classic secret is the unmarked usable panel, exploration is ranked
+  first, and a label on every hidden switch spoils it.
+- **A state line is how a hard gate looks impassable**: *Elevator — No power*, *Door lock — Code required*.
+- **The key shown is the real binding** of `+use`, which the Status page's tooltips already look up.
+- Walk-over pickups keep [ADR-0011](adr/0011-pickups-are-walk-over.md) and their `Take`. Breakables,
+  monsters and scenery get nothing. A [deposit](#mining-and-crystal-shards) gets a hint line — *Crystal
+  deposit — Mining tool required* — because that teaches the mechanic.
+- The Pickup Prompt is drawn in the engine's console font (PILLARS lists it as unstyled); widening it is
+  the reason to style it. **Prompt** goes to CONTEXT.md when built, with the Pickup Prompt as its oldest
+  case; the glossary's "avoid *use prompt*" is why the word is bare.
+
+### What a Record is
+
+- **The text lives in a data file in the mod directory, read by the client**: `records.txt`, keyed blocks
+  in the manner of `titles.txt` and `hud_additions.txt`; no JSON, the client has no parser for it. A user
+  message caps at 192 bytes, so text cannot cross the wire. A map entity carries an id; **the server owns
+  a saved found-set and syncs it as a mask**, the Skill pattern. **512 ids, sized once** — the Skill
+  ceiling moved twice and reset saves each time. Ids are stable once added and never reused. A missing id
+  draws as "record not found" with a console warning; a parse error names its line and skips the block.
+  The repo copy is the source of truth, copied to the install by hand like `sprites/`. A compiled table
+  like `skill_defs.h` was rejected: prose gets rewritten constantly and should not cost a rebuild of two
+  DLLs. Text in map keyvalues was rejected: chunked messages, keyvalue limits, and a typo costs a compile.
+- **Per Record**: a numeric id (the bit), a string id, a category, a title, a one-line **source**
+  (*Medical file, Level 3 infirmary*), an optional `revocable` flag, a plain-text body. **One emphasis
+  marker**, drawn in the suit's colour, for codes and for `[REDACTED]` — how the cover-up shows in the
+  documents. No images in the first version. **Short documents**: they are read in real time in an unsafe
+  world, so a long record is a series found apart.
+- They occupy no Cells — the Reset Token pattern argued for below.
+
+### Reading one
+
+- **Two forms, both read with +use**: a loose document (a model) and a fixed source — a terminal, a wall
+  notice, a roster — which is the mapper's brushwork. One entity class, two looks.
+- **Reading must be intentional.** A document absorbed by walking over it might never be read. This is a
+  **deliberate exception to [ADR-0011](adr/0011-pickups-are-walk-over.md)**, with its own reason: that ADR
+  is about *taking*, and a Record is *read* — attention, which is what +use already means for a scientist.
+  Written down with the build, so nobody fixes it back.
+- **A press registers the Record and opens the reader at once, in real time.** The Inventory Panel does
+  not pause the game and neither does this. **Taking damage closes the reader**; the Record is already
+  registered and nothing is lost. One reader serves the world and the tab. When it closes, a short
+  "Record registered" line in the suit's voice. Bank-and-notify was rejected as the walk-over problem one
+  step removed; a pause was rejected because GoldSrc only offers the console's.
+- **Both forms stay in the world** — the suit scans, nothing is taken — and re-open on every use.
+  **An unread Record has a soft glint or glow**, the progression pickups' dynamic light
+  (`cl_dll/entity.cpp`), which goes out once registered. If it glints, it is unread. The found-set lights
+  it, so the entity has no state of its own to save.
+
+### The tab
+
+Categories on the left, from the file, found order inside each; the reader on the right; a pinned
+**Guidance** section on top. A fourth row in the tab table in `cl_dll/vgui_inventory.cpp`.
+
+- **Guidance lines are ordinary Records in a `Guidance` category**, granted and revoked by a triggered
+  point entity, `record_grant`. "Done" is a revoke, optionally granting the next; nothing fails. Written in
+  the advisor's voice, so the vortigaunt's improving English shows here too. **Revoke is for Guidance
+  only**: a found document never leaves the suit's memory. A separate objectives system was rejected as a
+  second thing to save, sync and debug.
+- The same entity hands over any Record at a scripted moment, and **a Record's first read can fire a
+  target** — how one sets a remembered global for the endings with no code that knows about endings.
+
+### A Record can open something
+
+`record_lock` names a Record. On use it fires its target if the suit has that Record; the Prompt reads
+*Code required* without it and `[E] Enter code 4471` with it. **No typing**: GoldSrc has no keypad and
+VGUI1 text entry is awkward enough that the Inventory Panel avoids it. It is the
+[soft-gate rule's](#the-shape-of-the-game) first reusable form — `soft: intended Record X, alternative Y`,
+the alternative being the mapper's vent or window. It accepts a granted Record as readily as a found one.
+Knowledge costs no Cells, where a keycard item would tax a scarce Inventory. Accepted knowingly: a code
+remembered from a previous run still has to be found again; a typed keypad can be added beside the lock
+later without changing it.
+
+### Build order
+
+Each slice judgeable in game on its own. None of it is stealth, so
+[STEALTH_CHECKLIST.md](STEALTH_CHECKLIST.md) does not block it.
+
+1. **The Prompt, widened** — defaults by class, the real key. No Records. Judged in any vanilla map.
+2. **Records, the core** — the file and parser, the found-set and its sync, the world entity and its
+   glint, the reader, the tab. The first code pillar 1 has ever had.
+3. **`record_grant`, Guidance, `record_lock`**, and the first-read target.
+4. **The mapper's controls** — the three prompt keyvalues, the FGD (and its sync rule), CONTEXT terms, the
+   ADR-0011 exception, PILLARS pillar 1, an ART_DEBT line for the stand-in document model.
+
+### Before the grill
 
 The closest existing machinery: Half-Life's sentence system (`sentences.txt` and the `!SENTENCE` form used
 throughout, e.g. the Syringe's `!HEV_HEAL7`), `ambient_generic` for placed sound sources, and
@@ -2783,8 +2877,8 @@ Which means a Transmissions list is a new tab or a new panel, not an Inventory c
 
 ### Open questions
 
-**All four answered 2026-09-17, above** — replayable, banked to a tab, text standing in for subtitles,
-informative. Kept for the record.
+**All four answered 2026-09-17, above** — re-readable, read in the world and kept in a tab, text standing
+in for subtitles, informative. Kept for the record, in the old word.
 
 - Are Transmissions **replayable** after the first listen, or heard once? Replayable implies a list UI;
   once implies they are pure flavour and a much smaller feature.
@@ -2900,7 +2994,7 @@ the output on the floor.
   **item → item**?~~ **Answered 2026-09-17: item → item.** Crystal is the one material and it is an Item
   Type — no new identity space, no new UI, no save change. Whether Stations also *recycle* (break an
   unwanted item down into shards) is not decided.
-- Are recipes **known** from the start, found as [Transmissions](#pillar-1-transmissions), or discovered by
+- Are recipes **known** from the start, found as [Records](#pillar-1-records), or discovered by
   experiment?
 - Are Stations **fixed in the world** (a reason to backtrack, which the persistence design already
   anticipates — "maps are designed with backtracking in mind") or **carried**? Fixed is much stronger for
@@ -2956,8 +3050,11 @@ is designed, and may well change name first.
 | **Night Vision** | The fifth Module: replaces the flashlight when found, gates the Stealth region. | Settled 2026-09-15. Adapted from Opposing Force. |
 | **Overdraw** | The Energy Route's Major: energy attacks drain armour as well, for bonus damage. | Named 2026-09-15. |
 | **Evolution** | A durable alteration to a weapon that keeps the weapon's identity — silencer, second barrel, extended magazine. | Avoid *attachment* and *mod*; the first implies removable hardware, the second collides with "the mod". |
-| **Transmission** | A recorded log found in a level and played back. | Avoid *log*, *tape*, *audio diary*, *datapad*. |
-| **Station** | A world entity that takes items in and gives items out. | Avoid *bench*, *workbench*, *terminal*, *fabricator*. *Terminal* especially — it will be wanted for Transmissions. |
+| **Record** | A document, screen, notice or piece of advice the suit has **registered** in its memory: read with +use in the world, kept in the **Records** tab, occupying no Cells. | 2026-09-17. **Not an Entry** — that is an occupant of the Inventory. Avoid *entry*, *log* (the console), *note*, *datapad*, *lore*. |
+| **Transmission** | ~~A recorded log found in a level and played back.~~ Since 2026-09-17, a *category* of Record: what was radioed, intercepted or, later, voiced. | Avoid *log*, *tape*, *audio diary*, *datapad*. |
+| **Guidance** | The Records tab's pinned section: what an advisor last asked for, granted and revoked by the map. | 2026-09-17. Avoid *objective*, *quest*, *mission*, *task*. |
+| **Prompt** | The text shown in the vicinity of anything that can be interacted with: a title, and the action or actions under it. The Pickup Prompt is its oldest case. | 2026-09-17. CONTEXT.md avoids *use prompt*, *hint*, *tooltip*; hence the bare word. |
+| **Station** | A world entity that takes items in and gives items out. | Avoid *bench*, *workbench*, *terminal*, *fabricator*. *Terminal* especially — it is a fixed source of Records. |
 | **Decapitation** | A lethal head hit that removes the head: headless submodel, thrown skull, blood from the stump. | Distinct from *gibbing*, which is the whole body and already means something in this codebase. **Headless** names the resulting state. |
 | **Carbon Pickaxe** | The other custom weapon. | Named already; recorded here so it is used consistently. **Gauss Katana** graduated to CONTEXT.md on 2026-09-12 when the weapon was built. |
 | **Route** | A build path through the Skill Tree: the set of Skills whose bonuses multiply into one way of playing. A region of the tree since 2026-09-15. | Named 2026-09-13. Avoid *class*, *spec* and *tree* — the tree is the whole thing. |

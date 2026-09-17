@@ -49,7 +49,7 @@ an encounter (fight it, sneak it, go around it). See [ROADMAP.md](ROADMAP.md#the
 
 **Status: Not started**
 
-**Planned:** [Transmissions](ROADMAP.md#pillar-1-transmissions), [the world](ROADMAP.md#pillar-1-the-world)
+**Planned:** [Records](ROADMAP.md#pillar-1-records) and the Prompt, [the world](ROADMAP.md#pillar-1-the-world)
 — the facility, interactable props, Xen, and Stations. All of it downstream of
 [maps](ROADMAP.md#maps).
 
@@ -1235,7 +1235,7 @@ grant Rows later without rework.
 
 **Status: Playable**
 
-**Planned:** a [Transmissions](ROADMAP.md#pillar-1-transmissions) list that is deliberately *not* an
+**Planned:** a [Records](ROADMAP.md#pillar-1-records) list that is deliberately *not* an
 Inventory change.
 
 ### What exists
