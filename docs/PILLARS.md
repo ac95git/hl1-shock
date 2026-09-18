@@ -647,13 +647,26 @@ Three things worth knowing rather than rediscovering:
   resolving a hit, and `gpGlobals->v_forward` still holds the player's aim vector needed by `TraceAttack`
   and the Follow-Up knockback.
 
-Which leaves **Crowbar Speed** (id 11) as the only combat Skill that does nothing. It is no longer
-blocked on prediction; it is blocked on the crowbar's first-swing/follow-up damage rule, which reads
-`m_flNextPrimaryAttack` to decide which swing it was, so retuning the cadence retunes the damage.
+~~Which leaves **Crowbar Speed** (id 11) as the only combat Skill that does nothing~~ — stale, corrected
+2026-09-18: it was built as **Melee Speed** with the Melee Route on 2026-09-14, and the first-swing/follow-up
+rule that blocked it was dropped the day before, so every swing is full damage.
+
+**The melee alien grunt, v1** — `monster_alien_grunt_melee`, `CAGruntMelee` in `dlls/agrunt.cpp`, built
+2026-09-18 overnight, untested in game. The alpha's chainsaw grunt, first stage: a bare-handed brawler on the
+punches the stock grunt already has (`mattack2`/`mattack3`, `sk_agrunt_dmg_punch` as `DMG_CLUB`, the
+250-unit shove). The arm bodypart's bare submodel, and no hornets (`CheckRangeAttack1` is false). **Every
+melee grunt in a squad chases**: where the stock grunt asks for the one chase slot and, refused, stands off,
+this one goes after the enemy regardless, and the hornet grunts keep the slot rules they have — so a mixed
+squad has its hornet grunts holding back and shooting while the melee ones close. Alien military recruit
+across classnames, so mixed squads form on their own. **No armour**: the stock grunt's plates take 20 off
+every blow and ricochet it, which made it immune to the crowbar on most of its body; this one bleeds
+wherever it is hit, and the Backstab and Follow-Up work on it. It looks armoured and is not — the model's
+plates, and the bare arm standing in for the chainsaw, are in [ART_DEBT.md](ART_DEBT.md). With it, for
+every alien grunt: a punch the Pulse deflects still shoves, but no longer plays the hit sound or draws blood.
 
 ### What's missing
 
-- Attack-rate modifiers — see Crowbar Speed above.
+- ~~Attack-rate modifiers — see Crowbar Speed above.~~ Built as Melee Speed, 2026-09-14.
 - A custom Shield sprite; `sprites/shockwave.spr` is standing in.
 - **Tuning.** Every number is a first guess, and `pulse_ring_style` still has to be judged one way or the
   other so the winner can become the default.

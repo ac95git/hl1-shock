@@ -1989,7 +1989,17 @@
 		32 : "SquadLeader" : 0
 	]
 ]
-@PointClass base(Monster, Sequence) size(-16 -16 0, 16 16 72) studio("models/islave.mdl") = monster_alien_slave : "Vortigaunt" 
+// The melee alien grunt: bare-handed, no hornets, no armour (the model still shows the plates), and every
+// one in a squad closes in. Fights in one squad with ordinary alien grunts, which hold back and shoot.
+@PointClass base(Monster, Sequence) size(-32 -32 0, 32 32 64) studio("models/agrunt.mdl") body(1) = monster_alien_grunt_melee : "Alien Grunt (melee)"
+[
+	netname(string) : "Squad Name"
+	spawnflags(Flags) =
+	[
+		32 : "SquadLeader" : 0
+	]
+]
+@PointClass base(Monster, Sequence) size(-16 -16 0, 16 16 72) studio("models/islave.mdl") = monster_alien_slave : "Vortigaunt"
 [
 	netname(string) : "Squad Name"
 	spawnflags(Flags) =

@@ -358,6 +358,32 @@ A real pick head on the crowbar's rig, so the animations carry over. A HUD icon 
 ### Done when
 A pickaxe in hand, on the floor, in the bucket and in the Grid reads as a pick, not as a crowbar.
 
+## The melee alien grunt — armour it does not have, and no chainsaw
+
+### Scope
+`CAGruntMelee` in `dlls/agrunt.cpp`, `monster_alien_grunt_melee`. Built 2026-09-18.
+
+### Current stand-ins
+
+| Use | Asset | Borrowed from |
+| --- | --- | --- |
+| Model | `models/agrunt.mdl` with the arm bodypart on `Bare_arm` | the stock alien grunt |
+| Weapon | nothing — the bare arm stands in for the alien chainsaw | — |
+| Sounds | the stock alien grunt's | — |
+
+### What's wrong with them
+- **It wears plates it does not have.** The melee variant takes full damage everywhere; the stock model
+  still shows the armour, so a player who has learned that alien grunts shrug off the crowbar will not try.
+  Half-Life: Extended's `agrunt_noarmor.mdl` shows the idea exists; its origin is unknown.
+- It is told from the hornet grunt only by its empty arm.
+- No charge: no alien grunt model on this machine has a charge animation (see ROADMAP.md).
+
+### What to look for
+An unarmoured body on the stock rig, so every animation carries over. Later, the chainsaw and a charge.
+
+### Done when
+The melee grunt is told from the hornet grunt at a distance, and nothing about it suggests armour.
+
 ## The Crystal Shard — a glass gib in a glow shell, a glass clink, no Grid Icon
 
 ### Scope

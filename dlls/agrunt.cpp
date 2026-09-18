@@ -25,6 +25,19 @@
 #include "weapons.h"
 #include "soundent.h"
 #include "hornet.h"
+#include "player.h"
+
+// Did a punch that found a player land, or did the Pulse turn it away?
+// CheckTraceHullAttack hands back what it struck whether or not the damage
+// was taken, so the punch cannot tell from its result.  The window runs its
+// full length, so a Shield that negated this blow is still standing now.
+// A deflected punch still shoves -- the Pulse blocks the damage, not the
+// blow (docs/ROADMAP.md, "Melee alien grunt") -- but it no longer plays the
+// hit sound or draws blood on a player it did not hurt.
+static bool AGruntPunchDeflected(CBaseEntity* pHurt)
+{
+	return pHurt && pHurt->IsPlayer() && static_cast<CBasePlayer*>(pHurt)->m_pulse.WouldNegate(DMG_CLUB);
+}
 
 //=========================================================
 // monster-specific schedule types
@@ -536,11 +549,14 @@ void CAGrunt::HandleAnimEvent(MonsterEvent_t* pEvent)
 				pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_right * 250;
 			}
 
-			EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pAttackHitSounds), 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5, 5));
+			if (!AGruntPunchDeflected(pHurt))
+			{
+				EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pAttackHitSounds), 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5, 5));
 
-			Vector vecArmPos, vecArmAng;
-			GetAttachment(0, vecArmPos, vecArmAng);
-			SpawnBlood(vecArmPos, pHurt->BloodColor(), 25); // a little surface blood.
+				Vector vecArmPos, vecArmAng;
+				GetAttachment(0, vecArmPos, vecArmAng);
+				SpawnBlood(vecArmPos, pHurt->BloodColor(), 25); // a little surface blood.
+			}
 		}
 		else
 		{
@@ -566,11 +582,14 @@ void CAGrunt::HandleAnimEvent(MonsterEvent_t* pEvent)
 				pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_right * -250;
 			}
 
-			EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pAttackHitSounds), 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5, 5));
+			if (!AGruntPunchDeflected(pHurt))
+			{
+				EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pAttackHitSounds), 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5, 5));
 
-			Vector vecArmPos, vecArmAng;
-			GetAttachment(0, vecArmPos, vecArmAng);
-			SpawnBlood(vecArmPos, pHurt->BloodColor(), 25); // a little surface blood.
+				Vector vecArmPos, vecArmAng;
+				GetAttachment(0, vecArmPos, vecArmAng);
+				SpawnBlood(vecArmPos, pHurt->BloodColor(), 25); // a little surface blood.
+			}
 		}
 		else
 		{
@@ -1164,4 +1183,79 @@ Schedule_t* CAGrunt::GetScheduleOfType(int Type)
 	}
 
 	return CSquadMonster::GetScheduleOfType(Type);
+}
+
+//=========================================================
+// The melee alien grunt, v1 (docs/ROADMAP.md, "Melee alien grunt",
+// shaped 2026-09-13).  The alpha's chainsaw grunt brought back in two
+// stages; this is the first, a bare-handed brawler on the animations the
+// stock grunt already has.  Monster variety, not a replacement: melee and
+// hornet grunts fight in one squad, the hornet grunts holding back and
+// shooting while these close in.
+//
+//  - No hivehand: the arm bodypart's bare submodel, and no hornets at all.
+//  - Every melee grunt in a squad is in the fight.  The stock chase is one
+//    slot, so the rest stood off -- which was fine while they were shooting.
+//    These chase without competing for it, and the hornet grunts keep the
+//    slot rules they have.
+//  - No armour.  The stock grunt's plates take 20 off every blow and
+//    ricochet it, which would make a monster built to be met in melee immune
+//    to the crowbar; this one bleeds wherever it is hit.  The model still
+//    wears the plates, so it looks armoured and is not (ART_DEBT.md).
+//
+// A classname rather than a keyvalue on monster_alien_grunt, because it
+// shows by name in the editor and in debug_schedule, and costs nothing:
+// alien military recruit across classnames (CSquadMonster::SquadRecruit
+// only matches classnames for CLASS_ALIEN_MONSTER), so mixed squads still
+// form on their own.
+//=========================================================
+class CAGruntMelee : public CAGrunt
+{
+public:
+	void Spawn() override;
+	bool CheckRangeAttack1(float flDot, float flDist) override { return false; }
+	Schedule_t* GetSchedule() override;
+	void TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir, TraceResult* ptr, int bitsDamageType) override;
+};
+
+LINK_ENTITY_TO_CLASS(monster_alien_grunt_melee, CAGruntMelee);
+
+void CAGruntMelee::Spawn()
+{
+	CAGrunt::Spawn();
+
+	// Bodypart 1 is the arm: Gun_arm (0), Bare_arm (1).
+	SetBodygroup(1, 1);
+}
+
+Schedule_t* CAGruntMelee::GetSchedule()
+{
+	// Everything the stock grunt decides before the chase slot -- a danger
+	// sound, a dead or new enemy, a punch in reach, a flinch -- it still
+	// decides.  What changes is only where the stock grunt would ask for the
+	// slot and, refused, stand off: this one goes after the enemy regardless.
+	if (m_MonsterState == MONSTERSTATE_COMBAT &&
+		!HasConditions(bits_COND_ENEMY_DEAD | bits_COND_NEW_ENEMY | bits_COND_CAN_MELEE_ATTACK1 | bits_COND_HEAVY_DAMAGE))
+	{
+		bool bDanger = false;
+		if (HasConditions(bits_COND_HEAR_SOUND))
+		{
+			CSound* pSound = PBestSound();
+			bDanger = pSound && (pSound->m_iType & bits_SOUND_DANGER) != 0;
+		}
+
+		if (!bDanger)
+			return GetScheduleOfType(SCHED_CHASE_ENEMY);
+	}
+
+	return CAGrunt::GetSchedule();
+}
+
+void CAGruntMelee::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir, TraceResult* ptr, int bitsDamageType)
+{
+	// The stock grunt's TraceAttack with its armour branch gone: every hit
+	// bleeds and lands in full.
+	SpawnBlood(ptr->vecEndPos, BloodColor(), flDamage); // a little surface blood.
+	TraceBleed(flDamage, vecDir, ptr, bitsDamageType);
+	AddMultiDamage(pevAttacker, this, flDamage, bitsDamageType);
 }

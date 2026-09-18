@@ -1049,7 +1049,12 @@ for this.
 ### Melee alien grunt
 
 **Shape: Shaped 2026-09-13. The first version is decided and needs no new art; the charge and the weapon
-wait for model work.**
+wait for model work. v1 built 2026-09-18 overnight, untested in game** — `monster_alien_grunt_melee`,
+recorded in [PILLARS pillar 2](PILLARS.md#2-enhanced-combat). The "classname or keyvalue?" question below is
+answered: a classname, because alien military recruit across classnames, so mixed squads form either way,
+and a classname shows by name in the editor and in `debug_schedule`. The deflected-punch cosmetic fix went
+in with it, for every alien grunt. What is left: the charge, the chainsaw, an unarmoured body, and the
+shielded variant.
 
 In the Half-Life alpha and beta the alien grunt was planned as a melee monster carrying an **alien
 chainsaw**. This entry brings that back in two stages: a bare-handed brawler now, the chainsaw later.
@@ -1146,9 +1151,9 @@ Discharge, which are energy? A model with a shield is new art, like the chainsaw
 
 #### Still open
 
-- **Classname or keyvalue?** To be decided. A keyvalue on `monster_alien_grunt` keeps stock maps unchanged,
-  and the bare arm itself could be that switch. With a shielded variant coming as well, the answer covers
-  three kinds of grunt rather than two.
+- ~~**Classname or keyvalue?**~~ **Answered 2026-09-18: a classname**, `monster_alien_grunt_melee`. Stock
+  maps are unchanged either way, and the squad code only demands a matching classname of
+  `CLASS_ALIEN_MONSTER`, so mixed squads form on their own. A shielded grunt would be a third classname.
 - **The chainsaw's design**, from the ground up, and the charge animation. Both wait on model work.
 
 ### Shelled headcrab

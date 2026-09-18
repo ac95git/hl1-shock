@@ -13,6 +13,8 @@ One-shot like its parent: once minemap.map is edited in J.A.C.K., edit the .map,
   B  the tunnel east of A: five stable deposits -- in the walls, one high, one free-standing,
      one fat at the end
   C  the chamber south of B: two unstable veins, a wall of cover, a zombie and a headcrab to lure
+  D  the arena north of B, behind a door a button in the tunnel opens: two melee alien grunts and one
+     hornet grunt, placed in sight of each other so they form one mixed squad (added the same night)
 
 Usage:  python greybox_minemap.py [out.map]
 """
@@ -27,6 +29,8 @@ TEX_CEIL = "-0OUT_RK3"
 TEX_VEIN = "CRYS_1A"
 TEX_STATION = "+0~GENERIC85"
 TEX_COVER = "-0OUT_RK4"
+TEX_DOOR = "LAB1_DOOR2B"
+TEX_BUTTON = "+0BUTTON1"
 
 WADS = ";".join(
     "/apps/steam/steamapps/common/Half-Life/valve/" + w
@@ -118,6 +122,8 @@ vol("K", 64, -192, 0, 320, 0, 128)          # the closet, open along A's south w
 vol("B", 768, 128, 0, 1600, 384, 160)       # the tunnel, open along A's east wall
 vol("C", 1024, -512, 0, 1536, 0, 224)       # the chamber
 vol("CB", 1216, 0, 0, 1344, 128, 112)       # its doorway up into the tunnel
+vol("D", 1024, 448, 0, 1536, 960, 192)      # the arena
+vol("DB", 1344, 384, 0, 1440, 448, 112)     # its doorway down into the tunnel, closed by a door
 
 interiors = list(V.values())
 
@@ -215,7 +221,25 @@ for (nx, ny) in ((1088, -64), (1280, -64), (1440, -96), (1088, -320), (1440, -32
                  (1280, -464), (1440, -464), (1280, 64), (1280, 256), (1000, 256), (700, 256)):
     point("info_node", nx, ny, 16)
 
+# D -- the arena. A door fills the doorway until the button beside it in the tunnel is pressed, so
+# nothing in here joins the mining tests uninvited. Three grunts in sight of each other at spawn: two
+# melee, one with hornets. Alien military recruit across classnames, so this is one squad.
+ents.append(entity([("classname", "func_door"), ("targetname", "arena_door"), ("angles", "0 -1 0"),
+                    ("speed", "100"), ("lip", "8"), ("wait", "-1"), ("movesnd", "2"), ("stopsnd", "1")],
+                   [Box(1344, 400, 0, 1440, 432, 112, TEX_DOOR)]))
+ents.append(entity([("classname", "func_button"), ("target", "arena_door"), ("spawnflags", "1"),
+                    ("wait", "-1"), ("sounds", "1"), ("prompt_title", "Arena door")],
+                   [Box(1456, 376, 40, 1488, 384, 72, TEX_BUTTON)]))
+point("monster_alien_grunt_melee", 1216, 800, 4, ("angles", "0 270 0"))
+point("monster_alien_grunt_melee", 1344, 800, 4, ("angles", "0 270 0"))
+point("monster_alien_grunt", 1280, 896, 4, ("angles", "0 270 0"))
+for (nx, ny) in ((1088, 512), (1280, 512), (1472, 512), (1088, 704), (1280, 704), (1472, 704),
+                 (1088, 896), (1472, 896), (1392, 416)):
+    point("info_node", nx, ny, 16)
+
 # lights
+for (lx, ly) in ((1152, 576), (1408, 576), (1152, 832), (1408, 832)):
+    light(lx, ly, 176, "220 255 220 160")
 for (lx, ly) in ((128, 128), (384, 128), (640, 128), (128, 384), (384, 384), (640, 384)):
     light(lx, ly, 176)
 light(192, -96, 112, "255 255 255 120")

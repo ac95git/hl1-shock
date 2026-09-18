@@ -104,6 +104,7 @@ leak, error or warning, fifteen lights. Nobody has walked it yet.
 | The closet, south of the hall | Forty keycards, one Cell each: walk through it to fill the Grid | S5, T refusals |
 | The tunnel, east | Five stable deposits: north wall at waist height, south wall, north wall **high**, a free-standing boulder (rock sounds), and a fat one at the end (6 Shards, strength 200) | D |
 | The chamber, through the tunnel's south doorway | A free-standing unstable vein behind a wall of cover, a second unstable vein in the east wall, a zombie and a headcrab | U |
+| The arena, behind the door on the tunnel's north side (button beside it) | Two melee alien grunts and one hornet grunt, one squad | G |
 
 | # | Do | Expect |
 | --- | --- | --- |
@@ -141,6 +142,22 @@ With the Dash (`give item_longjump`).
 | A4 | With the Air Dash bought: jump, then Dash | The directional one, as before: along the crosshair, up included, gravity off |
 | A5 | With the Air Dash: Dash on the ground | The flat one, as before |
 | A6 | Read the Air Dash's tooltip | *In the air, the Dash goes where you aim, up included.* |
+
+## G. The melee alien grunt (reserve ②)
+
+On `minemap`: the button beside the door on the tunnel's north wall opens the arena. `debug_schedule 1`,
+then `debug_damage 1`.
+
+| # | Do | Expect |
+| --- | --- | --- |
+| G1 | Open the arena | Two grunts with an empty right arm, one with the hivehand. `debug_schedule` names the first two `monster_alien_grunt_melee` |
+| G2 | Let them see you | Both melee grunts close in; the hornet grunt holds back and shoots. Nobody stands still facing you doing nothing |
+| G3 | Aim at each | One squad: one `leader`, two `member` |
+| G4 | Crowbar a melee grunt in the back and the shoulder | Full damage, blood, no ricochet spark (a hornet grunt still ricochets) |
+| G5 | Backstab one | The Backstab lands in full |
+| G6 | Let one punch you | Damage, the claw hit sound, a shove sideways |
+| G7 | Pulse into a punch | The deflect; you are still shoved; **no** hit sound, **no** blood on you. Same with a hornet grunt's punch |
+| G8 | Kill one while the other watches | It reacts as any alien grunt does (5f's witness rules are unchanged) |
 
 ## Decisions I made
 
@@ -214,6 +231,14 @@ Things the grill did not settle, decided during the night. Each can be overturne
   could feel, since a jump followed by a Dash covers the same ground.
 - **The Air Dash's double-jump gate was not built**, though settled: it strands the Dash Recovery Stat node
   at (1,0), which the memory lists as your open placement question. Only the tooltip changed.
+- **The melee grunt is a classname, `monster_alien_grunt_melee`**, the entry's open question. A keyvalue was
+  the alternative; it would have mattered only if squads recruited by classname, and for alien military
+  they do not. A classname shows by name in the editor and in `debug_schedule`.
+- **Its chase bypasses the slot rather than taking it**, so a melee grunt can never be the one holding the
+  chase slot a hornet grunt would have used — the hornet grunt's behaviour is exactly vanilla.
+- **The deflected-punch fix applies to every alien grunt**, as the entry said to do "while there": the
+  shove stays, the hit sound and the blood go.
+- **The arena is behind a door** in `minemap`, so the grunts do not come to the mining tests on their own.
 - **The brace applies after Last Stand and Ricochet**, so a hit either of those refuses entirely never makes
   the brace's sound; and before the Demolitions and Insulation scales, which then multiply as usual.
 
