@@ -792,7 +792,10 @@ side of [Stations](ROADMAP.md#stations).
 
 The first Module after the long jump it rides on. **Tap SHIFT** (`impulse 151`, `DASH_IMPULSE` in
 `pm_shared/pm_shared.h`) for a burst along the direction the movement keys point — sideways and backwards
-included, forward when no key is held — **from the ground only**. Walk moved to **ALT**.
+included, forward when no key is held — ~~from the ground only~~ **on the ground and in the air alike since
+2026-09-18** (overnight, untested in game): the flat Dash runs its time wherever it is, leaves gravity alone
+in the air, and no longer ends at a ledge or on a jump, because a Dash glued to the ground cannot cross a
+gap. Walk moved to **ALT**.
 
 - **Found with the long jump.** `item_longjump` still gives the long jump and now also opens
   `EGate::DashModule` — the Shinobi region — with every charge ready. Having the Dash *is* that gate being
@@ -800,8 +803,8 @@ included, forward when no key is held — **from the ground only**. Walk moved t
   opens it on load.
 - **Predicted.** The burst runs in `pm_shared.cpp` (`PM_CheckDash`, `PM_DashBurst`) off `pmove->fuser1`,
   the milliseconds left, carried in clientdata and through `HUD_TxferPredictionData`. Friction is skipped
-  while it runs; when it ends, or the player leaves the ground, horizontal speed drops back to run speed —
-  so a Dash off a ledge or into a jump does not carry, which is the Air Dash's job.
+  while it runs; when it ends, horizontal speed drops back to run speed. ~~Leaving the ground ended it too,
+  so a Dash off a ledge or into a jump did not carry~~ — reversed 2026-09-18 with the Dash in the air.
 - **Charges on the server.** `CBasePlayer::DashThink` refills one float of charges and writes physinfo
   keys (`dsc` ready, `dsn` ceiling, `dsv` speed, `dst` ms, `dsr` recharge); `DashAfterMove` spends a
   charge when fuser1 rose across the move. Not saved — a load comes back full.
@@ -815,8 +818,11 @@ included, forward when no key is held — **from the ground only**. Walk moved t
   (−`skill_stat_dash_recovery` 0.05), summed and floored at ×0.2; Second Wind (two charges); **Reprisal** —
   a melee hit that kills a monster at full health gives a charge back (`CCrowbar::ReprisalRefill`, at both
   hit sites, once per victim of a Cleave); **Air Dash** — below. Phase still has none.
-- **The Air Dash.** With the major held (physinfo `dsa`), the Dash also starts in the air, along the
-  crosshair — up and down included — and the movement keys do nothing in the air. Gravity is off
+- **The Air Dash.** With the major held (physinfo `dsa`), a Dash started in the air goes along the
+  crosshair instead — up and down included — and the movement keys do nothing in the air. Since
+  2026-09-18 it is the *directional* dash rather than the only one that leaves the ground, and its tooltip
+  says so; its gate behind the double jump is settled and **not built**, because it strands the Dash
+  Recovery Stat node at (1,0), an open placement question. Gravity is off
   while it runs, it ends when its time is up or it lands, and it **stops dead**: no speed carries on, so
   one reaches about 120 units. Any ready charge can be spent in the air, back to back. A dive into the
   floor lands as a fall, and takes fall damage. `fuser1` counts down negative for an Air Dash, so the two

@@ -3057,18 +3057,20 @@ void PM_ReduceTimers()
 =============
 The Dash
 
-A burst on DASH_IMPULSE.  On the ground it goes along the movement keys,
-flattened; in the air, with the Air Dash, along the crosshair.  pmove->fuser1
-holds the milliseconds of burst left -- positive for a ground Dash, negative
-for an Air Dash, so the two end on their own rules without a second networked
-field.
+A burst on DASH_IMPULSE.  The base Dash goes along the movement keys,
+flattened, on the ground and in the air alike; with the Air Dash, a Dash
+started in the air goes along the crosshair instead.  pmove->fuser1 holds the
+milliseconds of burst left -- positive for the flat Dash, negative for an Air
+Dash, so the two end on their own rules without a second networked field.
 
-While a ground Dash runs, friction is skipped so its speed holds; it ends when
-its time is up or the player leaves the ground, so a Dash off a ledge or into
-a jump does not carry.  An Air Dash runs with gravity off, so it is a straight
-line, and ends when its time is up or it lands.  Both stop dead: horizontal
-speed drops back to the run speed, and an Air Dash keeps no vertical speed
-either, so its reach is the burst's length and nothing more.
+The flat Dash runs its time wherever it is: friction is skipped on the ground
+so its speed holds, gravity is left alone in the air, and leaving the ground
+does not end it -- a Dash glued to the ground cannot cross a gap (settled
+2026-09-17; until then it ended at the ledge, which was the Air Dash's job
+while only the Air Dash worked in the air).  An Air Dash runs with gravity
+off, so it is a straight line, and ends when its time is up or it lands.  Both
+stop dead: horizontal speed drops back to the run speed, and an Air Dash keeps
+no vertical speed either, so its reach is the burst's length and nothing more.
 
 The server owns the charges (CBasePlayer::DashThink) and writes the numbers
 into physinfo; this only reads them, so both sides of the prediction agree.
@@ -3095,8 +3097,9 @@ void PM_DashBurst()
 	const bool bCanRun = flLeft > 0 && pmove->movetype == MOVETYPE_WALK && 0 == pmove->dead && pmove->waterlevel < 2;
 	const bool bOnGround = pmove->onground != -1;
 
-	// A ground Dash ends when the ground does; an Air Dash when it finds some.
-	if (bCanRun && bAir != bOnGround)
+	// An Air Dash ends when it finds ground; the flat Dash only when its time
+	// is up.
+	if (bCanRun && !(bAir && bOnGround))
 	{
 		pmove->fuser1 = bAir ? -flLeft : flLeft;
 		return;
@@ -3127,9 +3130,10 @@ void PM_CheckDash()
 	if ((pmove->flags & (FL_FROZEN | FL_ONTRAIN)) != 0)
 		return;
 
-	const bool bAir = pmove->onground == -1;
-	if (bAir && atoi(pmove->PM_Info_ValueForKey(pmove->physinfo, DASH_KEY_AIR)) != 1)
-		return;
+	// In the air, the Air Dash's directional burst if it is held, and the
+	// flat Dash otherwise -- the base Dash works in the air from the start.
+	const bool bAir = pmove->onground == -1 &&
+		atoi(pmove->PM_Info_ValueForKey(pmove->physinfo, DASH_KEY_AIR)) == 1;
 
 	if (atoi(pmove->PM_Info_ValueForKey(pmove->physinfo, DASH_KEY_READY)) < 1)
 		return;
@@ -3151,6 +3155,7 @@ void PM_CheckDash()
 	{
 		// Where the movement keys point, flattened, so sideways and backwards
 		// dashes exist.  With no key held it goes where the player is facing.
+		// Horizontal only: in the air the fall it interrupts carries on.
 		Vector forward = pmove->forward;
 		Vector right = pmove->right;
 		forward[2] = 0;
@@ -3377,8 +3382,9 @@ void PM_PlayerMove(qboolean server)
 
 		// Not underwater
 		{
-			// Before the jump, so a Dash and a jump on the same frame dash:
-			// the jump then lifts off and PM_DashBurst ends the burst.
+			// Before the jump, so a Dash and a jump on the same frame dash and
+			// then lift off; the flat Dash carries into the jump for what is
+			// left of its time, as it would carry off a ledge.
 			if (!pLadder)
 			{
 				PM_CheckDash();

@@ -541,6 +541,7 @@ time: dropped.
 
 - **The base Dash works in the air from the start**, along the movement keys like the ground Dash — a Dash
   glued to the ground cannot cross a gap. "Ground only until the major node" above is superseded.
+  **Built 2026-09-18**, with the Major's tooltip; the double-jump gate below is not.
 - **The Major becomes the *directional* dash**: in the air it goes where the player aims, upward included.
   The tooltip changes with it; the id (112) and the cell do not.
 - **The Major is gated behind the double jump Module**, the sixth Module, found later in Xen. The upward

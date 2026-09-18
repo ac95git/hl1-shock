@@ -127,6 +127,19 @@ With the Pulse Module (`give item_pulsemodule`) and `debug_damage 1`. A zombie i
 | Q8 | With Pulse Window bought | The deflect part grows; the whole still ends at 1 s |
 | Q9 | Judge the two cues | Is "I braced" told from "I parried" by ear and by eye? |
 
+## A. The Dash in the air
+
+With the Dash (`give item_longjump`).
+
+| # | Do | Expect |
+| --- | --- | --- |
+| A1 | Jump, then Dash with a movement key held | A flat burst along the keys, mid-air; you keep falling as before, the burst adds only horizontal speed |
+| A2 | Dash along the ground off a ledge | The burst carries on past the edge and across a short gap (it used to stop dead at the edge) |
+| A3 | Dash and jump together | The burst carries into the jump — a longer jump than before. Say whether this reads as a feature or an exploit |
+| A4 | With the Air Dash bought: jump, then Dash | The directional one, as before: along the crosshair, up included, gravity off |
+| A5 | With the Air Dash: Dash on the ground | The flat one, as before |
+| A6 | Read the Air Dash's tooltip | *In the air, the Dash goes where you aim, up included.* |
+
 ## Decisions I made
 
 Things the grill did not settle, decided during the night. Each can be overturned in a line.
@@ -188,6 +201,13 @@ Things the grill did not settle, decided during the night. Each can be overturne
   `pulse_tail_scale`, where the roadmap guessed two. The Matrix's code is not touched.
 - **The bar shows the tail and the Recharge as one countdown** to Ready, not a new state: the client needs
   no change, and what the bar is for is *when can I Pulse again*. The ring and the sound carry the tail.
+- **The flat Dash no longer ends on leaving the ground, at all.** "Along the movement keys, the ground
+  Dash's own rule, because a Dash glued to the ground cannot cross a gap" — and the old end-at-the-ledge
+  rule was exactly the glue. Consequence: a Dash carries into a jump (A3). Rejected: a separate
+  third kind of Dash for the air, which would need a third state in `fuser1` and changes nothing a player
+  could feel, since a jump followed by a Dash covers the same ground.
+- **The Air Dash's double-jump gate was not built**, though settled: it strands the Dash Recovery Stat node
+  at (1,0), which the memory lists as your open placement question. Only the tooltip changed.
 - **The brace applies after Last Stand and Ricochet**, so a hit either of those refuses entirely never makes
   the brace's sound; and before the Demolitions and Insulation scales, which then multiply as usual.
 

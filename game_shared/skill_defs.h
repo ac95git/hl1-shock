@@ -772,7 +772,7 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	{ ESkillId::SecondWind,      "Second Wind",      "+1 Dash charge",  "train_forward1", 4, 3,  1, ENodeTier::Medium, EStat::None, EGate::DashModule },
 	{ ESkillId::Reprisal,        "Reprisal",         "A one-hit melee kill refills a Dash.", "d_skull", 0, 3, 1, ENodeTier::Medium, EStat::None, EGate::DashModule },
 	{ ESkillId::Phase,           "Phase",            "No damage while Dashing.",        "suit_empty",     2, 1,  1, ENodeTier::Medium, EStat::None, EGate::DashModule },
-	{ ESkillId::AirDash,         "Air Dash",         "Dash in the air, along the aim, up included.", "train_forward3", 0, 0, 1, ENodeTier::Major, EStat::None, EGate::DashModule },
+	{ ESkillId::AirDash,         "Air Dash",         "In the air, the Dash goes where you aim, up included.", "train_forward3", 0, 0, 1, ENodeTier::Major, EStat::None, EGate::DashModule },
 
 	// The region's roads: 13 Dash Recovery Stat nodes.
 	STAT_DASH(StatDash01, 1, 0),
