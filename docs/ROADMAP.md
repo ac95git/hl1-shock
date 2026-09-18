@@ -8,7 +8,10 @@ build on, and list the questions that have to be answered before the first line 
 is built, its content moves into PILLARS.md and the entry here is deleted — this file only ever shrinks
 from the top.
 
-**Last updated:** 2026-09-17 (the game shaped as a whole in a 29-question grill and reconciled here:
+**Last updated:** 2026-09-18 overnight (built, all untested in game: the Carbon Pickaxe, crystal Shards,
+deposits and unstable deposits, the first two Stations, the Pulse's tail, the base Dash in the air, the
+melee alien grunt; their entries below are trimmed to what is left, and the test rows are in
+[MORNING_CHECKLIST.md](MORNING_CHECKLIST.md)). Before that, 2026-09-17 (the game shaped as a whole in a 29-question grill and reconciled here:
 [The shape of the game](#the-shape-of-the-game) is new and is read first; stealth is swallowed by combat;
 the double jump is a sixth Module, the base Dash works in the air and the directional Air Dash is gated
 behind the double jump; the Pulse gains a half-damage tail; the Hook drops to low priority; mining,
