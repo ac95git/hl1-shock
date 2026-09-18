@@ -2223,6 +2223,12 @@
 	]
 ]
 @PointClass base(Monster, Sequence) size(-192 -192 0, 192 192 384) studio("models/nihilanth.mdl") = monster_nihilanth : "Nihilanth"  []
+// The Panthereye: a lone stalker. Once it notices the player it closes in, running out of their sight and
+// crawling on its belly within 512 units or on screen, growling low; in reach it claws. Seen for a quarter
+// second near the crosshair, or hurt, or after its first slash, it stops hiding for good: rushes, claws, and
+// pounces from 150-450 units. Needs a 64-unit-wide way through to reach the player. Always the blue body; the
+// red one is reserved for the alpha, not built yet.
+@PointClass base(Monster, Sequence) size(-32 -32 0, 32 32 64) studio("models/panthereye.mdl") body(1) = monster_panthereye : "Panthereye" []
 @PointClass base(Monster, Sequence) size(-480 -480 -112, 480 480 24) studio("models/osprey.mdl") = monster_osprey : "Osprey"
 [
 	spawnflags(Flags) = 

@@ -384,6 +384,36 @@ An unarmoured body on the stock rig, so every animation carries over. Later, the
 ### Done when
 The melee grunt is told from the hornet grunt at a distance, and nothing about it suggests armour.
 
+## The Panthereye — sounds that are nothing like it, and above all the growl
+
+### Scope
+`CPanthereye` in `dlls/panthereye.cpp`, `monster_panthereye`. Built 2026-09-18. The model is not debt: it is
+Valve's cut Panthereye as HL: Extended ships it, and it is what the monster is.
+
+### Current stand-ins
+
+| Use | Asset | Borrowed from |
+| --- | --- | --- |
+| **The growl** | `panthereye/pa_idle3.wav` played at pitch 75 (`panther_growl_pitch`) | HL: Extended's Panthereye idle |
+| Idle, alert, pain, death, the leap's cry | the other nine `panthereye/pa_*.wav` | HL: Extended |
+| Claw hit and miss | `zombie/claw_strike*.wav`, `zombie/claw_miss*.wav`, pitched to 90 | the stock zombie |
+
+### What's wrong with them
+- **They are not at all what the Panthereye was meant to sound like** (Andrei, 2026-09-18). All ten.
+- **The growl matters most.** It is the player's only warning that they are being stalked, so it is a
+  gameplay cue before it is flavour: it has to read as *something low and close is watching me* at low
+  volume and short range, and be told from every other monster's idle at once. An idle pitched down is the
+  nearest thing in the set, and it is still an idle.
+- The claws sound like a zombie's.
+
+### What to look for
+A low, continuous, throaty growl that loops or varies well at 3–5 s intervals; a cat-like snarl for the
+alert, which is the moment it is spotted and stops hiding; heavier claw impacts than the zombie's.
+
+### Done when
+A player hears the growl in a dark room and knows what it means before they see anything, and nothing the
+Panthereye makes is mistaken for another monster.
+
 ## The Crystal Shard — a glass gib in a glow shell, a glass clink, no Grid Icon
 
 ### Scope

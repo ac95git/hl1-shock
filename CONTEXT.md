@@ -338,6 +338,17 @@ How good one kind of monster is at perceiving. Every monster has one. A poor Pro
 to notice things, never blind to something it would otherwise notice.
 _Avoid_: senses, awareness level, difficulty, tier
 
+**Predator**:
+The Perception Profile of the hunters: the sharpest eyes and the longest memory of any, and a body is a lead
+to follow. The Panthereye's since 2026-09-18; the assassin moves to it with its boss.
+_Avoid_: hunter profile, apex, elite — and Trained, which is the soldiers' Profile
+
+**Stalk**:
+What a Panthereye does with an enemy that has not seen it: close in, running where the player cannot see
+it and crawling where they might, growling low. It ends for good when the player sees it, hurts it, or it
+strikes. The monster side of stealth, where the player is the one being hunted.
+_Avoid_: hunt (the post-aggro chase), sneak, prowl, ambush (a Stealth node)
+
 **Backstab**:
 A melee hit landed in a monster's rear arc. Purely a matter of where the attacker stands — whether the
 monster has noticed them does not enter into it. Some monsters cannot be backstabbed at all.

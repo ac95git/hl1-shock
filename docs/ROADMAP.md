@@ -859,7 +859,7 @@ gained the human side the same day: [the cult, the maddened](#the-cult-and-the-m
 
 | Entry | Kind | Starts from | Shape |
 | --- | --- | --- | --- |
-| [Panthereye](#panthereye) | Enemy | Half-Life's cut model and sounds; no AI | **Shaped** |
+| [Panthereye](#panthereye) | Enemy | Half-Life's cut model and sounds; AI written new | **v1 built** 2026-09-18, untested |
 | [Melee alien grunt](#melee-alien-grunt) | Enemy | `CAGrunt`, bare arm | **Shaped** |
 | [Shelled headcrab](#shelled-headcrab) | Enemy | `CHeadCrab`, recoloured | **Shaped** |
 | [Friendly alien slave](#friendly-alien-slave) | Non-combatant | The slave model on `CTalkMonster` | **Shaped** |
@@ -878,7 +878,31 @@ given **custom attacks**, and two add something more (a dash, and turning into a
 
 ### Panthereye
 
-**Shape: Shaped 2026-09-13. The behaviour is decided (below); no code.**
+**Shape: Shaped 2026-09-13. v1 built 2026-09-18, untested in game** — recorded in
+[PILLARS pillar 2](PILLARS.md#2-enhanced-combat): the stalk as a straight path (run off screen, crawl
+close or on screen), the spotted test, the claws, the pounce, the Predator profile, a den in `minemap`.
+What v1 settled in its grill that the text below did not: spotted is within 30° of the crosshair with a
+clear line to the centre or head, held 0.25 s, no light term and no range limit; hurt, spotted, **or its
+first slash** end the stalk; the alert sounds when it is spotted, not when it acquires; the growl is
+`pa_idle3` pitched to 75; the pounce is 150–450 units, capped at 900, 3 s apart, with a 0.55 s wind-up;
+v1 is always the blue body, and the red is kept for the alpha so the look never lies.
+
+**Left for later slices, in no set order:**
+
+- **Cover to cover.** v1 stalks in a straight line. The node search that prefers hidden nodes *closer* to
+  the threat is still unwritten (below, "What the settled behaviour costs").
+- **Feeding**, as a spawn keyvalue and a looping eat schedule woken by `Use`, **together with the carcass
+  scent** (decided 2026-09-18: yes, the bullsquid's `bits_SOUND_CARCASS`/`MEAT`, but only once eating
+  exists). Together they make an emergent feeding ambush — a Panthereye found over a houndeye it killed —
+  and the placeable keyvalue is then just "start already eating". The Disturbance (v1, through Predator)
+  stays the player's-kills-only lead it hunts; the scent is any corpse, which it eats.
+- **The alpha**: the red body, set by a keyvalue with its stats, the way `item_suit`'s `variant` is; leaps
+  from further out, a shorter `panther_leap_windup`, and may skip the stalk.
+- **The glowing-eye light** at the head, so it can be seen in the dark (below).
+- **Freeze when watched** — proposed 2026-09-18 and wanted by Andrei, deferred until the spotted test is
+  proven in play: while it is on the player's screen but not yet spotted it stops dead, a Weeping Angel,
+  and moves again when they look away. More menacing than the crawl; a second behaviour to tune on top of
+  the test, which is why it waits.
 
 **The model is Half-Life legacy content**, a monster Valve cut, not another mod's art. The copy found on
 this machine is in *Half-Life: Extended* (`Half-Life/hl_extended`, per its `liblist.gam`), which ships
@@ -1457,6 +1481,11 @@ where the player first sees the Dash, and possibly where they win it.
 **Placed 2026-09-17: the military's specialist, at the end of the military wing** — the stealth systems'
 hardest test, ending in a fight with someone better at it than the player. The Dash Module being won
 here is proposed, not confirmed.
+
+**Its Perception Profile becomes Predator when the boss is built** (decided 2026-09-18, when the Predator
+profile was made for the [Panthereye](#panthereye)): fill ×2.0 and drain ×0.25 where Trained is ×1.5 and
+×0.5. Not before, because the assassin is one of the four primaries 5f's numbers were checked against and
+[STEALTH_CHECKLIST.md](STEALTH_CHECKLIST.md) holds pillar 6 until it has results.
 
 ### The alien grunt boss
 

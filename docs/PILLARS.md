@@ -669,6 +669,25 @@ wherever it is hit, and the Backstab and Follow-Up work on it. It looks armoured
 plates, and the bare arm standing in for the chainsaw, are in [ART_DEBT.md](ART_DEBT.md). With it, for
 every alien grunt: a punch the Pulse deflects still shoves, but no longer plays the hit sound or draws blood.
 
+**The Panthereye, v1** — `monster_panthereye`, `CPanthereye` in `dlls/panthereye.cpp`, built 2026-09-18,
+**untested in game**. Half-Life's cut monster on HL: Extended's model and sounds (copied into `models/` and
+`sound/panthereye/`), with its AI written new from the roadmap's settled behaviour; v1's scope was grilled
+the same day. A lone `CBaseMonster`, `CLASS_ALIEN_PREDATOR`, always the blue body, backstabbable, on the new
+**Predator** Perception Profile (fill ×2.0, drain ×0.25, hears Disturbances). **Two modes, one way.** It
+**stalks** an enemy that has not seen it — a straight path to the player, running (200 u/s) beyond
+`panther_stalk_crawl_dist` (512) while off screen, otherwise crawling on its belly (43 u/s) through
+`crouch_to_crawl` and `walk_to_stand_1`, all by name over `ACT_RUN` — and growls every 3–5 s (`pa_idle3` at
+`panther_growl_pitch` 75, `ATTN_IDLE`, no `CSoundEnt`). It turns to **combat for good** when the player sees
+it (within `panther_spot_cone` 30° of the crosshair, a clear line from the eyes to its centre or head, held
+`panther_spot_dwell` 0.25 s, no light term, no range limit), when the player hurts it, or when it starts a
+slash; the alert plays then, not on acquisition. The claws work in both modes, every hit event
+`sk_panthereye_dmg_claw` as `DMG_SLASH` (the double swipe hits twice). The pounce is combat only: the
+headcrab's leap from `panther_leap_min`–`_max` (150–450), capped at `panther_leap_speed` (900), one hit on
+touch in the air for `sk_panthereye_dmg_leap`, `panther_leap_cooldown` (3 s), the crouch before take-off
+rescaled to `panther_leap_windup` (0.55 s, the model's own frame-11 event). Health 60/70/80, claw 13/15/20,
+leap 20/25/35 — HL: Extended's numbers, not yet tuned. The model's head hitbox (group 2) counts as a head.
+`panther_debug` centre-prints the spotted test. `minemap` has a den for it west of the hall, behind a door.
+
 ### What's missing
 
 - ~~Attack-rate modifiers — see Crowbar Speed above.~~ Built as Melee Speed, 2026-09-14.

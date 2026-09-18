@@ -6,7 +6,9 @@ construction with its own room list, per MAP_WORKFLOW.md: every interior volume 
 slabs, every volume is subtracted from every slab, so volumes that touch are open to each other
 and nothing else seals the map.
 
-One-shot like its parent: once minemap.map is edited in J.A.C.K., edit the .map, not this.
+One-shot like its parent: once minemap.map is edited in J.A.C.K., edit the .map, not this. That has
+happened: J.A.C.K. saved it on 2026-09-18 with a Pulse Module added, and the Panthereye's den west of
+the hall was added the same day to the .map text directly. Re-running this would lose both.
 
   A  the hall: start, the weapons, loose Shards, the three Stations on the north wall
   K  the closet off A: forty keycards, to fill the Grid (the refusal rows)

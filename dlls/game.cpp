@@ -262,6 +262,20 @@ cvar_t sk_zombie_dmg_both_slash1 = {"sk_zombie_dmg_both_slash1", "0"};
 cvar_t sk_zombie_dmg_both_slash2 = {"sk_zombie_dmg_both_slash2", "0"};
 cvar_t sk_zombie_dmg_both_slash3 = {"sk_zombie_dmg_both_slash3", "0"};
 
+// Panthereye (dlls/panthereye.cpp).  Real defaults, as the katana's are: the
+// mod ships no skill.cfg and Half-Life's has never heard of it.  The numbers
+// are HL: Extended's first three difficulties (it has four), a starting point
+// until they are set against a map.
+cvar_t sk_panthereye_health1 = {"sk_panthereye_health1", "60"};
+cvar_t sk_panthereye_health2 = {"sk_panthereye_health2", "70"};
+cvar_t sk_panthereye_health3 = {"sk_panthereye_health3", "80"};
+cvar_t sk_panthereye_dmg_claw1 = {"sk_panthereye_dmg_claw1", "13"};
+cvar_t sk_panthereye_dmg_claw2 = {"sk_panthereye_dmg_claw2", "15"};
+cvar_t sk_panthereye_dmg_claw3 = {"sk_panthereye_dmg_claw3", "20"};
+cvar_t sk_panthereye_dmg_leap1 = {"sk_panthereye_dmg_leap1", "20"};
+cvar_t sk_panthereye_dmg_leap2 = {"sk_panthereye_dmg_leap2", "25"};
+cvar_t sk_panthereye_dmg_leap3 = {"sk_panthereye_dmg_leap3", "35"};
+
 
 //Turret
 cvar_t sk_turret_health1 = {"sk_turret_health1", "0"};
@@ -599,6 +613,31 @@ cvar_t deposit_arc_period = {"deposit_arc_period", "4.0"};
 cvar_t deposit_arc_warn = {"deposit_arc_warn", "1.2"};
 cvar_t deposit_arc_damage = {"deposit_arc_damage", "20"};
 cvar_t deposit_arc_radius = {"deposit_arc_radius", "192"};
+// The Panthereye (monster_panthereye, dlls/panthereye.cpp): a stalker until
+// the player spots it, then a pouncer for good.  Spotted is the player seeing
+// IT -- within panther_spot_cone degrees of the crosshair, a clear line from
+// the eyes to its body or head, held for panther_spot_dwell seconds -- and is
+// one-way, so the test leans strict.  While stalking it runs where the player
+// cannot see it and crawls on its belly within panther_stalk_crawl_dist or
+// whenever it is on screen, growling (pa_idle3 at panther_growl_pitch) every
+// panther_growl_interval plus up to two seconds.  Once spotted it pounces from
+// between leap_min and leap_max, capped at leap_speed, no sooner than leap_cooldown
+// after the last, the crouch before take-off lasting leap_windup seconds (the
+// model's own event at frame 11 is the take-off; the sequence is rescaled so
+// it lands there).  panther_debug centre-prints the test.  First guesses,
+// settled in a grill on 2026-09-18.
+cvar_t panther_spot_cone = {"panther_spot_cone", "30"};
+cvar_t panther_spot_dwell = {"panther_spot_dwell", "0.25"};
+cvar_t panther_stalk_crawl_dist = {"panther_stalk_crawl_dist", "512"};
+cvar_t panther_growl_pitch = {"panther_growl_pitch", "75"};
+cvar_t panther_growl_volume = {"panther_growl_volume", "0.5"};
+cvar_t panther_growl_interval = {"panther_growl_interval", "3"};
+cvar_t panther_leap_min = {"panther_leap_min", "150"};
+cvar_t panther_leap_max = {"panther_leap_max", "450"};
+cvar_t panther_leap_speed = {"panther_leap_speed", "900"};
+cvar_t panther_leap_cooldown = {"panther_leap_cooldown", "3"};
+cvar_t panther_leap_windup = {"panther_leap_windup", "0.55"};
+cvar_t panther_debug = {"panther_debug", "0"};
 // The wave the right click throws (CKatanaWave, dlls/katana.cpp): an unseen
 // projectile whose look is the crescent the client draws (EV_KatanaArc).
 // Energy damage to everything on its path, each once: katana_wave_damage
@@ -1013,6 +1052,18 @@ void GameDLLInit()
 	CVAR_REGISTER(&deposit_arc_warn);
 	CVAR_REGISTER(&deposit_arc_damage);
 	CVAR_REGISTER(&deposit_arc_radius);
+	CVAR_REGISTER(&panther_spot_cone);
+	CVAR_REGISTER(&panther_spot_dwell);
+	CVAR_REGISTER(&panther_stalk_crawl_dist);
+	CVAR_REGISTER(&panther_growl_pitch);
+	CVAR_REGISTER(&panther_growl_volume);
+	CVAR_REGISTER(&panther_growl_interval);
+	CVAR_REGISTER(&panther_leap_min);
+	CVAR_REGISTER(&panther_leap_max);
+	CVAR_REGISTER(&panther_leap_speed);
+	CVAR_REGISTER(&panther_leap_cooldown);
+	CVAR_REGISTER(&panther_leap_windup);
+	CVAR_REGISTER(&panther_debug);
 	CVAR_REGISTER(&katana_wave_damage);
 	CVAR_REGISTER(&katana_wave_range);
 	CVAR_REGISTER(&katana_wave_full_range);
@@ -1343,6 +1394,16 @@ void GameDLLInit()
 	CVAR_REGISTER(&sk_zombie_dmg_both_slash1); // {"sk_zombie_dmg_both_slash1","0"};
 	CVAR_REGISTER(&sk_zombie_dmg_both_slash2); // {"sk_zombie_dmg_both_slash2","0"};
 	CVAR_REGISTER(&sk_zombie_dmg_both_slash3); // {"sk_zombie_dmg_both_slash3","0"};
+
+	CVAR_REGISTER(&sk_panthereye_health1);
+	CVAR_REGISTER(&sk_panthereye_health2);
+	CVAR_REGISTER(&sk_panthereye_health3);
+	CVAR_REGISTER(&sk_panthereye_dmg_claw1);
+	CVAR_REGISTER(&sk_panthereye_dmg_claw2);
+	CVAR_REGISTER(&sk_panthereye_dmg_claw3);
+	CVAR_REGISTER(&sk_panthereye_dmg_leap1);
+	CVAR_REGISTER(&sk_panthereye_dmg_leap2);
+	CVAR_REGISTER(&sk_panthereye_dmg_leap3);
 
 
 	//Turret

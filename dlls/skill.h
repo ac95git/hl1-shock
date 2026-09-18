@@ -88,6 +88,10 @@ struct skilldata_t
 	float zombieDmgOneSlash;
 	float zombieDmgBothSlash;
 
+	float panthereyeHealth;
+	float panthereyeDmgClaw;
+	float panthereyeDmgLeap;
+
 	float turretHealth;
 	float miniturretHealth;
 	float sentryHealth;

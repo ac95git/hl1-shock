@@ -93,6 +93,12 @@ inline constexpr PerceptionProfile g_ProfileDefault{1.0f, 1.0f, true, false};
 //! primaries stealth is tuned against.
 inline constexpr PerceptionProfile g_ProfileTrained{1.5f, 0.5f, true, true};
 
+//! The hunters: the sharpest eyes of any profile and the longest memory, so a
+//! half-noticed player stays half-noticed, and a body is a lead to follow.
+//! The Panthereye; the assassin moves here with its boss, not before -- it is
+//! one of the four primaries 5f's numbers were checked against.
+inline constexpr PerceptionProfile g_ProfilePredator{2.0f, 0.25f, true, true};
+
 //! Machines, aircraft, and the things with no eyes to fool.  Vanilla acquisition.
 inline constexpr PerceptionProfile g_ProfileAlwaysAware{1.0f, 1.0f, false, false};
 

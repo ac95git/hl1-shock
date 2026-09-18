@@ -281,6 +281,11 @@ void CGameRules::RefreshSkillData()
 	gSkillData.zombieDmgOneSlash = GetSkillCvar("sk_zombie_dmg_one_slash");
 	gSkillData.zombieDmgBothSlash = GetSkillCvar("sk_zombie_dmg_both_slash");
 
+	// Panthereye
+	gSkillData.panthereyeHealth = GetSkillCvar("sk_panthereye_health");
+	gSkillData.panthereyeDmgClaw = GetSkillCvar("sk_panthereye_dmg_claw");
+	gSkillData.panthereyeDmgLeap = GetSkillCvar("sk_panthereye_dmg_leap");
+
 	//Turret
 	gSkillData.turretHealth = GetSkillCvar("sk_turret_health");
 
