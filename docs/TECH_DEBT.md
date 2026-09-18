@@ -1,6 +1,11 @@
 # Technical Debt Register
 
-## Every Save Overruns A 64-Byte Stack Buffer In The Save Writer — OPEN, DIAGNOSED 2026-09-17
+## Every Save Overruns A 64-Byte Stack Buffer In The Save Writer — RESOLVED 2026-09-18
+
+Fixed by steps 1 and 2 below, after it came back on 2026-09-18 — it had only been deferred, so it had never
+gone away. `boolArray` in `CSave::WriteFields` is now a `std::vector<byte>` resized to each field, and the
+entity-array branch clamps to `MAX_ENTITYARRAY` after its `ALERT` instead of overrunning. The save format
+is unchanged. Committed on Andrei's go-ahead after the Debug build.
 
 Seen by Andrei on 2026-09-17 as a Debug-build stack check on changing the video resolution in game:
 *"stack around the variable 'entityArray' was corrupted"*. A resolution change makes the engine save the

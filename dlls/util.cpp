@@ -25,6 +25,7 @@
 #include "cbase.h"
 #include "saverestore.h"
 #include <time.h>
+#include <vector>
 #include "shake.h"
 #include "decals.h"
 #include "player.h"
@@ -2056,7 +2057,7 @@ bool CSave::WriteFields(const char* pname, void* pBaseData, TYPEDESCRIPTION* pFi
 	int i, j, actualCount, emptyCount;
 	TYPEDESCRIPTION* pTest;
 	int entityArray[MAX_ENTITYARRAY];
-	byte boolArray[MAX_ENTITYARRAY];
+	std::vector<byte> boolArray;
 
 	// Precalculate the number of empty fields
 	emptyCount = 0;
@@ -2100,9 +2101,15 @@ bool CSave::WriteFields(const char* pname, void* pBaseData, TYPEDESCRIPTION* pFi
 		case FIELD_EDICT:
 		case FIELD_ENTITY:
 		case FIELD_EHANDLE:
-			if (pTest->fieldSize > MAX_ENTITYARRAY)
+		{
+			// The warning alone used to be followed by an overrun of entityArray; clamp so it cannot.
+			int entityCount = pTest->fieldSize;
+			if (entityCount > MAX_ENTITYARRAY)
+			{
 				ALERT(at_error, "Can't save more than %d entities in an array!!!\n", MAX_ENTITYARRAY);
-			for (j = 0; j < pTest->fieldSize; j++)
+				entityCount = MAX_ENTITYARRAY;
+			}
+			for (j = 0; j < entityCount; j++)
 			{
 				switch (pTest->fieldType)
 				{
@@ -2123,8 +2130,9 @@ bool CSave::WriteFields(const char* pname, void* pBaseData, TYPEDESCRIPTION* pFi
 					break;
 				}
 			}
-			WriteInt(pTest->fieldName, entityArray, pTest->fieldSize);
-			break;
+			WriteInt(pTest->fieldName, entityArray, entityCount);
+		}
+		break;
 		case FIELD_POSITION_VECTOR:
 			WritePositionVector(pTest->fieldName, (float*)pOutputData, pTest->fieldSize);
 			break;
@@ -2136,12 +2144,14 @@ bool CSave::WriteFields(const char* pname, void* pBaseData, TYPEDESCRIPTION* pFi
 		{
 			//TODO: need to refactor save game stuff to make this cleaner and reusable
 			//Convert booleans to bytes
+			// Sized to the field, not MAX_ENTITYARRAY: the Skill Tree's unlocked array is k_SkillIdCeiling (256) long.
+			boolArray.resize(pTest->fieldSize);
 			for (j = 0; j < pTest->fieldSize; j++)
 			{
 				boolArray[j] = ((bool*)pOutputData)[j] ? 1 : 0;
 			}
 
-			WriteData(pTest->fieldName, pTest->fieldSize, (char*)boolArray);
+			WriteData(pTest->fieldName, pTest->fieldSize, (char*)boolArray.data());
 		}
 		break;
 
