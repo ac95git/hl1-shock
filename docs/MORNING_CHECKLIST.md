@@ -26,6 +26,18 @@ debug_damage 1          // numbers for the P rows
 | P5 | With Melee Force, Melee Speed, Cleave bought | Each applies, as on the crowbar |
 | P6 | `give weapon_pickaxe` on a fresh map; also place one from the FGD | It spawns, falls to the floor, is picked up by walking over it |
 
+## S. The Crystal Shard
+
+| # | Do | Expect |
+| --- | --- | --- |
+| S1 | `give item_shard` | A small glass piece in an amber glow at your feet; walking over it takes it, with a high clink and the pickup history showing the crystal icon |
+| S2 | Open the Inventory | A *Crystal Shard* Entry, one Cell, drawn with the crystal icon tinted (no Grid Icon yet) |
+| S3 | `give item_shard` eleven more times | One Stack of 10 and a second Entry of 2 |
+| S4 | Drop the Stack of 10 | Ten Shards scatter in front of you, and are not picked straight back up |
+| S5 | Fill the Grid, then walk over a Shard | Refused; it stays on the floor |
+| S6 | Look at a Shard on the floor | The Prompt names it *Crystal Shard* |
+| S7 | Judge the look | Does the amber shell read as crystal? It was chosen by elimination — see ART_DEBT |
+
 ## Decisions I made
 
 Things the grill did not settle, decided during the night. Each can be overturned in a line.
@@ -39,6 +51,12 @@ Things the grill did not settle, decided during the night. Each can be overturne
   0.375 s. DPS 67 against the crowbar's 40 and the katana slash's 100.
 - **The pickaxe's Grid Icon is a copy of the crowbar's**, so the Grid shows a picture rather than falling
   back to a tinted HUD sprite. Rejected: no Icon file, which draws the crowbar's HUD sprite anyway.
+- **The Shard got a real HUD icon** (`utils/sprtool/icons/shard.py`) rather than borrowing one: an Item
+  Type with no sprite draws as an empty box in the Grid, which is useless to test with, and no stock icon
+  looks like a crystal.
+- **The Shard's stand-in model is the glass gib, in an amber glow shell.** Amber by elimination: the
+  Records' glow is pale cold, the progression pickups' is cyan and gold. The whole game's crystal hue is
+  unsettled — ART_DEBT asks for the deposit, the Shard, the arcs and the Heart to agree once it is.
 
 ## Found stale in the docs
 

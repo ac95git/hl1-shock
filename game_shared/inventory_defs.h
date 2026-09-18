@@ -99,7 +99,11 @@ enum class EItemTypeId : int
 	// oversight -- the Inventory is the only record of a Syringe.
 	Syringe  = 5,
 
-	_Count   = 6, // keep last
+	// Crystal Shards: what a Deposit breaks into and what a Station takes in
+	// (docs/ROADMAP.md, "Mining and crystal shards").  Carried, not used.
+	Shard    = 6,
+
+	_Count   = 7, // keep last
 };
 
 inline constexpr int k_MaxItemTypes = static_cast<int>(EItemTypeId::_Count);
@@ -134,6 +138,11 @@ inline constexpr ItemTypeDef k_ItemTypes[k_MaxItemTypes] =
 	// sees a syringe in the Grid, uses it, and a syringe appears at the screen
 	// edge.  Ours, from sprites/hud.txt (utils/sprtool/icons/syringe.py).
 	{ EItemTypeId::Syringe,     "item_syringe",   "Health Syringe", "item_syringe", 1, 3,   true  },
+	// A Stack of ten is exactly what a Fuel Processor takes for a Skill Point,
+	// so that price reads off the Grid without arithmetic.  No Use: a Shard is
+	// spent at a Station, never on its own.  Sprite from
+	// utils/sprtool/icons/shard.py.
+	{ EItemTypeId::Shard,       "item_shard",     "Crystal Shard", "item_shard",  1, 10,   false },
 };
 
 // Returns nullptr for None or any out-of-range id.

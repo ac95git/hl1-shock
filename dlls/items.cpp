@@ -466,6 +466,50 @@ LINK_ENTITY_TO_CLASS(item_syringe, CItemSyringe);
 
 
 //=========================================================
+// A Crystal Shard -- what a Deposit breaks into, and what a Station
+// takes in (docs/ROADMAP.md, "Mining and crystal shards").  An
+// ordinary Item Type, walk-over like every pickup (ADR-0011); a full
+// Grid refuses it and it stays on the floor.  func_deposit scatters
+// these one per Shard, and dropping a Stack from the Grid does the same.
+//
+// There is no crystal model yet.  The stand-in is Half-Life's glass gib,
+// the first submodel, wearing an amber glow shell so it reads as crystal
+// rather than as broken glass -- and amber because the Records own pale
+// cold and the progression pickups own cyan and gold.  ART_DEBT.md.
+//=========================================================
+class CItemShard : public CItem
+{
+	void Spawn() override
+	{
+		Precache();
+		SET_MODEL(ENT(pev), "models/glassgibs.mdl");
+		pev->body = 0;
+		pev->renderfx = kRenderFxGlowShell;
+		pev->renderamt = 8;
+		pev->rendercolor = Vector(255, 160, 60);
+		CItem::Spawn();
+	}
+	void Precache() override
+	{
+		PRECACHE_MODEL("models/glassgibs.mdl");
+		PRECACHE_SOUND("debris/glass2.wav");
+	}
+	bool MyTouch(CBasePlayer* pPlayer) override
+	{
+		if (InventoryGiveItem(pPlayer, EItemTypeId::Shard) <= 0)
+			return false;
+
+		// A clink, pitched up so it rings rather than breaks.  Stand-in.
+		EMIT_SOUND_DYN(ENT(pPlayer->pev), CHAN_ITEM, "debris/glass2.wav", 0.6, ATTN_NORM, 0, 140 + RANDOM_LONG(0, 20));
+		AnnouncePickup(pPlayer, true);
+		return true;
+	}
+};
+
+LINK_ENTITY_TO_CLASS(item_shard, CItemShard);
+
+
+//=========================================================
 // Progression pickups -- Skill Points, Reset Tokens and Row Grants.
 //
 // None of the three is an Item Type.  All are banked counters, so none

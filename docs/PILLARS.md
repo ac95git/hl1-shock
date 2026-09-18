@@ -86,6 +86,13 @@ reusable form, and the first thing in the mod that gates on knowledge rather tha
 first read can fire a target, which is how a remembered global gets set without any code knowing what it
 is for.
 
+**Mining** (2026-09-18, overnight, untested in game) — the resource loop the roadmap shaped on 2026-09-17,
+small, finite and authored. **Crystal Shards** are an ordinary Item Type (`EItemTypeId::Shard`, id 6): one
+Cell, a Stack of ten — exactly a Fuel Processor's price, so it reads off the Grid — no Use, picked up by
+walking over `item_shard`. The pickup is a stand-in (Half-Life's glass gib in an amber glow shell); the HUD
+icon is the mod's own, `utils/sprtool/icons/shard.py`. The only tool that mines is the
+[Carbon Pickaxe](#2-enhanced-combat).
+
 What no custom code touches yet: level traversal, secrets, map flow, navigation aids.
 
 ### What's missing

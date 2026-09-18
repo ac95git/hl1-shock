@@ -65,6 +65,12 @@ The kind of a thing — medkit, battery, keycard. Defines display name, icon, Ce
 size, and what using it does. Half-Life's weapons are not Item Types; they keep their own identity.
 _Avoid_: item definition, template, item class, item kind
 
+**Shard**:
+A Crystal Shard: the Item Type a Deposit breaks into and a Station takes in. The mod's one material —
+there is no second resource type, and recycling (if it comes) is item to item. *Crystal Shard* on screen,
+*Shard* in prose, `item_shard` in maps.
+_Avoid_: ore, crystal (alone — that is the substance), resource, material, gem
+
 ### Acquisition
 
 **Prompt**:

@@ -353,6 +353,35 @@ model. A real pick head is the step after. `p_crowbar` has no decompile.
 ### Done when
 A pickaxe in hand, on the floor, in the bucket and in the Grid cannot be mistaken for the crowbar.
 
+## The Crystal Shard — a glass gib in a glow shell, a glass clink, no Grid Icon
+
+### Scope
+`CItemShard` in `dlls/items.cpp`. Built 2026-09-18. The HUD icon (`item_shard`, `utils/sprtool/icons/shard.py`)
+is the mod's own and is **not** debt.
+
+### Current stand-ins
+
+| Use | Asset | Borrowed from |
+| --- | --- | --- |
+| World model | `models/glassgibs.mdl`, body 0, with an amber `kRenderFxGlowShell` (amount 8) | `func_breakable`'s glass |
+| Pickup sound | `debris/glass2.wav` at pitch 140–160 | glass breaking |
+| Inventory Icon | none — the Grid falls back to the HUD icon, tinted and additive | — |
+
+### What's wrong with them
+- A glass gib is flat and shapeless; the shell is what makes it read as anything. On a bright floor the
+  shell may be the only thing seen, and the amber was chosen by elimination (the Records own pale cold,
+  the progression pickups cyan and gold), not against a crystal.
+- Glass breaking, pitched up, is a clink at best and a breakage at worst.
+- The Grid Icons are world-model renders; a Shard has no model to render.
+
+### What to look for
+A small crystal point, one to three facets deep, in whatever hue crystal settles on for the whole game —
+the deposit's texture, the Shard, the unstable vein's arcs and eventually the Heart should agree. A pickup
+sound that rings.
+
+### Done when
+A Shard on the floor is a crystal at a glance, and its Grid Icon is rendered from that model.
+
 ## The HEV suit pickup — three recoloured stock suits
 
 ### Scope

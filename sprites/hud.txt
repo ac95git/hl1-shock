@@ -1,4 +1,4 @@
-259
+263
 
 //===========================================
 selection		2560 2560/hud_selection	0	0	510	135
@@ -318,6 +318,10 @@ item_security     320   top/security_320    0  0  20   20
 item_security     640   top/security_640    0  0  44   44
 item_security     1280  top/security_1280   0  0  88   88
 item_security     2560  top/security_2560   0  0  132  132
+item_shard        320   top/shard_320       0  0  20   20
+item_shard        640   top/shard_640       0  0  44   44
+item_shard        1280  top/shard_1280      0  0  88   88
+item_shard        2560  top/shard_2560      0  0  132  132
 inv_carried       320   top/carried_320     0  0  20   20
 inv_carried       640   top/carried_640     0  0  44   44
 inv_carried       1280  top/carried_1280    0  0  88   88

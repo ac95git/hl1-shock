@@ -126,7 +126,9 @@ open the Inventory. Nothing to rebuild.
 Two families in the stock HUD, and a new icon should join one of them:
 
 - **Item icons** (`item_*`): shaded greyscale objects in three-quarter view, visible thickness, no
-  outline, bright edges over dark mass. The Syringe and the keycard (`icons/security.py`) are these.
+  outline, bright edges over dark mass. The Syringe, the keycard (`icons/security.py`) and the Crystal
+  Shard (`icons/shard.py`, flat-shaded facets with highlighted edges, and a second smaller point at the
+  foot so it reads as crystal rather than as a pencil) are these.
 - **Suit readouts** (`suit_full`, `flash_full`, `cross`): flat glyph silhouettes with a soft one-to-two
   pixel glow, drawn as light. The carried arrow (`inv_carried`, `icons/carried.py`) is one of these,
   drawn at the item family's sizes because it sits beside an item icon; the Concealment eye will be
