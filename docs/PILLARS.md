@@ -59,8 +59,9 @@ interactable props, Xen, and Stations. That last part is still downstream of [ma
 do — a title and `[E] Action`, in the Pickup Prompt's vicinity, in the engine's console font. Defaults
 by class (`game_shared/prompt_defs.h`); the server classifies, the client resolves, no strings cross the
 wire. The mod's own pickups that never reach the Grid, and all ammunition, are taken by a use press
-through it. Ammunition still reads a generic *Ammunition*; mapper overrides and suppression are not
-built.
+through it. A **state line** replaces the key and action where something is in the way — *Lock / Code
+required* — so a hard gate looks impassable instead of offering a press it will not honour. Ammunition
+still reads a generic *Ammunition*; mapper overrides and suppression are not built.
 
 **Records** (2026-09-18) — the first code this pillar has ever had. Documents read in the world with
 `+use`: a `record` (a model) or a `record_brush` (a terminal, a notice, a roster), both of which stay
@@ -72,6 +73,15 @@ saved found-set of 512 ids and syncs it as a mask. An unread Record glows and go
 the press, takes no input so the player keeps moving, and closes on damage or on walking away
 (`record_read_range`). A fourth **Records** tab in the Inventory Panel lists what has been read, by
 category with Guidance pinned, and shows the same reader.
+
+**Guidance and locks** (2026-09-18). `record_grant` hands a Record over or takes one back when triggered,
+which is all an objectives system needs: a Guidance line is an ordinary Record in the pinned category,
+and "done" is a revoke that grants the next. Only a *granted* Record can be revoked, enforced by a second
+saved mask rather than by a rule a mapper has to keep, so a document the player read can never be taken
+away. `record_lock` fires its target if the suit has the Record it names — the soft-gate rule's first
+reusable form, and the first thing in the mod that gates on knowledge rather than on an item. A Record's
+first read can fire a target, which is how a remembered global gets set without any code knowing what it
+is for.
 
 What no custom code touches yet: level traversal, secrets, map flow, navigation aids.
 

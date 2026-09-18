@@ -810,7 +810,11 @@ static bool ClassifyPickup(CBaseEntity* pEnt, EEntryKind& outKind, int& outId)
 
 // What is this usable entity called? Anything a use press can act on gets a
 // Prompt, so the fallback is Generic rather than None.
-static EPromptClass ClassifyUsable(CBaseEntity* pEnt)
+//
+// Takes the player because some classes have more than one face: a
+// record_lock says "Code required" or offers the code depending on what the
+// suit remembers, and only the server can answer that.
+static EPromptClass ClassifyUsable(CBaseEntity* pEnt, CBasePlayer* pPlayer)
 {
 	static const struct
 	{
@@ -837,6 +841,14 @@ static EPromptClass ClassifyUsable(CBaseEntity* pEnt)
 	// A corpse keeps its use caps and has nothing to say.
 	if (pEnt->MyMonsterPointer() != nullptr && !pEnt->IsAlive())
 		return EPromptClass::None;
+
+	// Asked before the table, because a lock's answer is not its classname.
+	if (IsRecordLock(pEnt))
+	{
+		return RecordLockIsOpen(pEnt, pPlayer)
+				   ? EPromptClass::RecordLock
+				   : EPromptClass::RecordLockSealed;
+	}
 
 	for (const auto& row : k_classes)
 	{
@@ -889,7 +901,7 @@ LookedAtPickup FindLookedAtPickup(CBasePlayer* pPlayer)
 		out.pEntity = pickup ? pObject : nullptr;
 		out.kind = pickup ? kind : EEntryKind::Empty;
 		out.id = pickup ? id : 0;
-		out.usable = pickup ? EPromptClass::None : ClassifyUsable(pObject);
+		out.usable = pickup ? EPromptClass::None : ClassifyUsable(pObject, pPlayer);
 	}
 
 	return out;

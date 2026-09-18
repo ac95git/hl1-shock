@@ -35,6 +35,12 @@ enum class EPromptClass : uint8_t
 	MountedGun,    // func_tankcontrols
 	Record,        // the `record` entity, in either of its two forms
 
+	// A record_lock, in its two states.  The server decides which, because
+	// only it holds the found-set -- so a lock can never say "open" to a
+	// player who cannot open it.
+	RecordLock,       // the suit has the Record it names
+	RecordLockSealed, // it does not
+
 	// Taken rather than used: the pickups that never reach the Grid, so the
 	// Item Type table cannot name them.  Sent as EEntryKind::Pickup's id.
 	SkillPoint,   // item_skillpoint
@@ -56,6 +62,13 @@ struct PromptClassDef
 {
 	const char* title;  // nullptr: draw the action alone
 	const char* action; // follows the bound use key: "[E] Press"
+
+	// A state line, drawn INSTEAD of the key and action: how a hard gate
+	// looks impassable (docs/ROADMAP.md, "The Prompt").  A door that offers
+	// "[E] Open" and then does nothing teaches the player that use presses
+	// are unreliable; one that says "Code required" teaches them to go and
+	// find the code.  nullptr on everything that simply works.
+	const char* state = nullptr;
 };
 
 // One row per EPromptClass, in enum order.
@@ -72,6 +85,8 @@ static const PromptClassDef k_PromptClassDefs[] = {
 	{"Movable object", "Pull"},  // Movable
 	{"Mounted gun", "Operate"},  // MountedGun
 	{"Record", "Read"},          // Record
+	{"Lock", "Enter code"},                 // RecordLock
+	{"Lock", nullptr, "Code required"},     // RecordLockSealed
 	{"Skill Point", "Take"},         // SkillPoint
 	{"Reset Token", "Take"},         // ResetToken
 	{"Row Grant", "Take"},           // RowGrant

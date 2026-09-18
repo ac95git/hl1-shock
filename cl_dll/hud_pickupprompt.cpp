@@ -133,12 +133,17 @@ bool CHudPickupPrompt::Draw(float flTime)
 	const char* name = nullptr;
 	const char* action = k_PromptTakeAction;
 
+	// A state line replaces the key and action entirely: what is in the way,
+	// rather than an offer the press will not honour.
+	const char* state = nullptr;
+
 	if (m_iKind == 0)
 	{
 		// Used, not taken. A class may have no title: the action stands alone.
 		const PromptClassDef& def = GetPromptClass(m_iClass);
 		name = def.title;
 		action = def.action;
+		state = def.state;
 	}
 	else if (static_cast<EEntryKind>(m_iKind) == EEntryKind::Weapon)
 	{
@@ -164,13 +169,16 @@ bool CHudPickupPrompt::Draw(float flTime)
 	}
 
 	// A pickup that cannot be named is not prompted for, as before.
-	if (!action || (!name && m_iKind != 0))
+	if ((!action && !state) || (!name && m_iKind != 0))
 		return true;
 
-	// Centred under the crosshair. Two lines: what it is, and what a use
-	// press does to it.
+	// Centred under the crosshair. Two lines: what it is, and either what a
+	// use press does to it or what is stopping one.
 	char hint[64];
-	FormatAction(action, hint, sizeof(hint));
+	if (state)
+		snprintf(hint, sizeof(hint), "%s", state);
+	else
+		FormatAction(action, hint, sizeof(hint));
 
 	int nameW = 0, nameH = 0;
 	int hintW = 0, hintH = 0;

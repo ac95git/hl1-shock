@@ -679,6 +679,41 @@ void ClientCommand(edict_t* pEntity)
 			ClientPrint(pev, HUD_PRINTCONSOLE, "record_spawn needs sv_cheats 1.\n");
 		}
 	}
+	else if (FStrEq(pcmd, "record_grant") || FStrEq(pcmd, "record_revoke"))
+	{
+		// Cheat-gated: what record_grant does, without a trigger to wire.
+		// The revoke goes through the same refusal a mapper's would, so the
+		// "a found document never leaves the suit's memory" rule can be
+		// tried rather than taken on trust.
+		if (0 != g_psv_cheats->value)
+		{
+			const bool bGrant = FStrEq(pcmd, "record_grant");
+			const int id = (CMD_ARGC() >= 2) ? atoi(CMD_ARGV(1)) : 0;
+
+			const bool bChanged = bGrant
+									  ? player->m_records.Grant(id)
+									  : player->m_records.Forget(id);
+
+			if (bChanged)
+				SyncPlayerRecords(player);
+
+			if (bGrant)
+			{
+				ClientPrint(pev, HUD_PRINTCONSOLE, UTIL_VarArgs(
+					"Record %d granted%s.\n", id, bChanged ? "" : " (already held)"));
+			}
+			else
+			{
+				ClientPrint(pev, HUD_PRINTCONSOLE, UTIL_VarArgs(
+					"Record %d %s.\n", id,
+					bChanged ? "revoked" : "not revoked -- not held, or it was read rather than granted"));
+			}
+		}
+		else
+		{
+			ClientPrint(pev, HUD_PRINTCONSOLE, "record_grant / record_revoke need sv_cheats 1.\n");
+		}
+	}
 	else if (FStrEq(pcmd, "record_forget"))
 	{
 		// Cheat-gated: empty the suit's memory so the same Record can be read

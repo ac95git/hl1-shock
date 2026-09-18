@@ -827,6 +827,7 @@ searching alien makes a noise when it is sent and when it gives up.
 | The unread glow, loose form | `kRenderFxGlowShell`, pale blue, `record_glow_shell` 25 | the buster egon's shell (`dlls/multiplay_gamerules.cpp`) |
 | The unread glow, brush form | `sprites/glow01.spr` at `kRenderGlow`, `record_glow_halo` 0.35 | vanilla's general-purpose glow sprite |
 | Reading a Record | nothing — it is silent | — |
+| A `record_lock` refusing a press | `buttons/button11.wav` | vanilla's access-denied beep |
 
 ### What's wrong with them
 - **A security card is not a document.** It is a flat rectangle, which is the only property being
@@ -837,6 +838,10 @@ searching alien makes a noise when it is sent and when it gives up.
 - **Nothing makes a sound.** Opening the reader, registering a Record and closing it are all silent, so
   the one moment worth confirming — *this is now in the suit's memory* — is carried by a line of text at
   the foot of the page and nothing else.
+- **A refused lock borrows a button sound.** `button11.wav` is the right *idea* — it is what Half-Life
+  means by access denied — but it is a button's voice, not the suit's, and the lock is a thing the suit
+  is reading rather than a thing the player is pressing. The accepting case has no sound at all, so the
+  only audible feedback the mechanic has is its failure.
 
 ### What to look for
 A document prop that reads as paper or as a slate from across a room: a clipboard, a folder, a loose

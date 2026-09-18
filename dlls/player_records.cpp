@@ -25,6 +25,12 @@
 static TYPEDESCRIPTION g_RecordsSaveData[] =
 {
     { FIELD_CHARACTER, "m_found512", static_cast<int>(offsetof(CPlayerRecords, m_found)), k_RecordMaskBytes, 0 },
+
+    // Added after the first Records build shipped.  A save written before it
+    // simply restores with nothing granted, which means nothing revocable --
+    // the safe answer, since the only thing that can be revoked is Guidance
+    // and a stale Guidance line is a smaller problem than a lost document.
+    { FIELD_CHARACTER, "m_granted512", static_cast<int>(offsetof(CPlayerRecords, m_granted)), k_RecordMaskBytes, 0 },
 };
 
 bool RecordsSave(CPlayerRecords& records, CSave& save)
@@ -52,21 +58,54 @@ bool CPlayerRecords::AnyFound() const
 
 bool CPlayerRecords::Register(int id)
 {
-    if (!RecordIdValid(id) || Has(id))
+    if (!RecordIdValid(id))
+        return false;
+
+    // Reading it makes it the player's own, so a later revoke can no longer
+    // take it back. This is the "found" half of "a found document never
+    // leaves the suit's memory" -- found means read, whatever put the bit
+    // there first.
+    RecordMaskSet(m_granted, id, false);
+
+    if (Has(id))
         return false;
 
     RecordMaskSet(m_found, id, true);
     return true;
 }
 
-void CPlayerRecords::Forget(int id)
+bool CPlayerRecords::Grant(int id)
 {
+    if (!RecordIdValid(id) || Has(id))
+        return false;
+
+    // Only a grant that actually ADDED something marks it revocable. A grant
+    // aimed at a Record the player already has changes nothing at all -- in
+    // particular it cannot make a document they read revocable, which would
+    // be a back door through the rule Forget exists to enforce.
+    RecordMaskSet(m_found, id, true);
+    RecordMaskSet(m_granted, id, true);
+    return true;
+}
+
+bool CPlayerRecords::Forget(int id)
+{
+    if (!RecordIdValid(id) || !Has(id))
+        return false;
+
+    // The whole rule, in one test.
+    if (!RecordMaskGet(m_granted, id))
+        return false;
+
     RecordMaskSet(m_found, id, false);
+    RecordMaskSet(m_granted, id, false);
+    return true;
 }
 
 void CPlayerRecords::Clear()
 {
     memset(m_found, 0, sizeof(m_found));
+    memset(m_granted, 0, sizeof(m_granted));
     m_iReaderOpen = k_RecordIdNone;
 }
 

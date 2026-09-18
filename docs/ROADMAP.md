@@ -2778,6 +2778,10 @@ title (*Battery*, *Terminal*, *Door lock*) and the action or actions under it (`
   Suppression is not optional: vanilla's classic secret is the unmarked usable panel, exploration is ranked
   first, and a label on every hidden switch spoils it.
 - **A state line is how a hard gate looks impassable**: *Elevator — No power*, *Door lock — Code required*.
+  **Built 2026-09-18** with `record_lock`, the first thing that needed one: a third field on
+  `PromptClassDef`, drawn *instead of* the bound key and its action. A door that offers `[E] Open` and
+  then does nothing teaches the player that use presses are unreliable; one that says *Code required*
+  teaches them to go and find the code.
 - **The key shown is the real binding** of `+use`, which the Status page's tooltips already look up.
 - Walk-over pickups keep [ADR-0011](adr/0011-pickups-are-walk-over.md) and their `Take`. Breakables,
   monsters and scenery get nothing. A [deposit](#mining-and-crystal-shards) gets a hint line — *Crystal
@@ -2836,6 +2840,12 @@ Categories on the left, from the file, found order inside each; the reader on th
   the advisor's voice, so the vortigaunt's improving English shows here too. **Revoke is for Guidance
   only**: a found document never leaves the suit's memory. A separate objectives system was rejected as a
   second thing to save, sync and debug.
+  **Built 2026-09-18, and the revoke rule is structural rather than a convention a mapper has to keep.**
+  The server cannot ask `records.txt` which category a Record is in — that file is the client's — so
+  `CPlayerRecords` carries a second saved mask of which ids arrived *by grant*. `Forget` refuses anything
+  else; a grant that adds nothing marks nothing, so it cannot launder a read document into a revocable
+  one; and reading clears the granted bit, because reading is finding. Pointing a revoke at a real
+  document therefore does nothing at all, without a parser and without a rule to remember.
 - The same entity hands over any Record at a scripted moment, and **a Record's first read can fire a
   target** — how one sets a remembered global for the endings with no code that knows about endings.
 
@@ -2849,6 +2859,20 @@ the alternative being the mapper's vent or window. It accepts a granted Record a
 Knowledge costs no Cells, where a keycard item would tax a scarce Inventory. Accepted knowingly: a code
 remembered from a previous run still has to be found again; a typed keypad can be added beside the lock
 later without changing it.
+
+**Built 2026-09-18** as `record_lock` and `record_lock_brush` — the brush form is the keypad a mapper
+builds, and it is the one that will get used. A press without the Record plays vanilla's access-denied
+beep; with it, the target fires. **The state line arrived with it**, as a third field on
+`PromptClassDef`, drawn instead of the bound key and action: *Lock / Code required*, then *Lock /
+`[E] Enter code`*. The server picks which face to show, because only it holds the found-set, so a lock
+can never offer an action it will not honour — and that is now the general mechanism every hard gate can
+use, which slice 4's keyvalues hang off rather than invent.
+
+**A door needs no `multisource`.** `CBaseDoor` already refuses to be walked into once it has a
+`targetname` (`dlls/doors.cpp:540`, "if door is somebody's target, then touching does nothing"), and it
+only gains `FCAP_IMPULSE_USE` when its *Use Only* flag is set. So a named door with that flag off is
+inert: no touch, no use press, no Prompt of its own. The keypad beside it is the only way through, which
+is two entities for a locked door instead of four.
 
 ### Build order
 
@@ -2878,9 +2902,17 @@ Each slice judgeable in game on its own. None of it is stealth, so
    room** (three attempts — see "Reading one"), and tuning cvars have to be re-read on a clock, because a
    look cannot be judged through a console command. Left over: the Prompt names a generic *Record*
    rather than the document's title, which wants slice 4's overrides.
-3. **`record_grant`, Guidance, `record_lock`**, and the first-read target.
-4. **The mapper's controls** — the three prompt keyvalues, the FGD (and its sync rule), CONTEXT terms, the
-   ADR-0011 exception, PILLARS pillar 1, an ART_DEBT line for the stand-in document model.
+3. ~~**`record_grant`, Guidance, `record_lock`**, and the first-read target.~~ **Built and verified in
+   game 2026-09-18.** All three, plus the Prompt's **state line**, which the lock needed and which every
+   hard gate now inherits (see "The Prompt" and "A Record can open something"). `record_grant` grants,
+   revokes, or both in one trigger, with an Only-once flag, and fires its target whether or not anything
+   changed so a Guidance chain cannot stall on a line the player already had. The first-read target is on
+   `record` and `record_brush` and fires once, because a Record stays in the world and is re-readable.
+   Cheats: `record_grant <id>`, `record_revoke <id>`. Left over: the lock says `Enter code` rather than
+   the digits, which is per-entity text and so is slice 4's.
+4. **The mapper's controls** — the three prompt keyvalues, the FGD (and its sync rule), CONTEXT terms
+   (Record, Prompt, Guidance), the ADR-0011 exception written into the ADR itself. ~~PILLARS pillar 1, an
+   ART_DEBT line for the stand-in document model~~ — both done with slice 2.
 
 ### Before the grill
 

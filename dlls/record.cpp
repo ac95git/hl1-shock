@@ -297,9 +297,20 @@ void CRecord::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useTyp
 	if (!pPlayer)
 		return;
 
+	// Asked BEFORE the read, because the read is what makes it false.
+	const bool bFirstRead = !pPlayer->m_records.Has(m_iRecordId);
+
 	// Center() rather than pev->origin, so a brush Record measures from the
 	// middle of the terminal and not from a corner of its bounding box.
 	PlayerReadRecord(pPlayer, m_iRecordId, Center());
+
+	// A Record's first read can fire a target -- which is how a remembered
+	// global gets set for the endings without any code here knowing that
+	// endings exist (docs/ROADMAP.md, "The tab").  First read only: a
+	// document that stays in the world is re-readable, and a trigger that
+	// fired every time would make "the player has read this" mean nothing.
+	if (bFirstRead && !FStringNull(pev->target))
+		SUB_UseTargets(pPlayer, USE_TOGGLE, 0);
 }
 
 //=========================================================
@@ -322,4 +333,245 @@ void UpdateRecordGlows(CBasePlayer* pPlayer)
 			pRecord->SetGlow(!pPlayer->m_records.Has(pRecord->RecordId()));
 		}
 	}
+}
+
+//=========================================================
+// record_grant
+//
+// Hands a Record over, or takes one back, at a scripted moment.  This is
+// how Guidance works: a Guidance line is an ordinary Record in a pinned
+// category, and "done" is a revoke that optionally grants the next one --
+// so there is no second objectives system to save, sync and debug
+// (docs/ROADMAP.md, "The tab").
+//
+// NOTHING FAILS.  Granting what is already held, revoking what is not,
+// naming an id records.txt has never heard of: all silent.  A mapper
+// wiring a chain of these should never have to reason about order, and a
+// trigger that could fail would make them.
+//
+// The same entity hands over any Record, not only Guidance -- a briefing
+// the player is given rather than finds.  Only a GRANTED Record can be
+// revoked (CPlayerRecords::Forget), so pointing the revoke at a real
+// document quietly does nothing rather than erasing it.
+//=========================================================
+#define SF_RECORD_GRANT_ONCE 1
+
+class CRecordGrant : public CPointEntity
+{
+public:
+	bool KeyValue(KeyValueData* pkvd) override;
+	void Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value) override;
+
+	bool Save(CSave& save) override;
+	bool Restore(CRestore& restore) override;
+	static TYPEDESCRIPTION m_SaveData[];
+
+private:
+	int m_iGrantId = k_RecordIdNone;
+	int m_iRevokeId = k_RecordIdNone;
+	bool m_bSpent = false;
+};
+
+LINK_ENTITY_TO_CLASS(record_grant, CRecordGrant);
+
+TYPEDESCRIPTION CRecordGrant::m_SaveData[] =
+	{
+		DEFINE_FIELD(CRecordGrant, m_iGrantId, FIELD_INTEGER),
+		DEFINE_FIELD(CRecordGrant, m_iRevokeId, FIELD_INTEGER),
+		DEFINE_FIELD(CRecordGrant, m_bSpent, FIELD_BOOLEAN),
+};
+
+IMPLEMENT_SAVERESTORE(CRecordGrant, CPointEntity);
+
+bool CRecordGrant::KeyValue(KeyValueData* pkvd)
+{
+	if (FStrEq(pkvd->szKeyName, "record_id"))
+	{
+		m_iGrantId = atoi(pkvd->szValue);
+		return true;
+	}
+	if (FStrEq(pkvd->szKeyName, "revoke_id"))
+	{
+		m_iRevokeId = atoi(pkvd->szValue);
+		return true;
+	}
+
+	return CPointEntity::KeyValue(pkvd);
+}
+
+void CRecordGrant::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value)
+{
+	if (m_bSpent)
+		return;
+
+	// Single player: whoever triggered this, the suit that remembers is the
+	// one player's. Taking the activator when it is a player keeps the door
+	// open for anything that later cares.
+	CBasePlayer* pPlayer = (pActivator != nullptr) ? dynamic_cast<CBasePlayer*>(pActivator) : nullptr;
+	if (!pPlayer)
+		pPlayer = static_cast<CBasePlayer*>(UTIL_PlayerByIndex(1));
+	if (!pPlayer)
+		return;
+
+	// Revoke first, so that "this objective is done, here is the next one"
+	// is one entity and reads in that order in the tab.
+	bool bChanged = pPlayer->m_records.Forget(m_iRevokeId);
+	bChanged = pPlayer->m_records.Grant(m_iGrantId) || bChanged;
+
+	if (bChanged)
+		SyncPlayerRecords(pPlayer);
+
+	if (FBitSet(pev->spawnflags, SF_RECORD_GRANT_ONCE))
+		m_bSpent = true;
+
+	// Fires whether or not anything changed: a chain must not stall because
+	// the player had already been given the line.
+	SUB_UseTargets(pPlayer, USE_TOGGLE, 0);
+}
+
+//=========================================================
+// record_lock
+//
+// Names a Record and fires its target if the suit has it.  The first
+// reusable form of the soft-gate rule (docs/ROADMAP.md): the intended way
+// through is knowing something, and the mapper's vent or window is the
+// alternative.
+//
+// NO TYPING.  GoldSrc has no keypad, and VGUI1 text entry is awkward
+// enough that the Inventory Panel avoids it -- so knowing the code IS
+// entering it.  Accepted knowingly: a code the player remembers from a
+// previous run still has to be found again.
+//
+// Knowledge costs no Cells, where a keycard would tax a scarce Inventory.
+// It takes a granted Record as readily as a found one, because the suit's
+// memory does not distinguish and neither should a door.
+//=========================================================
+class CRecordLock : public CBaseEntity
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+	bool KeyValue(KeyValueData* pkvd) override;
+	void Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value) override;
+
+	int ObjectCaps() override { return (CBaseEntity::ObjectCaps() & ~FCAP_ACROSS_TRANSITION) | FCAP_IMPULSE_USE; }
+
+	bool Save(CSave& save) override;
+	bool Restore(CRestore& restore) override;
+	static TYPEDESCRIPTION m_SaveData[];
+
+	int RecordId() const { return m_iRecordId; }
+
+private:
+	int m_iRecordId = k_RecordIdNone;
+};
+
+// Two classnames for the same reason `record` has two: an FGD cannot
+// declare one class both @PointClass and @SolidClass, and a lock is most
+// naturally a keypad the mapper builds out of brushes.
+LINK_ENTITY_TO_CLASS(record_lock, CRecordLock);
+LINK_ENTITY_TO_CLASS(record_lock_brush, CRecordLock);
+
+const char* const k_RecordLockClassnames[] = {"record_lock", "record_lock_brush"};
+const int k_NumRecordLockClassnames = 2;
+
+// The refusal. Vanilla's own access-denied beep, so a locked thing in this
+// mod sounds like a locked thing in Half-Life.
+static const char* const k_RecordLockDeniedSound = "buttons/button11.wav";
+
+TYPEDESCRIPTION CRecordLock::m_SaveData[] =
+	{
+		DEFINE_FIELD(CRecordLock, m_iRecordId, FIELD_INTEGER),
+};
+
+IMPLEMENT_SAVERESTORE(CRecordLock, CBaseEntity);
+
+bool CRecordLock::KeyValue(KeyValueData* pkvd)
+{
+	if (FStrEq(pkvd->szKeyName, "record_id"))
+	{
+		m_iRecordId = atoi(pkvd->szValue);
+		return true;
+	}
+
+	return CBaseEntity::KeyValue(pkvd);
+}
+
+void CRecordLock::Precache()
+{
+	PRECACHE_SOUND(k_RecordLockDeniedSound);
+
+	if (!FStringNull(pev->model) && STRING(pev->model)[0] != '*')
+		PRECACHE_MODEL(STRING(pev->model));
+}
+
+void CRecordLock::Spawn()
+{
+	Precache();
+
+	if (!FStringNull(pev->model))
+	{
+		SET_MODEL(ENT(pev), STRING(pev->model));
+
+		if (STRING(pev->model)[0] == '*')
+		{
+			pev->solid = SOLID_BSP;
+			pev->movetype = MOVETYPE_PUSH;
+			return;
+		}
+	}
+
+	// A point lock with no model is a bare interaction point -- the keypad
+	// is the mapper's brushwork nearby, or there is nothing to see at all.
+	// It still needs a size, or the aim test has nothing to aim at.
+	pev->solid = SOLID_TRIGGER;
+	pev->movetype = MOVETYPE_NONE;
+	UTIL_SetSize(pev, Vector(-8, -8, -8), Vector(8, 8, 8));
+	UTIL_SetOrigin(pev, pev->origin);
+}
+
+void CRecordLock::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value)
+{
+	CBasePlayer* pPlayer = (pActivator != nullptr) ? dynamic_cast<CBasePlayer*>(pActivator) : nullptr;
+	if (!pPlayer)
+		return;
+
+	if (!pPlayer->m_records.Has(m_iRecordId))
+	{
+		// The Prompt already said "Code required", so the sound is
+		// confirmation rather than news -- but a press that did nothing at
+		// all would read as the press having been missed.
+		EMIT_SOUND(ENT(pev), CHAN_ITEM, k_RecordLockDeniedSound, 1.0, ATTN_NORM);
+		return;
+	}
+
+	SUB_UseTargets(pPlayer, USE_TOGGLE, 0);
+}
+
+//=========================================================
+// RecordLockPromptClass  (declared in player_records.h)
+//
+// Which of the lock's two faces to show.  It lives here, beside the Use
+// that has to agree with it, so the Prompt and the press cannot drift --
+// the same reason FindLookedAtPickup mirrors PlayerUse's aim test.
+//=========================================================
+bool IsRecordLock(CBaseEntity* pEnt)
+{
+	if (!pEnt)
+		return false;
+
+	for (int i = 0; i < k_NumRecordLockClassnames; ++i)
+	{
+		if (FClassnameIs(pEnt->pev, k_RecordLockClassnames[i]))
+			return true;
+	}
+	return false;
+}
+
+bool RecordLockIsOpen(CBaseEntity* pEnt, CBasePlayer* pPlayer)
+{
+	if (!pPlayer || !IsRecordLock(pEnt))
+		return false;
+
+	return pPlayer->m_records.Has(static_cast<CRecordLock*>(pEnt)->RecordId());
 }

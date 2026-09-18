@@ -25,6 +25,16 @@ struct CPlayerRecords
 	// as Records are written.
 	unsigned char m_found[k_RecordMaskBytes] = {};
 
+	// Which of those arrived by record_grant rather than by being read.
+	//
+	// This is what makes "a found document never leaves the suit's memory"
+	// (docs/ROADMAP.md) true by construction instead of by a rule a mapper
+	// has to remember: Forget refuses anything not in here, so a revoke
+	// aimed at a real document does nothing at all.  The server cannot ask
+	// records.txt whether a Record is Guidance -- the file is the client's
+	// -- and this needs no parser to answer the same question.
+	unsigned char m_granted[k_RecordMaskBytes] = {};
+
 	// ---- Transient ----
 
 	// The Record the reader is currently showing, or k_RecordIdNone.  NOT
@@ -52,10 +62,16 @@ struct CPlayerRecords
 	// re-read without asking twice.
 	bool Register(int id);
 
-	// Takes one back.  Only Guidance is ever revoked (docs/ROADMAP.md) --
-	// a found document never leaves the suit's memory -- but the mask does
-	// not know the difference, so the rule lives in record_grant (slice 3).
-	void Forget(int id);
+	// Hands one over unread, at a scripted moment (record_grant).  Marks it
+	// granted, which is the only thing that can ever be taken back.
+	// Returns true only when it was new.
+	bool Grant(int id);
+
+	// Takes a granted Record back.  Refuses anything the player actually
+	// read: a found document never leaves the suit's memory.  Returns true
+	// only if something was removed, so "nothing fails" stays a statement
+	// about the mapper's experience and not about silence in the log.
+	bool Forget(int id);
 
 	void Clear();
 };
@@ -119,3 +135,14 @@ void CloseRecordReader(CBasePlayer* pPlayer);
 // reading.  Polled each frame from PlayerPreThink -- it is one distance
 // test against a stored origin, and only while a reader is open.
 void RecordReaderThink(CBasePlayer* pPlayer);
+
+// =====================================================================
+// record_lock, for the Prompt.
+//
+// Both live in record.cpp beside the Use they have to agree with, so the
+// Prompt and the press cannot drift apart -- the same reason
+// FindLookedAtPickup mirrors PlayerUse's aim test.
+// =====================================================================
+class CBaseEntity;
+bool IsRecordLock(CBaseEntity* pEnt);
+bool RecordLockIsOpen(CBaseEntity* pEnt, CBasePlayer* pPlayer);

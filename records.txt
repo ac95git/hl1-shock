@@ -47,6 +47,20 @@ guidance_first_steps
 	Find the pump control first.
 }
 
+guidance_west_corridor
+{
+	id        8
+	category  Guidance
+	title     Get through the west corridor
+	source    Advisory
+	revocable 1
+	body
+	The pumps are off. The way down is past the west corridor, and the
+	corridor doors are on the maintenance lock.
+
+	Somebody will have written the override down. They always do.
+}
+
 // ---------------------------------------------------------------------
 // Notices -- printed, posted, institutional.  The voice of the place.
 // ---------------------------------------------------------------------

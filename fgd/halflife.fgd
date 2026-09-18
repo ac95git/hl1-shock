@@ -1754,6 +1754,7 @@
 @PointClass size(-8 -8 0, 8 8 8) base(Targetname, Angles) studio() = record : "Record (readable document)"
 [
 	record_id(integer) : "Record id (records.txt)" : 1
+	target(target_destination) : "Fire on first read" : : "Fired the FIRST time this Record is read, and never again. A Record stays in the world and is re-readable, so a target that fired every time would not mean 'the player has read this'."
 	model(studio) : "Model" : "models/w_security.mdl" : "The loose document's world model. It defaults to a stand-in -- a security card is the flattest thing vanilla ships, and it is meant to look wrong until the document model exists (docs/ART_DEBT.md). Blank falls back to the same stand-in."
 	spawnflags(Flags) =
 	[
@@ -1764,6 +1765,51 @@
 @SolidClass base(Targetname) = record_brush : "Record (fixed source: terminal, notice, roster)"
 [
 	record_id(integer) : "Record id (records.txt)" : 1
+	target(target_destination) : "Fire on first read" : : "Fired the FIRST time this Record is read, and never again. A Record stays in the world and is re-readable, so a target that fired every time would not mean 'the player has read this'."
+]
+
+// Hands a Record over, or takes one back, when triggered.
+//
+// This is how Guidance works: a Guidance line is an ordinary Record in the
+// pinned Guidance category, and "objective done" is a revoke that optionally
+// grants the next one. Wire a chain of these and nothing else is needed --
+// there is no separate objectives system.
+//
+// NOTHING FAILS. Granting what the player already has, revoking what they do
+// not, naming an id records.txt has never heard of: all silent, and the target
+// fires either way, so a chain cannot stall.
+//
+// Only a GRANTED Record can be revoked. Pointing "Revoke" at a document the
+// player actually found and read does nothing -- a found document never leaves
+// the suit's memory.
+@PointClass base(Targetname, Target) = record_grant : "Record: grant / revoke (Guidance)"
+[
+	record_id(integer) : "Grant this Record id" : 0 : "0 to grant nothing."
+	revoke_id(integer) : "Revoke this Record id" : 0 : "0 to revoke nothing. Only works on a Record this player was GRANTED, never on one they read."
+	spawnflags(Flags) =
+	[
+		1 : "Only once" : 0
+	]
+]
+
+// Fires its target if the suit has the Record it names; otherwise beeps and
+// does nothing. The Prompt says "Code required" without it and offers the code
+// with it, so a locked thing looks locked before it is pressed.
+//
+// There is no typing: GoldSrc has no keypad, so KNOWING the code is entering
+// it. This is the soft-gate rule's reusable form -- the intended way through is
+// a Record, and the alternative is the mapper's vent or window.
+//
+// It takes a granted Record as readily as a found one.
+@PointClass size(-8 -8 -8, 8 8 8) base(Targetname, Target, Angles) studio() = record_lock : "Record lock (point)"
+[
+	record_id(integer) : "Record id that opens it" : 1
+	model(studio) : "Model (optional)"
+]
+
+@SolidClass base(Targetname, Target) = record_lock_brush : "Record lock (keypad brushwork)"
+[
+	record_id(integer) : "Record id that opens it" : 1
 ]
 
 //
