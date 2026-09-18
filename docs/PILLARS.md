@@ -93,6 +93,17 @@ walking over `item_shard`. The pickup is a stand-in (Half-Life's glass gib in an
 icon is the mod's own, `utils/sprtool/icons/shard.py`. The only tool that mines is the
 [Carbon Pickaxe](#2-enhanced-combat).
 
+**Deposits** are `func_deposit` (`dlls/deposit.cpp`), a brush the mapper carves: `CBreakable` underneath,
+so strength, break sound, gibs and the fired target come from it, and a pickaxe hit counts double as every
+blow on a breakable does — 50 against a default strength of 120, three swings. **Only a mining tool breaks
+one**: a hit whose attacker's active item answers `IsMiningTool()` and which was struck directly, so a
+grenade thrown before a swap to the pickaxe does not count. Everything else glances off in a ricochet
+spark and deals nothing — blades, bullets, explosions, the katana's wave. The Prompt names it *Crystal
+deposit* with a state line by what is in hand, *Strike to mine* or *Requires a mining tool*; a use press
+does nothing. Broken, it scatters its `yield` (default 3, at most 20) as loose `item_shard`s from the point
+nearest the striker, stepped toward them, so a vein in a wall breaks into the room. Triggered by name it
+breaks the same way, Shards and all. It never respawns.
+
 What no custom code touches yet: level traversal, secrets, map flow, navigation aids.
 
 ### What's missing

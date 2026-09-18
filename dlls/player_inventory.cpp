@@ -891,6 +891,15 @@ static EPromptClass ClassifyUsable(CBaseEntity* pEnt, CBasePlayer* pPlayer)
 				   : EPromptClass::RecordLockSealed;
 	}
 
+	// A deposit's answer depends on what is in the player's hand, and the
+	// Prompt resends when that changes (the class is part of its change test).
+	if (FClassnameIs(pEnt->pev, "func_deposit"))
+	{
+		return (pPlayer && pPlayer->m_pActiveItem && pPlayer->m_pActiveItem->IsMiningTool())
+				   ? EPromptClass::Deposit
+				   : EPromptClass::DepositNoTool;
+	}
+
 	for (const auto& row : k_classes)
 	{
 		if (FClassnameIs(pEnt->pev, row.classname))

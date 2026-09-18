@@ -41,6 +41,12 @@ enum class EPromptClass : uint8_t
 	RecordLock,       // the suit has the Record it names
 	RecordLockSealed, // it does not
 
+	// A func_deposit, by what the player holds.  Both are state lines: a
+	// deposit is mined by striking it, never by a use press, so neither
+	// offers the key.
+	Deposit,       // a mining tool is in hand
+	DepositNoTool, // it is not
+
 	// Taken rather than used: the pickups that never reach the Grid, so the
 	// Item Type table cannot name them.  Sent as EEntryKind::Pickup's id.
 	SkillPoint,   // item_skillpoint
@@ -111,6 +117,8 @@ static const PromptClassDef k_PromptClassDefs[] = {
 	{"Record", "Read"},          // Record
 	{"Lock", "Enter code"},                 // RecordLock
 	{"Lock", nullptr, "Code required"},     // RecordLockSealed
+	{"Crystal deposit", nullptr, "Strike to mine"},         // Deposit
+	{"Crystal deposit", nullptr, "Requires a mining tool"}, // DepositNoTool
 	{"Skill Point", "Take"},         // SkillPoint
 	{"Reset Token", "Take"},         // ResetToken
 	{"Row Grant", "Take"},           // RowGrant

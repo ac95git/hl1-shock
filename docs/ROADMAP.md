@@ -3133,14 +3133,14 @@ is designed, and may well change name first.
 | **Prompt** | The text shown in the vicinity of anything that can be interacted with: a title, and the action or actions under it. The Pickup Prompt is its oldest case. | 2026-09-17. CONTEXT.md avoids *use prompt*, *hint*, *tooltip*; hence the bare word. |
 | **Station** | A world entity that takes items in and gives items out. | Avoid *bench*, *workbench*, *terminal*, *fabricator*. *Terminal* especially — it is a fixed source of Records. |
 | **Decapitation** | A lethal head hit that removes the head: headless submodel, thrown skull, blood from the stump. | Distinct from *gibbing*, which is the whole body and already means something in this codebase. **Headless** names the resulting state. |
-| **Carbon Pickaxe** | The other custom weapon. | Named already; recorded here so it is used consistently. **Gauss Katana** graduated to CONTEXT.md on 2026-09-12 when the weapon was built. |
+| ~~**Carbon Pickaxe**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#weapons) on 2026-09-18, when v1 was built. | |
 | **Route** | A build path through the Skill Tree: the set of Skills whose bonuses multiply into one way of playing. A region of the tree since 2026-09-15. | Named 2026-09-13. Avoid *class*, *spec* and *tree* — the tree is the whole thing. |
 | **Hub** | The centre region of the Skill Tree: the suit, the generic suit stats, and the cross-Route Skills in its corner cells. | Settled 2026-09-15. Avoid *core* (the alien ammo) and *centre* alone. |
 | **Seam** | The shared border of two Routes' regions, where a cross-Route build pays in the neighbour's stat. | Settled 2026-09-15. Avoid *bridge*, *link* (a link is an effect that reads another Route). |
 | **Keystone** | A Skill Tree node with a real downside. Glass Cannon is the first. | Settled 2026-09-15, Path of Exile's word kept on purpose. Avoid *curse*, *trade-off node*. |
 | **Trace** | A drawn connector in the Skill Tree: thin between neighbours, thick for a Skill's gate, lit when powered. | Presentation term, 2026-09-15. Avoid *edge* in player-facing text (kept in code and the debug overlay). |
 | **The Heart** | The purest crystal of the anchor under the mine, cut free by the player in the cold open and seated in the rig. | Provisional, 2026-09-17. The grill called it the *keystone*; **Keystone** is taken, two rows up. |
-| **Deposit**, **Shard** | A hand-placed, finite crystal formation only a mining tool breaks; the stackable item it drops, the input to Stations. | 2026-09-17. Avoid *ore*, *node* (a node is in the Skill Tree), *resource*. |
+| ~~**Deposit**, **Shard**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#inventory) on 2026-09-18, when both were built. | |
 | **Fuel processor** | A Station that turns a stack of Shards into one Skill Point, once. | 2026-09-17. |
 | **Tail** | The half-damage remainder of a Pulse after its deflect window, to one second in total. | 2026-09-17. **Not a Shield** and not a deflect; "brace" is the player-facing verb candidate. |
 | **Double jump** | The sixth Module; fills the legs Slot. | 2026-09-17. Name as plain as Dash and Hook; a fiction name for the hardware is open. |

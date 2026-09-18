@@ -1076,7 +1076,31 @@
 	_minlight(string) : "Minimum light level"
 ]
 
-@SolidClass base(Global,Targetname, Target, RenderFields, Angles, Prompt, ZHLT) = func_button : "Button" 
+// A crystal deposit: carve the vein, texture it as crystal. Only a mining tool (the Carbon Pickaxe)
+// breaks it; everything else sparks off, and the Prompt says "Requires a mining tool". Broken, it
+// scatters "Shards" item_shard pickups on the striker's side and fires its target. Never respawns.
+// Triggering it by name breaks it too, Shards and all. The pickaxe hits a deposit for 50 (breakables
+// take double from a blow), so the default strength of 120 is three swings.
+@SolidClass base(Targetname, Global, RenderFields, Prompt, ZHLT) = func_deposit : "Crystal Deposit"
+[
+	target(target_destination) : "Target on break"
+	health(integer) : "Strength" : 120
+	yield(integer) : "Shards" : 3
+	material(choices) : "Material type" : 0 =
+	[
+		0: "Crystal (glass sounds and gibs)"
+		8: "Rock (concrete sounds, rock gibs)"
+	]
+	explosion(choices) : "Gibs Direction" : 1 =
+	[
+		0: "Random"
+		1: "Relative to Attack"
+	]
+	gibmodel(studio) : "Gib Model" : ""
+	_minlight(string) : "Minimum light level"
+]
+
+@SolidClass base(Global,Targetname, Target, RenderFields, Angles, Prompt, ZHLT) = func_button : "Button"
 [
 	speed(integer) : "Speed" : 5
 	health(integer) : "Health (shootable if > 0)"

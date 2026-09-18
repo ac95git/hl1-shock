@@ -135,6 +135,7 @@ cmd /c ""$(ProjectDir)..\..\filecopy.bat" "$(SolutionDir)../../network" "" "delt
     <ClCompile Include="..\..\dlls\crowbar.cpp" />
     <ClCompile Include="..\..\dlls\katana.cpp" />
     <ClCompile Include="..\..\dlls\pickaxe.cpp" />
+    <ClCompile Include="..\..\dlls\deposit.cpp" />
     <ClCompile Include="..\..\dlls\summon.cpp" />
     <ClCompile Include="..\..\dlls\defaultai.cpp" />
     <ClCompile Include="..\..\dlls\doors.cpp" />

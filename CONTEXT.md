@@ -65,6 +65,12 @@ The kind of a thing — medkit, battery, keycard. Defines display name, icon, Ce
 size, and what using it does. Half-Life's weapons are not Item Types; they keep their own identity.
 _Avoid_: item definition, template, item class, item kind
 
+**Deposit**:
+A crystal formation placed by hand in a map — a secret that happens to be made of crystal. Finite: broken
+once, never back. Only a mining tool breaks one, and it breaks into Shards. *Crystal deposit* on screen,
+`func_deposit` in maps.
+_Avoid_: ore, vein (fine in prose about one, not as the name), node (a node is in the Skill Tree), resource
+
 **Shard**:
 A Crystal Shard: the Item Type a Deposit breaks into and a Station takes in. The mod's one material —
 there is no second resource type, and recycling (if it comes) is item to item. *Crystal Shard* on screen,

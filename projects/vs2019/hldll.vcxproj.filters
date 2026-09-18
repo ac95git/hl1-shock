@@ -111,6 +111,9 @@
     <ClCompile Include="..\..\dlls\pickaxe.cpp">
       <Filter>Source Files\dlls</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\dlls\deposit.cpp">
+      <Filter>Source Files\dlls</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\dlls\summon.cpp">
       <Filter>Source Files\dlls</Filter>
     </ClCompile>
