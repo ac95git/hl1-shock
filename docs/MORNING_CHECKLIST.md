@@ -27,6 +27,17 @@ down, so it needs the Inventory as its UI or an arbitrary rule; a design fork, n
 detail. The Air Dash's double-jump gate — see the Dash decisions below. Reserve ① turned out to be done
 already (last section).
 
+## Results — Andrei, 2026-09-18
+
+| Section | Result |
+| --- | --- |
+| P, D, U — the pickaxe, deposits, unstable deposits | Pass — "chef's kiss" |
+| T — Stations | Pass, the refusals for Grid space and for uranium included |
+| G — the melee alien grunt | Pass — "a very good base, it will be extended and refined later" |
+| A — the Dash in the air | Pass |
+| Q — the Pulse's tail | **The mechanic passes; the visual does not.** "The visual indicator needs to be addressed in order for the mechanic to be clear and rewarding to the player." Open, next |
+| Q, open question | Whether a successful deflect should be followed by a tail too (today it is not). Lower priority |
+
 ## Setup
 
 Debug build, installed. Everything below can be run on `map minemap` (section M), which was generated and

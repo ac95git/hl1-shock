@@ -196,7 +196,7 @@ others. If it is cut instead, this entry goes with it.
 | Matrix ready again | `player/recharged.wav` at pitch 80 | the Pulse's own ready chime, pitched down so the two readiness cues are told apart by ear |
 | Matrix raise, the light | a `TE_DLIGHT` in the suit's colour, held a second | the Shield's own light, longer; deliberately not its rings, so the two verbs on the key do not look alike |
 | A hit braced in the tail (`CPlayerPulse::TailScale`, 2026-09-18) | `weapons/cbar_hit1/2.wav` at pitch 62–68, volume 0.7 | the deflect's own impact, pitched well down — the same family so it reads as the Pulse, duller so it never reads as a parry. Never in the same instant as a deflect: one hit is one or the other |
-| The tail begins, the ring | one ring at 0.6 of the Shield's scale, in the suit's colour at a third of its brightness | the Shield's own ring, dimmed |
+| The tail begins, the ring | one ring at 0.6 of the Shield's scale, in the suit's colour at a third of its brightness | the Shield's own ring, dimmed. **Not accepted in play (2026-09-18)**: the tail is not clear or rewarding enough to read — see ROADMAP, "The Pulse's tail" |
 
 The Matrix wants a sound that says *stance*: something coming up and staying up, not a discharge, and a
 drop that is unmistakably the same thing powering down. It should share nothing with the Pulse's set,

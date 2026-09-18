@@ -8,7 +8,8 @@ build on, and list the questions that have to be answered before the first line 
 is built, its content moves into PILLARS.md and the entry here is deleted — this file only ever shrinks
 from the top.
 
-**Last updated:** 2026-09-18 overnight (built, all untested in game: the Carbon Pickaxe, crystal Shards,
+**Last updated:** 2026-09-18 overnight (built, and verified in game by Andrei the same morning except the
+Pulse tail's visual, which is open: the Carbon Pickaxe, crystal Shards,
 deposits and unstable deposits, the first two Stations, the Pulse's tail, the base Dash in the air, the
 melee alien grunt; their entries below are trimmed to what is left, and the test rows are in
 [MORNING_CHECKLIST.md](MORNING_CHECKLIST.md)). Before that, 2026-09-17 (the game shaped as a whole in a 29-question grill and reconciled here:
@@ -518,7 +519,7 @@ other mods — rather than author from scratch, and to accept placeholder qualit
 
 ~~Replaces the crowbar.~~ Heavier, slower, hits harder.
 
-**v1 built 2026-09-18, untested in game** — `weapon_pickaxe`, 25 damage at 1.5× the crowbar's swing time,
+**v1 built and verified in game 2026-09-18** — `weapon_pickaxe`, 25 damage at 1.5× the crowbar's swing time,
 the only mining tool, the crowbar in black metal; recorded in [PILLARS pillar 2](PILLARS.md#2-enhanced-combat).
 What is left here: a real pick head ([ART_DEBT.md](ART_DEBT.md#the-carbon-pickaxe--a-black-crowbar-and-the-crowbars-sounds-and-hud-icon)),
 and becoming the starting tool, which is campaign work.
@@ -1052,7 +1053,8 @@ for this.
 ### Melee alien grunt
 
 **Shape: Shaped 2026-09-13. The first version is decided and needs no new art; the charge and the weapon
-wait for model work. v1 built 2026-09-18 overnight, untested in game** — `monster_alien_grunt_melee`,
+wait for model work. v1 built 2026-09-18 overnight, verified in game the same day** ("a very good base, it
+will be extended and refined later") — `monster_alien_grunt_melee`,
 recorded in [PILLARS pillar 2](PILLARS.md#2-enhanced-combat). The "classname or keyvalue?" question below is
 answered: a classname, because alien military recruit across classnames, so mixed squads form either way,
 and a classname shows by name in the editor and in `debug_schedule`. The deflected-punch cosmetic fix went
@@ -1895,7 +1897,13 @@ evolve a verb the player already has rather than granting it, which lets level d
 Module, level design may assume it only after its acquisition point. ~~That wants an ADR when it is
 built~~ **Built 2026-09-16 with [ADR-0013](adr/0013-the-pulse-is-a-found-module.md).**
 
-### The Pulse's tail — settled 2026-09-17, built 2026-09-18 overnight, untested in game
+### The Pulse's tail — settled 2026-09-17, built 2026-09-18 overnight, visual open
+
+**Verified in game 2026-09-18: the mechanic is right, the visual is not.** Andrei: "the visual indicator
+needs to be addressed in order for the mechanic to be clear and rewarding to the player." Today the tail is
+one dim ring at its start and a low clang on a braced hit; the bar shows it only as recharge. That is the
+next thing to do here. **Also open, lower priority:** whether a *successful* deflect should be followed by a
+tail. Today it is not — a deflect ends as it always did, and the rest of that second is unprotected.
 
 Recorded in [PILLARS pillar 2](PILLARS.md#2-enhanced-combat). Two calls made while building it: the tail
 follows only a window that deflected nothing (a deflect ends exactly as before, so nothing verified moves),
@@ -3033,7 +3041,7 @@ level design rather than a revisit. How many pieces (three proposed) and the thi
 
 ### Mining and crystal shards
 
-**Shape: Shaped 2026-09-17. Built 2026-09-18 overnight, untested in game** — the Shard, `func_deposit`
+**Shape: Shaped 2026-09-17. Built 2026-09-18 overnight, verified in game the same day** — the Shard, `func_deposit`
 and its unstable form are recorded in [PILLARS pillar 1](PILLARS.md#1-exploration), with the grill that
 settled the details in [OVERNIGHT_BRIEF.md](OVERNIGHT_BRIEF.md). What stays here is what was not built:
 the point-and-model deposit (waits on a crystal model) and the two open questions at the end. The
@@ -3061,7 +3069,8 @@ are desperate for); and the deposit as a model, for veins that are objects rathe
 
 ### Stations
 
-**Shape: Shaped 2026-09-17. The first two kinds built 2026-09-18 overnight, untested in game** — the Fuel
+**Shape: Shaped 2026-09-17. The first two kinds built 2026-09-18 overnight, verified in game the same day,
+refusals for Grid space and uranium included** — the Fuel
 processor and the Ammunition station, recorded in [PILLARS pillar 1](PILLARS.md#1-exploration). The room
 question below was answered by refusing: nothing is taken unless the whole output fits. What stays here:
 recycling, a Syringe or other outputs, and recipes found as Records. Crafting and recycling stations placed

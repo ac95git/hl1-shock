@@ -86,7 +86,8 @@ reusable form, and the first thing in the mod that gates on knowledge rather tha
 first read can fire a target, which is how a remembered global gets set without any code knowing what it
 is for.
 
-**Mining** (2026-09-18, overnight, untested in game) — the resource loop the roadmap shaped on 2026-09-17,
+**Mining** (2026-09-18, overnight; **verified in game the same day** — deposits, unstable deposits and
+Stations, the Stations' refusals for Grid space and uranium included) — the resource loop the roadmap shaped on 2026-09-17,
 small, finite and authored. **Crystal Shards** are an ordinary Item Type (`EItemTypeId::Shard`, id 6): one
 Cell, a Stack of ten — exactly a Fuel Processor's price, so it reads off the Grid — no Use, picked up by
 walking over `item_shard`. The pickup is a stand-in (Half-Life's glass gib in an amber glow shell); the HUD
@@ -221,7 +222,9 @@ deflect. The player therefore can never be Ready while a Shield is still standin
 coexist and the "window always runs its full duration" invariant holds. Granting it at deflect time was
 considered and rejected for exactly that reason.
 
-**The tail** (2026-09-18, overnight, untested in game). A window that deflected **nothing** does not
+**The tail** (2026-09-18, overnight; the mechanic **verified in game** the same day, **the visual not
+accepted**: Andrei, "the visual indicator needs to be addressed in order for the mechanic to be clear and
+rewarding to the player" — see [ROADMAP](ROADMAP.md#the-pulses-tail--settled-2026-09-17-built-2026-09-18-overnight-visual-open)). A window that deflected **nothing** does not
 fall; the Pulse stands on, braced, until `skill_matrix_hold` (1 s) after the press — the moment a hold
 would raise the Defense Matrix, so window, tail and Matrix are one motion with no unprotected gap. A hit
 in the tail on the Shield's damage list lands at `pulse_tail_scale` (0.5); falls and drowning are not
@@ -375,7 +378,8 @@ through OpenGL from inside the viewmodel's studio draw so it sits on the blade t
 whole against walls as the blade does. Details and the open questions are in
 [ROADMAP.md](ROADMAP.md#the-gauss-katana).
 
-**The Carbon Pickaxe, v1** — `weapon_pickaxe`, `dlls/pickaxe.cpp`, built 2026-09-18, untested in game.
+**The Carbon Pickaxe, v1** — `weapon_pickaxe`, `dlls/pickaxe.cpp`, built 2026-09-18, verified in game the
+same day.
 The mining tool and the third weapon on the crowbar's swing, `CCrowbar` with two hooks overridden like the
 katana: `BaseDamage()` reads `sk_plr_pickaxe1-3` (25) and `SwingDelayScale()` reads
 `pickaxe_swing_time_scale` (1.5, so 0.375 s after a hit and 0.75 s after a miss) — 2.5× the crowbar's hit
@@ -652,7 +656,8 @@ Three things worth knowing rather than rediscovering:
 rule that blocked it was dropped the day before, so every swing is full damage.
 
 **The melee alien grunt, v1** — `monster_alien_grunt_melee`, `CAGruntMelee` in `dlls/agrunt.cpp`, built
-2026-09-18 overnight, untested in game. The alpha's chainsaw grunt, first stage: a bare-handed brawler on the
+2026-09-18 overnight, verified in game the same day — "a very good base, it will be extended and refined
+later" (Andrei). The alpha's chainsaw grunt, first stage: a bare-handed brawler on the
 punches the stock grunt already has (`mattack2`/`mattack3`, `sk_agrunt_dmg_punch` as `DMG_CLUB`, the
 250-unit shove). The arm bodypart's bare submodel, and no hornets (`CheckRangeAttack1` is false). **Every
 melee grunt in a squad chases**: where the stock grunt asks for the one chase slot and, refused, stands off,
@@ -808,7 +813,7 @@ side of [Stations](ROADMAP.md#stations).
 The first Module after the long jump it rides on. **Tap SHIFT** (`impulse 151`, `DASH_IMPULSE` in
 `pm_shared/pm_shared.h`) for a burst along the direction the movement keys point — sideways and backwards
 included, forward when no key is held — ~~from the ground only~~ **on the ground and in the air alike since
-2026-09-18** (overnight, untested in game): the flat Dash runs its time wherever it is, leaves gravity alone
+2026-09-18** (overnight, verified in game the same day): the flat Dash runs its time wherever it is, leaves gravity alone
 in the air, and no longer ends at a ledge or on a jump, because a Dash glued to the ground cannot cross a
 gap. Walk moved to **ALT**.
 
