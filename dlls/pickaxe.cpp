@@ -11,9 +11,12 @@
 // the striking player's active item, so a second mining tool later is one
 // override and no bit out of the damage word.
 //
-// Placeholders, recorded in ART_DEBT.md: the crowbar's viewmodel, world and
-// player models, the crowbar's sounds, the crowbar's HUD sprite.  Like
-// crowbar.cpp this file compiles into both DLLs, for prediction.
+// The viewmodel and world model are the crowbar's in black metal
+// (E:\CustomAssets\scripts\pickaxe_black.py), a stand-in agreed in the grill
+// of 2026-09-18; v_pickaxe.mdl keeps the mod's crowbar's sequences and glove
+// families.  Still borrowed, and recorded in ART_DEBT.md: the player model,
+// the sounds, the HUD sprite.  Like crowbar.cpp this file compiles into both
+// DLLs, for prediction.
 
 #include "extdll.h"
 #include "util.h"
@@ -36,7 +39,7 @@ void CPickaxe::Spawn()
 {
 	Precache();
 	m_iId = WEAPON_PICKAXE;
-	SET_MODEL(ENT(pev), "models/w_crowbar.mdl");
+	SET_MODEL(ENT(pev), "models/w_pickaxe.mdl");
 	m_iClip = -1;
 
 	FallInit(); // get ready to fall down.
@@ -44,8 +47,8 @@ void CPickaxe::Spawn()
 
 void CPickaxe::Precache()
 {
-	PRECACHE_MODEL("models/v_crowbar.mdl");
-	PRECACHE_MODEL("models/w_crowbar.mdl");
+	PRECACHE_MODEL("models/v_pickaxe.mdl");
+	PRECACHE_MODEL("models/w_pickaxe.mdl");
 	PRECACHE_MODEL("models/p_crowbar.mdl");
 
 	// The crowbar's own set, for now.
@@ -86,7 +89,7 @@ bool CPickaxe::GetItemInfo(ItemInfo* p)
 
 bool CPickaxe::Deploy()
 {
-	return DefaultDeploy("models/v_crowbar.mdl", "models/p_crowbar.mdl", CROWBAR_DRAW, "crowbar");
+	return DefaultDeploy("models/v_pickaxe.mdl", "models/p_crowbar.mdl", CROWBAR_DRAW, "crowbar");
 }
 
 #ifndef CLIENT_DLL

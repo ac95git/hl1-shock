@@ -323,37 +323,40 @@ The viewmodel and world model are the mod's own (`models/v_katana.mdl`, `models/
 ### Done when
 The selection bucket shows a katana, and a swing sounds like a blade.
 
-## The Carbon Pickaxe — everything is the crowbar's
+## The Carbon Pickaxe — a black crowbar, and the crowbar's sounds and HUD icon
 
 ### Scope
-`dlls/pickaxe.cpp`, `sprites/weapon_pickaxe.txt`, `sprites/inv/weapon_pickaxe.spr`. Built 2026-09-18.
+`dlls/pickaxe.cpp`, `models/{v,w}_pickaxe.mdl`, `sprites/weapon_pickaxe.txt`,
+`sprites/inv/weapon_pickaxe.spr`. Built 2026-09-18.
 
 ### Current stand-ins
 
 | Use | Asset | Borrowed from |
 | --- | --- | --- |
-| Viewmodel | `models/v_crowbar.mdl` | the crowbar |
-| World model | `models/w_crowbar.mdl` | the crowbar |
-| Third-person (`p_`) model | `models/p_crowbar.mdl` | the crowbar |
+| Viewmodel | `models/v_pickaxe.mdl` — the mod's crowbar in black metal, gloves and Cleave swing kept | the crowbar, recoloured by `E:\CustomAssets\scripts\pickaxe_black.py` |
+| World model | `models/w_pickaxe.mdl` — the vanilla crowbar in black metal | the same script |
+| Inventory Icon | `sprites/inv/weapon_pickaxe.spr`, rendered from `w_pickaxe` (`render_icon.py --view top --roll 180`) | — |
+| Third-person (`p_`) model | `models/p_crowbar.mdl` | the crowbar; no decompile |
 | Swing, hit, body-hit sounds | `weapons/cbar_*.wav` | the crowbar |
 | HUD selection icon | `weapon_crowbar`'s sprites, via a copied `.txt` | the crowbar |
-| Inventory Icon | `sprites/inv/weapon_crowbar.spr`, copied | the crowbar |
+
+The black metal (grill, 2026-09-18) is a palette remap of the two metal textures, which are chrome
+environment maps: luminance onto a dark curve with a faint cold cast, so the shaft reads as blued steel
+with its highlight and the red paint becomes a near-black grip. Only palettes change, so the UVs and the
+chrome flags are the crowbar's.
 
 ### What's wrong with them
-- **It is indistinguishable from the crowbar**, in the hand, on the floor, in the bucket and in the Grid.
-  That is worse than the katana's debt, which at least has its own blade: a player carrying both cannot
-  tell which one is up without swinging at a deposit.
+- **It is still a crowbar**, only black. Told apart from the crowbar at a glance now, but nothing about the
+  silhouette says *pick*.
+- The HUD selection icon is the crowbar's, in the same bucket two places over.
 - The sounds are a crowbar's. A pick wants a heavier, duller strike, and a ring on crystal.
+- The black icon may be hard to read on the Grid's dark lattice; the Grid judges that, not the sheet.
 
 ### What to look for
-The agreed first step (grill, 2026-09-18) is a **black metal crowbar**: the mod's `v_crowbar` decompile
-(`E:\CustomAssets\models\decompiled\topmod\v_crowbar`, metal on `chrome.bmp`, three glove families) and
-the vanilla `w_crowbar` decompile (`E:\CustomAssets\models\decompiled\crowbar_vanilla\w_crowbar`),
-retextured and compiled as `v_pickaxe` and `w_pickaxe`, with the Grid Icon re-rendered from the new world
-model. A real pick head is the step after. `p_crowbar` has no decompile.
+A real pick head on the crowbar's rig, so the animations carry over. A HUD icon of it. Sounds with weight.
 
 ### Done when
-A pickaxe in hand, on the floor, in the bucket and in the Grid cannot be mistaken for the crowbar.
+A pickaxe in hand, on the floor, in the bucket and in the Grid reads as a pick, not as a crowbar.
 
 ## The Crystal Shard — a glass gib in a glow shell, a glass clink, no Grid Icon
 

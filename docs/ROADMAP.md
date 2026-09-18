@@ -516,8 +516,8 @@ other mods — rather than author from scratch, and to accept placeholder qualit
 ~~Replaces the crowbar.~~ Heavier, slower, hits harder.
 
 **v1 built 2026-09-18, untested in game** — `weapon_pickaxe`, 25 damage at 1.5× the crowbar's swing time,
-the only mining tool; recorded in [PILLARS pillar 2](PILLARS.md#2-enhanced-combat). What is left here:
-its own models (a black-metal retexture first, [ART_DEBT.md](ART_DEBT.md#the-carbon-pickaxe--everything-is-the-crowbars)),
+the only mining tool, the crowbar in black metal; recorded in [PILLARS pillar 2](PILLARS.md#2-enhanced-combat).
+What is left here: a real pick head ([ART_DEBT.md](ART_DEBT.md#the-carbon-pickaxe--a-black-crowbar-and-the-crowbars-sounds-and-hud-icon)),
 and becoming the starting tool, which is campaign work.
 
 **The starting tool, and the mining tool — settled 2026-09-17.** The player is a miner: the pickaxe is

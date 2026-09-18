@@ -2869,9 +2869,9 @@
 
 @PointClass base(Weapon, Targetx) studio("models/w_crowbar.mdl") = weapon_crowbar : "Crowbar" []
 @PointClass base(Weapon, Targetx) studio("models/w_katana.mdl") = weapon_katana : "Gauss Katana" []
-// The mining tool: the only thing that breaks a func_deposit. Models the
-// crowbar's for now; see docs/ART_DEBT.md.
-@PointClass base(Weapon, Targetx) studio("models/w_crowbar.mdl") = weapon_pickaxe : "Carbon Pickaxe" []
+// The mining tool: the only thing that breaks a func_deposit. For now the
+// crowbar in black metal; see docs/ART_DEBT.md.
+@PointClass base(Weapon, Targetx) studio("models/w_pickaxe.mdl") = weapon_pickaxe : "Carbon Pickaxe" []
 @PointClass base(Weapon, Targetx) studio("models/w_9mmhandgun.mdl") = weapon_9mmhandgun : "9mm Handgun" []
 @PointClass base(Weapon, Targetx) studio("models/w_357.mdl") = weapon_357 : "357 Handgun" []
 @PointClass base(Weapon, Targetx) studio("models/w_9mmar.mdl") = weapon_9mmAR : "9mm Assault Rifle" []

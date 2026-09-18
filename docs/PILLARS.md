@@ -383,9 +383,11 @@ at 1.5× its time, better burst and better sustained damage than the free crowba
 Every melee Skill, the Backstab, Cleave and the Follow-Up come with the subclass. **It alone mines**:
 `IsMiningTool()` on `CBasePlayerItem` is false everywhere else, and a crystal deposit asks the striking
 player's active item rather than reading a damage bit. Melee bucket, position 2; `impulse 101` gives it;
-the FGD places it. Everything it looks and sounds like is the crowbar's — see
-[ART_DEBT.md](ART_DEBT.md#the-carbon-pickaxe--everything-is-the-crowbars). Not yet the starting tool;
-that is a campaign decision.
+the FGD places it. It is **the crowbar in black metal** (`models/{v,w}_pickaxe.mdl`, a palette remap
+compiled by `E:\CustomAssets\scripts\pickaxe_black.py`, with its Grid Icon rendered from the new world
+model); its sounds, third-person model and HUD icon are still the crowbar's — see
+[ART_DEBT.md](ART_DEBT.md#the-carbon-pickaxe--a-black-crowbar-and-the-crowbars-sounds-and-hud-icon). Not
+yet the starting tool; that is a campaign decision.
 
 **Custom HEV gloves on every viewmodel.** Fourteen stock viewmodels plus the katana compile with three
 glove skin families — grey plates with cyan, red or purple light channels. Which one the player sees is

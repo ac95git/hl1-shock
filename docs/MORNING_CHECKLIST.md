@@ -22,8 +22,10 @@ debug_damage 1          // numbers for the P rows
 
 | # | Do | Expect |
 | --- | --- | --- |
-| P1 | `impulse 101`, open the melee bucket | Three entries: crowbar, katana, pickaxe — the pickaxe **looks exactly like the crowbar** (placeholder; ART_DEBT) |
-| P2 | Open the Inventory | The pickaxe has an Entry, with the crowbar's Icon |
+| P1 | `impulse 101`, open the melee bucket | Three entries: crowbar, katana, pickaxe — the pickaxe's HUD icon is still the crowbar's (ART_DEBT) |
+| P1b | Draw the pickaxe, in each Suit Variant | A **black metal crowbar** in hand, blued-steel shaft with a highlight and a near-black grip; your gloves as usual; the Cleave swing plays |
+| P1c | Look at one on the floor | The black crowbar lying there |
+| P2 | Open the Inventory | The pickaxe has an Entry with a black crowbar Icon. Say whether it reads on the dark lattice |
 | P3 | Swing at a zombie, `debug_damage 1` | 25 per hit on any difficulty (the crowbar's is 10) |
 | P4 | Swing at the air, then at a wall, several times | Slower than the crowbar, faster than the katana's slash: 0.75 s between misses, 0.375 s between hits (`pickaxe_swing_time_scale` 1.5) |
 | P5 | With Melee Force, Melee Speed, Cleave bought | Each applies, as on the crowbar |
@@ -151,8 +153,12 @@ Things the grill did not settle, decided during the night. Each can be overturne
 - **"~0.75 s" means after a miss.** The crowbar's stock delays are 0.5 s after a miss and 0.25 s after a
   hit; the settled "1.5× the crowbar's time" is `pickaxe_swing_time_scale` 1.5, which is 0.75 s and
   0.375 s. DPS 67 against the crowbar's 40 and the katana slash's 100.
-- **The pickaxe's Grid Icon is a copy of the crowbar's**, so the Grid shows a picture rather than falling
-  back to a tinted HUD sprite. Rejected: no Icon file, which draws the crowbar's HUD sprite anyway.
+- **The pickaxe's Grid Icon** was a copy of the crowbar's until the black metal landed; it is now rendered
+  from `w_pickaxe` the way every Icon is (`render_icon.py`, top view, rolled 180° to match the crowbar's).
+- **Black metal is a palette remap, not a repaint**: luminance onto a dark curve (10 to 175, gamma 1.7)
+  with a faint cold cast. The two textures are chrome environment maps, so the curve *is* the finish.
+  Luminance rather than the brightest channel, because by the brightest channel the red paint came out
+  lighter than the metal. The numbers are at the top of `pickaxe_black.py`.
 - **The Shard got a real HUD icon** (`utils/sprtool/icons/shard.py`) rather than borrowing one: an Item
   Type with no sprite draws as an empty box in the Grid, which is useless to test with, and no stock icon
   looks like a crystal.
