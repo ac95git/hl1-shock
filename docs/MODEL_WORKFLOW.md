@@ -16,6 +16,7 @@ the script and a re-run, not a hand edit of an exported file.
 | --- | --- |
 | Working directory (sources, not in this repo) | `E:\CustomAssets` |
 | Crowbar-decompiled stock and imported models | `E:\CustomAssets\models\decompiled\<name>\` |
+| Hand-made models: Andrei's `.blend`, his exports, his textures, the brief | `E:\CustomAssets\models\blender\<name>\` — agents and scripts only read it (the brief excepted), see below |
 | Sources we compile from (QC, SMDs, BMPs) | `E:\CustomAssets\models\src\<name>\` |
 | Blender scripts | `E:\CustomAssets\scripts\` |
 | Renders | `E:\CustomAssets\render\<name>\` |
@@ -40,6 +41,65 @@ every stock viewmodel and every `w_` pickup are in the Half-Life SDK folder, lis
 [HL_SDK.md](HL_SDK.md). Where a model is there, copy its folder into `E:\CustomAssets\models\src\<name>\`
 and work from it; no decompile is needed. Its QC may not be the exact file that built the shipped model,
 so compare it with `mdlinfo.py` on the `.mdl` first.
+
+## Hand-made models: the `blender/<name>/` tier
+
+Settled 2026-09-18, in the grill on the art workflow ([CLAUDE.md](../CLAUDE.md#hand-made-art-the-rule)
+has the rule for every kind of art). Some models are made by Andrei, by hand, in Blender; this is where
+they live and how they reach the game.
+
+- **`E:\CustomAssets\models\blender\<name>\` is his.** It holds the `.blend`, his own Source Tools
+  exports — `<name>_reference.smd`, and `anims/*.smd` for any animation of his — and `textures/*.png`
+  as he paints them. **No agent and no script ever writes into it**, with one exception: the project's
+  `BRIEF.md`, which the CLI agent writes and everyone appends the outcome to. Scripts read it and write into
+  `src/<name>/`, the same relationship a decompile has to `src/`. Where a model has both a decompile
+  and a `blender/` folder, the `blender/` folder wins: it is the newer source.
+- **He exports.** Nothing about the export has to be right for GoldSrc: the export can be exactly what
+  Source Tools writes (Source-style vertex lines, a comment header), because `blender_build.py` runs
+  `smd_goldsrc.py`, strips the comment lines and quantises the textures on the way to `src/`.
+- **`blender_build.py <name>`** is the whole build from the tier: textures to 8-bit BMP, SMDs
+  converted, the QC in `src/<name>/` used as it is (it is the sequence contract and is hand-maintained;
+  its `studio` line must name `<name>_reference`) or a one-bone static-prop QC written when there is
+  none, studiomdl, `*_glow` textures patched additive, a render from the eye (`--pose attack1:0` to
+  see a viewmodel at rest), `--install` to the repo's `models/` and the mod's. It refuses to write
+  anything under the tier.
+- **The tutoring loop runs in the live Blender 5.2 over the MCP**, from either surface — the CLI has
+  the MCP too since 2026-09-18. Andrei works in the GUI; the agent gives each step as menu, hotkey and
+  value, and checks the result by screenshot or by reading the scene. What the session decides about
+  the pipeline still goes into a script; what he makes stays in the `.blend`.
+- **Every project opens with `BRIEF.md` in its folder**, written by the CLI agent before the session:
+  what the thing must be (from ART_DEBT.md), the rig facts *measured* from the decompile or the SDK
+  source (bones, the bone to weight to and where it sits at rest, what the existing geometry spans),
+  the size in game units against something the player knows, the sequence contract, the Source Tools
+  export settings and the acceptance test. The outcome is recorded at its foot. The brief is the one
+  file the agent, the desktop agent and Andrei all read.
+- **Order of projects:** the pickaxe head (`blender/v_pickaxe/BRIEF.md` is the first brief), the alien
+  grunt's melee weapon (two models: the grunt's, on the grunt's rig, and the player's viewmodel on the
+  stock hands), the energy rifle.
+
+### Textures for hand-made models
+
+The engine's rules under *Facts that bind the work* still hold; this is how they land on a painted texture.
+
+- **One PNG per material, named as the material.** The material on the faces in Blender is `pickhead`,
+  the file is `textures/pickhead.png`, and Source Tools writes the material name into the SMD. The
+  script quantises to `pickhead.bmp` and studiomdl matches by name. Paint 24-bit in paint.net or in
+  Blender's texture paint; the quantise is the script's.
+- **Paint for 256 colours.** Flat colour, hard shading and painted highlights survive the quantise;
+  long smooth gradients band. Judge the script's render, which uses the BMP, not Blender's viewport,
+  which shows the PNG.
+- **64 to 256 on a side** matches the game. 512 is allowed and looks out of place beside everything else.
+- **UVs inside the one tile.** A face mapped past the tile's edge is black in game though Blender
+  repeats it. (`--wrap-uv` exists for a Source-derived mesh, not for a hand unwrap.)
+- **Two name conventions carry the flags.** `CHROME` in the material name gets the environment map from
+  studiomdl, which is what the pickaxe's shaft is today. A `_glow` suffix (`blade_glow`) gives a part
+  its own material, patched additive by the script; if it must be seen in the dark it also gets a
+  dynamic light in code, as the pickups do, since additive does not glow by itself.
+- **The gloves are not his to paint.** A viewmodel on the stock hands keeps the stock glove material
+  names untouched, and `gloves_rollout.py`'s generator supplies the three suit colours as skin families.
+  What he paints is the weapon.
+- **A variant of his own** — a hot blade, a second finish — is a second PNG under the same base name
+  with a state suffix, and the QC lays the families out as `qc_skins.py --state` does for the katana.
 
 ## Facts that bind the work
 
@@ -160,10 +220,43 @@ Working directory, `E:\CustomAssets\scripts\`:
 | `progression_world.py [--only NAME] [--scale]` | The three progression pickups on `smdprims.py`: `w_skillpoint.mdl` (a hex bipyramid stood up with `Y_TO_Z`, per-facet UVs so the edges are painted bright), `w_resettoken.mdl` (a puck with a rim, an inward-facing recess wall and two planar-mapped painted faces at 128px, since 64px made the tick ring a zigzag) and `w_rowgrant.mdl` (boxes only: bars, a divider panel, a handle). Each has a second `<name>_glow.bmp` material patched additive — the shard whole, the Token's marks and the Row Grant's grid as thin overlays 0.15 above solid faces — which is how they emit light in place of the old glow shell. About 100–330 triangles each. |
 | `gloves_rollout.py [model ...]` | The whole thing for every stock viewmodel: copy the decompile to `models/src/`, gloves, QC, studiomdl, verify three skin families in the `.mdl`, orbit render, contact sheet. Stops and names the model if a decompile is missing. |
 | `suit_world.py [--no-compile]` | The `w_suit` pickup in three Suit Variants: a colour wash over the stock front/back textures (hue from the variant, luminance from the suit, a 22% wash on the grey panels), skins.qc, QC, studiomdl, a three-up preview sheet. Looser thresholds than the gloves on purpose — see below. Produces `w_suit.mdl` **and** `w_suitT.mdl`; both ship. |
+| `blender_build.py <name> [--no-compile] [--no-render] [--install] [--wrap-uv] [--pose ANIM[:FRAME]]` | The build from the hand-made tier, `models/blender/<name>/` (2026-09-18): every `textures/*.png` quantised to 8-bit BMP into `src/<name>/`; the reference export and `anims/*.smd` stripped of `//` lines and passed through `smd_goldsrc.py` into `src/<name>/` as `<name>_reference.smd` and `<name>_anims/`; the QC in `src/` kept as it is when there is one (checked to name `<name>_reference` and only files that exist) or a static one-bone QC written; studiomdl; `*_glow` patched additive; `render_smd.py` from the eye, posed first with `--pose`; `--install` copies the `.mdl` and any T file to the repo and the mod. Refuses to write under the tier. Tested 2026-09-18 on a Source-style copy of the pickaxe's reference: 987 vertices reassigned, 11 bones kept, six textures through. |
 | `pickaxe_black.py [--install]` | The Carbon Pickaxe's stand-ins (2026-09-18): the mod's `v_crowbar` and the vanilla `w_crowbar` decompiles copied to `models/src/{v,w}_pickaxe`, the metal textures' **palettes** remapped from luminance onto a dark blued-steel curve (indices untouched, so UVs and studiomdl's chrome flags carry over), renamed, compiled. Drops `$externaltextures` so one `w_pickaxe.mdl` ships. Writes each recoloured texture as a new file from the decompile: overwriting a file `shutil` has just copied failed with `EINVAL` here. `--install` copies both into `models/` and `topmod/models/`. |
 
-Blender is always run as `blender.exe --background --python SCRIPT -- ARGS`. Renders use Workbench, so no
-GPU is needed and a run takes seconds.
+In the pipeline, Blender is always run as `blender.exe --background --python SCRIPT -- ARGS`. Renders use
+Workbench, so no GPU is needed and a run takes seconds.
+
+### The Blender MCP (desktop agent)
+
+Since 2026-09-18 a live Blender can also be driven over MCP, and **the desktop agent (Cowork) is the one
+that uses it** — the CLI agent keeps to the headless scripts. See [CLAUDE.md](../CLAUDE.md#two-agents-one-repo).
+
+Validated 2026-09-18: Blender **5.2.0 LTS** at the path above, interactive (not background), Python 3.13,
+the MCP extension (`bl_ext.BlenderRepository.mcp`) and Blender Source Tools (`io_scene_valvesource`,
+`bpy.ops.import_scene.smd`) both enabled. Code ran, the scene hierarchy came back, and a window screenshot
+returned.
+
+What it offers:
+
+| Tool | For |
+| --- | --- |
+| `execute_blender_code` | `bpy` in the open Blender; assign a dict to `result` to get data back |
+| `get_objects_summary`, `get_object_detail_summary` | The scene's collections and objects, without writing code |
+| `get_screenshot_of_window_as_image`, `render_viewport_to_path`, `render_thumbnail_to_path` | Seeing what Blender shows — the quick look the pipeline's renders take a script for |
+| `*_for_cli` variants | The same against a `.blend` opened in a background Blender, leaving the open one alone |
+| `search_api_docs`, `get_python_api_docs`, `search_manual_docs` | Blender's own docs, for the version installed |
+
+What it is for: looking — importing an SMD to see it, checking a rig, a pose, a UV island or a bone
+assignment, trying a transform before writing it down. Andrei and the agent can look at the same scene.
+
+What it is not: a second way for an *agent* to make a model. **The one rule and the script rule still
+hold for the agent** — whatever a session in the live Blender decides about the pipeline (a transform, a
+correction number, an export setting) goes into a script under `E:\CustomAssets\scripts\` and is re-run
+headless; a transform an agent tries in the open scene does not ship by being exported from there. What
+*Andrei* makes in the live Blender is different, since 2026-09-18: a `.blend` saved in the
+[`blender/<name>/` tier](#hand-made-models-the-blendername-tier) is a source, and his own export from it
+is the legitimate way it ships, through `blender_build.py`. The live scene is Andrei's too: the agent
+does not save over, close or clear a file it did not open, and says before it changes one.
 
 ## The katana, as a worked example
 
@@ -318,5 +411,8 @@ A sequence made outside the script goes in the same slot. Done 2026-09-15 with H
 - **Rigged world and player models**, and a Python decompiler to drop the Crowbar step; `mdlinfo.py` has
   the header parsing that one would start from. Static one-bone world models are covered twice over:
   from a Source prop (`katana_world.py`) and from nothing (`syringe_world.py`, `progression_world.py`).
-- **Meshes authored in Blender by hand or script.** Every authored model so far was emitted as SMD text
-  through `smdprims.py`, which suits primitives and nothing with an organic surface.
+- ~~**Meshes authored in Blender by hand or script.**~~ **The hand-made path exists since 2026-09-18**
+  (the `blender/<name>/` tier and `blender_build.py`, above) and nothing has been through it yet; the
+  pickaxe head is first. Every authored model before it was emitted as SMD text through `smdprims.py`,
+  which suits primitives and nothing with an organic surface. Exporting an *animation* from Blender
+  through Source Tools is still untried; the tier has an `anims/` folder for when it is.

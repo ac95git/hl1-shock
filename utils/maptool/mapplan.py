@@ -26,7 +26,11 @@ SKIP_POINT = {"light", "light_spot", "multi_manager", "game_text", "trigger_prin
 
 
 def parse(path):
-    text = open(path, encoding="latin1").read()
+    return parse_text(open(path, encoding="latin1").read())
+
+
+def parse_text(text):
+    """Entities of a Valve 220 .map given as text: a list of (keys, [brush bounds])."""
     ents = []
     i = 0
     n = len(text)
@@ -68,8 +72,12 @@ def main():
         cuts = [float(c) for c in sys.argv[i + 1].split(",")]
         del sys.argv[i:i + 2]
     src, out = sys.argv[1], sys.argv[2]
-    ents = parse(src)
+    draw(parse(src), out, cuts)
 
+
+def draw(ents, out, cuts=(40.0,)):
+    """Prints the classname count and writes the plan PNG. greybox.py calls this on a map it has
+    only generated in memory, so a plan exists before any .map is on disk."""
     counts = Counter(k.get("classname", "?") for k, _ in ents)
     for name, c in sorted(counts.items(), key=lambda t: (-t[1], t[0])):
         print("%4d  %s" % (c, name))

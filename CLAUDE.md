@@ -8,6 +8,31 @@ A Half-Life GoldSrc mod based on [TWHL's Half-Life Updated](https://github.com/t
 
 The mod is built around six gameplay pillars — exploration, enhanced combat, custom items, skill trees, inventory management, stealth. [docs/PILLARS.md](docs/PILLARS.md) tracks what each one actually does today; read it before proposing feature work, and [docs/ROADMAP.md](docs/ROADMAP.md) for what is intended and unbuilt.
 
+## Two agents, one repo
+
+Work happens from two surfaces, and either may pick up where the other left off — the docs here are the handoff, so both read and write them the same way.
+
+- **The CLI agent** (Claude Code in a terminal on this machine) — the default for code, builds, commits and the scripted pipelines.
+- **The desktop agent** (the Claude desktop app, Cowork) — used when a session needs **connectors**. Sessions there are also attached to the claude.ai project *hl-shock*.
+
+**Both talk to the Blender MCP** since 2026-09-18 (the CLI too, once `/mcp` shows `blender` connected): the live Blender 5.2 on this machine, for inspecting a scene, running `bpy` against it and taking screenshots of it. See [docs/MODEL_WORKFLOW.md](docs/MODEL_WORKFLOW.md#the-blender-mcp-desktop-agent) for what the MCP is for and what it is not. Blender tutoring sessions run from either surface.
+
+The desktop agent reaches this folder through a bridge: a shell on this machine when it starts, otherwise by copying files up to its cloud workspace and writing them back. When that shell is unavailable it cannot build, run scripts or commit — it says so and leaves those to the CLI agent.
+
+## Hand-made art: the rule
+
+Settled 2026-09-18, in a grill on the art workflow. **What Andrei makes by hand is a source file under `E:\CustomAssets`, in a tier of its own that no agent or script ever writes into.** A script turns it into what ships; the repo holds the shipped file and the spec. [docs/ART_DEBT.md](docs/ART_DEBT.md) is the request queue for all of it.
+
+| He makes | Where it lives | The script | Ships as |
+| --- | --- | --- | --- |
+| A model: `.blend`, his own SMD exports, `textures/*.png` | `E:\CustomAssets\models\blender\<name>\`, opened by its `BRIEF.md` | `E:\CustomAssets\scripts\blender_build.py` | `models/*.mdl` |
+| A map's layout, iterated as a plan before any `.map` | `maps/<name>.rooms.txt` (in the repo: it is the intent) | `utils/maptool/greybox.py` | `maps/*.map`, then J.A.C.K. once |
+| An icon, greyscale on black | `E:\CustomAssets\sprites\src\<name>.png` | `utils/sprtool/from_png.py` | `sprites/top/*.spr` and its `hud_additions.txt` lines; a weapon's selection pair goes to `sprites/weapon_<name>.txt` |
+| A sound, anything FL Studio exports | `E:\CustomAssets\sounds\src\<engine path>.wav` | `utils/sndtool/convert.py` | `sound/<path>.wav` |
+| A map texture, at final size | `E:\CustomAssets\textures\wad\<name>.png` | `utils/maptool/wadpack.py` | `wads/topmod.wad` |
+
+Each workflow doc below has the rules for its tier.
+
 ## Agent instructions
 
 | File | Read it when |
@@ -39,8 +64,9 @@ Referenced by `00-PROJECT-OVERVIEW.md` but **not yet written**: `10-COMMON-TASKS
 | [docs/adr/](docs/adr/) | Before changing something that looks arbitrary — the decisions recorded there were deliberate and the reasoning is not visible in the code |
 | [docs/TECH_DEBT.md](docs/TECH_DEBT.md) | Touching the skill tree tooltip or the inventory grid — both have known-issue entries with acceptance criteria |
 | [docs/ART_DEBT.md](docs/ART_DEBT.md) | Replacing a placeholder sprite or sound. Records what each stand-in is, why it's wrong, and what the replacement has to achieve |
-| [docs/SPRITE_WORKFLOW.md](docs/SPRITE_WORKFLOW.md) | Making or changing a HUD sprite — the script-to-`.spr`-to-`hud.txt` loop, the engine constraints that shape the art, and the tools under `utils/sprtool/` |
-| [docs/MODEL_WORKFLOW.md](docs/MODEL_WORKFLOW.md) | Making or changing a model — the decompile-Blender-studiomdl loop, where sources live outside the repo, the compile-time rotation and other traps, and the tools under `utils/mdltool/` |
+| [docs/SPRITE_WORKFLOW.md](docs/SPRITE_WORKFLOW.md) | Making or changing a HUD sprite — the script-to-`.spr`-to-`hud.txt` loop, the hand-drawn path, the engine constraints that shape the art, and the tools under `utils/sprtool/` |
+| [docs/MODEL_WORKFLOW.md](docs/MODEL_WORKFLOW.md) | Making or changing a model — the decompile-Blender-studiomdl loop, the hand-made `blender/<name>/` tier and its brief, the Blender MCP, where sources live outside the repo, the compile-time rotation and other traps, and the tools under `utils/mdltool/` |
+| [docs/SOUND_WORKFLOW.md](docs/SOUND_WORKFLOW.md) | Making or changing a sound — FL Studio to `sounds/src/` to the converter to `sound/`, the engine's format, loop cues, and the rule that a sound is judged in the sequence it plays in |
 | [docs/HL_SDK.md](docs/HL_SDK.md) | Looking for a tool, a stock model's source or cut content: the official Half-Life SDK folder on `D:` holds Valve's QC/SMD sources for the cut monsters, the grunts, the player, and every stock weapon and pickup. Check it before asking for a decompile |
 | [BUILDING.md](BUILDING.md) | Setting up a build or packaging the mod |
 | [INSTALL.md](INSTALL.md) | Installing the built mod into a Half-Life instance |
@@ -59,10 +85,11 @@ Out of scope: engine-level changes — graphics upgrades, physics, and anything 
 - `cl_dll/` — client: HUD, view, input, prediction, `vgui_*` interfaces. Presentation only.
 - `common/`, `engine/`, `public/` — SDK and engine headers. Treat as read-only.
 - `game_shared/`, `pm_shared/` — code compiled into both DLLs; a change here hits client and server.
-- `utils/` — map/model compilers. `utils/sprtool/` — .spr tooling and the scripts that generate the mod's icons. `utils/mdltool/` — .mdl inspection and SMD converters; model sources live in `E:\CustomAssets`, not here. `projects/vs2019/projects.sln` — main solution.
-- `maps/` — the mod's map sources (`.map`, Valve 220), source of truth for `topmod/maps/`; the `.bsp` is built from them with the VHLT tools in J.A.C.K.'s folder, see [docs/PROVING_MAP.md](docs/PROVING_MAP.md). `utils/maptool/` — the one-shot greybox generators that started `proving.map` and `minemap.map` (the mining and Stations test bed); not re-run once a map is hand-edited.
+- `utils/` — map/model compilers. `utils/sprtool/` — .spr tooling and the scripts that generate the mod's icons. `utils/mdltool/` — .mdl inspection and SMD converters; model sources live in `E:\CustomAssets`, not here. `utils/sndtool/` — the sound converter. `projects/vs2019/projects.sln` — main solution.
+- `maps/` — the mod's map sources (`.map`, Valve 220), source of truth for `topmod/maps/`; the `.bsp` is built from them with the VHLT tools in J.A.C.K.'s folder, see [docs/PROVING_MAP.md](docs/PROVING_MAP.md). A new map starts as `maps/<name>.rooms.txt`, the spec `utils/maptool/greybox.py` builds from and the plan is drawn from; the spec stays beside the `.map` as the intent. `utils/maptool/` also holds the two one-shot generators that started `proving.map` and `minemap.map`; no generator is re-run once a map is hand-edited.
+- `wads/` — the mod's own WAD, `topmod.wad`, packed by `utils/maptool/wadpack.py` from painted PNGs in `E:\CustomAssets\textures\wad\`; source of truth for `topmod/topmod.wad`, copied by hand like `models/`. See [docs/MAP_WORKFLOW.md](docs/MAP_WORKFLOW.md).
 - `models/` — the mod's compiled `.mdl` files, source of truth for `topmod/models/`; copied by hand like `sprites/`. Their sources are in `E:\CustomAssets`, see [docs/MODEL_WORKFLOW.md](docs/MODEL_WORKFLOW.md).
-- `sound/` — the mod's sounds, source of truth for `topmod/sound/`; copied by hand like `sprites/`. Loose `.wav`, mono 16-bit PCM. Imported sounds say where they came from in [docs/ART_DEBT.md](docs/ART_DEBT.md) — `player/recharged.wav` is from Team Fortress 2.
+- `sound/` — the mod's sounds, source of truth for `topmod/sound/`; copied by hand like `sprites/`. Loose `.wav`, mono 16-bit PCM, 22050 Hz, made by `utils/sndtool/convert.py` from `E:\CustomAssets\sounds\src\`, see [docs/SOUND_WORKFLOW.md](docs/SOUND_WORKFLOW.md). Imported sounds say where they came from in [docs/ART_DEBT.md](docs/ART_DEBT.md) — `player/recharged.wav` is from Team Fortress 2.
 - `events/` — the mod's own event scripts (empty by design; the engine only needs the file to exist), source of truth for `topmod/events/`.
 - `sprites/` — the mod's HUD sprites and its `hud.txt`, source of truth for `topmod/sprites/`. `hud.txt` is generated from `hud_additions.txt` by `utils/sprtool/make_hud_txt.py`; copy both to the install after every change, like the FGD.
 

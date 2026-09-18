@@ -14,10 +14,12 @@ import os
 import subprocess
 import sys
 
-from PIL import Image, ImageDraw, ImageFilter, ImageChops
+from PIL import Image, ImageDraw, ImageFilter
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 SPRTOOL = os.path.join(HERE, "..", "sprtool.py")
+sys.path.insert(0, os.path.join(HERE, ".."))
+from sprtool import additive_preview  # noqa: E402  (the shared review simulation, lifted 2026-09-18)
 
 # Size of the item_* family at each bucket (item_healthkit is 20/44/88/132).
 SIZES = {320: 20, 640: 44, 1280: 88, 2560: 132}
@@ -132,15 +134,6 @@ def render(size, angle=34.0, ss=8):
     out = Image.new("L", (size, size), 0)
     out.paste(small, ((size - small.size[0]) // 2, (size - small.size[1]) // 2))
     return out
-
-
-def additive_preview(icon, bg, tint, scale):
-    """Simulate SPR_DrawAdditive of a greyscale icon with a tint over a background colour."""
-    w, h = icon.size
-    base = Image.new("RGB", (w, h), bg)
-    tinted = Image.merge("RGB", [icon.point(lambda v, c=c: v * c // 255) for c in tint])
-    out = ImageChops.add(base, tinted)
-    return out.resize((w * scale, h * scale), Image.NEAREST)
 
 
 def main():

@@ -25,7 +25,7 @@ import os
 import struct
 import sys
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageChops, ImageDraw
 
 SPR_NORMAL, SPR_ADDITIVE, SPR_INDEXALPHA, SPR_ALPHTEST = 0, 1, 2, 3
 TEX_NAMES = {"normal": SPR_NORMAL, "additive": SPR_ADDITIVE, "indexalpha": SPR_INDEXALPHA, "alphatest": SPR_ALPHTEST}
@@ -126,6 +126,19 @@ def image_to_sprite(img, tex_format):
     else:
         raise ValueError("encode supports additive and alphatest")
     return Sprite(w, h, tex_format, pal, [(0, 0, w, h, px)])
+
+
+def additive_preview(icon, bg, tint, scale):
+    """Simulate SPR_DrawAdditive of a greyscale icon with a tint over a background colour.
+
+    The review simulation every icon script and from_png.py share: the sprite supplies brightness,
+    the code the colour, and the result is added onto whatever is behind it (dark pixels vanish).
+    """
+    w, h = icon.size
+    base = Image.new("RGB", (w, h), bg)
+    tinted = Image.merge("RGB", [icon.point(lambda v, c=c: v * c // 255) for c in tint])
+    out = ImageChops.add(base, tinted)
+    return out.resize((w * scale, h * scale), Image.NEAREST)
 
 
 def parse_hud_txt(path):

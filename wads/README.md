@@ -1,0 +1,1 @@
+The mod's WAD, `topmod.wad`, built by `utils/maptool/wadpack.py` from the painted PNGs in `E:\CustomAssets\textures\wad\` and copied to `topmod/` by hand, like `models/`. See docs/MAP_WORKFLOW.md, *The mod's WAD*. Empty until the first texture is painted.
