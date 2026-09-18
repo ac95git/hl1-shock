@@ -210,6 +210,31 @@ void DispatchKeyValue(edict_t* pentKeyvalue, KeyValueData* pkvd)
 	if (!pEntity)
 		return;
 
+	// The Prompt's three overrides, before the entity gets a say. Here
+	// rather than in CBaseEntity::KeyValue because they have to work on
+	// EVERY entity, and a good many KeyValue overrides in this SDK answer
+	// their own keys and return false without chaining to their base --
+	// which would silently drop the override on exactly the classes a
+	// mapper most wants to rename.
+	if (FStrEq(pkvd->szKeyName, "prompt_title"))
+	{
+		pEntity->m_iszPromptTitle = ALLOC_STRING(pkvd->szValue);
+		pkvd->fHandled = 1;
+		return;
+	}
+	if (FStrEq(pkvd->szKeyName, "prompt_action"))
+	{
+		pEntity->m_iszPromptAction = ALLOC_STRING(pkvd->szValue);
+		pkvd->fHandled = 1;
+		return;
+	}
+	if (FStrEq(pkvd->szKeyName, "prompt_suppress"))
+	{
+		pEntity->m_bPromptSuppress = atoi(pkvd->szValue) != 0;
+		pkvd->fHandled = 1;
+		return;
+	}
+
 	pkvd->fHandled = static_cast<int32>(pEntity->KeyValue(pkvd));
 }
 
@@ -623,6 +648,13 @@ TYPEDESCRIPTION CBaseEntity::m_SaveData[] =
 		DEFINE_FIELD(CBaseEntity, m_pfnTouch, FIELD_FUNCTION),
 		DEFINE_FIELD(CBaseEntity, m_pfnUse, FIELD_FUNCTION),
 		DEFINE_FIELD(CBaseEntity, m_pfnBlocked, FIELD_FUNCTION),
+
+		// The Prompt's overrides. Saved because a restored entity is never
+		// re-read from the map -- without these a loaded save would show
+		// every overridden button under its class default again.
+		DEFINE_FIELD(CBaseEntity, m_iszPromptTitle, FIELD_STRING),
+		DEFINE_FIELD(CBaseEntity, m_iszPromptAction, FIELD_STRING),
+		DEFINE_FIELD(CBaseEntity, m_bPromptSuppress, FIELD_BOOLEAN),
 };
 
 

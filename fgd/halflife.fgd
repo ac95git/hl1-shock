@@ -107,10 +107,34 @@
 	globalname(string) : "Global Entity Name" 
 ]
 
-@BaseClass base(Target) = Targetx 
+@BaseClass base(Target) = Targetx
 [
 	delay(string) : "Delay before trigger" : "0" : "Usually the time in seconds before an entity should trigger its target (after being triggered itself). Under other SmartEdit names, delay might also be the time to wait before performing some other action."
 	killtarget(target_destination) : "KillTarget" : : "When an entity is triggered, it will remove from the game the entity specified by this property."
+]
+
+// The Prompt's overrides (docs/ROADMAP.md, "The Prompt").
+//
+// Everything a use press can act on says what it is and what the press will
+// do, defaulting by class -- "Button" / "Press". These three keys override
+// that for one entity: "Pump control" / "Start pumps".
+//
+// THEY WORK ON EVERY ENTITY, not only the ones this base class is attached
+// to. The server reads them at the one keyvalue chokepoint every entity
+// passes through, so if the editor does not offer the fields, turn SmartEdit
+// off and add them by hand.
+//
+// Suppress is for the unmarked usable panel -- vanilla's classic secret. It
+// hides the label only: the thing still works when pressed.
+@BaseClass = Prompt
+[
+	prompt_title(string) : "Prompt: title" : : "Replaces the name the Prompt shows. Keep it short -- about 48 characters."
+	prompt_action(string) : "Prompt: action" : : "Replaces the action after the bound key: 'Start pumps' shows as '[E] Start pumps'."
+	prompt_suppress(choices) : "Prompt: suppress" : 0 : "Hide the Prompt entirely. The entity still works -- this is how a hidden switch stays hidden." =
+	[
+		0 : "No"
+		1 : "Yes -- show nothing"
+	]
 ]
 
 @BaseClass = RenderFxChoices
@@ -610,7 +634,7 @@
 // the player will ever have. World model is a stand-in; see docs/ART_DEBT.md.
 @PointClass base(Weapon, Targetx) studio("models/w_gaussammo.mdl") = item_core : "Core (alien Module ammo)" []
 
-@SolidClass base(Target, ZHLT) = button_target : "Target Button"
+@SolidClass base(Target, Prompt, ZHLT) = button_target : "Target Button"
 [
 	spawnflags(flags) =
 	[
@@ -1052,7 +1076,7 @@
 	_minlight(string) : "Minimum light level"
 ]
 
-@SolidClass base(Global,Targetname, Target, RenderFields, Angles, ZHLT) = func_button : "Button" 
+@SolidClass base(Global,Targetname, Target, RenderFields, Angles, Prompt, ZHLT) = func_button : "Button" 
 [
 	speed(integer) : "Speed" : 5
 	health(integer) : "Health (shootable if > 0)"
@@ -1146,9 +1170,9 @@
 	_minlight(string) : "Minimum light level"
 ]
 
-@SolidClass base(Door, ZHLT) = func_door : "Basic door" []
+@SolidClass base(Door, Prompt, ZHLT) = func_door : "Basic door" []
 
-@SolidClass base(Door, ZHLT) = func_door_rotating : "Rotating door" 
+@SolidClass base(Door, Prompt, ZHLT) = func_door_rotating : "Rotating door" 
 [
 	spawnflags(flags) =
 	[
@@ -1174,7 +1198,7 @@
 	_minlight(string) : "Minimum light level"
 ]
 
-@SolidClass base(Global, RenderFields, ZHLT) = func_healthcharger: "Wall health recharger" 
+@SolidClass base(Global, RenderFields, Prompt, ZHLT) = func_healthcharger: "Wall health recharger" 
 [
 	// dmdelay(integer) : "Deathmatch recharge delay" : 0
 	_minlight(string) : "Minimum light level"
@@ -1251,7 +1275,7 @@
 	_minlight(string) : "Minimum light level"
 ]
 
-@SolidClass base(Breakable, RenderFields, ZHLT) = func_pushable : "Pushable object"
+@SolidClass base(Breakable, RenderFields, Prompt, ZHLT) = func_pushable : "Pushable object"
 [
 	size(choices) : "Hull Size" : 0 =
 	[
@@ -1269,13 +1293,13 @@
 	_minlight(string) : "Minimum light level"
 ]
 
-@SolidClass base(Global,RenderFields, ZHLT) = func_recharge: "Battery recharger" 
+@SolidClass base(Global,RenderFields, Prompt, ZHLT) = func_recharge: "Battery recharger" 
 [
 	// dmdelay(integer) : "Deathmatch recharge delay" : 0
 	_minlight(string) : "Minimum light level"
 ]
 
-@SolidClass base(Targetname, Global, RenderFields, Angles, ZHLT) = func_rot_button : "RotatingButton" 
+@SolidClass base(Targetname, Global, RenderFields, Angles, Prompt, ZHLT) = func_rot_button : "RotatingButton" 
 [
 	target(target_destination) : "Targetted object"
 	// changetarget will change the button's target's TARGET field to the button's changetarget.
@@ -1353,7 +1377,7 @@
 	]
 ]
 
-@SolidClass = func_tankcontrols : "Tank controls"
+@SolidClass base(Prompt) = func_tankcontrols : "Tank controls"
 [
 	target(target_destination) : "Tank entity name"
 ]
@@ -1751,7 +1775,7 @@
 // An unread Record glows. The glow goes out when the suit registers it,
 // and the entity itself remembers nothing -- the player's found-set does.
 //
-@PointClass size(-8 -8 0, 8 8 8) base(Targetname, Angles) studio() = record : "Record (readable document)"
+@PointClass size(-8 -8 0, 8 8 8) base(Targetname, Angles, Prompt) studio() = record : "Record (readable document)"
 [
 	record_id(integer) : "Record id (records.txt)" : 1
 	target(target_destination) : "Fire on first read" : : "Fired the FIRST time this Record is read, and never again. A Record stays in the world and is re-readable, so a target that fired every time would not mean 'the player has read this'."
@@ -1762,7 +1786,7 @@
 	]
 ]
 
-@SolidClass base(Targetname) = record_brush : "Record (fixed source: terminal, notice, roster)"
+@SolidClass base(Targetname, Prompt) = record_brush : "Record (fixed source: terminal, notice, roster)"
 [
 	record_id(integer) : "Record id (records.txt)" : 1
 	target(target_destination) : "Fire on first read" : : "Fired the FIRST time this Record is read, and never again. A Record stays in the world and is re-readable, so a target that fired every time would not mean 'the player has read this'."
@@ -1801,13 +1825,13 @@
 // a Record, and the alternative is the mapper's vent or window.
 //
 // It takes a granted Record as readily as a found one.
-@PointClass size(-8 -8 -8, 8 8 8) base(Targetname, Target, Angles) studio() = record_lock : "Record lock (point)"
+@PointClass size(-8 -8 -8, 8 8 8) base(Targetname, Target, Angles, Prompt) studio() = record_lock : "Record lock (point)"
 [
 	record_id(integer) : "Record id that opens it" : 1
 	model(studio) : "Model (optional)"
 ]
 
-@SolidClass base(Targetname, Target) = record_lock_brush : "Record lock (keypad brushwork)"
+@SolidClass base(Targetname, Target, Prompt) = record_lock_brush : "Record lock (keypad brushwork)"
 [
 	record_id(integer) : "Record id that opens it" : 1
 ]
@@ -1865,7 +1889,7 @@
 	]
 ]
 
-@SolidClass base(Targetname, Target, Angles, RenderFields, ZHLT) = momentary_rot_button : "Direct wheel control" 
+@SolidClass base(Targetname, Target, Angles, RenderFields, Prompt, ZHLT) = momentary_rot_button : "Direct wheel control" 
 [
 	speed(integer) : "Speed" : 50
 	master(string) : "Master" 

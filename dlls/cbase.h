@@ -160,6 +160,23 @@ public:
 	*/
 	byte m_EFlags = 0;
 
+	// ---- The Prompt's mapper overrides (docs/ROADMAP.md, "The Prompt") ----
+	//
+	// On CBaseEntity rather than on the classes that happen to be usable
+	// today, because the rule is "everything that can be interacted with",
+	// and which classes those are keeps growing.  Read by UpdatePickupPrompt
+	// (dlls/player_inventory.cpp) and set by DispatchKeyValue, which is the
+	// one chokepoint every keyvalue passes through -- so they work on an
+	// entity whose own KeyValue forgets to chain to its base, which a fair
+	// number of them do.
+	string_t m_iszPromptTitle = iStringNull;
+	string_t m_iszPromptAction = iStringNull;
+
+	// No Prompt at all, however usable it is.  Not optional: vanilla's
+	// classic secret is the unmarked usable panel, exploration is the
+	// first-ranked pillar, and a label on every hidden switch spoils it.
+	bool m_bPromptSuppress = false;
+
 	virtual ~CBaseEntity() {}
 
 	// initialization functions

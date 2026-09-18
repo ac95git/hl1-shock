@@ -2777,6 +2777,10 @@ title (*Battery*, *Terminal*, *Door lock*) and the action or actions under it (`
   (*Pump control* / `Start pumps` — short strings fit a 192-byte message), **and can suppress the Prompt**.
   Suppression is not optional: vanilla's classic secret is the unmarked usable panel, exploration is ranked
   first, and a label on every hidden switch spoils it.
+  **Built 2026-09-18.** All three keys work on every entity, read in `DispatchKeyValue` rather than in
+  `CBaseEntity::KeyValue`, because too many KeyValue overrides in this SDK never chain to their base.
+  Suppression hides the label only — the thing still works when pressed, which is the entire point of
+  being able to hide one.
 - **A state line is how a hard gate looks impassable**: *Elevator — No power*, *Door lock — Code required*.
   **Built 2026-09-18** with `record_lock`, the first thing that needed one: a third field on
   `PromptClassDef`, drawn *instead of* the bound key and its action. A door that offers `[E] Open` and
@@ -2910,9 +2914,22 @@ Each slice judgeable in game on its own. None of it is stealth, so
    `record` and `record_brush` and fires once, because a Record stays in the world and is re-readable.
    Cheats: `record_grant <id>`, `record_revoke <id>`. Left over: the lock says `Enter code` rather than
    the digits, which is per-entity text and so is slice 4's.
-4. **The mapper's controls** — the three prompt keyvalues, the FGD (and its sync rule), CONTEXT terms
-   (Record, Prompt, Guidance), the ADR-0011 exception written into the ADR itself. ~~PILLARS pillar 1, an
-   ART_DEBT line for the stand-in document model~~ — both done with slice 2.
+4. ~~**The mapper's controls** — the three prompt keyvalues, the FGD (and its sync rule), CONTEXT terms
+   (Record, Prompt, Guidance), the ADR-0011 exception written into the ADR itself. PILLARS pillar 1, an
+   ART_DEBT line for the stand-in document model~~ — **all done, 2026-09-18**, the last two with slice 2.
+   `prompt_title`, `prompt_action` and `prompt_suppress` work on **every** entity: they are read in
+   `DispatchKeyValue`, the one chokepoint every keyvalue passes through, because a good many KeyValue
+   overrides in this SDK answer their own keys and return without chaining to their base — which would
+   have dropped the override on exactly the classes a mapper most wants to rename. They live on
+   `CBaseEntity` and are saved, since a restored entity is never re-read from the map. The FGD carries a
+   `Prompt` base class on the fourteen classes most likely to want it, and says in a comment that the
+   keys work everywhere else too, through SmartEdit. **This is the one place strings cross the wire**
+   (`gmsgPickupPrompt` is variable-length now, clamped at 48 characters each) and it is affordable for
+   the reason the Prompt was cheap to begin with: it is sent when what the player is looking at changes,
+   not per frame. The change test gained the entity index with it, or two renamed buttons would have
+   looked identical. **Also closed here:** ammunition and the vanilla pickups that are not Item Types
+   now name themselves — *Shotgun shells*, *Uranium*, *HEV battery* — instead of reading *Ammunition*
+   and *Item*, which was slice 1's leftover.
 
 ### Before the grill
 

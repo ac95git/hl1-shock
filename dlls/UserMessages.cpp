@@ -114,7 +114,11 @@ void LinkUserMessages()
 
 	gmsgRecordRead = REG_USER_MSG("RecordRead", 2);
 
-	gmsgPickupPrompt = REG_USER_MSG("PickupHint", 3);
+	// Variable length since 2026-09-18: three bytes of ids, then the
+	// mapper's prompt_title and prompt_action, each usually empty. The one
+	// place strings cross the wire, and affordable because a Prompt is only
+	// sent when what the player is looking at changes.
+	gmsgPickupPrompt = REG_USER_MSG("PickupHint", -1);
 
 	gmsgPulse = REG_USER_MSG("Pulse", 2);
 

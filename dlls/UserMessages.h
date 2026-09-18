@@ -78,9 +78,10 @@ inline int gmsgRecords = 0;
 // use press that opens it and on the damage that closes it, never per frame.
 inline int gmsgRecordRead = 0;
 
-// Pickup prompt: 2 bytes (entry kind, id). Sent only when the looked-at
-// pickup changes; (0,0) clears it. The client resolves the display name from
-// the shared Item Type table, so no strings go over the wire.
+// The Prompt: 3 bytes (entry kind, id, EPromptClass), then the mapper's
+// prompt_title and prompt_action, each empty unless overridden. Sent only
+// when what the player is looking at changes; all zero clears it. The client
+// resolves everything else from the shared tables.
 inline int gmsgPickupPrompt = 0;
 
 // Pulse state: 2 bytes (state, duration in tenths of a second).

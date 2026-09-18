@@ -67,11 +67,25 @@ _Avoid_: item definition, template, item class, item kind
 
 ### Acquisition
 
+**Prompt**:
+The text under the crosshair naming what the player is looking at and what a use press will do to it —
+a title, then either the bound key and an action, or a **state line** saying what is in the way. Every
+entity a use press can act on has one. It defaults by class, a mapper overrides it with `prompt_title`
+and `prompt_action`, and `prompt_suppress` hides it without disabling the thing, which is how an
+unmarked secret panel stays unmarked. The word is bare: there is no other kind of prompt in this game.
+_Avoid_: use prompt, hint, tooltip, HUD hint
+
 **Pickup Prompt**:
-The text shown under the crosshair naming a nearby thing that can be taken. A use press takes what it
-names; walking over the thing takes it too, so the prompt is for reaching what cannot be stepped on,
-for explaining a full Grid, and for the one use-only pickup, a suit switch.
-_Avoid_: use prompt, hint, tooltip
+The Prompt's oldest and narrowest case: the one naming a thing that can be taken. Walking over a thing
+takes it too, so this case is for reaching what cannot be stepped on, for explaining a full Grid, and
+for the one use-only pickup, a suit switch. Say **Prompt** unless the distinction is the point.
+_Avoid_: item prompt, pickup hint
+
+**State line**:
+The line a Prompt shows instead of a key and an action, when the thing cannot be acted on yet — *Code
+required*, *No power*. It is how a hard gate looks impassable. A gate that offered an action and then
+refused it would teach the player that use presses are unreliable.
+_Avoid_: locked message, error text, denial
 
 **Auto-Consume**:
 Using a medkit or battery on contact instead of carrying it, when doing so would waste none of it. A
@@ -88,6 +102,33 @@ _Avoid_: container, loot bag, stash, weaponbox
 Ammunition. A pool per type with a fixed cap, exactly as in Half-Life. Not an Item Type, never an Entry,
 and occupies no Cells — but is displayed on the Inventory Panel.
 _Avoid_: rounds, ammunition items, bullets
+
+### Records
+
+**Record**:
+A document the player reads in the world with a use press — a notice, a log, a file, a transmission.
+Its text lives in `records.txt` and is the client's; the server owns only which ones the suit has
+**registered**, saved as a mask of numeric ids. A Record is *read*, never taken: it stays where it is,
+re-opens on every press, and occupies no Cells. It **glows** while unread. Ids are saved, so they are
+stable once added and never reused.
+_Avoid_: entry (that is an occupant of an Inventory), note, lore pickup, document, log, transmission as
+the general word — *Transmission* is one category of Record
+
+**Register**:
+What the suit does to a Record the first time it is read: the id goes into its memory and stays there.
+_Avoid_: collect, pick up, unlock, acquire
+
+**Guidance**:
+Objectives, as Records in a pinned category, handed over and taken back by `record_grant`. "Done" is a
+revoke, optionally granting the next. Written in the advisor's voice. Guidance is the only kind of
+Record that is ever revoked: a Record the player *read* never leaves the suit's memory.
+_Avoid_: objective, quest, mission, task list
+
+**Reader**:
+The page a Record is shown on. One reader serves both the world and the Records tab. In the world it
+takes no input at all, so the player keeps moving and looking while reading; damage, a second press or
+walking away shut it.
+_Avoid_: viewer, popup, document window
 
 ### Skills
 

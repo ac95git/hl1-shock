@@ -60,8 +60,11 @@ do — a title and `[E] Action`, in the Pickup Prompt's vicinity, in the engine'
 by class (`game_shared/prompt_defs.h`); the server classifies, the client resolves, no strings cross the
 wire. The mod's own pickups that never reach the Grid, and all ammunition, are taken by a use press
 through it. A **state line** replaces the key and action where something is in the way — *Lock / Code
-required* — so a hard gate looks impassable instead of offering a press it will not honour. Ammunition
-still reads a generic *Ammunition*; mapper overrides and suppression are not built.
+required* — so a hard gate looks impassable instead of offering a press it will not honour. A mapper
+overrides any of it with `prompt_title` and `prompt_action` on any entity, and hides it entirely with
+`prompt_suppress` — which hides the label, not the interaction, so vanilla's unmarked secret panel still
+works. Ammunition and the vanilla pickups that are not Item Types name themselves. Still the engine's
+console font, which is the reason to style it.
 
 **Records** (2026-09-18) — the first code this pillar has ever had. Documents read in the world with
 `+use`: a `record` (a model) or a `record_brush` (a terminal, a notice, a roster), both of which stay

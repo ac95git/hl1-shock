@@ -781,6 +781,13 @@ static bool ClassifyPickup(CBaseEntity* pEnt, EEntryKind& outKind, int& outId)
 			{"item_silencer", EPromptClass::Silencer},
 			{"item_alienmodule", EPromptClass::AlienModule},
 			{"item_pulsemodule", EPromptClass::PulseModule},
+			// Vanilla pickups that are not Item Types either, and so were
+			// falling through to a bare "Item".
+			{"item_battery", EPromptClass::Battery},
+			{"item_healthkit", EPromptClass::Healthkit},
+			{"item_airtank", EPromptClass::AirTank},
+			{"item_antidote", EPromptClass::Antidote},
+			{"item_security", EPromptClass::SecurityCard},
 		};
 
 		EPromptClass promptClass = EPromptClass::Item;
@@ -800,8 +807,42 @@ static bool ClassifyPickup(CBaseEntity* pEnt, EEntryKind& outKind, int& outId)
 
 	if (dynamic_cast<CBasePlayerAmmo*>(pEnt))
 	{
+		// Named by what it is. Everything here read a bare "Ammunition"
+		// until 2026-09-18, which told the player nothing they could not
+		// already see on the floor.
+		static const struct
+		{
+			const char* classname;
+			EPromptClass promptClass;
+		} k_ammo[] = {
+			{"item_core", EPromptClass::Core},
+			{"ammo_357", EPromptClass::Ammo357},
+			{"ammo_9mmAR", EPromptClass::Ammo9mmAR},
+			{"ammo_mp5clip", EPromptClass::Ammo9mmAR}, // the same magazine under its old name
+			{"ammo_9mmbox", EPromptClass::Ammo9mmBox},
+			{"ammo_9mmclip", EPromptClass::Ammo9mmClip},
+			{"ammo_glockclip", EPromptClass::Ammo9mmClip},
+			{"ammo_ARgrenades", EPromptClass::AmmoARGrenades},
+			{"ammo_mp5grenades", EPromptClass::AmmoARGrenades},
+			{"ammo_buckshot", EPromptClass::AmmoBuckshot},
+			{"ammo_crossbow", EPromptClass::AmmoCrossbow},
+			{"ammo_egonclip", EPromptClass::AmmoEgonClip},
+			{"ammo_gaussclip", EPromptClass::AmmoGaussClip},
+			{"ammo_rpgclip", EPromptClass::AmmoRpgClip},
+		};
+
+		EPromptClass promptClass = EPromptClass::Ammo;
+		for (const auto& row : k_ammo)
+		{
+			if (FClassnameIs(pEnt->pev, row.classname))
+			{
+				promptClass = row.promptClass;
+				break;
+			}
+		}
+
 		outKind = EEntryKind::Pickup;
-		outId = static_cast<int>(FClassnameIs(pEnt->pev, "item_core") ? EPromptClass::Core : EPromptClass::Ammo);
+		outId = static_cast<int>(promptClass);
 		return true;
 	}
 
@@ -902,9 +943,29 @@ LookedAtPickup FindLookedAtPickup(CBasePlayer* pPlayer)
 		out.kind = pickup ? kind : EEntryKind::Empty;
 		out.id = pickup ? id : 0;
 		out.usable = pickup ? EPromptClass::None : ClassifyUsable(pObject, pPlayer);
+		out.pWinner = pObject;
 	}
 
 	return out;
+}
+
+// A mapper's override, clamped so an over-long one is truncated rather than
+// overflowing the message. Returns "" when there is none, which is what the
+// client reads as "use the shared table".
+static const char* PromptOverride(string_t iszValue, char* buf, int bufSize)
+{
+	buf[0] = '\0';
+
+	if (FStringNull(iszValue))
+		return buf;
+
+	const char* src = STRING(iszValue);
+	if (!src)
+		return buf;
+
+	const int max = (bufSize < k_PromptOverrideMax + 1) ? bufSize : k_PromptOverrideMax + 1;
+	snprintf(buf, max, "%s", src);
+	return buf;
 }
 
 void UpdatePickupPrompt(CBasePlayer* pPlayer)
@@ -914,23 +975,51 @@ void UpdatePickupPrompt(CBasePlayer* pPlayer)
 
 	const LookedAtPickup look = FindLookedAtPickup(pPlayer);
 
-	const int kind = look.Valid() ? static_cast<int>(look.kind) : 0;
-	const int id = look.Valid() ? look.id : 0;
-	const int promptClass = look.Valid() ? 0 : static_cast<int>(look.usable);
+	// Suppression hides the LABEL, never the interaction: an unmarked panel
+	// still opens when pressed, which is the whole point of being able to
+	// hide one (docs/ROADMAP.md, "The Prompt"). So it is applied here and
+	// not in FindLookedAtPickup, which the use press shares.
+	const bool bSuppressed = look.pWinner != nullptr && look.pWinner->m_bPromptSuppress;
+
+	const int kind = (look.Valid() && !bSuppressed) ? static_cast<int>(look.kind) : 0;
+	const int id = (look.Valid() && !bSuppressed) ? look.id : 0;
+	const int promptClass = (look.Valid() || bSuppressed) ? 0 : static_cast<int>(look.usable);
+
+	// The entity itself joins the change test now that its own strings can
+	// reach the client: two buttons are the same (kind, id, class) and may
+	// still be a Pump control and a Blast door.
+	const int entIndex = (bSuppressed || !look.pWinner) ? 0 : ENTINDEX(look.pWinner->edict());
 
 	// Only on change: the prompt is stable for as long as the player keeps
 	// looking at the same thing, so there is nothing to resend each frame.
-	if (kind == pPlayer->m_iPromptKind && id == pPlayer->m_iPromptId && promptClass == pPlayer->m_iPromptClass)
+	if (kind == pPlayer->m_iPromptKind && id == pPlayer->m_iPromptId &&
+		promptClass == pPlayer->m_iPromptClass && entIndex == pPlayer->m_iPromptEntity)
 		return;
 
 	pPlayer->m_iPromptKind = kind;
 	pPlayer->m_iPromptId = id;
 	pPlayer->m_iPromptClass = promptClass;
+	pPlayer->m_iPromptEntity = entIndex;
+
+	char szTitle[k_PromptOverrideMax + 1];
+	char szAction[k_PromptOverrideMax + 1];
+	if (bSuppressed || !look.pWinner)
+	{
+		szTitle[0] = '\0';
+		szAction[0] = '\0';
+	}
+	else
+	{
+		PromptOverride(look.pWinner->m_iszPromptTitle, szTitle, sizeof(szTitle));
+		PromptOverride(look.pWinner->m_iszPromptAction, szAction, sizeof(szAction));
+	}
 
 	MESSAGE_BEGIN(MSG_ONE, gmsgPickupPrompt, NULL, pPlayer->pev);
 	WRITE_BYTE((unsigned char)kind);
 	WRITE_BYTE((unsigned char)id);
 	WRITE_BYTE((unsigned char)promptClass); // EPromptClass; only when there is nothing to take
+	WRITE_STRING(szTitle);                  // "" -- use the shared table
+	WRITE_STRING(szAction);
 	MESSAGE_END();
 }
 

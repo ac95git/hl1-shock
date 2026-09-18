@@ -494,6 +494,11 @@ private:
 	int m_iKind = 0; // EEntryKind; 0 means nothing is being looked at
 	int m_iId = 0;   // WeaponId or EItemTypeId
 	int m_iClass = 0; // EPromptClass; set when the thing is used rather than taken
+
+	// The mapper's prompt_title / prompt_action for this entity, empty when
+	// it has none. The only strings the Prompt receives rather than resolves.
+	char m_szTitle[64] = {};
+	char m_szAction[64] = {};
 };
 
 //

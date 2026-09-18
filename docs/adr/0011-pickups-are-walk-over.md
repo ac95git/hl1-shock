@@ -4,6 +4,21 @@ Every pickup is taken by walking over it, as in Half-Life. A medkit or battery i
 that wastes none of it and carried otherwise; antidote, keycard and syringe are carried on contact. The
 one exception is a suit offered to a player already wearing one, which waits for a use press.
 
+> **Exception, 2026-09-18: a Record is read with a use press, never by walking over it.**
+>
+> This ADR is about **taking**. A Record is **read** — it is never taken, occupies no Cells, and stays
+> in the world to be re-read. What a press buys there is *attention*, which is already what a use press
+> means for a scientist, and it is the same verb.
+>
+> The reason is the one this ADR itself turns on: what the player will learn. A document absorbed by
+> brushing past it might never actually be read, and exploration is the first-ranked pillar
+> ([PILLARS.md](../PILLARS.md)) — so a Record the player walked through and never opened is the feature
+> failing silently. Reading has to be a decision.
+>
+> The rule above is not weakened. Nothing that goes **into the Grid or a pool** is use-only; a Record
+> goes into neither. If a future thing is both read and carried, it is a pickup and this exception does
+> not cover it. See [ROADMAP.md](../ROADMAP.md), "Pillar 1: Records".
+
 This reverses a deliberate rule from 2026-08-01, which made every Inventory item use-only: walk over a
 battery and nothing happened, and the Pickup Prompt under the crosshair told you a use press would take
 it. The rule was written down with its reason — "so the player is never surprised by what they are

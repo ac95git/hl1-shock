@@ -33,6 +33,8 @@ bool CHudPickupPrompt::Init()
 	m_iKind = 0;
 	m_iId = 0;
 	m_iClass = 0;
+	m_szTitle[0] = '\0';
+	m_szAction[0] = '\0';
 
 	gHUD.AddHudElem(this);
 	return true;
@@ -48,6 +50,8 @@ void CHudPickupPrompt::Reset()
 	m_iKind = 0;
 	m_iId = 0;
 	m_iClass = 0;
+	m_szTitle[0] = '\0';
+	m_szAction[0] = '\0';
 	m_iFlags &= ~HUD_ACTIVE;
 }
 
@@ -58,6 +62,17 @@ bool CHudPickupPrompt::MsgFunc_PickupHint(const char* pszName, int iSize, void* 
 	m_iKind = READ_BYTE();
 	m_iId = READ_BYTE();
 	m_iClass = READ_BYTE();
+
+	// The mapper's overrides, empty unless this entity carries one. Kept as
+	// the message left them: a Prompt is only sent on a change, so these are
+	// current until the next one arrives.
+	//
+	// COPIED ONE AT A TIME, and it has to stay that way: READ_STRING returns
+	// a pointer into a single static buffer (common/parsemsg.cpp), so holding
+	// two of its results at once leaves both pointing at whichever was read
+	// last. Reading both and then copying showed the action under the title.
+	snprintf(m_szTitle, sizeof(m_szTitle), "%s", READ_STRING());
+	snprintf(m_szAction, sizeof(m_szAction), "%s", READ_STRING());
 
 	// All zero means the player is no longer looking at anything a use press
 	// would act on.
@@ -167,6 +182,14 @@ bool CHudPickupPrompt::Draw(float flTime)
 		if (def && def->displayName)
 			name = def->displayName;
 	}
+
+	// The mapper's overrides win over everything the tables decided -- that
+	// is what they are for. A state line still takes precedence over the
+	// action, because a gate that is shut stays shut however it is labelled.
+	if (m_szTitle[0] != '\0')
+		name = m_szTitle;
+	if (m_szAction[0] != '\0')
+		action = m_szAction;
 
 	// A pickup that cannot be named is not prompted for, as before.
 	if ((!action && !state) || (!name && m_iKind != 0))

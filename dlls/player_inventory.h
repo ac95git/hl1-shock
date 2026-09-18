@@ -208,6 +208,11 @@ struct LookedAtPickup
 	// Only the Prompt reads it: there is nothing to take, so Valid() is false.
 	EPromptClass usable = EPromptClass::None;
 
+	// Whatever won the aim test, takeable or not. The Prompt's overrides
+	// live on the entity and apply to both kinds, so it needs the winner
+	// itself and not only what the winner turned out to be.
+	CBaseEntity* pWinner = nullptr;
+
 	bool Valid() const { return pEntity != nullptr && kind != EEntryKind::Empty; }
 };
 

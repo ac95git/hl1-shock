@@ -527,6 +527,7 @@ public:
 	int m_iPromptKind = 0;
 	int m_iPromptId = 0;
 	int m_iPromptClass = 0; // EPromptClass, when a usable entity won instead of a pickup
+	int m_iPromptEntity = 0; // which entity it was, so two renamed buttons differ
 
 	// ---- The Concealment readout ----
 	//

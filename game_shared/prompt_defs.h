@@ -55,6 +55,30 @@ enum class EPromptClass : uint8_t
 	Ammo,         // any other CBasePlayerAmmo
 	Item,         // any other CItem
 
+	// Ammunition, by what it actually is.  Until 2026-09-18 every box and
+	// clip in the game read "Ammunition", which tells the player nothing
+	// they could not see (Andrei).  A table rather than a prettified
+	// classname, because "ammo_9mmAR" does not prettify into anything worth
+	// reading.
+	Ammo357,
+	Ammo9mmAR,
+	Ammo9mmBox,
+	Ammo9mmClip,
+	AmmoARGrenades,
+	AmmoBuckshot,
+	AmmoCrossbow,
+	AmmoEgonClip,
+	AmmoGaussClip,
+	AmmoRpgClip,
+
+	// The vanilla pickups that are not Item Types either, and so were
+	// falling through to a bare "Item".
+	Battery,
+	Healthkit,
+	AirTank,
+	Antidote,
+	SecurityCard,
+
 	_Count, // keep last
 };
 
@@ -98,6 +122,23 @@ static const PromptClassDef k_PromptClassDefs[] = {
 	{"Core", "Take"},                // Core
 	{"Ammunition", "Take"},          // Ammo
 	{"Item", "Take"},                // Item
+
+	{".357 rounds", "Take"},         // Ammo357
+	{"Rifle magazine", "Take"},      // Ammo9mmAR
+	{"9mm box", "Take"},             // Ammo9mmBox
+	{"9mm clip", "Take"},            // Ammo9mmClip
+	{"Rifle grenades", "Take"},      // AmmoARGrenades
+	{"Shotgun shells", "Take"},      // AmmoBuckshot
+	{"Crossbow bolts", "Take"},      // AmmoCrossbow
+	{"Egon cells", "Take"},          // AmmoEgonClip
+	{"Uranium", "Take"},             // AmmoGaussClip
+	{"Rocket", "Take"},              // AmmoRpgClip
+
+	{"HEV battery", "Take"},         // Battery
+	{"Medkit", "Take"},              // Healthkit
+	{"Oxygen tank", "Take"},         // AirTank
+	{"Antidote", "Take"},            // Antidote
+	{"Security card", "Take"},       // SecurityCard
 };
 
 static_assert(sizeof(k_PromptClassDefs) / sizeof(k_PromptClassDefs[0]) == static_cast<int>(EPromptClass::_Count),
@@ -105,6 +146,23 @@ static_assert(sizeof(k_PromptClassDefs) / sizeof(k_PromptClassDefs[0]) == static
 
 // What every takeable thing says under its name.
 static const char* const k_PromptTakeAction = "Take";
+
+// ---------------------------------------------------------
+// The mapper's overrides.
+//
+// A default by class gets a Prompt onto everything for free, but it can
+// only ever say what the CLASS is -- and a pump control is not a "Button",
+// nor is its action "Press" (docs/ROADMAP.md, "The Prompt").  So any
+// entity takes prompt_title and prompt_action, and the server sends the
+// override in place of the table's row.
+//
+// This is the one place strings cross the wire, and it is deliberate: a
+// Prompt is only sent when what the player is looking at CHANGES, so the
+// cost is a handful of bytes per doorway rather than per frame.  They are
+// clamped well under the 192-byte message all the same, because a mapper
+// who writes an essay should get a truncated Prompt and not a dropped one.
+// ---------------------------------------------------------
+inline constexpr int k_PromptOverrideMax = 48;
 
 inline const PromptClassDef& GetPromptClass(int promptClass)
 {
