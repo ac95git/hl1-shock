@@ -608,7 +608,7 @@ quiet gun is the silencer, now a found Evolution.
 Watch `MAX_WORLD_SOUNDS`: it is 64 for the whole world. The duration is modest and the insert is
 player-kills-only for that reason.
 
-### The Search is the SDK's own — settled and built 2026-09-17, untested in game
+### The Search is the SDK's own — settled and built 2026-09-17, tested 2026-09-18
 
 Built as three pieces. `CBaseMonster::GetSchedule` (`dlls/schedule.cpp`) asks `TryClaimSearch` when a
 Disturbance is audible in IDLE or ALERT with no enemy, before the state switch, so every Trained monster
@@ -618,6 +618,15 @@ earshot would otherwise never learn it was sent. `TASK_GET_PATH_TO_BESTSOUND` wa
 target for two seconds after dispatch rather than to whatever sound is nearest, and
 `TASK_GET_PATH_TO_LASTPOSITION` fires the "no sign" line when the schedule is the Search. One body is
 answered once per dispatcher while its sound could still be in the list.
+
+**The searcher stops short of the body — fixed 2026-09-18.** The Search is dispatched the frame the victim
+dies, and until its death animation ends the victim is a full-size solid hull on the exact spot, so a route
+ending there always failed. With no triangulation or node route possible, every searcher dropped the Search
+at its path task, and the body then counted as answered. The path now aims 48 units short on the searcher's
+side, then 96, then the spot itself. The same session found the leader could pick himself on a member's
+call and never be given the schedule, since it was pushed only onto someone else; it is now pushed onto
+whoever was picked unless that is the one asking. `debug_schedule` prints `no search:`, `search path:` and
+`search ended:` to the console for this.
 
 `slInvestigateSound` (`dlls/defaultai.cpp:285`): stop, `TASK_STORE_LASTPOSITION`, path to the best sound,
 walk, idle ten seconds, path back to the stored position, walk, clear. **A Search and a return to Post in

@@ -291,7 +291,7 @@ void CSquadMonster::SquadMakeEnemy(CBaseEntity* pEnemy)
 // earshot of the Disturbance would otherwise never learn it was sent.
 //
 //=========================================================
-CSquadMonster* CSquadMonster::SquadDispatchSearch(const Vector& vecDisturbance)
+CSquadMonster* CSquadMonster::SquadDispatchSearch(const Vector& vecDisturbance, CSquadMonster* pCaller)
 {
 	if (!IsLeader())
 		return NULL;
@@ -351,14 +351,19 @@ CSquadMonster* CSquadMonster::SquadDispatchSearch(const Vector& vecDisturbance)
 	pNearest->m_vecSearchTarget = vecDisturbance;
 	pNearest->m_flSearchTargetTime = gpGlobals->time;
 
+	// The send line, when it is someone else going.
 	if (pNearest != this)
-	{
-		// The send line, then the schedule pushed straight onto the member:
-		// its own GetSchedule may not run for seconds if nothing interrupts
-		// what it is doing, and it may never have heard the body at all.
 		OnSearchDispatched();
+
+	// The schedule pushed straight onto whoever goes, unless it is the one
+	// asking -- that one returns the Search from its own GetSchedule.  Its own
+	// GetSchedule may not run for seconds if nothing interrupts what it is
+	// doing, and it may never have heard the body at all.  That includes the
+	// leader picking himself on a member's call: before 2026-09-18 he was
+	// never pushed, and the next time he heard the body it was refused as
+	// already answered, so nobody went.
+	if (pNearest != pCaller)
 		pNearest->ChangeSchedule(pNearest->GetScheduleOfType(SCHED_INVESTIGATE_SOUND));
-	}
 
 	DebugScheduleNoteSearch(this, pNearest);
 

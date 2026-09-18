@@ -470,7 +470,10 @@ bool CBaseMonster::TryClaimSearch(const Vector& vecDisturbance)
 	{
 		// A loner.  Goes itself, once per body.
 		if (SearchAlreadyAnswered(this, vecDisturbance))
+		{
+			DebugScheduleNoteRefusal(this, "loner, already answered");
 			return false;
+		}
 
 		m_vecLastSearch = vecDisturbance;
 		m_flLastSearchTime = gpGlobals->time;
@@ -479,7 +482,12 @@ bool CBaseMonster::TryClaimSearch(const Vector& vecDisturbance)
 		return true;
 	}
 
-	return pSquad->MySquadLeader()->SquadDispatchSearch(vecDisturbance) == pSquad;
+	CSquadMonster* pSent = pSquad->MySquadLeader()->SquadDispatchSearch(vecDisturbance, pSquad);
+
+	if (pSent != pSquad)
+		DebugScheduleNoteRefusal(this, pSent == NULL ? "squad, nobody sent" : "squad, another sent");
+
+	return pSent == pSquad;
 }
 
 //=========================================================
@@ -680,12 +688,23 @@ void DebugScheduleNoteSearch(CBaseMonster* pDispatcher, CBaseMonster* pSearcher)
 		return;
 
 	g_LastSearch.flTime = gpGlobals->time;
-	snprintf(g_LastSearch.szText, sizeof(g_LastSearch.szText), "search: %.10s -> %.10s%s",
-		ShortMonsterName(STRING(pDispatcher->pev->classname)),
-		ShortMonsterName(STRING(pSearcher->pev->classname)),
+	snprintf(g_LastSearch.szText, sizeof(g_LastSearch.szText), "search: #%d -> #%d%s",
+		pDispatcher->entindex(), pSearcher->entindex(),
 		pDispatcher == pSearcher ? " (self)" : "");
 
 	ALERT(at_console, "%s\n", g_LastSearch.szText);
+}
+
+// Why a monster that heard a body did not go.  Console only, and it repeats:
+// hear-and-turn brings the monster back here every few seconds for as long
+// as the body is audible.  Added 2026-09-18 for C7.
+void DebugScheduleNoteRefusal(CBaseMonster* pMonster, const char* pszWhy)
+{
+	if (debug_schedule.value == 0 || !pMonster)
+		return;
+
+	ALERT(at_console, "no search: %s #%d, %s\n", ShortMonsterName(STRING(pMonster->pev->classname)),
+		pMonster->entindex(), pszWhy);
 }
 
 //=========================================================
@@ -769,6 +788,45 @@ void DebugScheduleReport(CBasePlayer* pPlayer)
 			pszSchedule, pMonster->m_iScheduleIndex + 1, cTasks, iTask,
 			pMonster->m_flSuspicion, flConcealment, pMonster->m_flSuspicionFloor,
 			pMonster->m_hEnemy != NULL ? "  enemy" : "");
+
+		// The nearest live Disturbance against this monster's ears: distance,
+		// the range it can hear it at, and whether its last Listen did.  Added
+		// 2026-09-18 for C7 -- leaderless grunts not walking to a body -- where
+		// the question is whether they ever hear it at all.
+		const Vector vecEar = pMonster->EarPosition();
+		CSound* pNearestBody = NULL;
+		float flNearestBody = 0.0f;
+
+		for (int iSound = CSoundEnt::ActiveList(), cSteps = 0;
+			 iSound != SOUNDLIST_EMPTY && cSteps < MAX_WORLD_SOUNDS; cSteps++)
+		{
+			CSound* pSound = CSoundEnt::SoundPointerForIndex(iSound);
+
+			if (pSound == NULL)
+				break;
+
+			if ((pSound->m_iType & bits_SOUND_DISTURBANCE) != 0)
+			{
+				const float flDist = (pSound->m_vecOrigin - vecEar).Length();
+
+				if (pNearestBody == NULL || flDist < flNearestBody)
+				{
+					pNearestBody = pSound;
+					flNearestBody = flDist;
+				}
+			}
+
+			iSound = pSound->m_iNext;
+		}
+
+		if (pNearestBody != NULL)
+		{
+			char szBody[48];
+			snprintf(szBody, sizeof(szBody), "body %.0f/%.0f  heard %s\n",
+				flNearestBody, pNearestBody->m_iVolume * pMonster->HearingSensitivity(),
+				(pMonster->m_afSoundTypes & bits_SOUND_DISTURBANCE) != 0 ? "yes" : "no");
+			strncat(szReport, szBody, sizeof(szReport) - strlen(szReport) - 1);
+		}
 	}
 
 	// The events, while fresh, whether or not anything is under the crosshair.

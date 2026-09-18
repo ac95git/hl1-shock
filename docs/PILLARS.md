@@ -1751,9 +1751,10 @@ it off for comparison.
 **Nothing gives up.** Once a monster acquires the player it keeps them forever — no give-up, and no
 captain's notice propagation. Settled and unbuilt; see the next step.
 
-### The cost of a kill — built 2026-09-17, untested in game
+### The cost of a kill — built 2026-09-17, tested 2026-09-18
 
-Step 5f of the post-aggro step, built the day it was settled, none of it played yet:
+Step 5f of the post-aggro step, built the day it was settled and run through
+[STEALTH_CHECKLIST.md](STEALTH_CHECKLIST.md) the next day; the Search was fixed on the way (below):
 
 - **Witnesses.** Every hostile with a meter that had a line to the victim as it died jumps to 0.75, turns
   to the body and speaks; from there it drains to a permanent 0.3 floor, cleared only by a level change.
@@ -1771,8 +1772,11 @@ Step 5f of the post-aggro step, built the day it was settled, none of it played 
   ignoring the grunt's helmet; Shroud (id 160) in Cut the Head's cell; Ambush ×1.5 / ×2;
   `suspicion_fill` 2.0.
 
-What to watch first: whether the searcher walks to the body or past it, whether the mob reads as rabble
-or as a bug, and whether the witness window from cover is long enough for the stab-swap-headshot.
+The checklist found the Search dead: no searcher ever walked, because the route to a body that is still
+mid-death-animation ends inside a solid hull. The searcher now stops 48 units short of the body. With that
+fix, squads send one grunt and leaderless survivors all go, as designed. What the checklist left open is
+the captain's channel (5e), not built: the leader's meter only rises from his own sight, and a member that
+did not see a kill stays at 0.
 
 ### Next step
 

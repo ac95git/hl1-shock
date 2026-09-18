@@ -25,6 +25,7 @@
 #include "nodes.h"
 #include "defaultai.h"
 #include "soundent.h"
+#include "game.h"
 
 //=========================================================
 // FHaveSchedule - Returns true if monster's m_pSchedule
@@ -231,6 +232,17 @@ void CBaseMonster::MaintainSchedule()
 			// if we come into this block of code, the schedule is going to have to be changed.
 			// if the previous schedule was interrupted by a condition, GetIdealState will be
 			// called. Else, a schedule finished normally.
+
+			// Why a Search ended, for debug_schedule.  Added 2026-09-18 for a
+			// searcher that was sent and never walked.
+			if (debug_schedule.value != 0 && IsSearching())
+			{
+				ALERT(at_console, "search ended: #%d at task %d/%d (task id %d), conds %08x, state %d ideal %d%s\n",
+					entindex(), m_iScheduleIndex + 1, m_pSchedule->cTasks,
+					GetTask() ? GetTask()->iTask : -1, m_afConditions,
+					(int)m_MonsterState, (int)m_IdealMonsterState,
+					HasConditions(bits_COND_TASK_FAILED) ? ", task failed" : "");
+			}
 
 			// Notify the monster that his schedule is changing
 			ScheduleChange();
@@ -1107,13 +1119,40 @@ void CBaseMonster::StartTask(Task_t* pTask)
 		// the leader pushed this schedule onto may have heard nothing at all.
 		if (m_flSearchTargetTime > 0.0f && gpGlobals->time - m_flSearchTargetTime < 2.0f)
 		{
-			if (MoveToLocation(m_movementActivity, 2, m_vecSearchTarget))
+			// Not onto the body: the Search is dispatched the frame the victim
+			// dies, and for the length of its death animation it is still a
+			// full-size solid hull standing on that exact spot, so a route
+			// whose goal is inside it always fails -- no triangulation or node
+			// helps.  Found 2026-09-18: every searcher dropped the Search at
+			// this task.  So stop short of it on this side, which is also
+			// what standing over a body looks like, and keep the spot itself
+			// as the last try for a body that has already gone flat.
+			Vector vecBack = pev->origin - m_vecSearchTarget;
+			vecBack.z = 0;
+			vecBack = vecBack.Length() > 1.0f ? vecBack.Normalize() : g_vecZero;
+
+			static const float s_flStandOff[] = {48.0f, 96.0f, 0.0f};
+			bool bRouted = false;
+
+			for (float flStandOff : s_flStandOff)
+			{
+				if (MoveToLocation(m_movementActivity, 2, m_vecSearchTarget + vecBack * flStandOff))
+				{
+					if (debug_schedule.value != 0)
+						ALERT(at_console, "search path: #%d, %.0f short of the body\n", entindex(), flStandOff);
+
+					bRouted = true;
+					break;
+				}
+			}
+
+			if (bRouted)
 			{
 				TaskComplete();
 			}
 			else
 			{
-				ALERT(at_aiconsole, "GetPathToSearchTarget failed!!\n");
+				ALERT(debug_schedule.value != 0 ? at_console : at_aiconsole, "GetPathToSearchTarget failed!! #%d\n", entindex());
 				TaskFail();
 			}
 			break;
@@ -1397,7 +1436,9 @@ Schedule_t* CBaseMonster::GetSchedule()
 	{
 		CSound* pDisturbance = PAudibleSoundOfType(bits_SOUND_DISTURBANCE);
 
-		if (pDisturbance != NULL && TryClaimSearch(pDisturbance->m_vecOrigin))
+		if (pDisturbance == NULL)
+			DebugScheduleNoteRefusal(this, "heard, but not in the audible list");
+		else if (TryClaimSearch(pDisturbance->m_vecOrigin))
 			return GetScheduleOfType(SCHED_INVESTIGATE_SOUND);
 	}
 

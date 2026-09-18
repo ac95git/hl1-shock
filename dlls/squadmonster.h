@@ -76,8 +76,9 @@ public:
 	// The leader's half of the Search (docs/PERCEPTION.md): pick the nearest
 	// free member -- the leader included -- to go and look at a body, hand it
 	// the spot, and return it; NULL when nobody is free or this body has
-	// already been answered.  Called on the leader by whichever member heard.
-	CSquadMonster* SquadDispatchSearch(const Vector& vecDisturbance);
+	// already been answered.  Called on the leader by whichever member heard,
+	// pCaller; anyone else picked has the Search pushed onto it.
+	CSquadMonster* SquadDispatchSearch(const Vector& vecDisturbance, CSquadMonster* pCaller);
 
 	bool CheckEnemy(CBaseEntity* pEnemy) override;
 	void StartMonster() override;

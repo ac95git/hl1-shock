@@ -116,6 +116,7 @@ void DebugScheduleReport(CBasePlayer* pPlayer);
 
 //! The two events the readout carries; each also goes to the console.
 void DebugScheduleNoteKill(CBaseMonster* pVictim, int cWitnesses, bool bSilentKill);
+void DebugScheduleNoteRefusal(CBaseMonster* pMonster, const char* pszWhy);
 void DebugScheduleNoteSearch(CBaseMonster* pDispatcher, CBaseMonster* pSearcher);
 
 /**

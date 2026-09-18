@@ -296,6 +296,19 @@ void W_Precache()
 	giAmmoIndex = 0;
 
 	// custom items...
+	// The mod's own pickups, precached at every level load the way vanilla's
+	// are below.  An item's Spawn precaches its model, and the engine only
+	// allows that while the level loads -- so `give` on a loaded save whose
+	// placed copy was already picked up was a Host_Error.
+	UTIL_PrecacheOther("item_syringe");
+	UTIL_PrecacheOther("item_shard");
+	UTIL_PrecacheOther("item_skillpoint");
+	UTIL_PrecacheOther("item_resettoken");
+	UTIL_PrecacheOther("item_rowgrant");
+	UTIL_PrecacheOther("item_nightvision");
+	UTIL_PrecacheOther("item_silencer");
+	UTIL_PrecacheOther("item_alienmodule");
+	UTIL_PrecacheOther("item_pulsemodule");
 
 	// common world objects
 	UTIL_PrecacheOther("item_suit");

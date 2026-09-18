@@ -1,6 +1,9 @@
-# The Stealth checklist — 5f, untested
+# The Stealth checklist — 5f, tested 2026-09-18
 
-**This list blocks all stealth work.** Nothing in pillar 6 — not 5b, not 5e, not 5g, not a tuning pass, not
+**Closed 2026-09-18 — the block is lifted.** Results are in [the section below](#results-2026-09-18).
+What follows is kept as the test it was.
+
+**This list blocked all stealth work.** Nothing in pillar 6 — not 5b, not 5e, not 5g, not a tuning pass, not
 a new node — is touched until every row below has a result from Andrei. Written 2026-09-17, the night 5f
 was built; the design it tests is in [PERCEPTION.md part 2](PERCEPTION.md#part-2--the-model-this-mod-adds)
 and [ROADMAP.md](ROADMAP.md#the-post-aggro-step). Report results row by row; a row's letter and number is
@@ -127,3 +130,26 @@ Hold Silent Kill (id 130) for these.
 - B5, C7 and G6 are questions, not pass/fail: the answers decide whether victims are filtered, whether the
   mob stays, and how the light term is tuned.
 - F rows that miss by a point or two are tuning; F rows that miss by a helmet are bugs.
+
+## Results, 2026-09-18
+
+Every row passed except the ones listed here, as Andrei reported them.
+
+- **C1–C3: failed, fixed, passed.** The leader dispatched and nobody walked. The route to a body still
+  playing its death animation ended inside a solid hull, so the searcher failed its path task and the
+  body then counted as answered. The searcher now stops 48 units short (`dlls/schedule.cpp`). A second
+  fault fixed with it: a leader who picked himself on a member's call was never given the schedule.
+  Found with `debug_schedule`'s new console lines.
+- **C7: failed, then passed on the same fix.** Leaderless survivors go to the body. A grunt already
+  walking home from one body does not take the next, which is C4's rule and fine for now.
+- **B5: a non-issue for now.** Any victim makes a witness; no filter.
+- **G6: about 9 s** at 500–600 units in topmap's darkest spot with Nightfall, against G5's 3.5 s lit.
+  The light term is untuned.
+- **E: passed, plus a crash fixed.** `give item_silencer` on a loaded save whose placed silencer had been
+  picked up was a Host_Error: the model was precached only by the placed item. The mod's nine pickups
+  are now precached at every level load in `W_Precache` (`dlls/weapons.cpp`). Verified.
+- **Not a row: the leader.** His meter stays at 0 unless he sees the player himself, and a member that
+  did not see a kill stays at 0 too. Both are the captain's channel (5e), not built. Whether the leader
+  had a line to the body in that test was not established.
+- **topmap has no `info_node`s.** Searches around corners, the walk back, and grunt cover and flanking
+  all need the node graph; results above are from open ground.
