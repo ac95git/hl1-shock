@@ -1902,7 +1902,12 @@ built~~ **Built 2026-09-16 with [ADR-0013](adr/0013-the-pulse-is-a-found-module.
 **Verified in game 2026-09-18: the mechanic is right, the visual is not.** Andrei: "the visual indicator
 needs to be addressed in order for the mechanic to be clear and rewarding to the player." Today the tail is
 one dim ring at its start and a low clang on a braced hit; the bar shows it only as recharge. That is the
-next thing to do here. **Also open, lower priority:** whether a *successful* deflect should be followed by a
+next thing to do here — **deferred by Andrei on 2026-09-18** ("leave them for another time"). Proposed and
+not yet chosen, to be put to him when it comes back: (1) the bar gives the tail its own dimmer segment that
+drains before the recharge starts, which needs a new client state; (2) the dim ring repeats and fades across
+the whole tail, so its length reads in the world; (3) a braced hit gets its own payoff, a half-bright ring
+flash and a brief screen-edge tint in the suit's colour beside the low clang — a small win, clearly smaller
+than a parry. **Also open, lower priority:** whether a *successful* deflect should be followed by a
 tail. Today it is not — a deflect ends as it always did, and the rest of that second is unprotected.
 
 Recorded in [PILLARS pillar 2](PILLARS.md#2-enhanced-combat). Two calls made while building it: the tail
