@@ -116,6 +116,18 @@ discharge — the parry's first tutor, with no enemy attached. Veins start out o
 keep their place in the rhythm across a save, and stop when broken. Vanilla's lightning sprite and zaps,
 in the Shard's amber pushed toward white.
 
+**Stations** are `func_station` (`dlls/station.cpp`), a brush on `func_recharge`'s shape: one use press is
+one trade of Shards for something the player cannot find enough of. The recipe is a row of
+`game_shared/station_defs.h` chosen by `stationtype`, not free-form keys — a **Fuel processor** takes ten
+Shards, a full Stack, for one Skill Point, exactly once; an **Ammunition station** takes three for 20
+uranium or for 2 Cores, `uses` times (default 3, `-1` unlimited, `0` placed spent). The Prompt states the
+trade in the table's own words — *Fuel processor / [E] Insert 10 Shards for a Skill Point* — and a spent
+one shows a state line, *Spent* or *Empty*, so recipes are known rather than discovered. **Nothing is taken
+unless the whole output can be given**: too few Shards, or ammunition that would not all fit under the
+carry ceiling, is refused with the charger's refusal and the reason on the centre line, before a Shard
+moves. A Skill Point is banked, so it never needs room. Each trade fires the Station's target. The server
+owns the Inventory, so a trade is server code calling into it — no new message.
+
 What no custom code touches yet: level traversal, secrets, map flow, navigation aids.
 
 ### What's missing

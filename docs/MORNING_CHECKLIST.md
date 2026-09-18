@@ -72,6 +72,23 @@ A `func_deposit` with the *Unstable* flag.
 | U9 | Quicksave, quickload | It keeps its rhythm |
 | U10 | Judge the rhythm | Is 1.2 s of warning readable, and is 20 damage right for a tutor? `deposit_arc_period`, `_warn`, `_damage`, `_radius` |
 
+## T. Stations
+
+`func_station` of each type. `give item_shard` for Shards if no deposits are to hand.
+
+| # | Do | Expect |
+| --- | --- | --- |
+| T1 | Look at a Fuel processor | *Fuel processor*, *[E] Insert 10 Shards for a Skill Point* |
+| T2 | Press use with 4 Shards | The charger's refusal, and *Needs 10 Crystal Shards - you have 4.* on screen. Still 4 Shards |
+| T3 | Press use with 12 Shards | The charger's accept, *Skill Point acquired.*, 2 Shards left, the Skill Tree shows one more point |
+| T4 | Look at it again, press again | *Spent*, no key; a press only refuses |
+| T5 | Ammunition station (uranium), 9 Shards, no uranium | Three presses: 20, 40, 60 uranium; 0 Shards; then *Empty* |
+| T6 | Same with uranium at 90 of 100 | Refused, *No room for 20 uranium.*, **no Shards taken** |
+| T7 | Ammunition station (Cores) at 5 of 6 Cores | Refused, no Shards taken; at 4 of 6 it pays 2 |
+| T8 | Hold use, or double-tap | One trade per deliberate press (0.6 s lockout) |
+| T9 | A station with a `target` | The target fires on each trade |
+| T10 | Quicksave after one of three trades, quickload | Two trades left; a spent Fuel processor stays spent |
+
 ## Decisions I made
 
 Things the grill did not settle, decided during the night. Each can be overturned in a line.
@@ -113,6 +130,18 @@ Things the grill did not settle, decided during the night. Each can be overturne
   read as one substance; it moves with the Shard's hue when that settles.
 - **The discharge's attacker is the vein itself**, so a monster it kills is not a player kill and leaves no
   witnesses or Disturbance — stealth's rule for player-dealt deaths, applied as written.
+- **A trade whose ammunition would only partly fit is refused**, not paid out partly. The rule was "check
+  room before consuming"; half a payout for a full price is the same bug, smaller. The cost is that a player
+  at 81 uranium cannot trade until they have fired some.
+- **The ammunition choice is folded into the type**: three types (fuel, uranium, Cores) rather than a type
+  plus an ammo key. One dropdown in the editor, and a row per recipe in the table.
+- **The Prompt strings live in the Station table**, on the same line as the numbers they state, and the
+  Prompt's rows are built from them — so a price change is one line and cannot show one price while
+  charging another. `func_station` does not advertise the mapper's Prompt overrides for the same reason.
+- **Not enough Shards gets a centre-print** with the count, rather than a Prompt state line per shortfall:
+  the Prompt would need a class per price, and the refusal is the moment the player needs the number.
+- **Sounds are the HEV charger's accept and refuse**, a Station being `func_recharge`'s shape; a Skill Point
+  adds the Skill Point pickup sound.
 
 ## Found stale in the docs
 

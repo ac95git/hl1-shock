@@ -1107,6 +1107,24 @@
 	_minlight(string) : "Minimum light level"
 ]
 
+// A Station: a use press trades Crystal Shards for something. The Prompt states the trade. Nothing is
+// taken unless the whole output can be given - too few Shards, or ammunition that would not all fit,
+// is refused with the reason on screen. Fires its target on every trade.
+// Fuel processor: 10 Shards for one Skill Point, exactly once (Uses is ignored).
+// Ammunition: 3 Shards for 20 uranium, or 3 for 2 Cores, Uses times (-1 for unlimited, 0 placed spent).
+// Prices live in game_shared/station_defs.h.
+@SolidClass base(Targetname, Target, Global, RenderFields, ZHLT) = func_station : "Station"
+[
+	stationtype(choices) : "Station type" : 0 =
+	[
+		0: "Fuel processor (Skill Point)"
+		1: "Ammunition station (uranium)"
+		2: "Ammunition station (Cores)"
+	]
+	uses(integer) : "Uses (-1 unlimited)" : 3
+	_minlight(string) : "Minimum light level"
+]
+
 @SolidClass base(Global,Targetname, Target, RenderFields, Angles, Prompt, ZHLT) = func_button : "Button"
 [
 	speed(integer) : "Speed" : 5

@@ -3048,8 +3048,11 @@ are desperate for); and the deposit as a model, for veins that are objects rathe
 
 ### Stations
 
-**Shape: Shaped 2026-09-17.** Crafting and recycling stations placed in levels, with item inputs and item
-outputs. **The input is [crystal shards](#mining-and-crystal-shards)**; the outputs are what the player
+**Shape: Shaped 2026-09-17. The first two kinds built 2026-09-18 overnight, untested in game** — the Fuel
+processor and the Ammunition station, recorded in [PILLARS pillar 1](PILLARS.md#1-exploration). The room
+question below was answered by refusing: nothing is taken unless the whole output fits. What stays here:
+recycling, a Syringe or other outputs, and recipes found as Records. Crafting and recycling stations placed
+in levels, with item inputs and item outputs. **The input is [crystal shards](#mining-and-crystal-shards)**; the outputs are what the player
 cannot find enough of — Cores (which the [Alien Route](#alien) already said a Station would make),
 energy ammunition, perhaps a Syringe. Some are **fuel processors** that make one Skill Point, once. The
 choice a Station poses is ammunition now or power for good.
@@ -3076,11 +3079,11 @@ the output on the floor.
   **item → item**?~~ **Answered 2026-09-17: item → item.** Crystal is the one material and it is an Item
   Type — no new identity space, no new UI, no save change. Whether Stations also *recycle* (break an
   unwanted item down into shards) is not decided.
-- Are recipes **known** from the start, found as [Records](#pillar-1-records), or discovered by
-  experiment?
-- Are Stations **fixed in the world** (a reason to backtrack, which the persistence design already
-  anticipates — "maps are designed with backtracking in mind") or **carried**? Fixed is much stronger for
-  pillar 1 and costs nothing extra.
+- ~~Are recipes **known** from the start, found as [Records](#pillar-1-records), or discovered by
+  experiment?~~ **Answered 2026-09-18 by construction: known** — the Prompt states every trade. A recipe
+  found as a Record remains possible for a Station type added later.
+- ~~Are Stations **fixed in the world** or **carried**?~~ **Answered 2026-09-18: fixed** — a brush built into
+  a wall, which is the stronger answer for pillar 1 and cost nothing extra.
 
 ---
 
@@ -3136,7 +3139,7 @@ is designed, and may well change name first.
 | **Transmission** | ~~A recorded log found in a level and played back.~~ Since 2026-09-17, a *category* of Record: what was radioed, intercepted or, later, voiced. | Avoid *log*, *tape*, *audio diary*, *datapad*. |
 | **Guidance** | The Records tab's pinned section: what an advisor last asked for, granted and revoked by the map. | 2026-09-17. Avoid *objective*, *quest*, *mission*, *task*. |
 | **Prompt** | The text shown in the vicinity of anything that can be interacted with: a title, and the action or actions under it. The Pickup Prompt is its oldest case. | 2026-09-17. CONTEXT.md avoids *use prompt*, *hint*, *tooltip*; hence the bare word. |
-| **Station** | A world entity that takes items in and gives items out. | Avoid *bench*, *workbench*, *terminal*, *fabricator*. *Terminal* especially — it is a fixed source of Records. |
+| ~~**Station**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#inventory) on 2026-09-18, when the first two were built. | |
 | **Decapitation** | A lethal head hit that removes the head: headless submodel, thrown skull, blood from the stump. | Distinct from *gibbing*, which is the whole body and already means something in this codebase. **Headless** names the resulting state. |
 | ~~**Carbon Pickaxe**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#weapons) on 2026-09-18, when v1 was built. | |
 | **Route** | A build path through the Skill Tree: the set of Skills whose bonuses multiply into one way of playing. A region of the tree since 2026-09-15. | Named 2026-09-13. Avoid *class*, *spec* and *tree* — the tree is the whole thing. |
@@ -3146,7 +3149,7 @@ is designed, and may well change name first.
 | **Trace** | A drawn connector in the Skill Tree: thin between neighbours, thick for a Skill's gate, lit when powered. | Presentation term, 2026-09-15. Avoid *edge* in player-facing text (kept in code and the debug overlay). |
 | **The Heart** | The purest crystal of the anchor under the mine, cut free by the player in the cold open and seated in the rig. | Provisional, 2026-09-17. The grill called it the *keystone*; **Keystone** is taken, two rows up. |
 | ~~**Deposit**, **Shard**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#inventory) on 2026-09-18, when both were built. | |
-| **Fuel processor** | A Station that turns a stack of Shards into one Skill Point, once. | 2026-09-17. |
+| ~~**Fuel processor**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#inventory) on 2026-09-18. | |
 | **Tail** | The half-damage remainder of a Pulse after its deflect window, to one second in total. | 2026-09-17. **Not a Shield** and not a deflect; "brace" is the player-facing verb candidate. |
 | **Double jump** | The sixth Module; fills the legs Slot. | 2026-09-17. Name as plain as Dash and Hook; a fiction name for the hardware is open. |
 | **Wing**, **Piece** | A spoke of the hub; one of the things collected in the second half to take the facility home. | 2026-09-17. How many Pieces is open (three proposed). |

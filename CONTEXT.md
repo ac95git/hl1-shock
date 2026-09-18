@@ -77,6 +77,18 @@ there is no second resource type, and recycling (if it comes) is item to item. *
 *Shard* in prose, `item_shard` in maps.
 _Avoid_: ore, crystal (alone — that is the substance), resource, material, gem
 
+**Station**:
+A world entity that takes items in and gives items out: Shards in, something scarce out, one use press per
+trade, fixed where it was built. The trade is always stated before it is made, and nothing is taken unless
+all of the output can be given. `func_station` in maps.
+_Avoid_: bench, workbench, fabricator, crafting table; *terminal* especially — that is a fixed source of
+Records
+
+**Fuel processor**:
+The Station that turns a full Stack of Shards into one Skill Point, once — the crystal the suit is fed.
+The choice every other Station poses against it is ammunition now, or power for good.
+_Avoid_: refinery, converter
+
 ### Acquisition
 
 **Prompt**:

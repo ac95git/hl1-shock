@@ -20,6 +20,8 @@
 
 #include <cstdint>
 
+#include "station_defs.h"
+
 enum class EPromptClass : uint8_t
 {
 	None = 0,      // nothing usable is being looked at
@@ -46,6 +48,14 @@ enum class EPromptClass : uint8_t
 	// offers the key.
 	Deposit,       // a mining tool is in hand
 	DepositNoTool, // it is not
+
+	// A func_station, by its type and whether it has trades left.  The words
+	// are station_defs.h's, so the price shown is the price charged.
+	StationFuel,
+	StationFuelSpent,
+	StationUranium,
+	StationCores,
+	StationAmmoEmpty,
 
 	// Taken rather than used: the pickups that never reach the Grid, so the
 	// Item Type table cannot name them.  Sent as EEntryKind::Pickup's id.
@@ -119,6 +129,11 @@ static const PromptClassDef k_PromptClassDefs[] = {
 	{"Lock", nullptr, "Code required"},     // RecordLockSealed
 	{"Crystal deposit", nullptr, "Strike to mine"},         // Deposit
 	{"Crystal deposit", nullptr, "Requires a mining tool"}, // DepositNoTool
+	{k_StationDefs[0].promptTitle, k_StationDefs[0].promptAction},          // StationFuel
+	{k_StationDefs[0].promptTitle, nullptr, k_StationDefs[0].promptSpent},  // StationFuelSpent
+	{k_StationDefs[1].promptTitle, k_StationDefs[1].promptAction},          // StationUranium
+	{k_StationDefs[2].promptTitle, k_StationDefs[2].promptAction},          // StationCores
+	{k_StationDefs[1].promptTitle, nullptr, k_StationDefs[1].promptSpent},  // StationAmmoEmpty
 	{"Skill Point", "Take"},         // SkillPoint
 	{"Reset Token", "Take"},         // ResetToken
 	{"Row Grant", "Take"},           // RowGrant

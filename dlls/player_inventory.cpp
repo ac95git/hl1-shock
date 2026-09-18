@@ -12,6 +12,7 @@
 #include "player_inventory.h"
 #include "UserMessages.h"
 #include "suit_defs.h"
+#include "station.h"
 #include <algorithm>
 
 //=========================================================
@@ -890,6 +891,10 @@ static EPromptClass ClassifyUsable(CBaseEntity* pEnt, CBasePlayer* pPlayer)
 				   ? EPromptClass::RecordLock
 				   : EPromptClass::RecordLockSealed;
 	}
+
+	// A Station's answer is its recipe, or that it is spent.
+	if (const EPromptClass station = StationPromptClass(pEnt); station != EPromptClass::None)
+		return station;
 
 	// A deposit's answer depends on what is in the player's hand, and the
 	// Prompt resends when that changes (the class is part of its change test).
