@@ -25,8 +25,9 @@
 // Placeholders, all for docs/ART_DEBT.md: the hivehand's viewmodel, world
 // model and player model; the hivehand's HUD sprites (sprites/weapon_summon.txt,
 // copied from the base game's weapon_hornetgun.txt) with the gauss's ammo icon
-// standing in for a Core; the slave's zap sounds; the Quake teleport splash for
-// a ghost arriving and leaving; and w_gaussammo.mdl for item_core.
+// standing in for a Core; the slave's zap sounds; and the Quake teleport splash
+// for a ghost arriving and leaving.  item_core has its own model since
+// 2026-09-19, w_core.mdl, the battery in green.
 
 #include "extdll.h"
 #include "util.h"
@@ -291,7 +292,12 @@ bool CSummon::FindGhostSpot(Vector& vecSpot)
 #endif
 
 //=========================================================
-// item_core -- the world pickup, the shape of the uranium box.
+// item_core -- the world pickup: a green battery.
+//
+// The HEV battery reskinned to the vortigaunt beam's green (Andrei,
+// 2026-09-18; E:\CustomAssets\scripts\core_world.py), and it gives off light in
+// that green on the client (cl_dll/entity.cpp, ProgressionLight), as the
+// battery does in its own teal.
 //
 // Cores are found in the world only and are finite (docs/ROADMAP.md): one
 // pickup is one Core, and the carry ceiling is CORE_MAX_CARRY.  Nothing makes
@@ -303,12 +309,12 @@ class CCoreAmmo : public CBasePlayerAmmo
 	void Spawn() override
 	{
 		Precache();
-		SET_MODEL(ENT(pev), "models/w_gaussammo.mdl"); // stand-in; see ART_DEBT
+		SET_MODEL(ENT(pev), "models/w_core.mdl");
 		CBasePlayerAmmo::Spawn();
 	}
 	void Precache() override
 	{
-		PRECACHE_MODEL("models/w_gaussammo.mdl");
+		PRECACHE_MODEL("models/w_core.mdl");
 		PRECACHE_SOUND("items/9mmclip1.wav");
 	}
 	bool AddAmmo(CBaseEntity* pOther) override

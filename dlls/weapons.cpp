@@ -309,6 +309,7 @@ void W_Precache()
 	UTIL_PrecacheOther("item_silencer");
 	UTIL_PrecacheOther("item_alienmodule");
 	UTIL_PrecacheOther("item_pulsemodule");
+	UTIL_PrecacheOther("item_core"); // its own model since 2026-09-19; the gauss no longer covers it
 
 	// common world objects
 	UTIL_PrecacheOther("item_suit");

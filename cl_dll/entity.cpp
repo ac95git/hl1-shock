@@ -33,6 +33,13 @@ bool g_iAlive = true;
 // pickup.  Nothing crosses the network.  The colours are the family's own --
 // cyan is common, gold is scarce -- and the light sits at each model's heart
 // rather than on the floor.  progression_light is the radius; 0 turns it off.
+//
+// The battery and the Core light up too (Andrei, 2026-09-18): the battery in
+// the teal of its charge window, the Core -- the same battery reskinned, its
+// own .mdl because this table is keyed by model -- in the vortigaunt beam's
+// yellow-green (180, 255, 96, dlls/islave.cpp), which is what tells it from the
+// Row Grant's pure green a room away.  Both models stand 14 units tall at
+// $scale 1.3, so the heart is 8 up.
 static void ProgressionLight(cl_entity_t* ent, const char* modelname)
 {
 	static const struct
@@ -44,6 +51,8 @@ static void ProgressionLight(cl_entity_t* ent, const char* modelname)
 		{"models/w_skillpoint.mdl", 0, 200, 255, 9.0f, 1.0f},
 		{"models/w_resettoken.mdl", 255, 190, 40, 3.0f, 1.25f},
 		{"models/w_rowgrant.mdl", 80, 255, 80, 5.0f, 1.0f},
+		{"models/w_battery.mdl", 50, 220, 185, 8.0f, 1.0f},
+		{"models/w_core.mdl", 180, 255, 96, 8.0f, 1.0f},
 	};
 	static cvar_t* s_radius = nullptr;
 

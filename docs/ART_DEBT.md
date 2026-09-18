@@ -889,7 +889,7 @@ The pickup on the floor says *this is the Pulse* before the tooltip does.
 | Use | Asset | Borrowed from |
 | --- | --- | --- |
 | `item_alienmodule` world model | `models/w_sqknest.mdl` | the squeak grenade's nest prop |
-| `item_core` world model | `models/w_gaussammo.mdl` | the gauss gun's ammo box |
+| ~~`item_core` world model~~ | ~~`models/w_gaussammo.mdl`~~ **replaced 2026-09-19 by `models/w_core.mdl`, below** | ~~the gauss gun's ammo box~~ |
 | `weapon_summon` viewmodel, world model, sounds | the hivehand's | the hivehand |
 | `weapon_summon`'s HUD/ammo icon | the gauss ammo icon, in `sprites/weapon_summon.txt` | the gauss, standing in for a Core |
 
@@ -902,13 +902,24 @@ The pickup on the floor says *this is the Pulse* before the tooltip does.
 - A Core on the HUD is a gauss ammo icon — borrowed because it exists, not because it says the right
   thing, the same accident the Pulse's first readout icon was.
 
-### The Core's replacement, decided 2026-09-18
+### The Core's replacement, decided 2026-09-18, built 2026-09-19
 Andrei: **a Core is a green battery.** `w_battery` is reskinned from its blue to the vortigaunt beam's
 green, and both the battery and the Core give off light in their own colour. The light is a row each in
 `ProgressionLight`'s table (`cl_dll/entity.cpp`), which is keyed by model name. So the Core wants its own
 `.mdl`, not a skin of `w_battery`, and a green that can be told apart from the Row Grant's (80, 255, 80).
 The battery's source is in the SDK at `Weapon Models/world_models/wrld_battery` ([HL_SDK.md](HL_SDK.md)).
 The HUD icon follows the model.
+
+**Built:** `models/w_core.mdl` by `E:\CustomAssets\scripts\core_world.py`. The one coloured thing on the
+stock battery is the teal charge-window cloud on `batside.bmp`; it takes the islave zap beam's hue and
+saturation (180, 255, 96, `dlls/islave.cpp`) at its own luminance, so the cloud's texture survives, and
+nothing else changes — the hazard stripes, the orange readout and the grey body say *battery*, the
+window says *green*. The SMD and QC are the SDK's, the textures the shipped T file's (the SDK's
+`batside.BMP` is 100 wide against the shipped 116). `$externaltextures` dropped, so one file ships.
+`item_core` uses it and is precached in `W_Precache`; the light rows are the Core in the beam's
+yellow-green and the battery in its window's teal (50, 220, 185), both 8 units up. The sheet in
+`E:\CustomAssets\render\w_core\` shows a variant with the body washed 0.15 toward the green, not shipped.
+**Not yet verified in game.** The HUD icon is still the gauss's.
 
 ### Done when
 `item_alienmodule`, `item_core` and `weapon_summon` each have a look of their own, and a Core reads on the

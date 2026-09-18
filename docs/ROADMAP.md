@@ -776,7 +776,9 @@ progression pickups a dynamic light keyed by model name, so each is one row in i
 watch when it is built. The table is keyed by model, so the Core has to be its own `.mdl`, or the row has to
 read the skin as well. And the Row Grant's light is already green (80, 255, 80), so the Core's green has to
 be told apart from it. The battery's source is in the SDK (`Weapon Models/world_models/wrld_battery`,
-[HL_SDK.md](HL_SDK.md)), so the reskin needs no decompile.
+[HL_SDK.md](HL_SDK.md)), so the reskin needs no decompile. **Built 2026-09-19**, not yet verified in game:
+`models/w_core.mdl` from `core_world.py`, the light rows for both, the details in
+[ART_DEBT.md](ART_DEBT.md#the-cores-replacement-decided-2026-09-18-built-2026-09-19).
 
 ### Weapon evolutions
 
