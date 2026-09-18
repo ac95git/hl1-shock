@@ -83,8 +83,10 @@ The engine's rules under *Facts that bind the work* still hold; this is how they
 
 - **One PNG per material, named as the material.** The material on the faces in Blender is `pickhead`,
   the file is `textures/pickhead.png`, and Source Tools writes the material name into the SMD. The
-  script quantises to `pickhead.bmp` and studiomdl matches by name. Paint 24-bit in paint.net or in
-  Blender's texture paint; the quantise is the script's.
+  script quantises to `pickhead.bmp` and studiomdl matches by name — the *file* name, extension
+  included, so the script appends `.bmp` to every extensionless material line on the way to `src/`
+  (found on the pickaxe's first build, 2026-09-19: `./pickshaft not found`). Paint 24-bit in paint.net
+  or in Blender's texture paint; the quantise is the script's.
 - **Paint for 256 colours.** Flat colour, hard shading and painted highlights survive the quantise;
   long smooth gradients band. Judge the script's render, which uses the BMP, not Blender's viewport,
   which shows the PNG.
