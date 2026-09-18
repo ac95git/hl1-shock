@@ -111,6 +111,22 @@ leak, error or warning, fifteen lights. Nobody has walked it yet.
 
 Note for T5: picking up the gauss already gives 20 uranium, so the station's trades read 40, 60, 80.
 
+## Q. The Pulse's tail
+
+With the Pulse Module (`give item_pulsemodule`) and `debug_damage 1`. A zombie is the easiest attacker.
+
+| # | Do | Expect |
+| --- | --- | --- |
+| Q1 | Pulse so a hit lands **inside** the window | Exactly as before: the deflect, no damage, the short Recharge (and the Rebound if bought) |
+| Q2 | Pulse with nothing hitting you | After the Shield's ring, a dimmer, smaller ring: the tail. The bar goes straight to recharging, for about 3.75 s |
+| Q3 | Pulse early, so the hit lands about 0.5 s after the press | A dull, low clang, and **half** the damage (`debug_damage`); no Discharge, no Follow-Up icon |
+| Q4 | Pulse, then take a hit about 1.2 s after the press | Full damage: the tail is over |
+| Q5 | Pulse, then fall a long way inside the tail | Full fall damage: falls are not on the Shield's list |
+| Q6 | With the Defense Matrix: hold the key | Window, then tail, then the Matrix rising at 1 s — no moment unprotected, and the Matrix behaves as before |
+| Q7 | Mash the key against a grunt | Roughly a second of cover every four seconds, most of it at half |
+| Q8 | With Pulse Window bought | The deflect part grows; the whole still ends at 1 s |
+| Q9 | Judge the two cues | Is "I braced" told from "I parried" by ear and by eye? |
+
 ## Decisions I made
 
 Things the grill did not settle, decided during the night. Each can be overturned in a line.
@@ -164,6 +180,16 @@ Things the grill did not settle, decided during the night. Each can be overturne
   the Prompt would need a class per price, and the refusal is the moment the player needs the number.
 - **Sounds are the HEV charger's accept and refuse**, a Station being `func_recharge`'s shape; a Skill Point
   adds the Skill Point pickup sound.
+- **The tail follows only a window that deflected nothing.** A window that deflected ends exactly as it
+  always has — short Recharge, Rebound — so the verified parry and Rebound timing do not move at all. The
+  cost: after a deflect, the rest of the second is unprotected, as it is today.
+- **The tail's length is `skill_matrix_hold`**, not a cvar of its own: rule 5 says the tail runs exactly to
+  the Matrix's raise, and two numbers for one moment could only ever disagree. So one new cvar,
+  `pulse_tail_scale`, where the roadmap guessed two. The Matrix's code is not touched.
+- **The bar shows the tail and the Recharge as one countdown** to Ready, not a new state: the client needs
+  no change, and what the bar is for is *when can I Pulse again*. The ring and the sound carry the tail.
+- **The brace applies after Last Stand and Ricochet**, so a hit either of those refuses entirely never makes
+  the brace's sound; and before the Demolitions and Insulation scales, which then multiply as usual.
 
 ## Found stale in the docs
 

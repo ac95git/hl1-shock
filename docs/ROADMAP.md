@@ -1887,7 +1887,12 @@ evolve a verb the player already has rather than granting it, which lets level d
 Module, level design may assume it only after its acquisition point. ~~That wants an ADR when it is
 built~~ **Built 2026-09-16 with [ADR-0013](adr/0013-the-pulse-is-a-found-module.md).**
 
-### The Pulse's tail — settled 2026-09-17, not built
+### The Pulse's tail — settled 2026-09-17, built 2026-09-18 overnight, untested in game
+
+Recorded in [PILLARS pillar 2](PILLARS.md#2-enhanced-combat). Two calls made while building it: the tail
+follows only a window that deflected nothing (a deflect ends exactly as before, so nothing verified moves),
+and its length is `skill_matrix_hold` rather than a cvar of its own, since rule 5 makes them one moment —
+so one new cvar, `pulse_tail_scale`, not two. The settled rules, kept for the record:
 
 The deflect window stays (`pulse_window`, 0.25 s, full negation). The Pulse then **persists to one second
 in total, and the tail takes half damage.** The rules that keep the skill ceiling where it is:
@@ -3150,7 +3155,7 @@ is designed, and may well change name first.
 | **The Heart** | The purest crystal of the anchor under the mine, cut free by the player in the cold open and seated in the rig. | Provisional, 2026-09-17. The grill called it the *keystone*; **Keystone** is taken, two rows up. |
 | ~~**Deposit**, **Shard**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#inventory) on 2026-09-18, when both were built. | |
 | ~~**Fuel processor**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#inventory) on 2026-09-18. | |
-| **Tail** | The half-damage remainder of a Pulse after its deflect window, to one second in total. | 2026-09-17. **Not a Shield** and not a deflect; "brace" is the player-facing verb candidate. |
+| ~~**Tail**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#the-pulse) on 2026-09-18, when it was built. | |
 | **Double jump** | The sixth Module; fills the legs Slot. | 2026-09-17. Name as plain as Dash and Hook; a fiction name for the hardware is open. |
 | **Wing**, **Piece** | A spoke of the hub; one of the things collected in the second half to take the facility home. | 2026-09-17. How many Pieces is open (three proposed). |
 | **Hard gate**, **Soft gate** | Sealed by construction and looking it; or an intended key plus at least one deliberate alternative. | 2026-09-17. Map-brief terms, not player-facing. |

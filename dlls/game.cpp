@@ -702,6 +702,11 @@ cvar_t pulse_window_bonus = {"pulse_window_bonus", "0.15"};
 cvar_t pulse_recharge_hit = {"pulse_recharge_hit", "1.5"};
 cvar_t pulse_recharge_miss = {"pulse_recharge_miss", "3.0"};
 cvar_t pulse_recharge_scale = {"pulse_recharge_scale", "0.66"};
+// The tail (docs/ROADMAP.md, "The Pulse's tail"): a Pulse whose window deflected
+// nothing stands on, braced, until the moment a hold would raise the Defense
+// Matrix -- skill_matrix_hold after the press, so window, tail and Matrix are
+// one motion -- and a hit in it takes this share.  Only the window deflects.
+cvar_t pulse_tail_scale = {"pulse_tail_scale", "0.5"};
 // The cap is load-bearing, not cosmetic: without it, timing a Pulse against the
 // hardest-hitting attacks in the game yields the strongest counter.
 cvar_t pulse_discharge_scale = {"pulse_discharge_scale", "0.75"};
@@ -1053,6 +1058,7 @@ void GameDLLInit()
 	CVAR_REGISTER(&pulse_window_bonus);
 	CVAR_REGISTER(&pulse_recharge_hit);
 	CVAR_REGISTER(&pulse_recharge_miss);
+	CVAR_REGISTER(&pulse_tail_scale);
 	CVAR_REGISTER(&pulse_recharge_scale);
 	CVAR_REGISTER(&pulse_discharge_scale);
 	CVAR_REGISTER(&pulse_discharge_min);

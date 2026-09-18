@@ -216,6 +216,12 @@ The interval a Shield stands for. Damage that arrives inside it is negated; dama
 it is not.
 _Avoid_: active frames, i-frames, parry window
 
+**Tail**:
+What follows a Pulse Window that negated nothing: the Pulse stands on, braced, up to the moment a hold
+would raise the Defense Matrix, and a hit in it lands at half. **Not a Shield and not a deflect** — it
+earns nothing the window earns. *Brace* is the verb for what it does to a hit.
+_Avoid_: shield, deflect, parry, guard, block
+
 **Recharge**:
 The wait between a Shield falling and the next Pulse being available. Shorter when the Shield negated
 something than when it negated nothing.

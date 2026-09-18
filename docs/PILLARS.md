@@ -221,7 +221,19 @@ deflect. The player therefore can never be Ready while a Shield is still standin
 coexist and the "window always runs its full duration" invariant holds. Granting it at deflect time was
 considered and rejected for exactly that reason.
 
-**Fifteen tuning cvars**, registered in `dlls/game.cpp` — thirteen for behaviour, two for the ring's
+**The tail** (2026-09-18, overnight, untested in game). A window that deflected **nothing** does not
+fall; the Pulse stands on, braced, until `skill_matrix_hold` (1 s) after the press — the moment a hold
+would raise the Defense Matrix, so window, tail and Matrix are one motion with no unprotected gap. A hit
+in the tail on the Shield's damage list lands at `pulse_tail_scale` (0.5); falls and drowning are not
+halved. Only the window is a deflect: a hit in the tail earns no Discharge, no Follow-Up, no Rebound and
+no short Recharge, and the long Recharge waits for the tail to end. A window that **did** deflect ends
+exactly as before, so the parry, the Rebound and the short Recharge are untouched. Pulse Window widens
+the window inside the second and never extends it. The tail begins with a dimmer, smaller ring, and a
+braced hit sounds like the deflect pitched far down; the bar counts the tail and the Recharge after it as
+one wait. Its length is the Matrix's own cvar rather than one of its own, which could only ever disagree
+with it. Mashing the key buys about a second of cover per four-second cycle, most of it at half.
+
+**Sixteen tuning cvars** (`pulse_tail_scale` the sixteenth), registered in `dlls/game.cpp` — fourteen for behaviour, two for the ring's
 look — plus `hud_pulse_tint`, which is client-side and `FCVAR_ARCHIVE` because it is a comfort setting
 rather than a tuning knob.
 
