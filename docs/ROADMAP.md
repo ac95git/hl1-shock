@@ -8,7 +8,15 @@ build on, and list the questions that have to be answered before the first line 
 is built, its content moves into PILLARS.md and the entry here is deleted — this file only ever shrinks
 from the top.
 
-**Last updated:** 2026-09-18 overnight (built, and verified in game by Andrei the same morning except the
+**Last updated:** 2026-09-18, later (seven ideas from Andrei recorded, none grilled: the
+[energy rifle](#the-energy-rifle), [crafting](#crafting--idea-2026-09-18) and
+[vending machines](#vending-machines--idea-2026-09-18) as Stations, the Panthereye and Gargantua as
+[kin](#panthereye), [the Pulse against sustained fire](#the-pulse-against-sustained-fire), the
+[Nihilanth finisher as an ending choice](#the-nihilanth), and [soldiers who shoot on the move](#soldiers);
+then the rifle fires Cores, Cores become green batteries that give off light, and the Half-Life SDK's
+model sources were found — [HL_SDK.md](HL_SDK.md) — which answered the soldiers' and the Panthereye's model
+questions).
+Before that, 2026-09-18 overnight (built, and verified in game by Andrei the same morning except the
 Pulse tail's visual, which is open: the Carbon Pickaxe, crystal Shards,
 deposits and unstable deposits, the first two Stations, the Pulse's tail, the base Dash in the air, the
 melee alien grunt; their entries below are trimmed to what is left, and the test rows are in
@@ -730,6 +738,46 @@ fingers. Shaped in a grilling session the same day:
   animation with a hit delay; explicitly left open in both directions.
 - **Credit:** an [ART_DEBT.md](ART_DEBT.md) entry like the Cleave swing's, licence unchecked.
 
+#### The energy rifle
+
+**Shape: Idea, from Andrei 2026-09-18. Not grilled.** An alien rifle with a scope that fires green beams:
+the game's sniper. It is **technological, not organic** — built, not grown — which sets it apart from the
+hivehand and the [alien Module's](#alien) Core weapons.
+
+**It is unlocked by alien progression**, past a threshold. Two ways proposed, not chosen:
+
+- **A gift.** Enough Alien nodes taken and the [friendly vortigaunt](#friendly-alien-slave) hands it over
+  through his machine — which fits the hand-over he already has and the rule that energy and alien weapons
+  are late, authored finds ([The rules](#the-rules)). It is also the first hand-over gated on the build
+  rather than on the story, and "Skills never gate the critical path" holds only while the rifle is
+  optional.
+- **Crafted**, at a [crafting Station](#crafting--idea-2026-09-18). Waits on crafting existing.
+
+What it touches, for when it is grilled:
+
+- **Green beams are presumably `DMG_ENERGYBEAM`**, which scales with the [Energy Route](#energy), passes the
+  Gargantua's filter and is what a [Panthereye immune to all but energy](#panthereye) would demand. That
+  makes it the ranged half of the Energy build beside the katana.
+- **It fires Cores** — settled by Andrei 2026-09-18. The same ammunition as the alien Module's weapons,
+  which the Ammunition Station already makes. The Core's look changes with it to a green battery (below,
+  and in [ART_DEBT.md](ART_DEBT.md#the-alien-module--stand-in-models-and-the-summon-weapons-borrowed-everything)),
+  which suits a technological weapon better than the organic reading of Cores did.
+- **A scope is new code**: Half-Life's only zoom is the crossbow's and the 357's FOV change
+  (`m_iFOV`), which is the whole of it — no overlay, no sway.
+- **Beams at sniper range meet the katana wave's lesson**: a visible projectile drawn on the client around
+  one server trace is how the wave already works; a beam is simpler, `TE_BEAMPOINTS` from the muzzle.
+- Model, sounds and icon: [ART_DEBT.md](ART_DEBT.md) when built. The stated approach for custom weapons is
+  to reuse existing assets.
+
+**Cores become green batteries — Andrei, 2026-09-18.** The Core's world model is the HEV battery
+reskinned from its blue to the vortigaunt beam's green. **The battery and the Core both give off light in
+their own colour.** The light is cheap: `ProgressionLight` in `cl_dll/entity.cpp` already gives the
+progression pickups a dynamic light keyed by model name, so each is one row in its table. Two things to
+watch when it is built. The table is keyed by model, so the Core has to be its own `.mdl`, or the row has to
+read the skin as well. And the Row Grant's light is already green (80, 255, 80), so the Core's green has to
+be told apart from it. The battery's source is in the SDK (`Weapon Models/world_models/wrld_battery`,
+[HL_SDK.md](HL_SDK.md)), so the reskin needs no decompile.
+
 ### Weapon evolutions
 
 **Shape: Shaped, and the answer is already in the codebase.**
@@ -867,6 +915,7 @@ gained the human side the same day: [the cult, the maddened](#the-cult-and-the-m
 | [Assassin boss](#the-assassin-boss) | Boss | `CHAssassin` | Idea |
 | [Alien grunt boss](#the-alien-grunt-boss) | Boss | `CAGrunt` | Idea |
 | [Nihilanth](#the-nihilanth) | Boss | `CNihilanth`, new model | **Shaped** 2026-09-17: a pattern fight |
+| [Soldiers](#soldiers) | Enemy | `CHGrunt`; fire on the move | Idea 2026-09-18 |
 | [The maddened](#the-cult-and-the-maddened) | Enemy | A melee human: zombie-class schedules on a worker model; a loner grunt for security | **Shaped** 2026-09-17 |
 | [Cultists](#the-cult-and-the-maddened) | Enemy, passive in ritual scenes | The maddened, plus a ritual spawn state | **Shaped** 2026-09-17 |
 | [Cult leader](#the-cult-and-the-maddened) | Boss | A melee human | Idea |
@@ -923,6 +972,40 @@ the animations read goofy, and the Panthereye has to become menacing:
   28 parent to 19), so aiming with them may twist the forelegs off the ground — to be seen in HLMV before
   it is designed around. A controller on the neck or head alone would be a model edit (decompile,
   `$controller`, recompile).
+
+**The two controllers as the menace's means — Andrei, 2026-09-18. Idea.** Valve's source for the model is
+in the SDK (`Monster Models/Diablo/diablo.qc`, [HL_SDK.md](HL_SDK.md)) and confirms both:
+`$controller 0 "Bip01 Spine" YR 90 -90` and `$controller 1 "Bip01 Spine" ZR 0 50`. Andrei's reading is
+that the first turns the upper body and the second is a rotation. His plan for each:
+
+- **Controller 0 carries the circle-strafe stalk.** The body circles and the upper body stays turned on
+  the player. This is the "head fixed on the player" bullet above, with its foreleg risk still to be seen
+  in HLMV.
+- **Controller 1 for something like a wall jump**: the body rotates toward a wall, pushes off it and comes
+  at the player from an angle they were not watching. "Insane" if it works. It is a leap with a bounce: the
+  headcrab-style leap it already has, a trace for a wall in the leap's path, and a second velocity on the
+  touch. What the ZR 0–50 axis actually does to the pose has to be seen in HLMV before it is designed
+  around.
+
+Since the source is there, a controller on the neck or head alone is now a QC edit and a recompile, not a
+decompile.
+
+**Kin to the Gargantua — Andrei, 2026-09-18. Idea, not grilled.** The Panthereye reads as the Gargantua's
+little cousin: the same skin texture, the same red eye. Proposed to make the kinship mechanical:
+
+- **The Panthereye's body is immune to anything but energy**, the Gargantua's own rule (`GARG_DAMAGE`,
+  `dlls/gargantua.cpp:47`, zeroing everything else in `TraceAttack`). The cost to weigh: the player of the
+  first hour has the pickaxe, the crowbar and the Pulse, none of them energy, so a Panthereye met before
+  the katana or the [energy rifle](#the-energy-rifle) is unkillable and becomes a thing to avoid — which may
+  be exactly right for a stalker, but then where it is placed is the design. Whether the head or eye is an
+  exception (the Gargantua pattern below, in small) would keep it killable early by precision.
+- **The Gargantua's red eye becomes a weak spot** — hitting it does not necessarily kill, but enough damage
+  to the eye **stuns** it. Two things to build: the eye as a hitgroup (`CGargantua::TraceAttack` has an
+  `// UNDONE: Hit group specific damage?` in it, and its hitboxes are unread — `mdlinfo.py` first), and the
+  stun itself, since Half-Life has no stagger ([Shared by all of them](#shared-by-all-of-them)). Whether
+  the eye takes non-energy damage — the natural answer to "how does anyone without the katana fight one" —
+  is the question that decides the rest. The eye glow already exists as a sprite on attachment 1
+  (`m_pEyeGlow`), which could dim while stunned.
 
 **The model is Half-Life legacy content**, a monster Valve cut, not another mod's art. The copy found on
 this machine is in *Half-Life: Extended* (`Half-Life/hl_extended`, per its `liblist.gam`), which ships
@@ -1557,6 +1640,16 @@ may tint. Nothing scales time.
 After it he gives the backstory, in flashbacks. What follows is one of several endings, deliberately the
 last thing to be designed.
 
+**The finisher as a choice — Andrei, 2026-09-18. Idea, open to refine or dismantle.** In the scripted
+ending the friendly vortigaunts fire *at the player*, and the Pulse reflects every attack into the
+Nihilanth. Doing it grants one ending; **not deflecting** grants another, in which the Nihilanth is not
+dealt a killing blow. That turns the one live input of the freeze into the first ending decision, which
+the rule in [The rules](#the-rules) wants: a moment that might matter sets a named `env_global`. Questions
+it raises: what *not deflecting* costs the player in the moment (the volley lands on them — is it lethal,
+survivable, or stopped short), how the game tells a choice from a missed timing, and whether the
+vortigaunts firing on the player reads as betrayal or as trust. Nothing waits on it; the endings are
+still [the last thing designed](#open-questions).
+
 ### The cult and the maddened
 
 **Shape: Shaped 2026-09-17.** The human enemies that are not soldiers. Both come from one fact: the
@@ -1582,12 +1675,54 @@ who spent years around crystal, heard the voice, and did something with it.
   table, neutral-until-provoked exists only as Barney's per-monster hack, and a faction-wide version is a
   second social layer on top of an untested 5f. One ritual room gives the feeling at a fraction of the cost.
 
+### Soldiers
+
+**Shape: Idea, from Andrei 2026-09-18. Not grilled.** Soldiers are the bulk of the human enemies and
+[the arsenal](#the-rules), and they fight as vanilla's grunts do: stop, then shoot. Proposed:
+
+- **They move while shooting**, less accurate while they do.
+- **Stationary fire stays**, more accurate, and its burst may grow from 3 to 5.
+- **The soldier decides which** — support fire on the move, or a still, accurate burst — and may still run
+  to cover without shooting when cover is the bigger priority.
+
+What it meets in the code:
+
+- ~~**The model has no move-and-shoot sequence.**~~ **It does, and it is not wired up** (Andrei,
+  2026-09-18, confirmed from Valve's source in the SDK, [HL_SDK.md](HL_SDK.md)). `strafeleft` and
+  `straferight` are made from animations named `strafefire_l2` and `strafefire_r2`. The weapon visibly
+  fires in them, they are tagged `ACT_STRAFE_LEFT`/`_RIGHT`, and they carry **no fire events**, where
+  `standing_mp5` fires at frames 10, 12 and 14. Two ways to use them: add the events in the QC and recompile
+  from the SDK source, or fire from code on a timer while the strafe plays. They only cover sideways
+  movement, facing the enemy. A soldier advancing or retreating while firing needs more.
+- **For any direction, split the body** — Andrei's second proposal was a new bone controller at the torso,
+  with the firing animation on the upper body and the movement on the lower. A bone controller only turns a
+  bone by a value, so it cannot carry an animation. But **the split exists already, for the player**:
+  `CStudioModelRenderer` (`cl_dll/StudioModelRenderer.cpp:928-946`) plays the player's
+  `gaitsequence` on the bones below `Bip01 Spine` and the main sequence above it. That is how a player
+  model runs and shoots at once. Giving a monster the same split is a client renderer change plus a way to
+  network a second sequence for a non-player entity. Whether that field arrives, and at what
+  precision, is decided by the entity's encoder in `delta.lst`. It is also the general answer to "move while doing anything" for
+  every monster, not only soldiers. The grunt's skeleton is a Biped too.
+- **The burst is the animation.** Three fire events in the sequence (`HGRUNT_AE_BURST1`–`3`,
+  `dlls/hgrunt.cpp:80`), and `GRUNT_CLIP_SIZE` 36 carries the note "3 round burst sound, so keep as
+  3 * x". Five rounds means new events in the model or a loop in code, a new burst sound, and a clip size
+  that is a multiple of five.
+- **Accuracy is one cone**, `VECTOR_CONE_10DEGREES` in `CHGrunt::Shoot` (`dlls/hgrunt.cpp:855`). A moving
+  cone is a branch there.
+- **"Decides" is the schedule selection** in `CHGrunt::GetSchedule`, which today chooses between cover,
+  suppress and attack; moving fire is a new schedule and a new task beside `SCHED_RANGE_ATTACK1`.
+- **It feeds [the Pulse against sustained fire](#the-pulse-against-sustained-fire)**: more fire on the move is more bullets the Pulse is
+  asked to answer.
+
 ### Xen hell and the cut monsters
 
 **Shape: Idea.** The bottom of Xen, where the collective keeps what it has used up, populated by
 Half-Life's cut monsters. On this machine, in `valve/models/`: `friendly.mdl` (Mr. Friendly),
 `kingpin.mdl`, `stukabat.mdl`, `snapbug.mdl`, `archer.mdl`, `protozoa.mdl`, `boid.mdl`, `chumtoad.mdl`;
-`panthereye.mdl` in `hl_extended`. **All are models without AI**, so each is the
+`panthereye.mdl` in `hl_extended`. **Valve's sources for most of them are in the Half-Life SDK** —
+Archer, Bigrat, Floater, Gasbag, Kingpin, Mr. Friendly, Snapbug, Stukabat, the chumtoad, and the
+Panthereye as `Diablo` — with QCs, so a change is a recompile, not a decompile ([HL_SDK.md](HL_SDK.md)).
+**All are models without AI**, so each is the
 [Panthereye's](#panthereye) cost again: read the sequences with `utils/mdltool/mdlinfo.py`, then write the
 monster. **Kingpin is its boss** and guards a piece. Stukabats and any other flyer matter beyond Xen hell:
 see [aerial melee](#settled-2026-09-17--the-fuel-the-processors-the-air-dash-gate).
@@ -1983,6 +2118,29 @@ in total, and the tail takes half damage.** The rules that keep the skill ceilin
 Mashing the key buys about a second of cover per four-second cycle, most of it at half — roughly 12%
 average reduction at today's `pulse_recharge_miss` of 3 s. A cushion, not a build. Two new cvars: the
 tail's length and its scale.
+
+### The Pulse against sustained fire
+
+**Shape: Idea, from Andrei 2026-09-18. Needs refining; no answer chosen.** Grunts spam shots, and
+deflecting bullets makes an awkward loop: it works *sometimes*, so a player concludes it is worth trying,
+and the window is short enough that trying it again and again is frustrating. The Pulse teaches a verb
+that does not hold up against the enemy the player meets most.
+
+The shape of the problem, as far as the code goes: a burst is three hitscan rounds fired by the
+sequence's own events, and the window (`pulse_window`, 0.25 s) is followed by the long recharge whenever
+it catches nothing — how much of a burst a well-timed window covers has not been measured. [ADR-0006](adr/0006-the-discharge-vents-at-the-crosshair.md) records that the mechanic was
+designed against exactly this hitscan. The tail (above) halves what lands after the window but does not
+change the lesson. Directions worth putting to Andrei, none decided:
+
+- **Tell the player plainly that bullets are not the Pulse's job** — the window only answers a telegraphed
+  hit, and bullets are answered by cover. The honest version of the loop, and the cheapest.
+- **Make a burst the unit**: a window that catches the first round covers the rest of that burst.
+- **Give the grunt a telegraph** the Pulse can read — the flash-then-discharge language — so a deflect is
+  earned by reading the soldier, not by guessing.
+- **Deflect credit per window, not per round**: one success is one reward and the short recharge,
+  however many rounds were stopped.
+
+[Soldiers moving while shooting](#soldiers) makes this more pressing, not less.
 
 ### Open questions
 
@@ -3148,6 +3306,46 @@ refuses politely everywhere else. A Station that consumes inputs and then cannot
 destroyed the player's belongings, which is the same class of bug as the three `CWeaponBox` hazards PILLARS
 records under "Deliberately deferred". The transaction has to check for room *before* consuming, or spawn
 the output on the floor.
+
+#### Crafting — Idea, 2026-09-18
+
+**From Andrei, not grilled.** Some Stations get a **VGUI panel**: a list of recipes, each consuming
+ingredients for a result. The ingredients are **scrap or junk components**, found throughout the facility
+or looted from enemies.
+
+This reverses two calls made for the overnight build, on purpose now that it is asked for:
+[OVERNIGHT_BRIEF.md](OVERNIGHT_BRIEF.md) kept Stations to one press per trade with no panel, and called
+free-form recipes "a crafting system, which nobody asked for". What it asks of the design:
+
+- **A second material.** Crystal was settled as "the one material" (answered below). Scrap as an ordinary
+  stackable Item Type keeps the answer's substance — item → item, no new identity space, no save change —
+  but crystal stops being the only input, and what scrap is *for* has to differ from what Shards are for.
+- **Loot from enemies** is new: nothing drops items into the Grid today except a weapon from a soldier.
+- **The panel** is a new VGUI page, on the pattern of the Inventory Panel's tabs, and a server message for
+  the recipe list and a client command to craft; the transaction stays server-side under
+  [ADR-0004](adr/0004-the-server-owns-the-inventory.md), with room checked before anything is consumed.
+- **Recipes known, found, or both.** A panel lists what a Station can make, which is "known"; recipes found
+  as [Records](#pillar-1-records) could unlock rows.
+- **The risk named under [Mining](#mining-and-crystal-shards) applies twice**: junk to loot is the
+  harvesting loop in its most common form. Scarce, authored placement is the answer there and here.
+- A crafted [energy rifle](#the-energy-rifle) is one proposed customer.
+
+#### Vending machines — Idea, 2026-09-18
+
+**From Andrei, not grilled.** Some Stations **sell**: a list of products and their prices, paid in a
+**currency** found or earned through the game. The simplest case is a drinks machine, which vanilla
+half-supports: `env_beverage` (`dlls/effects.cpp:2147`) is a point entity that, triggered, drops an
+`item_sodacan` (one health on touch) from a finite stock, one can at a time, with no price and no panel.
+
+- **Currency is new** — a third thing to collect beside Shards and Skill Points. Whether it is an Item Type
+  occupying Cells, like Shards, or a counter occupying none, like a Record, is the first question; the
+  two answers price inventory space very differently.
+- **Earned how** — found, looted from enemies, paid for Shards at a Station, or all three. Shards bought
+  with currency or currency bought with Shards would make them exchange rates of each other.
+- A vending machine and a crafting Station may be **one panel** with different inputs; worth deciding
+  before either is built.
+- No noun is proposed for the currency or the scrap yet, per [Proposed vocabulary](#proposed-vocabulary):
+  naming them first would settle the design by accident.
 
 ### Open questions
 

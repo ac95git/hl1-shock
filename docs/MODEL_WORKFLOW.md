@@ -35,6 +35,12 @@ and asks for that decompile by name. No decompiler gets written, no mesh gets pu
 another way, no work proceeds on a partial set. The only exception is textures, which Crowbar sometimes
 leaves out and `mdlinfo.py --extract-bmp` can supply.
 
+**Check the SDK before asking.** Valve's own sources for the cut monsters, the grunts, the player model,
+every stock viewmodel and every `w_` pickup are in the Half-Life SDK folder, listed in
+[HL_SDK.md](HL_SDK.md). Where a model is there, copy its folder into `E:\CustomAssets\models\src\<name>\`
+and work from it; no decompile is needed. Its QC may not be the exact file that built the shipped model,
+so compare it with `mdlinfo.py` on the `.mdl` first.
+
 ## Facts that bind the work
 
 - **studiomdl rotates every SMD +90° about Z when it compiles.** SMD **-Y** is the game's **+X**, forward

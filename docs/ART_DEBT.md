@@ -902,6 +902,14 @@ The pickup on the floor says *this is the Pulse* before the tooltip does.
 - A Core on the HUD is a gauss ammo icon — borrowed because it exists, not because it says the right
   thing, the same accident the Pulse's first readout icon was.
 
+### The Core's replacement, decided 2026-09-18
+Andrei: **a Core is a green battery.** `w_battery` is reskinned from its blue to the vortigaunt beam's
+green, and both the battery and the Core give off light in their own colour. The light is a row each in
+`ProgressionLight`'s table (`cl_dll/entity.cpp`), which is keyed by model name. So the Core wants its own
+`.mdl`, not a skin of `w_battery`, and a green that can be told apart from the Row Grant's (80, 255, 80).
+The battery's source is in the SDK at `Weapon Models/world_models/wrld_battery` ([HL_SDK.md](HL_SDK.md)).
+The HUD icon follows the model.
+
 ### Done when
 `item_alienmodule`, `item_core` and `weapon_summon` each have a look of their own, and a Core reads on the
 HUD as something other than gauss ammo.

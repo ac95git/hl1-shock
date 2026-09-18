@@ -41,6 +41,7 @@ Referenced by `00-PROJECT-OVERVIEW.md` but **not yet written**: `10-COMMON-TASKS
 | [docs/ART_DEBT.md](docs/ART_DEBT.md) | Replacing a placeholder sprite or sound. Records what each stand-in is, why it's wrong, and what the replacement has to achieve |
 | [docs/SPRITE_WORKFLOW.md](docs/SPRITE_WORKFLOW.md) | Making or changing a HUD sprite — the script-to-`.spr`-to-`hud.txt` loop, the engine constraints that shape the art, and the tools under `utils/sprtool/` |
 | [docs/MODEL_WORKFLOW.md](docs/MODEL_WORKFLOW.md) | Making or changing a model — the decompile-Blender-studiomdl loop, where sources live outside the repo, the compile-time rotation and other traps, and the tools under `utils/mdltool/` |
+| [docs/HL_SDK.md](docs/HL_SDK.md) | Looking for a tool, a stock model's source or cut content: the official Half-Life SDK folder on `D:` holds Valve's QC/SMD sources for the cut monsters, the grunts, the player, and every stock weapon and pickup. Check it before asking for a decompile |
 | [BUILDING.md](BUILDING.md) | Setting up a build or packaging the mod |
 | [INSTALL.md](INSTALL.md) | Installing the built mod into a Half-Life instance |
 | [README.md](README.md) | Upstream context, contributors, licensing |
