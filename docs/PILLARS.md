@@ -321,6 +321,18 @@ through OpenGL from inside the viewmodel's studio draw so it sits on the blade t
 whole against walls as the blade does. Details and the open questions are in
 [ROADMAP.md](ROADMAP.md#the-gauss-katana).
 
+**The Carbon Pickaxe, v1** — `weapon_pickaxe`, `dlls/pickaxe.cpp`, built 2026-09-18, untested in game.
+The mining tool and the third weapon on the crowbar's swing, `CCrowbar` with two hooks overridden like the
+katana: `BaseDamage()` reads `sk_plr_pickaxe1-3` (25) and `SwingDelayScale()` reads
+`pickaxe_swing_time_scale` (1.5, so 0.375 s after a hit and 0.75 s after a miss) — 2.5× the crowbar's hit
+at 1.5× its time, better burst and better sustained damage than the free crowbar, well under the katana.
+Every melee Skill, the Backstab, Cleave and the Follow-Up come with the subclass. **It alone mines**:
+`IsMiningTool()` on `CBasePlayerItem` is false everywhere else, and a crystal deposit asks the striking
+player's active item rather than reading a damage bit. Melee bucket, position 2; `impulse 101` gives it;
+the FGD places it. Everything it looks and sounds like is the crowbar's — see
+[ART_DEBT.md](ART_DEBT.md#the-carbon-pickaxe--everything-is-the-crowbars). Not yet the starting tool;
+that is a campaign decision.
+
 **Custom HEV gloves on every viewmodel.** Fourteen stock viewmodels plus the katana compile with three
 glove skin families — grey plates with cyan, red or purple light channels. Which one the player sees is
 the Suit Variant they wear, below.

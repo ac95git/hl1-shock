@@ -324,6 +324,12 @@ hit — the Backstab, Melee Reach, Force and Speed, the Melee Damage Stat nodes,
 the blade. `weapon_katana` in code and maps; `katana_wave` is the projectile.
 _Avoid_: sword, blade, energy sword, gauss blade; and *katana* alone where the gauss half matters
 
+**Carbon Pickaxe**:
+The miner's tool and the heavy end of the melee roster: on the crowbar's swing, slower and harder-hitting
+than the crowbar, lighter than the katana. It is the **mining tool** — the only thing that breaks a
+Deposit. Every melee Skill applies to it. `weapon_pickaxe` in code and maps; *the pickaxe* in prose.
+_Avoid_: pick, mattock; *mining laser* or *drill* for this weapon
+
 **Disturbance**:
 What a player-dealt death leaves behind at the place it happened: a sound, not a sight. Monsters that care
 about such things — soldiers — hear it and one comes to look, for as long as it lasts. A Silent Kill leaves

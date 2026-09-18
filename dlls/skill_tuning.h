@@ -63,6 +63,10 @@ inline CSkillTuning g_tuneDrawTime = {"skill_draw_time_scale", 1.0f, nullptr};
 inline CSkillTuning g_tuneKatanaSwing = {"katana_swing_time_scale", 1.0f, nullptr};
 inline CSkillTuning g_tuneKatanaWaveSwing = {"katana_wave_swing_time_scale", 1.0f, nullptr};
 
+// The Carbon Pickaxe's swing time, on the same rule: a multiple of the
+// crowbar's, predicted, neutral meaning "as fast as the crowbar".
+inline CSkillTuning g_tunePickaxeSwing = {"pickaxe_swing_time_scale", 1.0f, nullptr};
+
 // The recovery after a Cleave swing, in seconds, so the swipe animation plays
 // whole (CCrowbar::CleaveRecovery).  Predicted like every swing delay.
 // Neutral is 0, which the swing reads as "the stock delay".

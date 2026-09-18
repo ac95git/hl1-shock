@@ -53,6 +53,7 @@ Vector previousorigin;
 CGlock g_Glock;
 CCrowbar g_Crowbar;
 CKatana g_Katana;
+CPickaxe g_Pickaxe;
 CPython g_Python;
 CMP5 g_Mp5;
 CCrossbow g_Crossbow;
@@ -489,6 +490,7 @@ void HUD_InitClientWeapons()
 	HUD_PrepEntity(&g_Glock, &player);
 	HUD_PrepEntity(&g_Crowbar, &player);
 	HUD_PrepEntity(&g_Katana, &player);
+	HUD_PrepEntity(&g_Pickaxe, &player);
 	HUD_PrepEntity(&g_Python, &player);
 	HUD_PrepEntity(&g_Mp5, &player);
 	HUD_PrepEntity(&g_Crossbow, &player);
@@ -600,6 +602,10 @@ void HUD_WeaponsPostThink(local_state_s* from, local_state_s* to, usercmd_t* cmd
 
 	case WEAPON_KATANA:
 		pWeapon = &g_Katana;
+		break;
+
+	case WEAPON_PICKAXE:
+		pWeapon = &g_Pickaxe;
 		break;
 
 	case WEAPON_GLOCK:

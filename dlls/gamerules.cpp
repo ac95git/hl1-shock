@@ -298,6 +298,9 @@ void CGameRules::RefreshSkillData()
 	// Gauss Katana
 	gSkillData.plrDmgKatana = GetSkillCvar("sk_plr_katana");
 
+	// Carbon Pickaxe
+	gSkillData.plrDmgPickaxe = GetSkillCvar("sk_plr_pickaxe");
+
 	// Glock Round
 	gSkillData.plrDmg9MM = GetSkillCvar("sk_plr_9mm_bullet");
 

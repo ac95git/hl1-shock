@@ -189,10 +189,9 @@ movement verb gated on player state: the server sets a physics key (`"slj"`, `dl
 `PM_Jump` reads it from `pmove->physinfo` (`pm_shared/pm_shared.cpp:2662`). The same mechanism can carry a
 Module or a movement Skill. Noticed 2026-09-12 while shaping Modules; not yet tried for anything new.
 
-**Crowbar swing speed is no longer a prediction problem.** The cadence is predicted and now reachable, but
-`CCrowbar::Swing` reads `m_flNextPrimaryAttack` to decide whether a swing is a first swing (full damage) or
-a follow-up (half), so shortening the interval silently makes every swing a follow-up. Separating those two
-uses of the same timer is the work, and it is small.
+**Crowbar swing speed is no longer a prediction problem**, and the timer problem that sat behind it is gone
+too: `CCrowbar::Swing` used to read `m_flNextPrimaryAttack` to halve a follow-up swing, and the Melee Route
+dropped that rule on 2026-09-13, so every swing is full damage (found stale here on 2026-09-18).
 
 ---
 
@@ -516,6 +515,11 @@ other mods — rather than author from scratch, and to accept placeholder qualit
 
 ~~Replaces the crowbar.~~ Heavier, slower, hits harder.
 
+**v1 built 2026-09-18, untested in game** — `weapon_pickaxe`, 25 damage at 1.5× the crowbar's swing time,
+the only mining tool; recorded in [PILLARS pillar 2](PILLARS.md#2-enhanced-combat). What is left here:
+its own models (a black-metal retexture first, [ART_DEBT.md](ART_DEBT.md#the-carbon-pickaxe--everything-is-the-crowbars)),
+and becoming the starting tool, which is campaign work.
+
 **The starting tool, and the mining tool — settled 2026-09-17.** The player is a miner: the pickaxe is
 what they hold in the cold open, check in at the end of the shift, and get back within the first 5–10
 minutes; the crowbar becomes a find. It is also the only thing that breaks a
@@ -530,9 +534,9 @@ is entirely in what the crowbar's name is load-bearing for:
   cvar. Ids unchanged. Nothing in the tree is named for the crowbar any more.
 - ~~**CONTEXT.md's Follow-Up entry says "crowbar swing"**~~ Reworded with the rename.
 - **`d_crowbar` is the icon for three Skills** (see [ART_DEBT.md](ART_DEBT.md)).
-- `crowbar.cpp` compiles into both DLLs for prediction. That is no longer a blocker — `m_skills` is
-  populated on the client — but the swing-rate change still has to reckon with the first-swing/follow-up
-  damage rule, which reads the same timer. See [the prediction problem](#the-prediction-problem).
+- ~~`crowbar.cpp` compiles into both DLLs for prediction~~ and the first-swing/follow-up damage rule that
+  read the same timer is gone: the Melee Route dropped Valve's half-damage follow-up on 2026-09-13, so
+  every swing is full damage and a swing-rate change costs nothing (`CCrowbar::Swing` carries the reason).
 
 ~~Open: does the player still find a crowbar somewhere, or is the pickaxe simply what melee *is* in this mod?~~
 **Answered 2026-09-13: the crowbar stays and the pickaxe joins it**, as one of a melee roster on the

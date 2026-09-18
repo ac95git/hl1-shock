@@ -321,6 +321,38 @@ The viewmodel and world model are the mod's own (`models/v_katana.mdl`, `models/
 ### Done when
 The selection bucket shows a katana, and a swing sounds like a blade.
 
+## The Carbon Pickaxe — everything is the crowbar's
+
+### Scope
+`dlls/pickaxe.cpp`, `sprites/weapon_pickaxe.txt`, `sprites/inv/weapon_pickaxe.spr`. Built 2026-09-18.
+
+### Current stand-ins
+
+| Use | Asset | Borrowed from |
+| --- | --- | --- |
+| Viewmodel | `models/v_crowbar.mdl` | the crowbar |
+| World model | `models/w_crowbar.mdl` | the crowbar |
+| Third-person (`p_`) model | `models/p_crowbar.mdl` | the crowbar |
+| Swing, hit, body-hit sounds | `weapons/cbar_*.wav` | the crowbar |
+| HUD selection icon | `weapon_crowbar`'s sprites, via a copied `.txt` | the crowbar |
+| Inventory Icon | `sprites/inv/weapon_crowbar.spr`, copied | the crowbar |
+
+### What's wrong with them
+- **It is indistinguishable from the crowbar**, in the hand, on the floor, in the bucket and in the Grid.
+  That is worse than the katana's debt, which at least has its own blade: a player carrying both cannot
+  tell which one is up without swinging at a deposit.
+- The sounds are a crowbar's. A pick wants a heavier, duller strike, and a ring on crystal.
+
+### What to look for
+The agreed first step (grill, 2026-09-18) is a **black metal crowbar**: the mod's `v_crowbar` decompile
+(`E:\CustomAssets\models\decompiled\topmod\v_crowbar`, metal on `chrome.bmp`, three glove families) and
+the vanilla `w_crowbar` decompile (`E:\CustomAssets\models\decompiled\crowbar_vanilla\w_crowbar`),
+retextured and compiled as `v_pickaxe` and `w_pickaxe`, with the Grid Icon re-rendered from the new world
+model. A real pick head is the step after. `p_crowbar` has no decompile.
+
+### Done when
+A pickaxe in hand, on the floor, in the bucket and in the Grid cannot be mistaken for the crowbar.
+
 ## The HEV suit pickup — three recoloured stock suits
 
 ### Scope

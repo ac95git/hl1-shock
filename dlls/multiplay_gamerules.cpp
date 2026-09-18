@@ -127,6 +127,9 @@ void CHalfLifeMultiplay::RefreshSkillData()
 	// Gauss Katana
 	gSkillData.plrDmgKatana = 60;
 
+	// Carbon Pickaxe
+	gSkillData.plrDmgPickaxe = 25;
+
 	// Glock Round
 	gSkillData.plrDmg9MM = 12;
 

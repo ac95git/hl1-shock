@@ -72,7 +72,8 @@ public:
 
 // weapon weight factors (for auto-switching)   (-1 = noswitch)
 #define CROWBAR_WEIGHT 0
-#define KATANA_WEIGHT 1 // preferred over the crowbar on pickup, below every gun
+#define KATANA_WEIGHT 1  // preferred over the crowbar on pickup, below every gun
+#define PICKAXE_WEIGHT 1 // beside the katana: better than the crowbar, below every gun
 #define GLOCK_WEIGHT 10
 #define PYTHON_WEIGHT 15
 #define MP5_WEIGHT 15
@@ -247,6 +248,14 @@ public:
 	virtual bool CanHolster() { return true; } // can this weapon be put away right now?
 	virtual void Holster();
 	virtual void UpdateItemInfo() {}
+
+	// Is this the mining tool?  A crystal deposit (func_deposit) breaks to
+	// nothing else -- not a blade, not a bullet, not a grenade -- and asks
+	// the striking player's active item this question rather than reading a
+	// damage bit, so a second mining tool is one override and costs no bit
+	// out of the damage word.  See docs/ROADMAP.md, "Mining and crystal
+	// shards".
+	virtual bool IsMiningTool() { return false; }
 
 	virtual void ItemPreFrame() {}	// called each frame by the player PreThink
 	virtual void ItemPostFrame() {} // called each frame by the player PostThink
@@ -741,6 +750,37 @@ private:
 
 	unsigned short m_usKatanaSwing;
 	unsigned short m_usKatanaArc;
+};
+
+// The Carbon Pickaxe (docs/ROADMAP.md, "The Carbon Pickaxe"): the miner's
+// tool, and the third weapon on the crowbar's swing.  Heavier, slower, hits
+// harder -- 25 at ~0.75s against the crowbar's 10 at 0.5s, so it beats the
+// crowbar on burst and on sustained damage both, which it must, because the
+// crowbar is free and this costs Cells.  Well under the katana, which costs
+// three Cells and uranium.
+//
+// What it alone can do is mine: only a mining tool breaks a crystal deposit,
+// and that rule is what keeps the pickaxe worth carrying once the katana
+// exists.  Everything else -- Backstab, Melee Force, Melee Reach, Melee
+// Speed, Cleave, the Follow-Up -- comes free with the subclass.
+//
+// Models, sounds and HUD sprite are the crowbar's for now; ART_DEBT.md
+// records what each stand-in owes.
+class CPickaxe : public CCrowbar
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+	bool GetItemInfo(ItemInfo* p) override;
+	bool Deploy() override;
+
+	bool IsMiningTool() override { return true; }
+
+protected:
+#ifndef CLIENT_DLL
+	float BaseDamage() override;
+#endif
+	float SwingDelayScale() override;
 };
 
 // The summon weapon, v1 -- the alien Module's first Core weapon

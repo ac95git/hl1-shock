@@ -314,6 +314,9 @@ void W_Precache()
 	// Gauss Katana
 	UTIL_PrecacheOtherWeapon("weapon_katana");
 
+	// Carbon Pickaxe
+	UTIL_PrecacheOtherWeapon("weapon_pickaxe");
+
 	// glock
 	UTIL_PrecacheOtherWeapon("weapon_9mmhandgun");
 	UTIL_PrecacheOther("ammo_9mmclip");

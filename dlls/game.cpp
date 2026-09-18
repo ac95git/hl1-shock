@@ -295,6 +295,12 @@ cvar_t sk_plr_katana1 = {"sk_plr_katana1", "60"};
 cvar_t sk_plr_katana2 = {"sk_plr_katana2", "60"};
 cvar_t sk_plr_katana3 = {"sk_plr_katana3", "60"};
 
+// Carbon Pickaxe, the same way: 2.5x the crowbar's hit at 1.5x the time.
+// Flat across the three difficulties for now, like the katana's.
+cvar_t sk_plr_pickaxe1 = {"sk_plr_pickaxe1", "25"};
+cvar_t sk_plr_pickaxe2 = {"sk_plr_pickaxe2", "25"};
+cvar_t sk_plr_pickaxe3 = {"sk_plr_pickaxe3", "25"};
+
 // Glock Round
 cvar_t sk_plr_9mm_bullet1 = {"sk_plr_9mm_bullet1", "0"};
 cvar_t sk_plr_9mm_bullet2 = {"sk_plr_9mm_bullet2", "0"};
@@ -576,6 +582,11 @@ cvar_t cleave_swing_time = {"cleave_swing_time", "1.2"};
 // and is slow again now that the fast click is the other one.
 cvar_t katana_swing_time_scale = {"katana_swing_time_scale", "2.4"};
 cvar_t katana_wave_swing_time_scale = {"katana_wave_swing_time_scale", "1.0"};
+// The Carbon Pickaxe's swing, as a multiple of the crowbar's like the
+// katana's, read from both DLLs through skill_tuning.h.  1.5 is 0.375 s after
+// a hit and 0.75 s after a miss: heavier than the crowbar, lighter than the
+// katana's slash.
+cvar_t pickaxe_swing_time_scale = {"pickaxe_swing_time_scale", "1.5"};
 // The wave the right click throws (CKatanaWave, dlls/katana.cpp): an unseen
 // projectile whose look is the crescent the client draws (EV_KatanaArc).
 // Energy damage to everything on its path, each once: katana_wave_damage
@@ -980,6 +991,7 @@ void GameDLLInit()
 	CVAR_REGISTER(&cleave_swing_time);
 	CVAR_REGISTER(&katana_swing_time_scale);
 	CVAR_REGISTER(&katana_wave_swing_time_scale);
+	CVAR_REGISTER(&pickaxe_swing_time_scale);
 	CVAR_REGISTER(&katana_wave_damage);
 	CVAR_REGISTER(&katana_wave_range);
 	CVAR_REGISTER(&katana_wave_full_range);
@@ -1335,6 +1347,10 @@ void GameDLLInit()
 	CVAR_REGISTER(&sk_plr_katana1);
 	CVAR_REGISTER(&sk_plr_katana2);
 	CVAR_REGISTER(&sk_plr_katana3);
+
+	CVAR_REGISTER(&sk_plr_pickaxe1);
+	CVAR_REGISTER(&sk_plr_pickaxe2);
+	CVAR_REGISTER(&sk_plr_pickaxe3);
 
 	CVAR_REGISTER(&sk_plr_crowbar1); // {"sk_plr_crowbar1","0"};
 	CVAR_REGISTER(&sk_plr_crowbar2); // {"sk_plr_crowbar2","0"};
