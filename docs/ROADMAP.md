@@ -904,6 +904,26 @@ v1 is always the blue body, and the red is kept for the alpha so the look never 
   and moves again when they look away. More menacing than the crawl; a second behaviour to tune on top of
   the test, which is why it waits.
 
+**Menace — Andrei's direction after playing v1, 2026-09-18. Idea, not grilled.** v1 plays "super solid";
+the animations read goofy, and the Panthereye has to become menacing:
+
+- **A slower crawl.** Playing `crawl_on_belly` slower, with the movement slowed to match, instantly reads
+  as a wild animal. Cheap: `MoveExecute` already multiplies the sequence's ground speed by
+  `pev->framerate`, so one rate on the crawl slows the feet and the body together and nothing slides. The
+  risk is a Panthereye too slow to ever arrive; the running phase off screen is what pays for it.
+- **It looks for the back.** The stalk's goal is the player's rear, not the player.
+- **Circling when glimpsed.** Seen in the corner of the eye (on screen, not yet spotted), it closes by
+  circling rather than coming straight, the way canines circle prey, probing for an opening. This overlaps
+  cover to cover and freeze-when-watched above — three answers to "what does it do when it might be seen",
+  to be reconciled into one before any is built.
+- **The head fixed on the player.** While stalking with a line of sight, the head (and upper body) stays
+  locked on the player as the body circles. **The model already has the means**: two bone controllers on
+  `Bip01 Spine` (bone 16), yaw ±90° and 0–50° on the second axis, which HL: Extended presumably used to aim
+  the upper body. They turn everything above the spine, and the front legs hang off the neck (bones 21 and
+  28 parent to 19), so aiming with them may twist the forelegs off the ground — to be seen in HLMV before
+  it is designed around. A controller on the neck or head alone would be a model edit (decompile,
+  `$controller`, recompile).
+
 **The model is Half-Life legacy content**, a monster Valve cut, not another mod's art. The copy found on
 this machine is in *Half-Life: Extended* (`Half-Life/hl_extended`, per its `liblist.gam`), which ships
 `models/panthereye.mdl`, ten sounds in `sound/panthereye/`, an FGD entry and skill cvars. None of it is in
