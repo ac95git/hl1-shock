@@ -587,6 +587,18 @@ cvar_t katana_wave_swing_time_scale = {"katana_wave_swing_time_scale", "1.0"};
 // a hit and 0.75 s after a miss: heavier than the crowbar, lighter than the
 // katana's slash.
 cvar_t pickaxe_swing_time_scale = {"pickaxe_swing_time_scale", "1.5"};
+
+// An unstable deposit (func_deposit, dlls/deposit.cpp): a free-running
+// cycle of deposit_arc_period seconds, whose last deposit_arc_warn seconds
+// are the telegraph -- small arcs crawling on the vein and a rising light --
+// ending in the discharge, one arc to every living thing within
+// deposit_arc_radius that it can see, each dealing deposit_arc_damage as
+// energy.  Player and monsters alike: a hazard on nobody's side, and the
+// parry's first tutor, since energy is on the Shield's list.
+cvar_t deposit_arc_period = {"deposit_arc_period", "4.0"};
+cvar_t deposit_arc_warn = {"deposit_arc_warn", "1.2"};
+cvar_t deposit_arc_damage = {"deposit_arc_damage", "20"};
+cvar_t deposit_arc_radius = {"deposit_arc_radius", "192"};
 // The wave the right click throws (CKatanaWave, dlls/katana.cpp): an unseen
 // projectile whose look is the crescent the client draws (EV_KatanaArc).
 // Energy damage to everything on its path, each once: katana_wave_damage
@@ -992,6 +1004,10 @@ void GameDLLInit()
 	CVAR_REGISTER(&katana_swing_time_scale);
 	CVAR_REGISTER(&katana_wave_swing_time_scale);
 	CVAR_REGISTER(&pickaxe_swing_time_scale);
+	CVAR_REGISTER(&deposit_arc_period);
+	CVAR_REGISTER(&deposit_arc_warn);
+	CVAR_REGISTER(&deposit_arc_damage);
+	CVAR_REGISTER(&deposit_arc_radius);
 	CVAR_REGISTER(&katana_wave_damage);
 	CVAR_REGISTER(&katana_wave_range);
 	CVAR_REGISTER(&katana_wave_full_range);

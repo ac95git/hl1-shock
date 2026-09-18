@@ -1081,8 +1081,15 @@
 // scatters "Shards" item_shard pickups on the striker's side and fires its target. Never respawns.
 // Triggering it by name breaks it too, Shards and all. The pickaxe hits a deposit for 50 (breakables
 // take double from a blow), so the default strength of 120 is three swings.
+// Unstable: on a free-running cycle (deposit_arc_period, 4 s) small arcs crawl over the vein and a light
+// swells for deposit_arc_warn (1.2 s), then it arcs into every living thing it can see within
+// deposit_arc_radius (192) for deposit_arc_damage (20) energy - the player and monsters alike. Cover works.
 @SolidClass base(Targetname, Global, RenderFields, Prompt, ZHLT) = func_deposit : "Crystal Deposit"
 [
+	spawnflags(flags) =
+	[
+		8 : "Unstable" : 0
+	]
 	target(target_destination) : "Target on break"
 	health(integer) : "Strength" : 120
 	yield(integer) : "Shards" : 3

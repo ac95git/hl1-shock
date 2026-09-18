@@ -55,6 +55,23 @@ carve one in `topmap` from the FGD.
 | D8 | A deposit with a `targetname`, triggered by a button | It breaks and drops its Shards with nobody swinging |
 | D9 | Quicksave with a deposit half-broken, quickload | Still half-broken; break it; its Shards drop once |
 
+## U. Unstable deposits
+
+A `func_deposit` with the *Unstable* flag.
+
+| # | Do | Expect |
+| --- | --- | --- |
+| U1 | Watch it from a distance | Every 4 s: a crackle, 1.2 s of small arcs crawling over the vein with a swelling amber light, then a big crack of arcs into nearby walls with sparks |
+| U2 | Look at the rock side of a vein set into a wall | No arc ever seems to come out of the rock |
+| U3 | Stand within ~190 units, in the open | On the discharge an arc hits you for 20 |
+| U4 | Same, behind a pillar or crate | No arc, no damage |
+| U5 | Pulse just before the discharge | Parried — the deflect's usual cue, no damage |
+| U6 | Lure a zombie or headcrab past it | It is struck too; two things in reach take two arcs |
+| U7 | Break it with the pickaxe mid-telegraph | It stops at once; its Shards drop as usual |
+| U8 | Two unstable veins in one room | They do not pulse in step |
+| U9 | Quicksave, quickload | It keeps its rhythm |
+| U10 | Judge the rhythm | Is 1.2 s of warning readable, and is 20 damage right for a tutor? `deposit_arc_period`, `_warn`, `_damage`, `_radius` |
+
 ## Decisions I made
 
 Things the grill did not settle, decided during the night. Each can be overturned in a line.
@@ -85,6 +102,17 @@ Things the grill did not settle, decided during the night. Each can be overturne
   would drop its Shards more than the 256 units an item falls to find a floor.
 - **The material choice is glass (default) or rock**, nothing else: glass sounds and gibs are what the
   Shard stand-in already is. The FGD offers only those two.
+- **The arcs strike only the living** — players and monsters. "Every damageable thing" would have arced to
+  crates and breakables, which reads as noise rather than as a rule.
+- **The flash is arcs plus a dynamic light**, not the Records halo the brief mentioned: a halo sprite does
+  nothing to say *when*, while a light that swells with the telegraph does, and a hazard's warning is not
+  the beacon the Records rule forbids.
+- **The numbers**: a 4 s cycle, 1.2 s of warning, 20 damage, 192 units. First guesses, all cvars. The warning
+  is longer than the Pulse window on purpose — this is the tutor.
+- **The arc colour is the Shard's amber pushed toward white** (255, 200, 120), so crystal and its discharge
+  read as one substance; it moves with the Shard's hue when that settles.
+- **The discharge's attacker is the vein itself**, so a monster it kills is not a player kill and leaves no
+  witnesses or Disturbance — stealth's rule for player-dealt deaths, applied as written.
 
 ## Found stale in the docs
 

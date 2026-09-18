@@ -104,6 +104,18 @@ does nothing. Broken, it scatters its `yield` (default 3, at most 20) as loose `
 nearest the striker, stepped toward them, so a vein in a wall breaks into the room. Triggered by name it
 breaks the same way, Shards and all. It never respawns.
 
+**Unstable deposits** (spawnflag 8) discharge on a free-running cycle, in the mod's one telegraph language —
+a flash, then the discharge. For the last `deposit_arc_warn` (1.2 s) of every `deposit_arc_period` (4 s),
+small arcs crawl over the vein, thickening, and a light swells around it, with one crackle as it starts;
+then **one arc per victim**: every living thing within `deposit_arc_radius` (192) that the vein can see
+from its own surface takes `deposit_arc_damage` (20) as `DMG_ENERGYBEAM`, the arc drawn to it, so what is
+seen is what hurts and cover works. Player and monsters alike, a hazard on nobody's side; with nobody in
+reach it arcs into the walls. Arcs start from points on the vein's exposed surface, found once by tracing
+in from outside, so none leaves solid rock. Energy is on the Shield's list, so the Pulse parries a
+discharge — the parry's first tutor, with no enemy attached. Veins start out of step with each other,
+keep their place in the rhythm across a save, and stop when broken. Vanilla's lightning sprite and zaps,
+in the Shard's amber pushed toward white.
+
 What no custom code touches yet: level traversal, secrets, map flow, navigation aids.
 
 ### What's missing

@@ -3020,7 +3020,11 @@ level design rather than a revisit. How many pieces (three proposed) and the thi
 
 ### Mining and crystal shards
 
-**Shape: Shaped 2026-09-17.** The mod's resource loop — small, finite, authored.
+**Shape: Shaped 2026-09-17. Built 2026-09-18 overnight, untested in game** — the Shard, `func_deposit`
+and its unstable form are recorded in [PILLARS pillar 1](PILLARS.md#1-exploration), with the grill that
+settled the details in [OVERNIGHT_BRIEF.md](OVERNIGHT_BRIEF.md). What stays here is what was not built:
+the point-and-model deposit (waits on a crystal model) and the two open questions at the end. The
+mod's resource loop — small, finite, authored.
 
 - **Deposits** are placed by hand, mostly off the critical path, and never respawn; a few dozen in the
   game. **Only a mining tool breaks one**, and the [pickaxe](#the-carbon-pickaxe) is that tool.
@@ -3038,8 +3042,9 @@ level design rather than a revisit. How many pieces (three proposed) and the thi
 - Shards as a second faucet of Skill Points was rejected except for the bounded
   [fuel processors](#settled-2026-09-17--the-fuel-the-processors-the-air-dash-gate).
 
-Open: shard stack size and how many Cells; whether any second-half deposit is remembered for the endings
-(stripping Xen's crystal, which the Xenians are desperate for).
+~~Open: shard stack size and how many Cells~~ (answered 2026-09-18: one Cell, a Stack of ten). Open:
+whether any second-half deposit is remembered for the endings (stripping Xen's crystal, which the Xenians
+are desperate for); and the deposit as a model, for veins that are objects rather than carved brushwork.
 
 ### Stations
 
