@@ -1,0 +1,337 @@
+# shaft1 -- the cold open. The campaign's first map, grilled with Andrei on 2026-09-19.
+#
+# The bottom of the mine: the cage lands at the pit bottom station, the haulage way runs in and
+# down to the face, the blast opens the chamber, the Heart is cut free, the way back collapses,
+# the old workings climb out in the dark to a gallery above the station, the hoist takes the
+# Heart. The player boards the next cage and the map ends; the ride up is map two.
+# docs/ROADMAP.md, "The shape of the game" and "The cold open" have the decisions; this file is
+# the layout. Second cut, after Andrei walked the first (2026-09-19): the haulage way longer,
+# bent and descending 192; the station much larger with rooms off it; blind branches behind
+# mesh; steel sets; the way back longer, climbing 352, and out through a gate on a gallery
+# the player could see but not reach at the start.
+
+map shaft1
+message shaft1 -- the cold open
+wall -0TNNL_RCK1
+floor -0OUT_GRVL1
+ceil -0OUT_RK3
+
+brief A modern hard-rock mine, drill-and-blast, run by a company with more money than the ore
+  explains. Drifts cut square, rock-bolted with mesh, steel sets where the ground is bad, dry
+  and dusty, lit by work lamps strung on a cable so the light is a line of pools with dark
+  between them. A rail haulage way with cars is the main road; the working drifts branch off
+  it, narrower and lower. Hot and old at the bottom. The crystal shows as amber threads in the
+  walls of the deepest drift, brighter the closer to the face. Behind the face is not mined
+  space: a chamber that was arranged, tall and symmetrical, the crystal set in it on purpose,
+  and wrong for a mine in every proportion.
+  Beats, in order: the cage has just landed and the player is suited (Agility, their own) with
+  the pickaxe; the pit bottom station where the shift spends its day (lamp room, tool crib, the
+  foreman's office, benches, the notice wall); the walk in under the lamps, down three legs,
+  past the stope and the mesh-gated branches; the crew at the face; the foreman fires the blast
+  and the chamber opens; four deposits encase the Heart, one unstable, and mining at least one
+  reaches it (the mining tutorial and the telegraph tutor; their Shards are the first thing in
+  the Grid); the Heart is a walk-over pickup, a unique Entry three Cells wide, not droppable;
+  taking it brings the quake: the breach fills with rubble and the chamber's south wall opens
+  into the old workings; the old workings are unlit (the flashlight's first job), one attacker
+  waits at a vein in the dark (a zombie standing in for the maddened miner), a shrine sits in a
+  dead end, wordless; the old workings climb back and come out on the gallery above the
+  station, through the gate marked no entry that the player saw locked at the start; the hoist
+  takes the Heart from the Grid and sends the cage up; the player boards the cage and the map
+  ends.
+  Stand-ins in v1: scientists and Barneys for the crew and security, no voice; the zombie;
+  stock rock, steel and chainlink. The look, the props, the posters and the signage are
+  Andrei's in J.A.C.K.; crystal is amber.
+  Code this map needs (built 2026-09-19): item_heart and its Item Type row; the hoist as a
+  Station that takes a named Entry (stationtype 3); the strip flag that also removes the suit
+  and empties the Grid is map two's.
+entrance The cage, west of the station, just landed. Facing east into the station.
+exit The same cage, after the hoist has taken the Heart. A button in the cage rides it up; a
+  trigger at the top of the shaft ends the map with a message until map two exists.
+
+gate rockface hard: the face is solid rock until the crew's blast opens it; story, not a puzzle
+gate collapse hard: the breach fills with rubble when the Heart is taken; the old workings are the only way out
+gate gallery hard: the gate on the gallery above the station opens only from the old workings' side; seen locked at the start, opened from behind at the end
+
+# ---------------------------------------------------------------------------
+# Rooms. x east, y north, z up. The station floor is 0. The haulage way drops 64 per leg to
+# the face at -192. The old workings start at -224 and climb to the gallery at +128.
+# Haulage way 192 wide, 144 high; old workings 128 wide, 104 high; the chamber taller than wide.
+# ---------------------------------------------------------------------------
+
+# The shaft and the pit bottom station, with its rooms
+room CAGE       -160  224    0   -32  416  640
+room CAGEDOOR    -32  256    0     0  384  128
+room STATION       0    0    0   768  640  224
+room LAMPDOOR    160  640    0   224  672   96
+room LAMPROOM     64  672    0   320  896  128
+room CRIBDOOR    544  640    0   608  672   96
+room CRIB        448  672    0   704  896  128
+room OFFICEDOOR  160  -32    0   224    0   96
+room OFFICE       64 -256    0   320  -32  128
+room GALLERY     448 -128  128   704    0  232
+
+# The haulage way: leg A east, down, leg B south, down, leg C east, down, the face
+room LEG_A       768  256    0  1408  448  144
+room RAMP_A     1408  256  -64  1664  448  144
+room BEND_A     1664  256  -64  1856  448   80
+room LEG_B      1664 -448  -64  1856  256   80
+room RAMP_B     1664 -704 -128  1856 -448   80
+room BEND_B     1664 -896 -128  1856 -704   16
+room LEG_C      1856 -896 -128  2560 -704   16
+room RAMP_C     2560 -896 -192  2816 -704   16
+room FACE       2816 -960 -192  3072 -640  -16
+room BREACH     3072 -832 -192  3136 -704  -64
+
+# Off the haulage way: the stope north of leg A, and the blind branches behind mesh
+room STOPEWAY   1024  448    0  1120  512  104
+room STOPE       960  512    0  1216  832  176
+room BLIND_A    1280  448    0  1408  704  104
+room BLIND_B    1856 -320  -64  2176 -192   40
+room BLIND_C    2176 -1152 -128 2304 -896  -24
+room BLIND_D    2432 -704 -128  2560 -448  -24
+
+# The chamber and the hole the quake opens
+room CHAMBER    3136 -992 -192  3584 -544  384
+room HOLE       3296 -1056 -192 3392 -992  -88
+
+# The old workings: south, a long west leg, up, west, up, north in two climbs, west, up, up,
+# and out on the gallery
+room OLD_1      3264 -1280 -224 3424 -1056 -120
+room OLD_2      2432 -1408 -224 3424 -1280 -120
+room RAMP_O1    2176 -1408 -224 2432 -1280  -56
+room OLD_3      1408 -1408 -160 2176 -1280  -56
+room BLIND_E    1744 -1664 -160 1840 -1408  -56
+room SHRINEWAY  2896 -1472 -224 2960 -1408 -128
+room SHRINE     2832 -1664 -224 3024 -1472 -120
+room OLD_4      1280 -1408 -160 1408 -1152  -56
+room RAMP_O2    1280 -1152 -160 1408 -896     8
+room OLD_5      1280 -896   -96 1408 -640     8
+room RAMP_O3    1280 -640   -96 1408 -384    72
+room OLD_6      1024 -384   -32 1408 -256    72
+room RAMP_O4     640 -384   -32 1024 -256   200
+room OLD_7       512 -384    64  640 -256   168
+room RAMP_O5     512 -256    64  640 -128   232
+
+# ---------------------------------------------------------------------------
+# The cage: a platform that rises 448 up the shaft (lip -432 on a 16-thick door). The hoist
+# sends it up with the Heart; the button in the cage sends it up with the player.
+# ---------------------------------------------------------------------------
+door -160 224 0 -32 416 16 tex=-0OUT_RK4 targetname=cage_plat lip=-432 speed=80 wait=6
+brushent func_button -160 304 24 -152 336 56 tex=+0BUTTON1 target=cage_plat spawnflags=1 wait=-1 sounds=1 prompt_title="Cage control"
+brushent trigger_once -160 224 560 -32 416 600 tex=AAATRIGGER target=end_text
+point game_text -96 320 620 targetname=end_text message="shaft1 ends here. The ride up is map two." spawnflags=1 x=-1 y=0.4 holdtime=6 color="255 170 60" effect=0 fadein=0.5 fadeout=1
+
+# Start: standing on the cage floor (origin 36 above the feet), suited, carrying the pick.
+point info_player_start -96 320 56 angles="0 0 0"
+pickup item_suit -96 320 20 spawnflags=1
+pickup weapon_pickaxe -96 288 20
+
+# ---------------------------------------------------------------------------
+# The station. The hoist on the west wall beside the cage door. Benches, a notice wall, the
+# crib counter, the office desk, as boxes; the rest is Andrei's in J.A.C.K.
+# ---------------------------------------------------------------------------
+brushent func_station 0 416 32 16 480 96 tex=+0~GENERIC85 stationtype=3 target=cage_plat prompt_title="Hoist"
+point monster_barney 128 512 4 angles="0 270 0"
+point monster_barney 640 128 4 angles="0 135 0"
+point monster_scientist 384 96 4 angles="0 90 0"
+solid 288 48 0 480 80 20 tex=OUT_WD
+solid 288 560 0 480 592 20 tex=OUT_WD
+solid 752 64 40 768 224 136 tex=C1A0_WDSIGN
+solid 448 704 0 640 736 40 tex=METAL_WALL04
+solid 96 -128 0 224 -96 32 tex=OUT_WD
+sets 768 256 0 1408 448 144 along=x every=192 post=16 tex=METAL_BORD07
+
+# The gallery over the station's south wall, 128 up: the gate the player sees locked at the
+# start, and the button that opens it from the old workings' side.
+door 448 -16 128 704 0 224 tex={GATE targetname=gallery_gate rendermode=4 renderamt=255 speed=60
+brushent func_button 696 -96 152 704 -64 184 tex=+0BUTTON1 target=gallery_gate spawnflags=1 wait=-1 sounds=1 prompt_title="Gallery gate"
+
+# ---------------------------------------------------------------------------
+# The haulage way: rails, cars, lamps, sets. Ramps are shallow steps, 32 by 8.
+# ---------------------------------------------------------------------------
+stairs 1408 256 -64 1664 448 0 dir=-x tread=32 rise=8
+stairs 1664 -704 -128 1856 -448 -64 dir=+y tread=32 rise=8
+stairs 2560 -896 -192 2816 -704 -128 dir=-x tread=32 rise=8
+solid 784 320 0 1392 336 8 tex=-0OUT_RK4
+solid 784 368 0 1392 384 8 tex=-0OUT_RK4
+solid 896 352 8 992 400 64 tex=-0OUT_RK4
+solid 1008 352 8 1104 400 64 tex=-0OUT_RK4
+solid 1872 -784 -128 2544 -768 -120 tex=-0OUT_RK4
+solid 1872 -832 -128 2544 -816 -120 tex=-0OUT_RK4
+solid 2304 -848 -120 2400 -800 -64 tex=-0OUT_RK4
+sets 1664 -448 -64 1856 256 80 along=y every=192 post=16 tex=METAL_BORD07
+sets 1856 -896 -128 2560 -704 16 along=x every=192 post=16 tex=METAL_BORD07
+
+# The stope: a dead end north of leg A with two deposits, mined before the tutorial by a
+# curious player, or never.
+brushent func_deposit 1168 704 32 1216 800 112 tex=CRYS_1A
+brushent func_deposit 960 528 24 1008 608 88 tex=CRYS_1A
+
+# The blind branches: mesh across the mouth, a lamp inside so the drift is seen. BLIND_B is
+# open and ends in a fall of rock.
+brushent func_wall 1280 448 0 1408 452 104 tex={CHAINLINK rendermode=4 renderamt=255
+brushent func_wall 2176 -900 -128 2304 -896 -24 tex={CHAINLINK rendermode=4 renderamt=255
+brushent func_wall 2432 -708 -128 2560 -704 -24 tex={CHAINLINK rendermode=4 renderamt=255
+solid 2080 -320 -64 2176 -192 -24 tex=-0OUT_RK4
+solid 2032 -304 -64 2080 -208 -40 tex=-0OUT_RK4
+solid 2000 -288 -64 2032 -224 -52 tex=-0OUT_RK4
+
+# ---------------------------------------------------------------------------
+# The face: the crew, the drill, a barrier to stand behind. Entering fires the blast three
+# seconds later: a shake, an explosion at the breach, the rock face breaks.
+# ---------------------------------------------------------------------------
+solid 3008 -792 -192 3040 -744 -96 tex=-0OUT_RK4
+solid 2880 -892 -192 2896 -792 -144 tex=-0OUT_RK4
+point monster_barney 2896 -768 -188 angles="0 0 0"
+point monster_scientist 2944 -672 -188 angles="0 270 0"
+point monster_scientist 3008 -896 -188 angles="0 90 0"
+brushent trigger_once 2832 -896 -192 2864 -704 -48 tex=AAATRIGGER target=blast_mm
+point multi_manager 2944 -768 -52 targetname=blast_mm blast_shake=2.5 blast_boom=3 rockface=3
+point env_shake 2944 -768 -96 targetname=blast_shake amplitude=16 radius=1500 duration=3 frequency=2.5
+point env_explosion 3104 -768 -128 targetname=blast_boom iMagnitude=100 spawnflags=1
+brushent func_breakable 3072 -832 -192 3136 -704 -64 tex=-0TNNL_RCK1 targetname=rockface spawnflags=1 material=8 health=1
+brushent trigger_autosave 3136 -832 -192 3152 -704 -64 tex=AAATRIGGER
+
+# ---------------------------------------------------------------------------
+# The chamber: the dais, four deposits in a ring around the Heart (east one unstable), the
+# Heart on the pocket floor. Taking the Heart fires the quake: shake, rubble in the breach,
+# the south wall opens.
+# ---------------------------------------------------------------------------
+solid 3280 -848 -192 3440 -688 -144 tex=-0OUT_RK4
+brushent func_deposit 3280 -848 -144 3312 -688 -48 tex=CRYS_1A
+brushent func_deposit 3408 -848 -144 3440 -688 -48 tex=CRYS_1A spawnflags=8
+brushent func_deposit 3312 -848 -144 3408 -816 -48 tex=CRYS_1A
+brushent func_deposit 3312 -720 -144 3408 -688 -48 tex=CRYS_1A
+pickup item_heart 3360 -768 -140 target=quake_mm
+point multi_manager 3360 -768 200 targetname=quake_mm quake_shake=0.5 rubble=1.5 holewall=2
+point env_shake 3360 -768 0 targetname=quake_shake amplitude=24 radius=4096 duration=6 frequency=2
+brushent func_wall_toggle 3072 -832 -192 3136 -704 -64 tex=-0OUT_RK4 targetname=rubble spawnflags=1
+brushent func_breakable 3296 -1056 -192 3392 -992 -88 tex=-0TNNL_RCK1 targetname=holewall spawnflags=1 material=8 health=1
+
+# ---------------------------------------------------------------------------
+# The old workings: no lamps, timber sets. A vein in OLD_2's north wall with the attacker at
+# it; the shrine off OLD_2 with loose Shards and two candles; BLIND_E collapsed; the climbs.
+# ---------------------------------------------------------------------------
+brushent trigger_autosave 3264 -1088 -224 3424 -1056 -120 tex=AAATRIGGER
+sets 2432 -1408 -224 3424 -1280 -120 along=x every=128 post=12 tex=OUT_WD
+sets 1408 -1408 -160 2176 -1280 -56 along=x every=128 post=12 tex=OUT_WD
+sets 1024 -384 -32 1280 -256 72 along=x every=128 post=12 tex=OUT_WD
+brushent func_deposit 2640 -1312 -200 2704 -1280 -128 tex=CRYS_1A
+encounter monster_zombie 2672 -1344 -220 angles="0 90 0"
+
+solid 2896 -1648 -224 2960 -1616 -184 tex=-0OUT_RK4
+pickup item_shard 2872 -1608 -220
+pickup item_shard 2984 -1608 -220
+pickup item_shard 2912 -1588 -220
+pickup item_shard 2944 -1588 -220
+pickup item_shard 2928 -1528 -220
+
+solid 1744 -1664 -160 1840 -1600 -104 tex=-0OUT_RK4
+solid 1760 -1600 -160 1824 -1552 -128 tex=-0OUT_RK4
+
+stairs 2176 -1408 -224 2432 -1280 -160 dir=-x tread=32 rise=8
+stairs 1280 -1152 -160 1408 -896 -96 dir=+y tread=32 rise=8
+stairs 1280 -640 -96 1408 -384 -32 dir=+y tread=32 rise=8
+stairs 640 -384 -32 1024 -256 64 dir=-x tread=32 rise=8
+stairs 512 -256 64 640 -128 128 dir=+y tread=16 rise=8
+
+# ---------------------------------------------------------------------------
+# Lights. The station and the haulage way are warm work light; the branches get one dim lamp
+# each; the chamber is lit by its crystal, amber; the old workings get the vein, the candles
+# and the station's spill through the gate, nothing else.
+# ---------------------------------------------------------------------------
+light -96 320 100 255 230 200 120
+light 128 128 200 255 230 200 170
+light 384 128 200 255 230 200 170
+light 640 128 200 255 230 200 170
+light 128 384 200 255 230 200 170
+light 384 384 200 255 230 200 170
+light 640 384 200 255 230 200 170
+light 384 576 200 255 230 200 170
+light 192 784 110 255 230 200 120
+light 576 784 110 255 230 200 120
+light 192 -144 110 255 230 200 120
+light 576 -64 220 255 230 200 90
+light 896 352 124 255 220 170 150
+light 1152 352 124 255 220 170 150
+light 1408 352 124 255 220 170 150
+light 1760 352 60 255 220 170 150
+light 1760 128 60 255 220 170 150
+light 1760 -128 60 255 220 170 150
+light 1760 -384 60 255 220 170 150
+light 1760 -576 -20 255 220 170 150
+light 1760 -800 -4 255 220 170 150
+light 2016 -800 -4 255 220 170 150
+light 2272 -800 -4 255 220 170 150
+light 2528 -800 -4 255 220 170 150
+light 2688 -800 -68 255 220 170 150
+light 1072 480 90 255 220 170 80
+light 1088 672 140 255 220 170 60
+light 1344 640 90 255 220 170 70
+light 2112 -256 20 255 220 170 70
+light 2240 -1088 -40 255 220 170 70
+light 2496 -512 -40 255 220 170 70
+light 2944 -720 -36 255 240 220 220
+light 2944 -880 -36 255 240 220 220
+light 3360 -768 100 255 170 60 200
+light 3200 -928 0 255 170 60 100
+light 3520 -928 0 255 170 60 100
+light 3200 -608 0 255 170 60 100
+light 3520 -608 0 255 170 60 100
+light 2672 -1300 -150 255 170 60 40
+light 2880 -1628 -204 255 140 40 60
+light 2976 -1628 -204 255 140 40 60
+light 576 -96 200 255 230 200 40
+
+# ---------------------------------------------------------------------------
+# Nodes, the whole route
+# ---------------------------------------------------------------------------
+node 128 320 16
+node 384 320 16
+node 640 320 16
+node 192 784 16
+node 576 784 16
+node 192 -144 16
+node 896 352 16
+node 1152 352 16
+node 1344 352 16
+node 1536 352 -16
+node 1760 352 -48
+node 1760 128 -48
+node 1760 -128 -48
+node 1760 -384 -48
+node 1760 -576 -80
+node 1760 -800 -112
+node 2016 -800 -112
+node 2272 -800 -112
+node 2528 -800 -112
+node 2688 -800 -144
+node 2944 -800 -176
+node 3200 -768 -176
+node 3360 -608 -176
+node 3360 -928 -176
+node 3520 -768 -176
+node 3344 -1024 -176
+node 3344 -1168 -208
+node 3344 -1344 -208
+node 3088 -1344 -208
+node 2816 -1344 -208
+node 2560 -1344 -208
+node 2304 -1344 -176
+node 2048 -1344 -144
+node 1792 -1344 -144
+node 1536 -1344 -144
+node 1344 -1344 -144
+node 1344 -1216 -144
+node 1344 -1024 -112
+node 1344 -768 -80
+node 1344 -512 -48
+node 1344 -320 -16
+node 1152 -320 -16
+node 832 -320 16
+node 576 -320 80
+node 576 -192 112
+node 576 -64 144
+node 2928 -1568 -208
+node 1072 480 16
+node 1088 672 16

@@ -32,6 +32,10 @@ The geometry and the entities:
     stairs x0 y0 z0 x1 y1 z1 dir=+x [tread=32] [rise=16] [tex=T]
                                                stepped solids climbing along dir (+x -x +y -y), the first
                                                tread `rise` above z0, the last reaching z1
+    sets x0 y0 z0 x1 y1 z1 along=x [every=128] [post=16] [tex=T]
+                                               support sets down a drift: two posts and a cap beam, `post`
+                                               thick, one set every `every` units along the axis, the first
+                                               half a step in. The box is the drift's interior
     brushent CLASS x0 y0 z0 x1 y1 z1 tex=T [key=value ...]
                                                any brush entity: func_door, func_button, func_breakable,
                                                func_deposit, func_station, trigger_once, trigger_autosave
@@ -168,6 +172,27 @@ def stairs(b, direction, tread, rise, tex):
     return steps
 
 
+def sets(b, along, every, post, tex):
+    """Support sets along a drift: two posts and a cap, every `every` units."""
+    out = []
+    h = post // 2
+    length = (b.x1 - b.x0) if along == "x" else (b.y1 - b.y0)
+    p = every // 2
+    while p + h <= length:
+        if along == "x":
+            x = b.x0 + p
+            out.append(Box(x - h, b.y0, b.z0, x + h, b.y0 + post, b.z1 - post, tex))
+            out.append(Box(x - h, b.y1 - post, b.z0, x + h, b.y1, b.z1 - post, tex))
+            out.append(Box(x - h, b.y0, b.z1 - post, x + h, b.y1, b.z1, tex))
+        else:
+            y = b.y0 + p
+            out.append(Box(b.x0, y - h, b.z0, b.x0 + post, y + h, b.z1 - post, tex))
+            out.append(Box(b.x1 - post, y - h, b.z0, b.x1, y + h, b.z1 - post, tex))
+            out.append(Box(b.x0, y - h, b.z1 - post, b.x1, y + h, b.z1, tex))
+        p += every
+    return out
+
+
 class Spec:
     def __init__(self):
         self.header = {"map": "greybox", "wad": DEFAULT_WADS}
@@ -191,6 +216,14 @@ def parse_spec(text):
             spec.brief.append((last_text_key, raw.strip()))
             continue
         last_text_key = None
+        # Header lines are prose and are taken raw: an apostrophe in a brief or a gate line is
+        # not an open quote. Everything else is tokenised.
+        first = raw.split(None, 1)[0].lower()
+        if first in HEADER_TEXT:
+            _header(spec, first, raw, [])
+            if first in ("brief", "entrance", "exit"):
+                last_text_key = first
+            continue
         try:
             toks = shlex.split(raw, comments=True)
         except ValueError as e:
@@ -201,8 +234,6 @@ def parse_spec(text):
         try:
             if kw in HEADER_TEXT:
                 _header(spec, kw, raw, rest)
-                if kw in ("brief", "entrance", "exit"):
-                    last_text_key = kw
             elif kw == "room":
                 name = rest[0]
                 b, opts = _box(spec, rest[1:])
@@ -221,6 +252,14 @@ def parse_spec(text):
                     raise ValueError("dir must be one of +x -x +y -y")
                 spec.solids.extend(stairs(b, d, int(opts.pop("tread", 32)), int(opts.pop("rise", 16)),
                                          opts.pop("tex", spec.tex["wall"])))
+                _no_extra(opts, lineno)
+            elif kw == "sets":
+                b, opts = _box(spec, rest)
+                along = opts.pop("along", "x")
+                if along not in ("x", "y"):
+                    raise ValueError("along must be x or y")
+                spec.solids.extend(sets(b, along, int(opts.pop("every", 128)), int(opts.pop("post", 16)),
+                                       opts.pop("tex", spec.tex["wall"])))
                 _no_extra(opts, lineno)
             elif kw in ("brushent", "door"):
                 if kw == "brushent":
@@ -262,6 +301,9 @@ def parse_spec(text):
 
 def _header(spec, kw, raw, rest):
     value = raw.split(None, 1)[1].strip() if len(raw.split(None, 1)) > 1 else ""
+    # `message "a title"` and `message a title` mean the same thing.
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
+        value = value[1:-1]
     if kw in ("wall", "floor", "ceil"):
         spec.tex[kw] = value
     elif kw == "gate":

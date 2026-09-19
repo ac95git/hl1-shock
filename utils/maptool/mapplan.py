@@ -95,12 +95,41 @@ def draw(ents, out, cuts=(40.0,)):
     def P(x, y):
         return (int((x - x0) * scale), int((y1 - y) * scale))
 
-    colours = [(253, 208, 162), (158, 202, 225), (199, 233, 192), (218, 218, 235)]
+    # A 256-unit grid under everything, labelled in map units along the top and left edges, and a
+    # scale bar in the corner, so a room's size reads off the plan without the spec beside it.
+    grid = 256
+    gx = int(x0 // grid) * grid
+    while gx <= x1:
+        px = P(gx, 0)[0]
+        d.line([(px, 0), (px, H)], fill=(225, 225, 225))
+        d.text((px + 2, 2), str(gx), fill=(150, 150, 150))
+        gx += grid
+    gy = int(y0 // grid) * grid
+    while gy <= y1:
+        py = P(0, gy)[1]
+        d.line([(0, py), (W, py)], fill=(225, 225, 225))
+        d.text((2, py + 2), str(gy), fill=(150, 150, 150))
+        gy += grid
+    bar = 512
+    bx, by = 12, H - 18
+    d.line([(bx, by), (bx + int(bar * scale), by)], fill=(0, 0, 0), width=3)
+    d.line([(bx, by - 5), (bx, by + 5)], fill=(0, 0, 0), width=1)
+    d.line([(bx + int(bar * scale), by - 5), (bx + int(bar * scale), by + 5)], fill=(0, 0, 0), width=1)
+    d.text((bx + 4, by - 16), "%d units (grid %d)" % (bar, grid), fill=(0, 0, 0))
+
+    colours = [(253, 208, 162), (158, 202, 225), (199, 233, 192), (218, 218, 235),
+               (253, 231, 160), (222, 198, 226)]
     world = ents[0][1]
+
+    def is_slab(b):
+        # A floor or ceiling: 32 thick in z and wide both ways. Skipped at every cut, so a cut
+        # through a deeper storey's ceiling does not fill the storey in.
+        return (b[5] - b[2]) <= 32 and (b[3] - b[0]) > 64 and (b[4] - b[1]) > 64
+
     for ci, cut in reversed(list(enumerate(cuts))):
         col = colours[ci % len(colours)]
         for b in world:
-            if b[2] <= cut < b[5]:
+            if b[2] <= cut < b[5] and not is_slab(b):
                 d.rectangle([P(b[0], b[4]), P(b[3], b[1])], fill=col, outline=(90, 90, 90))
     for keys, bs in ents[1:]:
         cls = keys.get("classname", "?")
