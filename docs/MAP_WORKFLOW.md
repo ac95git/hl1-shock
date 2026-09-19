@@ -100,8 +100,10 @@ loop puts the layout work where it is cheap and the craft where the eyes are:
 `topmap` stays outside this loop as it is outside the other one. `minemap` and `proving` predate it;
 their specs were never written and their `.map` files are the source. **`shaft1` is the first map through
 it** (2026-09-19): `maps/shaft1.rooms.txt` and its plan `maps/shaft1.plan.png`, the plan accepted the same
-day and the `.map` generated, installed and compiled; at step 3, the walk, and the generator may still be
-re-run on it until J.A.C.K. opens. Two facts from it: a `trigger_once`'s `message` is a titles.txt key, so
+day and the `.map` generated, installed and compiled; three cuts walked and confirmed the same day, and
+**at step 4 since the evening of 2026-09-19: the layout is frozen, the `.map` is edited in J.A.C.K. or in
+the text, and the generator is not run on it again.** The spec stays beside it as the intent. Two facts
+from it: a `trigger_once`'s `message` is a titles.txt key, so
 raw text on screen is a `game_text` it targets; and `func_door` with a negative `lip` travels further than
 its own thickness, which is how a 16-unit cage floor rises 448.
 

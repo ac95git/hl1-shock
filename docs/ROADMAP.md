@@ -3309,7 +3309,9 @@ the way back climbing 352 to a gallery over the station's south wall, out throug
 the start and opened from behind. Props, posters, signage and the non-box shapes are his in J.A.C.K.,
 once the layout stops moving. **Debt it creates** is in [ART_DEBT.md](ART_DEBT.md#shaft1--the-cold-opens-stand-ins).
 
-**The third cut, built unattended the same evening, not verified in game.** Andrei's notes on the second:
+**The third cut, built unattended the same evening; walked by Andrei on his return and every row below
+confirmed, the hand-in and the strip flag with them. The layout is frozen from here: the map is his in
+J.A.C.K. and the generator is not run on it again.** Andrei's notes on the second:
 way bigger, in both senses — larger volumes so there is room for storytelling by hand, and more places
 with a reason each — the locker room, and a road before the first enemy long enough to foreshadow him
 ("this guy is missing for some time already"). What the spec now holds beyond the second cut: the
@@ -3323,7 +3325,8 @@ volume (alien voices and the slaves' words standing in for the incantations), a 
 under the shrine, and past the vein a ladderway up to the missing man's camp; the cage button dead until
 the hoist and the hand-in have both fired, through two multisources. Every stand-in is in ART_DEBT.
 
-**Walk it — the test rows for the third cut**, in order:
+**Walk it — the test rows for the third cut**, in order. **All confirmed by Andrei, 2026-09-19.** They
+stay as the regression list for the editor pass:
 
 | Row | What should happen |
 | --- | --- |
