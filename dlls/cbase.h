@@ -111,6 +111,10 @@ typedef void (CBaseEntity::*USEPTR)(CBaseEntity* pActivator, CBaseEntity* pCalle
 #define CLASS_BARNACLE 99		  // special because no one pays attention to it, and it eats a wide cross-section of creatures.
 
 #define CLASS_VEHICLE 14
+// The maddened and the cult (docs/ROADMAP.md, "The cult and the maddened"):
+// everyone's enemy, allies of each other. Rows and columns 14 and 15 of the
+// relationship table in monsters.cpp.
+#define CLASS_MADDENED 15
 
 class CBaseEntity;
 class CBaseToggle;

@@ -286,6 +286,10 @@ void CGameRules::RefreshSkillData()
 	gSkillData.panthereyeDmgClaw = GetSkillCvar("sk_panthereye_dmg_claw");
 	gSkillData.panthereyeDmgLeap = GetSkillCvar("sk_panthereye_dmg_leap");
 
+	// The maddened miner
+	gSkillData.maddenedHealth = GetSkillCvar("sk_maddened_health");
+	gSkillData.maddenedDmgSwing = GetSkillCvar("sk_maddened_dmg_swing");
+
 	//Turret
 	gSkillData.turretHealth = GetSkillCvar("sk_turret_health");
 

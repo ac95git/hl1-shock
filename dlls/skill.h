@@ -92,6 +92,10 @@ struct skilldata_t
 	float panthereyeDmgClaw;
 	float panthereyeDmgLeap;
 
+	// The maddened miner (dlls/maddened.cpp)
+	float maddenedHealth;
+	float maddenedDmgSwing;
+
 	float turretHealth;
 	float miniturretHealth;
 	float sentryHealth;

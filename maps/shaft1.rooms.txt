@@ -325,7 +325,7 @@ pickup item_shard 2672 -1944 -220
 
 # The vein and the man at it
 brushent func_deposit 1312 -1696 -136 1376 -1664 -64 tex=CRYS_1A
-encounter monster_zombie 1344 -1728 -156 angles="0 90 0"
+encounter monster_maddened 1344 -1728 -156 angles="0 90 0" suited=0
 
 # The collapsed branch
 solid 1168 -2080 -160 1264 -2016 -104 tex=-0OUT_RK4

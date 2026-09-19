@@ -276,6 +276,16 @@ cvar_t sk_panthereye_dmg_leap1 = {"sk_panthereye_dmg_leap1", "20"};
 cvar_t sk_panthereye_dmg_leap2 = {"sk_panthereye_dmg_leap2", "25"};
 cvar_t sk_panthereye_dmg_leap3 = {"sk_panthereye_dmg_leap3", "35"};
 
+// The maddened miner (dlls/maddened.cpp, grilled 2026-09-19): 60 health is
+// three pick swings from the front, two with a Melee Damage node, one
+// Backstab; a 15 swing is seven hits on an unsuited player.
+cvar_t sk_maddened_health1 = {"sk_maddened_health1", "50"};
+cvar_t sk_maddened_health2 = {"sk_maddened_health2", "60"};
+cvar_t sk_maddened_health3 = {"sk_maddened_health3", "70"};
+cvar_t sk_maddened_dmg_swing1 = {"sk_maddened_dmg_swing1", "10"};
+cvar_t sk_maddened_dmg_swing2 = {"sk_maddened_dmg_swing2", "15"};
+cvar_t sk_maddened_dmg_swing3 = {"sk_maddened_dmg_swing3", "20"};
+
 
 //Turret
 cvar_t sk_turret_health1 = {"sk_turret_health1", "0"};
@@ -1404,6 +1414,13 @@ void GameDLLInit()
 	CVAR_REGISTER(&sk_panthereye_dmg_leap1);
 	CVAR_REGISTER(&sk_panthereye_dmg_leap2);
 	CVAR_REGISTER(&sk_panthereye_dmg_leap3);
+
+	CVAR_REGISTER(&sk_maddened_health1);
+	CVAR_REGISTER(&sk_maddened_health2);
+	CVAR_REGISTER(&sk_maddened_health3);
+	CVAR_REGISTER(&sk_maddened_dmg_swing1);
+	CVAR_REGISTER(&sk_maddened_dmg_swing2);
+	CVAR_REGISTER(&sk_maddened_dmg_swing3);
 
 
 	//Turret

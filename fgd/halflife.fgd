@@ -2475,6 +2475,18 @@
 	]
 ]
 @PointClass base(Monster, Sequence) size(-16 -16 0, 16 16 72) studio("models/zombie.mdl") = monster_zombie : "Scientist Zombie" []
+// The maddened miner: a man who heard the voice, with a pick. Walks, always; swings for 15 (medium) at
+// 64; 60 health, so three swings from the front and one Backstab. Everyone's enemy, allied with his own
+// kind. Mutters the road's whisper every few seconds - his tell in the dark. Some still wear the suit:
+// "suited" sets the helmet and the suit skin together. Body is the player's model; see docs/ART_DEBT.md.
+@PointClass base(Monster, Sequence) size(-16 -16 0, 16 16 72) studio("models/maddened.mdl") = monster_maddened : "Maddened miner"
+[
+	suited(choices) : "Suited" : 0 =
+	[
+		0: "Overalls, bare head"
+		1: "HEV suit and helmet"
+	]
+]
 @PointClass base(Targetname, Angles) size(-16 -16 -16, 16 16 16) = monstermaker : "Monster Maker"
 [
 	target(string) : "Target On Release" 
