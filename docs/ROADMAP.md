@@ -3293,7 +3293,8 @@ is built. The decisions, in the order they were made:
 14. The foreman fires the blast; the player's own act is cutting the Heart.
 15. The name is `shaft1`; `topmap` and `minemap` stay test maps.
 
-**Code this map needs, all small — written 2026-09-19, not verified in game:** `item_heart` and its Item
+**Code this map needs, all small — written 2026-09-19, verified in game by Andrei the same evening on the
+second cut (the Heart into the Grid, the hoist, the cage):** `item_heart` and its Item
 Type row (`game_shared/inventory_defs.h`, id 7, three Cells, unique, with a new `droppable` column the
 server's Drop verb and the client's Drop buttons both read); `func_station` stationtype 3, the hoist —
 `StationDef` gained an `input` Item Type and a `None` output, so the hoist takes the Heart once and fires
