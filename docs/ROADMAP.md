@@ -8,7 +8,12 @@ build on, and list the questions that have to be answered before the first line 
 is built, its content moves into PILLARS.md and the entry here is deleted — this file only ever shrinks
 from the top.
 
-**Last updated:** 2026-09-18, later (seven ideas from Andrei recorded, none grilled: the
+**Last updated:** 2026-09-19 (the cold open grilled and specified as the campaign's first map, `shaft1`:
+[The cold open](#the-cold-open--shaft1-grilled-2026-09-19) under Pillar 1 has the fifteen decisions, among
+them that miners wear suits and the player starts in one, the Heart is carried in the Grid, the suit choice
+is made at the hub, the escape is unequipped so the Pulse moves after it, crystal is amber. The spec is
+`maps/shaft1.rooms.txt` and the plan `maps/shaft1.plan.png`, not yet read by Andrei; no `.map` yet).
+Before that, 2026-09-18, later (seven ideas from Andrei recorded, none grilled: the
 [energy rifle](#the-energy-rifle), [crafting](#crafting--idea-2026-09-18) and
 [vending machines](#vending-machines--idea-2026-09-18) as Stations, the Panthereye and Gargantua as
 [kin](#panthereye), [the Pulse against sustained fire](#the-pulse-against-sustained-fire), the
@@ -82,7 +87,7 @@ Stations are pillar 1; sounds and icons are not roadmap items at all — see [Ar
 - [Pillar 3: Modules](#pillar-3-modules)
 - [Pillar 4: Routes](#pillar-4-routes) — builds; all seven Routes shaped; four Skills cut
 - [Pillar 1: Records](#pillar-1-records) — Ready: the Prompt on everything usable, then Records read with +use and kept in a fourth tab; audio later
-- [Pillar 1: The world](#pillar-1-the-world) — the facility, Xen, mining and Shards, Stations
+- [Pillar 1: The world](#pillar-1-the-world) — the facility, **the cold open (`shaft1`, grilled 2026-09-19)**, Xen, mining and Shards, Stations
 - [Art and audio](#art-and-audio)
 - [Proposed vocabulary](#proposed-vocabulary)
 - [Open questions](#open-questions)
@@ -167,6 +172,10 @@ and the base Dash in the air (both small); [the Prompt and Records](#pillar-1-re
 tab; [deposits, shards and Stations](#mining-and-crystal-shards); the maddened miner; the slave boss and
 the hub's vortigaunt; the hub and wing one as maps. Not urgent: the Hook, the double jump (second half),
 everything in Xen, the endings.
+
+**Amended 2026-09-19:** the first real map is not the hub but [the cold open](#the-cold-open--shaft1-grilled-2026-09-19),
+`shaft1`, chosen because it is the most fully specified level in this document, needs no open question
+answered, is linear, and uses only what is built. Everything after it in the list above stands.
 
 ---
 
@@ -2066,7 +2075,9 @@ Pulse:
 - **The passive branch is a separate rechargeable health pool.** Damage lands on the pool before armour
   and health, and the pool refills on its own.
 - **The Pulse is found in the world, early.** It is the player's first Module, and the stretch of game
-  that cannot assume it is short.
+  that cannot assume it is short. **Moved 2026-09-19:** the escape after the cafeteria is made with no
+  suit at all, and the Pulse needs one, so "the safety cabinet in the first minutes" becomes the hub or
+  just after it, where the suit is put back on. See [the cold open](#the-cold-open--shaft1-grilled-2026-09-19).
 
 **The pool sits next to two things that already absorb damage**, and the design has to say how it differs
 from each:
@@ -3230,6 +3241,65 @@ with roughly one Skill Point per optional space and 5–10 Reset Tokens across t
 20% in. Those numbers are a level-design brief. Nobody has written a map against them.~~ The Skill Point
 economy is a non-issue as of 2026-09-15 (see [Maps](#maps)), so these areas are level design for its own
 sake, not a test of the numbers.
+
+### The cold open — `shaft1`, grilled 2026-09-19
+
+**Shape: Ready.** The spec is `maps/shaft1.rooms.txt`, in the loop [MAP_WORKFLOW.md](MAP_WORKFLOW.md) sets:
+plan first (`maps/shaft1.plan.png`), then the `.map`, then J.A.C.K. once. Andrei has not read the plan yet.
+Why this map first: the session opened on feeling blocked, and the diagnosis was a design-complete,
+play-zero project — five pillars Playable and no level anyone has played. The cold open is the most fully
+specified level in this document, needs none of the open questions answered, is linear, and uses only what
+is built. The decisions, in the order they were made:
+
+1. **Miners wear suits.** The player starts suited, in their own, **Agility**, with the pickaxe. Both are
+   given by the map at the spawn (`item_suit` with the short logon, `weapon_pickaxe`), no code. The
+   maddened are miners too, so some wear suits and some do not.
+2. **The suit choice is made at the hub**, under an hour in, not in a changeroom at minute one and not in
+   the escape. Suit Variants are meant to carry specialization (stat bonuses or Skill unlocks — Andrei,
+   2026-09-19; PILLARS still records them as cosmetic with codenames), so the choice has to be informed.
+3. **The escape is unequipped**: no suit, no pick. It sets the atmosphere, introduces Records and a locked
+   door, maybe a Panthereye chase. So the Pulse moves from the safety cabinet to the hub or after it.
+4. **The map ends at the cage.** The ride is map two: the title sequence has to show the facility working,
+   which a greybox cannot. The strip of suit, pick and Shards is map two's, at the pithead.
+5. **NPCs now, as stand-ins, only the ones the beats need**: the crew at the face, security at the hoist,
+   scientist and Barney models, scripted, no voice.
+6. **Theme in words now, the look later.** The brief's paragraph shapes the volumes (haulage way 192 by
+   144, drifts 128 by 104–112, the chamber taller than wide); textures, light and detail wait for
+   J.A.C.K., stock rock until then.
+7. **Crystal is amber**, as in vanilla's own amber crystal, and the chamber inherits it. The Shard's shell
+   and the arcs already are; the deposit code's "unsettled" comment can go.
+8. **The Heart is carried in the Grid**, not on a cart: a unique Entry three Cells wide, **not
+   droppable** (a soft-lock otherwise, and the Grid cannot be freed of it, which is the point of it being
+   big). Four deposits encase it, one unstable; mining at least one reaches it. The hoist is a Station's
+   cousin that takes a named Entry and fires the cage.
+9. **The way back collapses** when the Heart is taken (a quake; the one hard gate), and the old workings,
+   unlit, lead out to the landing from the other side. The map is a loop.
+10. **One attacker in the dark**, at a vein in the old workings, a zombie standing in for the maddened
+    miner, who is a monster still to write.
+11. **Two secrets**: a stope with two deposits off the haulage way, and a wordless shrine in a dead end.
+    No Skill Point: the tree is the suit's fuel and the suit comes off at the top of the shaft.
+12. **Mined Shards are handed in with the kit** at the pithead: the strip empties the Grid too, and the
+    company owning the ore is the first showing of who owns what. **Later option, recorded**: a stash —
+    hide Shards, or deposit them for retrieval later in the campaign.
+13. **Start at the shaft bottom**, the cage just landed, and walk in under the lamps, so the lit half is
+    seen before the dark half and the loop closes where it opened.
+14. The foreman fires the blast; the player's own act is cutting the Heart.
+15. The name is `shaft1`; `topmap` and `minemap` stay test maps.
+
+**Code this map needs, all small — written 2026-09-19, not verified in game:** `item_heart` and its Item
+Type row (`game_shared/inventory_defs.h`, id 7, three Cells, unique, with a new `droppable` column the
+server's Drop verb and the client's Drop buttons both read); `func_station` stationtype 3, the hoist —
+`StationDef` gained an `input` Item Type and a `None` output, so the hoist takes the Heart once and fires
+its target, with its own Prompt rows; and for map two, spawnflag 1 on `player_weaponstrip`, which also
+removes the suit and the Grid's Entries one by one (not `Clear()`, which would forget granted Rows). The
+plan was accepted by Andrei ("looks really good"), the first `.map` walked the same evening ("solid"),
+and his five notes became the second cut, all in the spec: the haulage way three legs long with two
+bends, descending 192 on shallow steps; the station grown to a pit bottom with a lamp room, a tool crib
+and the foreman's office off it; four blind branches behind chainlink and one ending in a rockfall; steel
+sets down every drift, timber in the old workings, from a new `sets` line in the generator's grammar; and
+the way back climbing 352 to a gallery over the station's south wall, out through a gate seen locked at
+the start and opened from behind. Props, posters, signage and the non-box shapes are his in J.A.C.K.,
+once the layout stops moving. **Debt it creates** is in [ART_DEBT.md](ART_DEBT.md#shaft1--the-cold-opens-stand-ins).
 
 ### Interactable props
 

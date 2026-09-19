@@ -98,14 +98,21 @@ loop puts the layout work where it is cheap and the craft where the eyes are:
    read before asking why a room is where it is.
 
 `topmap` stays outside this loop as it is outside the other one. `minemap` and `proving` predate it;
-their specs were never written and their `.map` files are the source.
+their specs were never written and their `.map` files are the source. **`shaft1` is the first map through
+it** (2026-09-19): `maps/shaft1.rooms.txt` and its plan `maps/shaft1.plan.png`, the plan accepted the same
+day and the `.map` generated, installed and compiled; at step 3, the walk, and the generator may still be
+re-run on it until J.A.C.K. opens. Two facts from it: a `trigger_once`'s `message` is a titles.txt key, so
+raw text on screen is a `game_text` it targets; and `func_door` with a negative `lip` travels further than
+its own thickness, which is how a 16-unit cage floor rises 448.
 
 ### The grammar
 
 One item per line, `#` comments, `key=value` options after the numbers, quotes for a value with spaces.
 Coordinates are map units, x east, y north, z up, absolute — or `@ROOM dx dy dz`, offsets from that
 room's minimum corner. A doorway is a small room touching two big ones; no line opens it, touching is
-enough. The full text is at the top of `greybox.py`.
+enough. The header's text lines (`brief`, `gate`, `message` and the rest) are prose and are taken raw, so
+an apostrophe in them is not an open quote; `message` may be quoted or not. The full text is at the top
+of `greybox.py`.
 
 | Line | Makes |
 | --- | --- |
@@ -115,7 +122,8 @@ enough. The full text is at the top of `greybox.py`.
 | `gate NAME hard` / `gate NAME soft: intended X, alternative Y` | One line per gate, counted and echoed |
 | `room NAME x0 y0 z0 x1 y1 z1 [tex=T]` | An interior volume; `tex=` is one texture all round, for a duct |
 | `solid x0 y0 z0 x1 y1 z1 [tex=T]` | A world brush inside a room, never subtracted: a ledge, a pillar, cover, a crate that must not break |
-| `stairs x0 y0 z0 x1 y1 z1 dir=+x [tread=32] [rise=16] [tex=T]` | Stepped solids climbing along `dir` from `z0` to `z1`; the proving map's stairs exactly |
+| `stairs x0 y0 z0 x1 y1 z1 dir=+x [tread=32] [rise=16] [tex=T]` | Stepped solids climbing along `dir` from `z0` to `z1`; the proving map's stairs exactly. `tread=32 rise=8` reads as a ramp |
+| `sets x0 y0 z0 x1 y1 z1 along=x [every=128] [post=16] [tex=T]` | Support sets down a drift: two posts and a cap beam every `every` units, the box being the drift's interior. Steel or timber is the texture |
 | `brushent CLASS x0 y0 z0 x1 y1 z1 tex=T [key=value ...]` | Any brush entity: `func_door`, `func_button`, `func_breakable`, `func_deposit`, `func_station`, `trigger_*` |
 | `door x0 y0 z0 x1 y1 z1 [tex=T] [key=value ...]` | A `func_door` with the generators' defaults: rises, speed 100, lip 8, wait 4 (or -1 with a `targetname`) |
 | `point CLASS x y z [key=value ...]` | Any point entity |

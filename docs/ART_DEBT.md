@@ -358,6 +358,36 @@ A real pick head on the crowbar's rig, so the animations carry over. A HUD icon 
 ### Done when
 A pickaxe in hand, on the floor, in the bucket and in the Grid reads as a pick, not as a crowbar.
 
+## shaft1 — the cold open's stand-ins
+
+### Scope
+`maps/shaft1.rooms.txt`, the campaign's first map, grilled 2026-09-19 (ROADMAP.md, *The cold open*). A
+greybox by design: everything below is a stand-in on purpose until the plan is walked and J.A.C.K. opens.
+
+### Current stand-ins
+
+| Use | Asset | Borrowed from |
+| --- | --- | --- |
+| The Heart, on the seat and in the Grid | `item_heart` is not written; when it is, a stock model and a rendered Icon | — |
+| The maddened miner | `monster_zombie` at the vein in the old workings | the zombie; the monster is code still to write: a melee human on the scientist rig with the pick, untrained perception, backstabbable |
+| The crew and security | `monster_scientist`, `monster_barney`, no lines | the stock cast |
+| The hoist | `func_station` with the charger-panel texture | the Station's own stand-in |
+| Rock, gravel, the vein | `-0TNNL_RCK1`, `-0OUT_GRVL1`, `-0OUT_RK3`, `CRYS_1A` | valve's WADs, minemap's set |
+| The shrine | a rock slab, five loose Shards, two candle lights | — |
+
+### What's wrong with them
+- A zombie is the wrong body and the wrong pace for a man who heard the voice; the fight teaches the
+  pickaxe's timing either way.
+- **The maddened need two bodies**, suited and unsuited (Andrei, 2026-09-19: miners wear suits, and some
+  of the maddened still do), so the player learns nothing false about who wears one.
+- The Heart is the most important object in the game and has no shape. Amber, arranged, wrong for a mine.
+- The mine has no textures of its own: rock, timber or steel sets, mesh, the rail, the lamps, and the
+  amber crystal vein, which is the first texture the WAD was created for.
+
+### Done when
+The Heart has a model the Icon is rendered from, the maddened miner is a monster with both bodies, and the
+mine is textured from the mod's own WAD.
+
 ## The melee alien grunt — armour it does not have, and no chainsaw
 
 ### Scope
