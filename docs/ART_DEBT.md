@@ -390,28 +390,35 @@ greybox by design: everything below is a stand-in on purpose until the plan is w
 ### Done when
 The Heart has a model the Icon is rendered from, and the mine is textured from the mod's own WAD.
 
-## The maddened miner — the player's body, Gordon's face, a black crowbar, no flinch
+## The maddened miner — Ivan in blue, a black crowbar, no flinch
 
 ### Scope
-`monster_maddened` in `dlls/maddened.cpp`; `models/maddened.mdl`, built by `E:\CustomAssets\scripts\maddened_build.py`
-from the SDK's player sources. Grilled and built 2026-09-19 (ROADMAP.md, "The cult and the maddened").
+`monster_maddened` in `dlls/maddened.cpp`; `models/maddened.mdl`, built by `E:\CustomAssets\scripts\maddened_build.py`.
+Grilled and built 2026-09-19 (ROADMAP.md, "The cult and the maddened"). The body changed twice: the
+first build was the player's own body with Gordon's face, verified in game; two SDK deathmatch bodies
+stood in for an hour; on 2026-09-20 Andrei chose Ivan, Half-Life's original protagonist from the 25th
+anniversary update, decompiled by him into `E:\CustomAssets\models\decompiled\npcs\ivan\`, as the one
+and only body. Not yet verified in game.
 
 ### Current stand-ins
 
 | Use | Asset | Borrowed from |
 | --- | --- | --- |
-| The body, both of them | the player model's mesh; the suit as shipped for the suited body, and the suit's thirteen shell textures washed to a work blue for the overalls | the SDK's `Player Models/player/` |
-| The face | `PLAYER_Face1.bmp` and its sides | Gordon Freeman's |
+| The body | Ivan, as decompiled, with his three suit textures washed to a work blue by the script; face, hair, gloves, collar and boots as they are | the 25th anniversary's `models/player/ivan/ivan.mdl` |
 | The pick | `reference_crowbar`, the crowbar mesh skinned to the hand, in the pickaxe's black | the crowbar; the real head is the hand-made `v_pickaxe` project, and goes into this model the same way when it exists |
-| The swing | `ref_swingdown_crowbar` / `ref_swingup_crowbar` at 12 fps | the player's upper-body crowbar swings: his legs stand planted while he hacks |
+| The swing | the crowbar swing's two pitch files as one blended sequence at 12 fps, held level | the player's upper-body crowbar swing: his legs stand planted while he hacks |
 | A flinch | none | the player never flinches, so neither does he: hits land without a reaction until one kills him |
-| Idle, walk, run, deaths, the fall | the player's | — |
+| Idle, walk, run, deaths | Ivan's decompiled set, which is the player's | — |
+| The fall | `falling.smd` fitted to Ivan's bones | the SDK's player sources |
 | The mutter | `aslave/slv_word1/2/4/5/7.wav` at half volume, pitched down, every 4–8 s | the alien slave's words: the voice, but a vortigaunt's |
 | Swing miss and hit | `weapons/cbar_miss1.wav`, `weapons/cbar_hitbod1-3.wav` at pitch 80–88 | the crowbar's |
 | Pain and death | `barney/ba_pain1-3.wav`, `barney/ba_die1-3.wav` | Barney's |
 
 ### What's wrong with them
-- **He has Gordon's face**, on every one of them. A miner's face, and a few of them, is a texture set.
+- **Every maddened is the same man**, Ivan's one face and one suit. A second face is a texture on the
+  same mesh; a variety of bodies is the SDK's deathmatch roster on this rig (Barney's, the scientist's,
+  the masked grunt's), which the script's fitter already takes.
+- **His suit is Ivan's, not the mod's.** A maddened who turned in the mod's suit has no body yet.
 - **The pick is a crowbar painted black**, the same stand-in the player's own pickaxe wears.
 - **He cannot flinch**, so the pickaxe fight has no feedback on him beyond blood and the health he loses.
   A short flinch animation on this rig would fix it, and the player model would gain one too.
@@ -420,8 +427,8 @@ from the SDK's player sources. Grilled and built 2026-09-19 (ROADMAP.md, "The cu
   words — the same voice the road's whispers use, so the road and the man are one sound.
 
 ### Done when
-A miner's face, a real pick, a flinch, a swing with a step, and a human mutter. Until then he is the
-player in the dark with a crowbar, which is at least the right silhouette.
+More than one face, a real pick, a flinch, a swing with a step, and a human mutter. Until then he is a
+bearded man in a blue suit in the dark with a crowbar, which already reads as a man who broke.
 
 ## The melee alien grunt — armour it does not have, and no chainsaw
 

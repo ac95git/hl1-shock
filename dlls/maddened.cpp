@@ -2,19 +2,16 @@
 // maddened", grilled 2026-09-19).
 //
 // A miner who heard the voice.  A melee human on the base AI's chase-and-
-// swing, the zombie's shape with a man's body: models/maddened.mdl is the
-// player's own model from the SDK sources, built by maddened_build.py
-// (E:\CustomAssets\scripts), with the pick as a bodygroup on the hand.  He
-// walks, always -- the run is the cult's, later.  He is everyone's enemy
-// (CLASS_MADDENED: the player's, the soldiers', Xen's) and his own kind's
-// ally, which the cult will share.  The default Perception Profile for now,
-// no Disturbances, backstabbable: three swings from the front, one from
-// behind, which is the stealth lesson of the first hour.
-//
-// The "suited" keyvalue picks the body: some of the maddened still wear the
-// suit and some do not, so the player learns nothing false about who wears
-// one.  It sets the head (bare or helmet) and the skin (overalls or suit)
-// together; the pick is always in the hand.
+// swing, the zombie's shape with a man's body: models/maddened.mdl is Ivan,
+// Half-Life's original protagonist as the 25th anniversary shipped him, on
+// the player's rig in a suit of his own washed to work blue, built by
+// maddened_build.py (E:\CustomAssets\scripts) with the pick as a bodygroup
+// on the hand.  One body, no variants.  He walks unaware and runs when he
+// chases.  He is everyone's enemy (CLASS_MADDENED: the player's, the
+// soldiers', Xen's) and his own kind's ally, which the cult will share.  The
+// default Perception Profile for now, no Disturbances, backstabbable: three
+// swings from the front, one from behind, which is the stealth lesson of
+// the first hour.
 //
 // Sounds are stand-ins (docs/ART_DEBT.md, "shaft1"): the alien slave's words
 // as his mutter, so what the player heard down the old workings is him and
@@ -33,14 +30,14 @@
 // The QC's event on the frame the pick lands.
 #define MADDENED_AE_SWING 1
 
-// Bodygroups, in the QC's order: body (one), head (bare, helmet), weapon
-// (blank, pick).  pev->body is head + 2 * weapon.
-#define MADDENED_HEAD_BARE 0
-#define MADDENED_HEAD_HELMET 1
-#define MADDENED_WEAPON_PICK 2
+// Bodygroups, in the QC's order: body (one), weapon (blank, pick).  With one
+// body, pev->body is the weapon index alone.
+#define MADDENED_BODY_PICK 1
 
-#define MADDENED_SKIN_SUIT 0
-#define MADDENED_SKIN_OVERALLS 1
+// The swing is one sequence blended on pitch between its aiming-down and
+// aiming-up files (blend XR -45 45).  The base AI never touches the blend
+// byte, and 0 would be the floor, so it is held at centre: he swings level.
+#define MADDENED_BLEND_LEVEL 127
 
 // The mutter: every 4-8 s while nothing is happening.
 #define MADDENED_MUTTER_MIN 4.0f
@@ -51,7 +48,6 @@ class CMaddened : public CBaseMonster
 public:
 	void Spawn() override;
 	void Precache() override;
-	bool KeyValue(KeyValueData* pkvd) override;
 	void SetYawSpeed() override;
 	int Classify() override;
 	void HandleAnimEvent(MonsterEvent_t* pEvent) override;
@@ -76,7 +72,6 @@ public:
 	static const char* pDeathSounds[];
 
 private:
-	bool m_bSuited = false;
 	float m_flNextMutter = 0.0f;
 };
 
@@ -84,7 +79,6 @@ LINK_ENTITY_TO_CLASS(monster_maddened, CMaddened);
 
 TYPEDESCRIPTION CMaddened::m_SaveData[] =
 {
-	DEFINE_FIELD(CMaddened, m_bSuited, FIELD_BOOLEAN),
 	DEFINE_FIELD(CMaddened, m_flNextMutter, FIELD_TIME),
 };
 
@@ -125,16 +119,6 @@ const char* CMaddened::pDeathSounds[] =
 	"barney/ba_die3.wav",
 };
 
-bool CMaddened::KeyValue(KeyValueData* pkvd)
-{
-	if (FStrEq(pkvd->szKeyName, "suited"))
-	{
-		m_bSuited = atoi(pkvd->szValue) != 0;
-		return true;
-	}
-	return CBaseMonster::KeyValue(pkvd);
-}
-
 int CMaddened::Classify()
 {
 	return CLASS_MADDENED;
@@ -161,8 +145,9 @@ void CMaddened::Spawn()
 	m_MonsterState = MONSTERSTATE_NONE;
 	m_afCapability = bits_CAP_DOORS_GROUP;
 
-	pev->body = (m_bSuited ? MADDENED_HEAD_HELMET : MADDENED_HEAD_BARE) + MADDENED_WEAPON_PICK;
-	pev->skin = m_bSuited ? MADDENED_SKIN_SUIT : MADDENED_SKIN_OVERALLS;
+	pev->body = MADDENED_BODY_PICK;
+	pev->skin = 0;
+	pev->blending[0] = MADDENED_BLEND_LEVEL;
 
 	m_flNextMutter = gpGlobals->time + RANDOM_FLOAT(1.0f, MADDENED_MUTTER_MAX);
 

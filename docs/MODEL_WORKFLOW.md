@@ -128,9 +128,28 @@ The engine's rules under *Facts that bind the work* still hold; this is how they
   the upper arms), so it compiles cleanly and then every animation glues the arms to the body. The
   head files and `reference_crowbar` are fine. `player_template_biped1.smd` is weighted the way a body
   should be, and stripping its head triangles (any triangle touching `Bip01 Head` or the five face
-  bones) gives a headless body with the shipped model's own 255 vertices. `maddened_build.py` does that;
-  Valve's own `player.qc` in the SDK, compiled as it is, has the same fault and 42 bones against the
-  shipped 50. Count vertices per bone before trusting any SDK reference SMD.
+  bones) gives a headless body with the shipped model's own 255 vertices. `maddened_build.py` did that
+  for the first miner; Valve's own `player.qc` in the SDK, compiled as it is, has the same fault and 42
+  bones against the shipped 50. Count vertices per bone before trusting any SDK reference SMD. The
+  SDK's `Player Models/DMatch/` bodies, counted the same evening, are sound: every one is a whole body
+  on the player's rig, so any of them takes the player's animation set. Their atlases are all called
+  `DM_Base.bmp`, so two in one model need renaming in the SMD, and their UVs run past the edge, so the
+  QC needs `$cliptotextures` as Valve's do or studiomdl grows the texture to cover them. The 25th
+  anniversary's multiplayer models (Ivan, whom the maddened miner wears) are the same rig with the finger
+  and face bones dropped, 22 bones; a decompile of one has the whole player animation set beside it.
+- **A mesh skinned to a bone the animations lack needs that bone injected into every animation.**
+  studiomdl wants every bone in every animation file. `maddened_build.py` has the fitter: it cuts each SMD
+  to one target skeleton by bone name, refuses a kept bone whose parent differs between files or a
+  vertex on a dropped bone, and writes a missing bone into every frame at a rest pose taken from the file
+  that defines it (the SDK's `reference_crowbar` and its `Box01` under the right hand, onto Ivan's 22
+  bones). Bone rest poses must agree between the files for this to hold; Ivan's and the SDK's do.
+- **A Crowbar decompile of a player model has `$origin` baked into its animations and not its reference.**
+  The shipped player models compile with `$origin 0 0 36`, the origin at the hull's centre. Ivan's
+  decompile writes the reference with the root at z 39.5 and the feet at 0, and every animation with the
+  root 36 lower; compiled as they come, the mesh renders 36 low and the monster stands in the floor to
+  his waist (found 2026-09-20, the first Ivan in game). `maddened_build.py` shifts each decompiled
+  animation's root up by 36 and stops if the gap between reference and idle is not that. Check a build
+  by reading the compiled sequences' bounding boxes: a monster's idle should start at z 0.
 - **Sequence order is a contract with the code.** Weapons address sequences by index (`CROWBAR_DRAW` is
   the second sequence, and so on). A model that replaces or reuses a weapon's animations keeps its QC's
   sequence list in the same order, with nothing inserted. A sequence of the mod's own goes **after** the

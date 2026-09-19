@@ -6657,7 +6657,6 @@
 }
 {
 "classname" "monster_maddened"
-"suited" "0"
 "angles" "0 90 0"
 "origin" "1344 -1728 -156"
 }

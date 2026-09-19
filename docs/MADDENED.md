@@ -4,7 +4,7 @@
 is today, in enough depth that the grill that follows can start from the built thing rather than from the
 brief. The decisions behind him, with their rejected alternatives, are in
 [ROADMAP.md](ROADMAP.md#the-cult-and-the-maddened); what stands in for art is in
-[ART_DEBT.md](ART_DEBT.md#the-maddened-miner--the-players-body-gordons-face-a-black-crowbar-no-flinch).
+[ART_DEBT.md](ART_DEBT.md#the-maddened-miner--ivan-in-blue-a-black-crowbar-no-flinch).
 
 ## Who he is
 
@@ -19,13 +19,13 @@ is seen.
 
 | # | Decision | In the code |
 | --- | --- | --- |
-| 1 | The player's body, from the SDK sources | `models/maddened.mdl`, built by `E:\CustomAssets\scripts\maddened_build.py` |
+| 1 | The player's rig, from the SDK sources. The body changed twice on the evening of 2026-09-19 and settled on **Ivan**, Half-Life's original protagonist as the 25th anniversary shipped him, in his own bulkier suit washed to work blue. One body, no variants | `models/maddened.mdl`, built by `E:\CustomAssets\scripts\maddened_build.py` from Andrei's Crowbar decompile |
 | 2 | ~~He walks, always~~ **He runs when he chases** — reversed on play the same night: the walking miner "looks like no threat" (Andrei), the running one had already worked | `run` is the player's `new_run` at 40 fps under `ACT_RUN`; the base AI's chase uses it. Unaware, he stands and walks |
 | 3 | Health 60, swing 15, reach 64, about a second a swing | `sk_maddened_health` 50/60/70, `sk_maddened_dmg_swing` 10/15/20; the base AI's 64-unit melee test; the swing at 12 fps over 13 frames |
 | 4 | Everyone's enemy, allied with his kind | `CLASS_MADDENED` (15), a new row and column in the relationship table |
 | 5 | The default Perception Profile, backstabbable | Nothing overridden: `GetPerceptionProfile` returns the default and `CanBackstab` is true on every monster |
 | 6 | Stand-in sounds: the slave's words as his mutter, the crowbar's, Barney's | `pMutterSounds` on a 4–8 s clock in `PrescheduleThink`; hit and miss on the swing event; pain and death |
-| 7 | The one in shaft1 is unsuited | `"suited" "0"` on the entity at the vein, in `maps/shaft1.map` and the spec |
+| 7 | ~~The one in shaft1 is unsuited~~ There is one body now, so nothing to choose | The `suited` keyvalue is gone from the class, the FGD, `maps/shaft1.map` and the spec (2026-09-20) |
 
 ## The code
 
@@ -35,10 +35,11 @@ its model has a sequence tagged `ACT_MELEE_ATTACK1` (`CBaseMonster::MonsterInit`
 What the class supplies:
 
 - **Spawn.** The human hull, `MOVETYPE_STEP`, red blood, the skill health, `VEC_VIEW`, a 0.5 field of
-  view (the zombie's), `bits_CAP_DOORS_GROUP`. The `suited` keyvalue sets `pev->body` and `pev->skin`
-  together: body is head + 2 × weapon in the QC's bodygroup order, so bare head with the pick is 2 and
-  helmet with the pick is 3; skin 0 is the suit, 1 the overalls.
-- **The swing.** The QC fires event 1 on frame 5 of either swing. `HandleAnimEvent` runs
+  view (the zombie's), `bits_CAP_DOORS_GROUP`. `pev->body` is 1, the pick, since the body group has
+  one entry; `pev->skin` is 0; `pev->blending[0]` is 127, the centre of the swing's pitch blend, so he
+  swings level (the first build had the blend's two endpoint files as two sequences and swung at the
+  floor or the ceiling at random). Nothing else touches the blend byte.
+- **The swing.** The QC fires event 1 on frame 5 of the swing. `HandleAnimEvent` runs
   `CheckTraceHullAttack(70, sk_maddened_dmg_swing, DMG_CLUB)`, the zombie's trace: a hit punches the
   victim's view and shoves it 60 forward, and plays a body-hit sound; a miss plays the miss. The base AI
   decides when to swing: within 64 units, facing within a 0.7 dot, the enemy on the ground.
@@ -55,7 +56,7 @@ What the class supplies:
   dislike him, humans and alien military hate him, alien monsters, prey and predators dislike him,
   insects fear him, passives and vehicles ignore him. `IRelationship` now range-checks both classes,
   since `CLASS_BARNACLE` is 99 and never indexed the table on purpose.
-- **Save.** `m_bSuited` and the mutter clock.
+- **Save.** The mutter clock.
 - **Skill cvars** in `dlls/game.cpp`, read in `dlls/gamerules.cpp` into `gSkillData.maddenedHealth` and
   `maddenedDmgSwing`, declared in `dlls/skill.h`.
 
@@ -67,39 +68,51 @@ own.
 
 ## The model
 
-`models/maddened.mdl`, 177 KB, 45 bones, 42 textures, three bodyparts, twelve sequences. Built by
-`maddened_build.py` from `Player Models/player/` in the SDK ([HL_SDK.md](HL_SDK.md)); the pattern for
-any monster on the player's rig.
+`models/maddened.mdl`, 114 KB, 23 bones, 11 textures, two bodyparts, thirteen sequences. Built by
+`maddened_build.py` from Andrei's Crowbar decompile of **Ivan** at
+`E:\CustomAssets\models\decompiled\npcs\ivan\`, plus two files from the SDK's `Player Models/player/`
+([HL_SDK.md](HL_SDK.md)). Ivan is the protagonist of Half-Life's early builds, a bearded man with a
+madman's stare in a bulkier suit that is not the mod's, shipped by the 25th anniversary update as a
+multiplayer model; Andrei chose him on 2026-09-20 over the two SDK deathmatch bodies that stood in for an
+hour (the sealed-helmet suit and the scientist in a blue coat) because he already looks the part. Not
+verified in game yet. The SDK's deathmatch roster (Gordon, the helmet, Barney, the scientist, Gman, Gina,
+a grunt, a recon grunt, a zombie) stays the pool of bodies on this rig that take the whole animation set
+without hand modelling; Barney's is the maddened security member's when the roadmap reaches him.
 
-- **Meshes.** The body is cut by the script from `player_template_biped1.smd`, the whole-body reference,
-  by dropping every triangle that touches `Bip01 Head` or the five face bones: 486 triangles kept, 153
-  dropped, 255 vertices, the shipped player's own count. The SDK's split `(No_Head)1` file is not used:
-  it is a broken export with its vertices on the ends of bone chains, and it is why the first miner in
-  game folded at the shoulders ([MODEL_WORKFLOW.md](MODEL_WORKFLOW.md), *Facts that bind the work*).
-  The heads are the SDK's `(Gordon_Head)1` and `(Helmet)1`. The pick is `reference_crowbar`, the crowbar
-  mesh skinned to a `Box01` bone under the right hand, wearing the black crowbar texture from
-  `models/src/w_pickaxe/`.
-- **Bodygroups.** `body` (one), `head` (bare, helmet), `weapon` (blank, pick).
-- **Skins.** Two families: the suit as shipped, and overalls, which are the suit's thirteen shell textures
-  (back, bicep, calf, chest, chrome, cuff, deltoid, forearm, knee, leg back, legs, shoulder joint,
-  shoulders) rewritten to a work blue at their own luminance, a little darker. Face, teeth, mouth, helmet,
-  gloves and boots are the same on both. The three suit colours are not on him yet; when they are, they
-  are three more families on the same textures, the way the suit pickup has them.
-- **Sequences and activities.** `idle` and `idle2` (`new_idle`, `new_idle2`, ACT_IDLE), `walk` (`new_walk`,
-  ACT_WALK, linear movement extracted), `run` (`new_run`, ACT_RUN, 40 fps), `swing_down` and
-  `swing_up` (`ref_swingdown_crowbar`, `ref_swingup_crowbar`, ACT_MELEE_ATTACK1, event 1 at frame 5, 12
-  fps), `die_simple`, `die_backward`, `die_forward` (`player_die1`), `die_headshot`, `die_gutshot` (the
-  player's, with their body-drop events), `falling` (ACT_FALL).
-- **The QC otherwise** is the player's: the Character Studio bone renames, the three hand attachments,
-  the four spine controllers, the hitboxes. The origin is the feet (no `$origin`), where the player's is
-  36 up at the hull's centre.
+- **The rig.** Ivan is the player's skeleton with the finger and face bones dropped, 22 bones, and his
+  hand's rest pose matches the SDK's to the fourth decimal. The script fits every SMD to one skeleton,
+  those 22 plus `Box01` under the right hand: the SDK's `reference_crowbar` has its 69 bones cut to them
+  (all its vertices are on `Box01`), and each animation gains `Box01` at its rest pose from the crowbar
+  file, since studiomdl wants every bone in every animation. The fitter refuses a kept bone whose parent
+  differs between files and a vertex on a dropped bone. His mesh has vertices on the thighs, calves and
+  upper arms, counted before use, unlike the SDK's split player file that folded the first miner at the
+  shoulders ([MODEL_WORKFLOW.md](MODEL_WORKFLOW.md), *Facts that bind the work*).
+- **Bodygroups.** `body` (Ivan), `weapon` (blank, pick). The pick is the crowbar mesh in the black
+  crowbar texture from `models/src/w_pickaxe/`.
+- **Textures.** Ivan's ten, as decompiled, with his three suit textures renamed from their multiplayer
+  colour-remap names (`suit_front`, `suit_back`, `suit_boot`; the face too, to `face`) and washed to the
+  work blue of the first miner's overalls, every pixel to hue 150 at its own luminance, a little darker.
+  Face, hair, gloves, the grey collar and the boot soles stay. `$cliptotextures`, as his QC has it. No skin
+  families; the suit colours, if the maddened ever wear the mod's suit, are not on him.
+- **Sequences and activities.** `idle` and `look_idle` (ACT_IDLE), `walk` (`walk2handed`, ACT_WALK, 26
+  fps, linear movement extracted), `run` (`run2`, ACT_RUN, 40 fps), `swing` (ACT_MELEE_ATTACK1: the
+  crowbar swing's aiming-down and aiming-up files as one sequence blended on pitch, `blend XR -45 45`, 12
+  fps over 13 frames, event 1 at frame 5), seven deaths with the player's activity weights and body-drop
+  events (`die_simple`, `die_backwards1`, `die_backwards`, `die_forwards`, `headshot`, `die_spin`,
+  `gutshot`), `falling` (the SDK's, fitted; ACT_FALL). The attachments, spine controllers and hitboxes
+  are Ivan's QC's. The origin is the feet: the decompile's reference has them there, but its animations
+  carry the shipped player's 36-unit origin baked in (idle's root at z 2.9 against the reference's 39.5),
+  so compiled as they came he stood in the floor to his waist (Andrei, 2026-09-20). The script shifts the
+  root of each of Ivan's animations up by 36 and refuses a decompile whose gap is not that; the SDK's
+  fall is authored at the reference height and is not shifted. Checked on the compiled model: the idle's
+  box runs 0 to 73, as the first miner's did.
 - **Textures** stay internal (no `$externaltextures`), one file ships.
 
 ## Where he is placed
 
-shaft1's vein, in the old workings' third leg, unsuited, facing the vein; the road's three whispers are
-`ambient_generic`s that play his sound before he is seen. Placing another is one entity: `monster_maddened`
-with `suited` 0 or 1, and `info_node`s, since he walks the node graph like any monster.
+shaft1's vein, in the old workings' third leg, facing the vein; the road's three whispers are
+`ambient_generic`s that play his sound before he is seen. Placing another is one entity: `monster_maddened`,
+no keyvalues of its own, and `info_node`s, since he walks the node graph like any monster.
 
 ## Numbers to judge against
 
@@ -127,8 +140,9 @@ Not decided, or decided for now and worth revisiting once he has been fought a f
   the leader may want faster ones.
 - **The voice.** His mutter is the road's whisper is a vortigaunt's. What he says, in what language, and
   whether the maddened ever speak a word the player understands.
-- **The bodies.** Which maddened are suited, and in which colour; whether a suited one drops or hands over
-  anything; whether the face is one man's or several.
+- **The bodies.** Every maddened is Ivan now, one face and one blue suit. Whether the crew that wears the
+  mod's suit (Andrei: not all of the crew wears suits, but the ones on special operations always do)
+  ever turns maddened in it, and what that body is; whether any maddened drops or hands over anything.
 - **Security.** The roadmap has a maddened security member as a lone grunt; whether that stays a grunt or
   becomes a variant of him with a pistol.
 - **The ritual state.** The cult's passive-until-noticed spawn state, which the feeding Panthereye also

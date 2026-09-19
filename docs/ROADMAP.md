@@ -1684,16 +1684,24 @@ who spent years around crystal, heard the voice, and did something with it.
   `CLASS_MADDENED` as row and column 15 of a relationship table grown to 16 (14 is the vehicle class, which
   Valve defined and never gave a row), `sk_maddened_health` 50/60/70 and `sk_maddened_dmg_swing` 10/15/20,
   the FGD entry with its `suited` choice, and shaft1's vein now holds him, unsuited, instead of the zombie.
-  His stand-ins are in [ART_DEBT.md](ART_DEBT.md#the-maddened-miner--the-players-body-gordons-face-a-black-crowbar-no-flinch).
+  His stand-ins are in [ART_DEBT.md](ART_DEBT.md#the-maddened-miner--ivan-in-blue-a-black-crowbar-no-flinch).
   Seven decisions:
-  1. **Body: the player's model, from the SDK sources** (`Player Models/player/`, [HL_SDK.md](HL_SDK.md)),
+  1. **Body: the player's rig, from the SDK sources** (`Player Models/`, [HL_SDK.md](HL_SDK.md)),
      built by a script into `models/maddened.mdl`. Rejected: the zombie's rig (attacks exist, the mesh is
      a corpse, the miner would be hand modelling from minute one) and the scientist's (a hundred
-     animations of a man at work, no attack, no source, a Bip02 nothing else shares). Bodygroups for the
-     head (bare or helmet) and the weapon (the pick: `reference_crowbar`, the crowbar mesh already skinned
-     to the hand bone, in the pickaxe's black), skin families for overalls and the suit, later the three
-     suit colours. One keyvalue, suited or not, sets head and skin together. The origin drops from the
-     player's 36 to 0. The swing is the player's crowbar swing with a damage event on the frame it lands.
+     animations of a man at work, no attack, no source, a Bip02 nothing else shares). The weapon as a
+     bodygroup (the pick: `reference_crowbar`, the crowbar mesh already skinned to the hand bone, in the
+     pickaxe's black). One keyvalue, suited or not, picks the body. The origin drops from the player's 36
+     to 0. The swing is the player's crowbar swing with a damage event on the frame it lands.
+     **Amended twice after the first build was verified.** The evening of 2026-09-19: two of the SDK's
+     deathmatch characters on the same rig, the sealed-helmet suit and the scientist in a blue coat,
+     because a face and clothes for the unsuited man are hand modelling Andrei cannot do yet. Then
+     2026-09-20, Andrei's find: **Ivan**, Half-Life's original protagonist as the 25th anniversary
+     shipped him, decompiled by Andrei, "the look of a madman" in a bulkier suit of his own, washed to
+     the work blue. **One body, the only variant**: the suited keyvalue is gone from class, FGD, map and
+     spec. The swing is now one pitch-blended sequence held level, as Valve's QC has it, which ends the
+     swing at the floor or the ceiling. The deathmatch roster stays the pool for later bodies (Barney's
+     for the maddened security member). Not yet verified in game.
   2. ~~**He walks, always.** The run is the cult's, later. Rejected: walk until seen, then run — the first
      fight in the game should not be a sprint in the dark.~~ **Reversed on play the same night: he runs
      when he chases.** The first build ran by accident, and it worked; the corrected walking one "looks
@@ -1708,11 +1716,12 @@ who spent years around crystal, heard the voice, and did something with it.
   6. **Sounds, all stand-ins:** the road's whisper (the slave's words) as his idle every 4–8 s, so what the
      player heard down the tunnel is him and it is his tell in the dark; the crowbar's miss and body hit
      pitched down; Barney's pain and death.
-  7. **The one at the vein in shaft1 is unsuited** — lost, a stray. The zombie's line in the map becomes his.
+  7. ~~**The one at the vein in shaft1 is unsuited** — lost, a stray.~~ Moot since Ivan: one body. The
+     zombie's line in the map became his.
 
-  **Debt it creates, for ART_DEBT when built:** Gordon's face; the black crowbar as the pick until the
-  hand-made head exists; no flinch, since the player never flinches; a planted swing, since it is an
-  upper-body animation; the voice.
+  **Debt it creates, for ART_DEBT when built:** one face for all of them; the black crowbar as the pick
+  until the hand-made head exists; no flinch, since the player never flinches; a planted swing, since it
+  is an upper-body animation; the voice.
 - **The cult** is the organised form, with a leader. **Hostile everywhere, with one exception: ritual
   scenes**, where cultists stay passive until the player is noticed or crosses a map trigger.
 - **The ritual has to be the cultist's own state**, not a `scripted_sequence`: Suspicion is frozen while a

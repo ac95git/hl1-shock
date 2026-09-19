@@ -671,8 +671,10 @@ every alien grunt: a punch the Pulse deflects still shoves, but no longer plays 
 
 **The maddened miner, v1** — `monster_maddened`, `CMaddened` in `dlls/maddened.cpp`, built 2026-09-19 and
 **verified in game the same night** ("it works"). The mod's first human enemy: a miner who heard the
-voice, on the player's own body from the SDK sources (`models/maddened.mdl`, `maddened_build.py`), with a
-pick in his hand as a bodygroup and overalls or the suit as skins. The base AI's chase and melee, nothing
+voice, on the player's rig (`models/maddened.mdl`, `maddened_build.py`), with a pick in his hand as a
+bodygroup. The body is Ivan, Half-Life's original protagonist from the 25th anniversary update, in his
+own suit washed to work blue, one body and no variants (chosen 2026-09-20 after the first build, the
+player's own body, was verified; Ivan is not yet). The base AI's chase and melee, nothing
 scripted: he walks unaware and runs when he chases (the grill said walk; the walking one read as no threat
 in play and the decision reversed the same night), swings for `sk_maddened_dmg_swing`
 (10/15/20, `DMG_CLUB`) at 64 units, has `sk_maddened_health` (50/60/70), mutters the alien slave's words
