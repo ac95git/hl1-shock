@@ -389,3 +389,13 @@ A monster_ghost_slave summoned by the alien Module's weapon: an alien slave figh
 translucent, with no corpse, gone when its lifetime runs out, on death, or — once built — with the
 ultimate's volley. Built 2026-09-16; it does not yet follow the player.
 _Avoid_: ghost slave (the classname says slave once already), pet, minion, summon (the weapon and the verb)
+
+### The humans
+
+**The maddened**:
+Staff who heard the voice through the crystal and broke: miners with picks, some security. Not controlled —
+the Nihilanth plants ideas and nothing else. A **maddened miner** is `monster_maddened`, a melee human on the
+player's body who walks, always, and swings a pick; everyone's enemy and his own kind's ally (`CLASS_MADDENED`).
+Built 2026-09-19; [docs/MADDENED.md](docs/MADDENED.md) is the record. **The cult** is the organised form,
+with a leader, and will share his class.
+_Avoid_: zombie, infected, thrall, cultist for a maddened miner (the cult chose; the maddened broke)

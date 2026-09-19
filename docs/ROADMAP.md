@@ -1675,6 +1675,43 @@ who spent years around crystal, heard the voice, and did something with it.
   slow to notice, lethal up close. They are the fair melee enemy of the first hour and the stealth tutorial
   before the soldiers arrive. A maddened security member is a grunt that spawns as a loner, which 5f
   already treats differently (the mob rule).
+
+  **The maddened miner, grilled 2026-09-19 evening, built and verified in game the same night ("it
+  works"). Recorded in [PILLARS pillar 2](PILLARS.md#2-enhanced-combat) and in depth in
+  [MADDENED.md](MADDENED.md), which ends with the list for the grill that follows.** One correction
+  after the first sight of him: the chase's `ACT_RUN` had the real run animation, so he ran; it is the
+  walk now, per decision 2. What was built:
+  `monster_maddened` (`dlls/maddened.cpp`), `models/maddened.mdl` from `E:\CustomAssets\scripts\maddened_build.py`,
+  `CLASS_MADDENED` as row and column 15 of a relationship table grown to 16 (14 is the vehicle class, which
+  Valve defined and never gave a row), `sk_maddened_health` 50/60/70 and `sk_maddened_dmg_swing` 10/15/20,
+  the FGD entry with its `suited` choice, and shaft1's vein now holds him, unsuited, instead of the zombie.
+  His stand-ins are in [ART_DEBT.md](ART_DEBT.md#the-maddened-miner--the-players-body-gordons-face-a-black-crowbar-no-flinch).
+  Seven decisions:
+  1. **Body: the player's model, from the SDK sources** (`Player Models/player/`, [HL_SDK.md](HL_SDK.md)),
+     built by a script into `models/maddened.mdl`. Rejected: the zombie's rig (attacks exist, the mesh is
+     a corpse, the miner would be hand modelling from minute one) and the scientist's (a hundred
+     animations of a man at work, no attack, no source, a Bip02 nothing else shares). Bodygroups for the
+     head (bare or helmet) and the weapon (the pick: `reference_crowbar`, the crowbar mesh already skinned
+     to the hand bone, in the pickaxe's black), skin families for overalls and the suit, later the three
+     suit colours. One keyvalue, suited or not, sets head and skin together. The origin drops from the
+     player's 36 to 0. The swing is the player's crowbar swing with a damage event on the frame it lands.
+  2. **He walks, always.** The run is the cult's, later. Rejected: walk until seen, then run — the first
+     fight in the game should not be a sprint in the dark.
+  3. **Health 60, swing 15, reach 64, about 1.2 s a swing**, as skill cvars: three swings from the front,
+     two with a Melee Damage node, one Backstab.
+  4. **A relationship class of his own, everyone's enemy**, the player's, the soldiers', Xen's, allied with
+     his own kind, which the cult will share. Rejected: Xen leaving the touched alone, which contradicts
+     the rule that the voice plants ideas and controls nothing.
+  5. **The default Perception Profile for now**; no Disturbances; `CanBackstab` true. A slower profile
+     of his own (fill 0.75, drain 1.5) was proposed and deferred to when the cult needs faster ones.
+  6. **Sounds, all stand-ins:** the road's whisper (the slave's words) as his idle every 4–8 s, so what the
+     player heard down the tunnel is him and it is his tell in the dark; the crowbar's miss and body hit
+     pitched down; Barney's pain and death.
+  7. **The one at the vein in shaft1 is unsuited** — lost, a stray. The zombie's line in the map becomes his.
+
+  **Debt it creates, for ART_DEBT when built:** Gordon's face; the black crowbar as the pick until the
+  hand-made head exists; no flinch, since the player never flinches; a planted swing, since it is an
+  upper-body animation; the voice.
 - **The cult** is the organised form, with a leader. **Hostile everywhere, with one exception: ritual
   scenes**, where cultists stay passive until the player is noticed or crosses a map trigger.
 - **The ritual has to be the cultist's own state**, not a `scripted_sequence`: Suspicion is frozen while a
@@ -3544,7 +3581,7 @@ is designed, and may well change name first.
 | **Double jump** | The sixth Module; fills the legs Slot. | 2026-09-17. Name as plain as Dash and Hook; a fiction name for the hardware is open. |
 | **Wing**, **Piece** | A spoke of the hub; one of the things collected in the second half to take the facility home. | 2026-09-17. How many Pieces is open (three proposed). |
 | **Hard gate**, **Soft gate** | Sealed by construction and looking it; or an intended key plus at least one deliberate alternative. | 2026-09-17. Map-brief terms, not player-facing. |
-| **The maddened**, **the cult** | Staff who heard the voice and broke; the organised ones, with a leader. Neither is controlled — the Nihilanth only plants ideas. | 2026-09-17. Avoid *zombie*, *infected*, *thrall*. |
+| ~~**The maddened**, **the cult**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#the-humans) on 2026-09-19, when the maddened miner was built. | |
 | ~~**Stat node**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#skills) on 2026-09-14, when the Melee Route built the first nine. | |
 | **Defense Matrix** | The Juggernaut Route's stance: the Pulse key held for a second raises it, armour takes a far larger share of every hit while it is up, the player is slowed. Drops on release, at 6 s, or at zero armour. | Settled 2026-09-13. **Not a Shield** — that word is the Pulse's field in CONTEXT.md. |
 | ~~**Core**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#the-alien-route) on 2026-09-16, when Cores were built as a real ammo type. | |

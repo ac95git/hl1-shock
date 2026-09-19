@@ -369,7 +369,7 @@ greybox by design: everything below is a stand-in on purpose until the plan is w
 | Use | Asset | Borrowed from |
 | --- | --- | --- |
 | The Heart, on the seat and in the Grid | `item_heart` is not written; when it is, a stock model and a rendered Icon | — |
-| The maddened miner | `monster_zombie` at the vein in the old workings | the zombie; the monster is code still to write: a melee human on the scientist rig with the pick, untrained perception, backstabbable |
+| ~~The maddened miner~~ | ~~`monster_zombie` at the vein~~ **`monster_maddened` since the evening of 2026-09-19**, its own entry below | — |
 | The crew and security | `monster_scientist`, `monster_barney`, no lines | the stock cast |
 | The hoist | `func_station` with the charger-panel texture | the Station's own stand-in |
 | Rock, gravel, the vein | `-0TNNL_RCK1`, `-0OUT_GRVL1`, `-0OUT_RK3`, `CRYS_1A` | valve's WADs, minemap's set |
@@ -380,10 +380,6 @@ greybox by design: everything below is a stand-in on purpose until the plan is w
 | Mine ambience | `ambience/industrial2.wav`, `pumper.wav`, `rotormachine.wav`, `drips.wav`, `wind2.wav`, `alien_hollow.wav`, `the_horror2.wav` | vanilla; the pump and the fan are close to right |
 
 ### What's wrong with them
-- A zombie is the wrong body and the wrong pace for a man who heard the voice; the fight teaches the
-  pickaxe's timing either way.
-- **The maddened need two bodies**, suited and unsuited (Andrei, 2026-09-19: miners wear suits, and some
-  of the maddened still do), so the player learns nothing false about who wears one.
 - The Heart is the most important object in the game and has no shape. Amber, arranged, wrong for a mine.
 - **The missing man's voice is the road's whole point** and it is a vortigaunt's. The three whispers want a
   human voice half-saying words, the same voice the maddened miner then uses when he turns; the crew's two
@@ -392,8 +388,40 @@ greybox by design: everything below is a stand-in on purpose until the plan is w
   amber crystal vein, which is the first texture the WAD was created for.
 
 ### Done when
-The Heart has a model the Icon is rendered from, the maddened miner is a monster with both bodies, and the
-mine is textured from the mod's own WAD.
+The Heart has a model the Icon is rendered from, and the mine is textured from the mod's own WAD.
+
+## The maddened miner — the player's body, Gordon's face, a black crowbar, no flinch
+
+### Scope
+`monster_maddened` in `dlls/maddened.cpp`; `models/maddened.mdl`, built by `E:\CustomAssets\scripts\maddened_build.py`
+from the SDK's player sources. Grilled and built 2026-09-19 (ROADMAP.md, "The cult and the maddened").
+
+### Current stand-ins
+
+| Use | Asset | Borrowed from |
+| --- | --- | --- |
+| The body, both of them | the player model's mesh; the suit as shipped for the suited body, and the suit's thirteen shell textures washed to a work blue for the overalls | the SDK's `Player Models/player/` |
+| The face | `PLAYER_Face1.bmp` and its sides | Gordon Freeman's |
+| The pick | `reference_crowbar`, the crowbar mesh skinned to the hand, in the pickaxe's black | the crowbar; the real head is the hand-made `v_pickaxe` project, and goes into this model the same way when it exists |
+| The swing | `ref_swingdown_crowbar` / `ref_swingup_crowbar` at 12 fps | the player's upper-body crowbar swings: his legs stand planted while he hacks |
+| A flinch | none | the player never flinches, so neither does he: hits land without a reaction until one kills him |
+| Idle, walk, run, deaths, the fall | the player's | — |
+| The mutter | `aslave/slv_word1/2/4/5/7.wav` at half volume, pitched down, every 4–8 s | the alien slave's words: the voice, but a vortigaunt's |
+| Swing miss and hit | `weapons/cbar_miss1.wav`, `weapons/cbar_hitbod1-3.wav` at pitch 80–88 | the crowbar's |
+| Pain and death | `barney/ba_pain1-3.wav`, `barney/ba_die1-3.wav` | Barney's |
+
+### What's wrong with them
+- **He has Gordon's face**, on every one of them. A miner's face, and a few of them, is a texture set.
+- **The pick is a crowbar painted black**, the same stand-in the player's own pickaxe wears.
+- **He cannot flinch**, so the pickaxe fight has no feedback on him beyond blood and the health he loses.
+  A short flinch animation on this rig would fix it, and the player model would gain one too.
+- **The swing is planted**: a full-body swing with a step would read as a man, not a turret.
+- **His voice is a vortigaunt's.** The mutter is his tell in the dark and it should be a man half-saying
+  words — the same voice the road's whispers use, so the road and the man are one sound.
+
+### Done when
+A miner's face, a real pick, a flinch, a swing with a step, and a human mutter. Until then he is the
+player in the dark with a crowbar, which is at least the right silhouette.
 
 ## The melee alien grunt — armour it does not have, and no chainsaw
 

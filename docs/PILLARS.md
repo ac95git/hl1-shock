@@ -669,6 +669,16 @@ wherever it is hit, and the Backstab and Follow-Up work on it. It looks armoured
 plates, and the bare arm standing in for the chainsaw, are in [ART_DEBT.md](ART_DEBT.md). With it, for
 every alien grunt: a punch the Pulse deflects still shoves, but no longer plays the hit sound or draws blood.
 
+**The maddened miner, v1** — `monster_maddened`, `CMaddened` in `dlls/maddened.cpp`, built 2026-09-19 and
+**verified in game the same night** ("it works"). The mod's first human enemy: a miner who heard the
+voice, on the player's own body from the SDK sources (`models/maddened.mdl`, `maddened_build.py`), with a
+pick in his hand as a bodygroup and overalls or the suit as skins. The base AI's chase and melee, nothing
+scripted: he walks, always (the chase's run activity plays the walk), swings for `sk_maddened_dmg_swing`
+(10/15/20, `DMG_CLUB`) at 64 units, has `sk_maddened_health` (50/60/70), mutters the alien slave's words
+every 4–8 s as his tell in the dark, and is `CLASS_MADDENED`: everyone's enemy, allied with his own kind,
+on a relationship table grown to 16×16. The default Perception Profile, backstabbable, no flinch. The first
+stands at shaft1's vein, unsuited. [MADDENED.md](MADDENED.md) is the full record and the list for his grill.
+
 **The Panthereye, v1** — `monster_panthereye`, `CPanthereye` in `dlls/panthereye.cpp`, built 2026-09-18,
 **untested in game**. Half-Life's cut monster on HL: Extended's model and sounds (copied into `models/` and
 `sound/panthereye/`), with its AI written new from the roadmap's settled behaviour; v1's scope was grilled
