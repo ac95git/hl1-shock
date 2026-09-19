@@ -1112,6 +1112,7 @@
 // is refused with the reason on screen. Fires its target on every trade.
 // Fuel processor: 10 Shards for one Skill Point, exactly once (Uses is ignored).
 // Ammunition: 3 Shards for 20 uranium, or 3 for 2 Cores, Uses times (-1 for unlimited, 0 placed spent).
+// Hoist: takes the Heart (item_heart) once, gives nothing, fires its target - the cage in shaft1.
 // Prices live in game_shared/station_defs.h.
 @SolidClass base(Targetname, Target, Global, RenderFields, ZHLT) = func_station : "Station"
 [
@@ -1120,6 +1121,7 @@
 		0: "Fuel processor (Skill Point)"
 		1: "Ammunition station (uranium)"
 		2: "Ammunition station (Cores)"
+		3: "Hoist (takes the Heart, fires target)"
 	]
 	uses(integer) : "Uses (-1 unlimited)" : 3
 	_minlight(string) : "Minimum light level"
@@ -1783,6 +1785,9 @@
 // One Crystal Shard, the input to a func_station. Normally a func_deposit drops these; placing one
 // loose is for a secret. Model is a stand-in (a glass gib in an amber shell); see docs/ART_DEBT.md.
 @PointClass size(-16 -16 0, 16 16 16) base(Weapon, Targetx) studio("models/glassgibs.mdl") = item_shard : "Crystal Shard" []
+// The Heart: cut free in the cold open, carried in the Grid (three Cells, unique, never dropped) to the
+// hoist, a func_station of type 3. Fires its target when taken - shaft1's quake. Model is a stand-in.
+@PointClass size(-16 -16 0, 16 16 16) base(Weapon, Targetx) studio("models/crystal.mdl") = item_heart : "The Heart" []
 // Progression pickups. All three are banked counters rather than Item Types:
 // they occupy no Cells and a full Grid cannot refuse them.
 //
@@ -2554,7 +2559,15 @@
 	loadtime(string) : "Reload delay" : "0"
 ]
 
-@PointClass base(Targetname) size(-16 -16 -16, 16 16 16) = player_weaponstrip : "Strips player's weapons" []
+// Strips weapons and ammunition. With the flag, also the suit and everything in the Grid: the end of a
+// shift at the pithead, where kit and ore are handed in (docs/ROADMAP.md, "The cold open").
+@PointClass base(Targetname) size(-16 -16 -16, 16 16 16) = player_weaponstrip : "Strips player's weapons"
+[
+	spawnflags(flags) =
+	[
+		1 : "Also the suit and the Grid" : 0
+	]
+]
 
 @PointClass base(Targetname, Targetx) size(-16 -16 0, 16 16 72) color(255 0 255) = scripted_sentence : "Scripted Sentence"
 [

@@ -103,7 +103,13 @@ enum class EItemTypeId : int
 	// (docs/ROADMAP.md, "Mining and crystal shards").  Carried, not used.
 	Shard    = 6,
 
-	_Count   = 7, // keep last
+	// The Heart: the purest crystal of the anchor, cut free in the cold open
+	// and carried to the hoist (docs/ROADMAP.md, "The cold open").  Unique,
+	// three Cells wide, never dropped -- the one Entry the Grid cannot be
+	// freed of, which is the point of it being big.
+	Heart    = 7,
+
+	_Count   = 8, // keep last
 };
 
 inline constexpr int k_MaxItemTypes = static_cast<int>(EItemTypeId::_Count);
@@ -114,7 +120,7 @@ inline constexpr int k_MaxItemTypes = static_cast<int>(EItemTypeId::_Count);
 struct ItemTypeDef
 {
 	EItemTypeId id;
-	const char* classname;   // world entity to spawn on drop; nullptr = cannot be dropped
+	const char* classname;   // world entity: spawned on drop, named by the Prompt, keys the Grid Icon
 	const char* displayName; // shown in the UI
 	const char* spriteName;  // HUD sprite name; nullptr = renders without an icon
 	int         cellWidth;   // Cells occupied
@@ -123,26 +129,33 @@ struct ItemTypeDef
 	// than from a list of its own -- it had one, and the first item added after
 	// it was written silently shipped with no Use button.
 	bool        usable;
+	// Whether Drop is offered.  False for the one thing that must never be
+	// left in a corner: the server refuses the verb and the client hides it.
+	bool        droppable;
 };
 
 inline constexpr ItemTypeDef k_ItemTypes[k_MaxItemTypes] =
 {
-	//  id                      classname         display     sprite            cells  stack  usable
-	{ EItemTypeId::None,        nullptr,          "",         nullptr,          1,     0,     false },
-	{ EItemTypeId::Medkit,      "item_healthkit", "Medkit",   "item_healthkit", 1,     5,     true  },
+	//  id                      classname         display     sprite            cells  stack  usable  drop
+	{ EItemTypeId::None,        nullptr,          "",         nullptr,          1,     0,     false,  false },
+	{ EItemTypeId::Medkit,      "item_healthkit", "Medkit",   "item_healthkit", 1,     5,     true,   true  },
 	// Carried, not consumed -- deliberately have no Use.
-	{ EItemTypeId::Antidote,    "item_antidote",  "Antidote", nullptr,          1,     5,     false },
-	{ EItemTypeId::Keycard,     "item_security",  "Keycard",  nullptr,          1,     1,     false },
-	{ EItemTypeId::Battery,     "item_battery",   "Battery",  "item_battery",   1,     5,     true  },
+	{ EItemTypeId::Antidote,    "item_antidote",  "Antidote", nullptr,          1,     5,     false,  true  },
+	{ EItemTypeId::Keycard,     "item_security",  "Keycard",  nullptr,          1,     1,     false,  true  },
+	{ EItemTypeId::Battery,     "item_battery",   "Battery",  "item_battery",   1,     5,     true,   true  },
 	// Deliberately the same sprite the Infusion's status icon uses: the player
 	// sees a syringe in the Grid, uses it, and a syringe appears at the screen
 	// edge.  Ours, from sprites/hud.txt (utils/sprtool/icons/syringe.py).
-	{ EItemTypeId::Syringe,     "item_syringe",   "Health Syringe", "item_syringe", 1, 3,   true  },
+	{ EItemTypeId::Syringe,     "item_syringe",   "Health Syringe", "item_syringe", 1, 3,   true,   true  },
 	// A Stack of ten is exactly what a Fuel Processor takes for a Skill Point,
 	// so that price reads off the Grid without arithmetic.  No Use: a Shard is
 	// spent at a Station, never on its own.  Sprite from
 	// utils/sprtool/icons/shard.py.
-	{ EItemTypeId::Shard,       "item_shard",     "Crystal Shard", "item_shard",  1, 10,   false },
+	{ EItemTypeId::Shard,       "item_shard",     "Crystal Shard", "item_shard",  1, 10,   false,  true  },
+	// The Heart.  Three Cells so it is felt; not droppable so it cannot soft-lock
+	// the cold open; no Use, the hoist takes it.  The Shard's sprite stands in
+	// until it has a model (docs/ART_DEBT.md, "shaft1").
+	{ EItemTypeId::Heart,       "item_heart",     "The Heart", "item_shard",     3,     1,     false,  false },
 };
 
 // Returns nullptr for None or any out-of-range id.

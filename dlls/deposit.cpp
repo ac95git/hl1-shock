@@ -60,7 +60,7 @@
 
 // The arcs.  Vanilla's lightning sprite and zaps; the colour is the
 // Shard's amber, pushed toward white, so crystal and its discharge read as
-// one substance (ART_DEBT.md: the whole game's crystal hue is unsettled).
+// one substance (crystal is amber for the whole game, settled 2026-09-19).
 #define DEPOSIT_ARC_SPRITE "sprites/lgtning.spr"
 constexpr int k_ArcR = 255, k_ArcG = 200, k_ArcB = 120;
 

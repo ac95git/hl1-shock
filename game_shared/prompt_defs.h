@@ -56,6 +56,8 @@ enum class EPromptClass : uint8_t
 	StationUranium,
 	StationCores,
 	StationAmmoEmpty,
+	StationHoist,
+	StationHoistSent,
 
 	// Taken rather than used: the pickups that never reach the Grid, so the
 	// Item Type table cannot name them.  Sent as EEntryKind::Pickup's id.
@@ -134,6 +136,8 @@ static const PromptClassDef k_PromptClassDefs[] = {
 	{k_StationDefs[1].promptTitle, k_StationDefs[1].promptAction},          // StationUranium
 	{k_StationDefs[2].promptTitle, k_StationDefs[2].promptAction},          // StationCores
 	{k_StationDefs[1].promptTitle, nullptr, k_StationDefs[1].promptSpent},  // StationAmmoEmpty
+	{k_StationDefs[3].promptTitle, k_StationDefs[3].promptAction},          // StationHoist
+	{k_StationDefs[3].promptTitle, nullptr, k_StationDefs[3].promptSpent},  // StationHoistSent
 	{"Skill Point", "Take"},         // SkillPoint
 	{"Reset Token", "Take"},         // ResetToken
 	{"Row Grant", "Take"},           // RowGrant

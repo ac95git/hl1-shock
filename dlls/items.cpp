@@ -510,6 +510,48 @@ LINK_ENTITY_TO_CLASS(item_shard, CItemShard);
 
 
 //=========================================================
+// The Heart -- the purest crystal of the anchor, cut free in the cold open
+// and carried to the hoist (docs/ROADMAP.md, "The cold open").  Walk-over
+// like every pickup; a full Grid refuses it and it stays on the seat.  It
+// fires its target when taken, which is how shaft1's quake starts.
+//
+// Stand-in: Half-Life's Xen crystal prop at half its scenery size, in the
+// Shard's amber shell so the two read as one substance.  ART_DEBT.md,
+// "shaft1".
+//=========================================================
+class CItemHeart : public CItem
+{
+	void Spawn() override
+	{
+		Precache();
+		SET_MODEL(ENT(pev), "models/crystal.mdl");
+		pev->scale = 0.5f;
+		pev->renderfx = kRenderFxGlowShell;
+		pev->renderamt = 10;
+		pev->rendercolor = Vector(255, 160, 60);
+		CItem::Spawn();
+	}
+	void Precache() override
+	{
+		PRECACHE_MODEL("models/crystal.mdl");
+		PRECACHE_SOUND("debris/glass2.wav");
+	}
+	bool MyTouch(CBasePlayer* pPlayer) override
+	{
+		if (InventoryGiveItem(pPlayer, EItemTypeId::Heart) <= 0)
+			return false;
+
+		// The Shard's clink, pitched down: bigger.  Stand-in.
+		EMIT_SOUND_DYN(ENT(pPlayer->pev), CHAN_ITEM, "debris/glass2.wav", 0.8, ATTN_NORM, 0, 70);
+		AnnouncePickup(pPlayer, true);
+		return true;
+	}
+};
+
+LINK_ENTITY_TO_CLASS(item_heart, CItemHeart);
+
+
+//=========================================================
 // Progression pickups -- Skill Points, Reset Tokens and Row Grants.
 //
 // None of the three is an Item Type.  All are banked counters, so none

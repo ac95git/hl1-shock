@@ -302,6 +302,7 @@ void W_Precache()
 	// placed copy was already picked up was a Host_Error.
 	UTIL_PrecacheOther("item_syringe");
 	UTIL_PrecacheOther("item_shard");
+	UTIL_PrecacheOther("item_heart");
 	UTIL_PrecacheOther("item_skillpoint");
 	UTIL_PrecacheOther("item_resettoken");
 	UTIL_PrecacheOther("item_rowgrant");

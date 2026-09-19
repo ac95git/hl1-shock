@@ -139,6 +139,7 @@ void CInventoryContextMenu::Show(int x, int y, int entryIndex, EEntryKind kind, 
     m_iId = id;
 
     bool showUse = false;
+    bool showDrop = true;
     if (kind == EEntryKind::Weapon)
     {
         m_pUseButton->setText("Equip");
@@ -148,9 +149,11 @@ void CInventoryContextMenu::Show(int x, int y, int entryIndex, EEntryKind kind, 
     {
         // Only consumables do anything when used; a keycard is carried, not used.
         // Read from the shared Item Type table rather than listed here, so a new
-        // item cannot ship without its Use button.
+        // item cannot ship without its Use button.  The same table says whether
+        // it can be dropped at all: the Heart cannot.
         const ItemTypeDef* def = GetItemType(id);
         showUse = (def && def->usable);
+        showDrop = (def && def->droppable);
         m_pUseButton->setText("Use");
     }
 
@@ -159,7 +162,7 @@ void CInventoryContextMenu::Show(int x, int y, int entryIndex, EEntryKind kind, 
     m_pDropOneButton->setText(isStack ? "Drop 1" : "Drop");
 
     Button* order[CTX_MENU_BUTTONS] = { m_pUseButton, m_pDropOneButton, m_pDropAllButton };
-    const bool visible[CTX_MENU_BUTTONS] = { showUse, true, isStack };
+    const bool visible[CTX_MENU_BUTTONS] = { showUse, showDrop, showDrop && isStack };
 
     // Laid out over the visible buttons only, so a hidden option leaves no gap.
     int yPos = CTX_BTN_MARGIN;

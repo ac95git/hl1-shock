@@ -92,6 +92,8 @@ EPromptClass StationPromptClass(CBaseEntity* pEnt)
 		return pStation->Spent() ? EPromptClass::StationAmmoEmpty : EPromptClass::StationUranium;
 	case EStationType::AmmoCores:
 		return pStation->Spent() ? EPromptClass::StationAmmoEmpty : EPromptClass::StationCores;
+	case EStationType::Hoist:
+		return pStation->Spent() ? EPromptClass::StationHoistSent : EPromptClass::StationHoist;
 	default:
 		return EPromptClass::Generic;
 	}
@@ -164,11 +166,15 @@ void CStation::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useTy
 	}
 
 	// Every refusal before a single Shard is taken.
-	const int iHave = pPlayer->m_inventory.TotalOfItem(static_cast<int>(EItemTypeId::Shard));
+	const ItemTypeDef* pInput = GetItemType(def.input);
+	const int iHave = pPlayer->m_inventory.TotalOfItem(static_cast<int>(def.input));
 	if (iHave < def.shards)
 	{
 		char szWhy[96];
-		snprintf(szWhy, sizeof(szWhy), "Needs %d Crystal Shards - you have %d.\n", def.shards, iHave);
+		if (def.shards == 1)
+			snprintf(szWhy, sizeof(szWhy), "Needs %s.\n", pInput ? pInput->displayName : "the input");
+		else
+			snprintf(szWhy, sizeof(szWhy), "Needs %d %ss - you have %d.\n", def.shards, pInput ? pInput->displayName : "item", iHave);
 		Refuse(pPlayer, szWhy);
 		return;
 	}
@@ -195,7 +201,7 @@ void CStation::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useTy
 	}
 
 	// The trade.
-	if (InventoryTakeItem(pPlayer, EItemTypeId::Shard, def.shards) != def.shards)
+	if (InventoryTakeItem(pPlayer, def.input, def.shards) != def.shards)
 	{
 		// Unreachable after the count above; refused rather than half-paid if
 		// it ever is.
@@ -214,6 +220,10 @@ void CStation::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useTy
 
 	case EStationOutput::Ammo:
 		pPlayer->GiveAmmo(def.amount, def.ammoName, iAmmoMax);
+		break;
+
+	case EStationOutput::None:
+		// The target below is the whole of the output.
 		break;
 	}
 

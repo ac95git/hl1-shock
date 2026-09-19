@@ -639,7 +639,7 @@ bool InventoryDropEntry(CBasePlayer* pPlayer, int index, EEntryKind expectedKind
 	}
 
 	const ItemTypeDef* def = GetItemType(expectedId);
-	if (!def || !def->classname)
+	if (!def || !def->classname || !def->droppable)
 		return false;
 
 	const int wanted = dropAll ? inv.CountAt(index) : 1;

@@ -1,11 +1,15 @@
 #pragma once
 
+#include "inventory_defs.h"
+
 // ---------------------------------------------------------
 // Stations: world entities that take items in and give items out
-// (docs/ROADMAP.md, "Stations").  The input is always Crystal Shards; the
-// output is what the player cannot find enough of.  The choice a Station
-// poses is ammunition now, or power for good -- which is why there are
-// exactly these two kinds to begin with.
+// (docs/ROADMAP.md, "Stations").  The input is an Item Type -- Crystal
+// Shards for every trade, and the Heart for the hoist that ends the cold
+// open; the output is what the player cannot find enough of, or nothing
+// but the target fired.  The choice a Station poses is ammunition now, or
+// power for good -- which is why there are exactly these two kinds of
+// trade to begin with.
 //
 // A func_station names one row by its "stationtype" keyvalue; the recipe
 // lives here rather than as free-form keys on the entity, because
@@ -23,6 +27,7 @@ enum class EStationType : int
 	FuelProcessor = 0, // Shards into one Skill Point, once
 	AmmoUranium   = 1, // Shards into uranium
 	AmmoCores     = 2, // Shards into Cores
+	Hoist         = 3, // the Heart in, nothing out but the target: shaft1's cage goes up
 	_Count,
 };
 
@@ -30,12 +35,14 @@ enum class EStationOutput : int
 {
 	SkillPoint, // banked, like item_skillpoint; never needs room
 	Ammo,       // amount of ammoName, refused unless it all fits
+	None,       // the trade is the target it fires
 };
 
 struct StationDef
 {
 	EStationType   type;
-	int            shards;      // Crystal Shards one trade takes
+	EItemTypeId    input;       // the Item Type one trade takes
+	int            shards;      // how many of it (the column keeps its old name: it is Shards on every row but one)
 	EStationOutput output;
 	const char*    ammoName;    // Half-Life's ammo name, for EStationOutput::Ammo
 	int            amount;      // how much one trade gives
@@ -52,10 +59,12 @@ struct StationDef
 // with the numbers on its own row.
 inline constexpr StationDef k_StationDefs[] =
 {
-	//  type                          shards output                       ammo        amt uses fixed title                 action                                spent
-	{ EStationType::FuelProcessor,  10, EStationOutput::SkillPoint,     nullptr,    1,  1,   true,  "Fuel processor",      "Insert 10 Shards for a Skill Point", "Spent" },
-	{ EStationType::AmmoUranium,    3,  EStationOutput::Ammo,           "uranium",  20, 3,   false, "Ammunition station",  "Insert 3 Shards for 20 uranium",     "Empty" },
-	{ EStationType::AmmoCores,      3,  EStationOutput::Ammo,           "Cores",    2,  3,   false, "Ammunition station",  "Insert 3 Shards for 2 Cores",        "Empty" },
+	//  type                          input               n   output                       ammo        amt uses fixed title                 action                                spent
+	{ EStationType::FuelProcessor,  EItemTypeId::Shard, 10, EStationOutput::SkillPoint,  nullptr,    1,  1,   true,  "Fuel processor",      "Insert 10 Shards for a Skill Point", "Spent" },
+	{ EStationType::AmmoUranium,    EItemTypeId::Shard, 3,  EStationOutput::Ammo,        "uranium",  20, 3,   false, "Ammunition station",  "Insert 3 Shards for 20 uranium",     "Empty" },
+	{ EStationType::AmmoCores,      EItemTypeId::Shard, 3,  EStationOutput::Ammo,        "Cores",    2,  3,   false, "Ammunition station",  "Insert 3 Shards for 2 Cores",        "Empty" },
+	// The hoist at the bottom of shaft1: takes the Heart once and fires the cage.
+	{ EStationType::Hoist,          EItemTypeId::Heart, 1,  EStationOutput::None,        nullptr,    0,  1,   true,  "Hoist",               "Send the Heart up",                  "Sent" },
 };
 
 static_assert(sizeof(k_StationDefs) / sizeof(k_StationDefs[0]) == static_cast<int>(EStationType::_Count),

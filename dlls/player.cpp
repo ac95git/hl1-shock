@@ -5812,6 +5812,8 @@ void CDeadHEV::Spawn()
 }
 
 
+#define SF_STRIP_SUIT_AND_GRID 1
+
 class CStripWeapons : public CPointEntity
 {
 public:
@@ -5835,8 +5837,21 @@ void CStripWeapons::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE 
 		pPlayer = (CBasePlayer*)UTIL_GetLocalPlayer();
 	}
 
-	if (pPlayer)
-		pPlayer->RemoveAllItems(false);
+	if (!pPlayer)
+		return;
+
+	// With the flag, the end of a shift: suit, weapons and everything in the
+	// Grid are handed in (docs/ROADMAP.md, "The cold open").  The Entries go
+	// one by one rather than through Clear(), which would also forget the
+	// Rows the player has been granted.
+	const bool bEverything = (pev->spawnflags & SF_STRIP_SUIT_AND_GRID) != 0;
+	pPlayer->RemoveAllItems(bEverything);
+	if (bEverything)
+	{
+		for (int e = pPlayer->m_inventory.EntryCount() - 1; e >= 0; --e)
+			pPlayer->m_inventory.RemoveAt(e);
+		SendInventoryToClient(pPlayer);
+	}
 }
 
 
