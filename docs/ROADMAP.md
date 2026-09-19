@@ -8,11 +8,13 @@ build on, and list the questions that have to be answered before the first line 
 is built, its content moves into PILLARS.md and the entry here is deleted — this file only ever shrinks
 from the top.
 
-**Last updated:** 2026-09-19 (the cold open grilled and specified as the campaign's first map, `shaft1`:
-[The cold open](#the-cold-open--shaft1-grilled-2026-09-19) under Pillar 1 has the fifteen decisions, among
-them that miners wear suits and the player starts in one, the Heart is carried in the Grid, the suit choice
-is made at the hub, the escape is unequipped so the Pulse moves after it, crystal is amber. The spec is
-`maps/shaft1.rooms.txt` and the plan `maps/shaft1.plan.png`, not yet read by Andrei; no `.map` yet).
+**Last updated:** 2026-09-19, evening (the cold open grilled, specified and built as the campaign's first
+map, `shaft1`, through three cuts in a day: [The cold open](#the-cold-open--shaft1-grilled-2026-09-19)
+under Pillar 1 has the fifteen decisions, among them that miners wear suits, the Heart is carried in the
+Grid, the suit choice is made at the hub, the escape is unequipped so the Pulse moves after it, crystal is
+amber; the second cut was walked by Andrei and the third, built unattended on his notes — bigger, the dry
+as the locker room used twice, the road that foreshadows the miner — has its test rows there. The stock
+campaign's decompiles are a new [open question](#open-questions), 13).
 Before that, 2026-09-18, later (seven ideas from Andrei recorded, none grilled: the
 [energy rifle](#the-energy-rifle), [crafting](#crafting--idea-2026-09-18) and
 [vending machines](#vending-machines--idea-2026-09-18) as Stations, the Panthereye and Gargantua as
@@ -3251,9 +3253,12 @@ play-zero project — five pillars Playable and no level anyone has played. The 
 specified level in this document, needs none of the open questions answered, is linear, and uses only what
 is built. The decisions, in the order they were made:
 
-1. **Miners wear suits.** The player starts suited, in their own, **Agility**, with the pickaxe. Both are
-   given by the map at the spawn (`item_suit` with the short logon, `weapon_pickaxe`), no code. The
-   maddened are miners too, so some wear suits and some do not.
+1. **Miners wear suits.** The player's own is **Agility**, with the pickaxe. ~~Both are given by the map
+   at the spawn~~ **Amended in the third cut, 2026-09-19 evening, on Andrei's ask for a locker room:** the
+   player lands in overalls and takes both from their own open locker in the dry, on the station's
+   mezzanine, thirty seconds from the cage; the HUD wakes there. The same locker is where the kit is
+   handed in at the end (decision 12). No code either way. The maddened are miners too, so some wear
+   suits and some do not.
 2. **The suit choice is made at the hub**, under an hour in, not in a changeroom at minute one and not in
    the escape. Suit Variants are meant to carry specialization (stat bonuses or Skill unlocks — Andrei,
    2026-09-19; PILLARS still records them as cosmetic with codenames), so the choice has to be informed.
@@ -3278,9 +3283,11 @@ is built. The decisions, in the order they were made:
     miner, who is a monster still to write.
 11. **Two secrets**: a stope with two deposits off the haulage way, and a wordless shrine in a dead end.
     No Skill Point: the tree is the suit's fuel and the suit comes off at the top of the shaft.
-12. **Mined Shards are handed in with the kit** at the pithead: the strip empties the Grid too, and the
-    company owning the ore is the first showing of who owns what. **Later option, recorded**: a stash —
-    hide Shards, or deposit them for retrieval later in the campaign.
+12. **Mined Shards are handed in with the kit** ~~at the pithead~~ **in the dry at the pit bottom, in
+    this map (third cut)**: after the hoist, security sends the player on break, the hand-in button on
+    the locker strips suit, pick and Shards, and only then does the cage button work; the ride and map
+    two begin with no suit. The company owning the ore is the first showing of who owns what. **Later
+    option, recorded**: a stash — hide Shards, or deposit them for retrieval later in the campaign.
 13. **Start at the shaft bottom**, the cage just landed, and walk in under the lamps, so the lit half is
     seen before the dark half and the loop closes where it opened.
 14. The foreman fires the blast; the player's own act is cutting the Heart.
@@ -3300,6 +3307,39 @@ sets down every drift, timber in the old workings, from a new `sets` line in the
 the way back climbing 352 to a gallery over the station's south wall, out through a gate seen locked at
 the start and opened from behind. Props, posters, signage and the non-box shapes are his in J.A.C.K.,
 once the layout stops moving. **Debt it creates** is in [ART_DEBT.md](ART_DEBT.md#shaft1--the-cold-opens-stand-ins).
+
+**The third cut, built unattended the same evening, not verified in game.** Andrei's notes on the second:
+way bigger, in both senses — larger volumes so there is room for storytelling by hand, and more places
+with a reason each — the locker room, and a road before the first enemy long enough to foreshadow him
+("this guy is missing for some time already"). What the spec now holds beyond the second cut: the
+station on two storeys with the dry and the showers on the mezzanine (decisions 1 and 12 amended above);
+a junction on the first leg with a second working drift north to an abandoned face, roof down and two
+deposits left, where the missing man was last seen, and a pump room south over a sump; the ventilation
+raise behind mesh, its fan heard down the leg; a 640-by-640 chamber 704 tall with crystal pillars; the crew
+scripted with vanilla sentence groups as stand-ins, the worried line, the foreman's word, then the blast;
+the old workings' 1500-unit road before the vein, with drips and wind, three triggered whispers at growing
+volume (alien voices and the slaves' words standing in for the incantations), a flooded dip, the horror
+under the shrine, and past the vein a ladderway up to the missing man's camp; the cage button dead until
+the hoist and the hand-in have both fired, through two multisources. Every stand-in is in ART_DEBT.
+
+**Walk it — the test rows for the third cut**, in order:
+
+| Row | What should happen |
+| --- | --- |
+| Start | On the cage floor, no HUD. The cage button says nothing and does nothing (mastered) |
+| The dry | Up either stair to the mezzanine, through the door: the open locker holds the suit and the pick; the HUD wakes; the guard is there |
+| The station | Lamp room and crib under the mezzanine, office off the south, the hoist by the cage door, the gallery gate seen locked above the south wall; a hum |
+| Leg A | 256 wide, sets every 192, rails and two cars; the chainlink branch south with a lamp inside |
+| The junction | North: the drift to the abandoned face, its roof down at the end, two deposits, a lamp. South: the pump room, the sump's water, the pump running |
+| The descent | Three shallow ramps, two bends; the fan heard from the raise behind mesh on leg B; two more chainlink branches on leg C |
+| The face | The worried line, the foreman's word, the blast at about six seconds; the rock face breaks |
+| The chamber | Amber, tall, four pillars; mine a deposit, the unstable one flashes then arcs; the Heart walks over into the Grid as a three-wide Entry with no Drop button |
+| The quake | Rubble fills the breach; the south wall opens; autosave |
+| The road | Drips, then wind; a whisper far off, a second nearer, a third close; the flooded dip is ankle deep; the shrine's dead end and its sound; the vein and the zombie |
+| The camp | Past the vein, a ladder in the ceiling; a bedroll, a lamp, three Shards |
+| The climbs | Five ramps; out on the gallery; the gate opens from the button beside it; the drop into the station |
+| The hoist | Takes the Heart, the cage rises empty and returns; the line about the dry |
+| The hand-in | At the dry the guard speaks; the locker button strips everything and the Grid empties; the cage button now works and the top of the shaft ends the map |
 
 ### Interactable props
 
@@ -3550,3 +3590,7 @@ Ranked by how much else is waiting on the answer.
 11. **Where are the Dash and the double jump found?** Proposed: the assassin boss, and the vortigaunt's
     first hand-over after the teleport.
 12. **The names**: the player, the facility, the company, the Heart, and whether *miner* is the final word.
+13. **The decompiled stock maps** (2026-09-19, `E:\CustomAssets\maps\decompiled\`, the tram ride and
+    Anomalous Materials): a reference for proportions and construction to learn from, or brushwork to
+    lift, which is a licensing question first. See [MAP_WORKFLOW.md](MAP_WORKFLOW.md#decompiled-half-life-maps).
+    Not used until grilled.

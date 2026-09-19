@@ -373,7 +373,11 @@ greybox by design: everything below is a stand-in on purpose until the plan is w
 | The crew and security | `monster_scientist`, `monster_barney`, no lines | the stock cast |
 | The hoist | `func_station` with the charger-panel texture | the Station's own stand-in |
 | Rock, gravel, the vein | `-0TNNL_RCK1`, `-0OUT_GRVL1`, `-0OUT_RK3`, `CRYS_1A` | valve's WADs, minemap's set |
+| Steel sets, timber sets, lockers, chainlink, water, the ladder | `METAL_BORD07`, `OUT_WD`, `METAL_WALL05B`, `{CHAINLINK`, `{GATE`, `!WATER1`, `{LADDER1` | valve's WADs |
 | The shrine | a rock slab, five loose Shards, two candle lights | — |
+| **The incantations** heard down the old workings (third cut) | `ambience/alienvoices1.wav`, then `aslave/slv_word5.wav`, then `slv_word2.wav`, each once, louder | Xen ambience and the alien slave's words: thematically the voice, but a vortigaunt's, not a man's |
+| The crew's and the guard's lines | sentence groups `SC_PQUEST`, `BA_OK`, `BA_WAIT`, `BA_POK` | vanilla's scientist and Barney vocabulary; none says what the beat means |
+| Mine ambience | `ambience/industrial2.wav`, `pumper.wav`, `rotormachine.wav`, `drips.wav`, `wind2.wav`, `alien_hollow.wav`, `the_horror2.wav` | vanilla; the pump and the fan are close to right |
 
 ### What's wrong with them
 - A zombie is the wrong body and the wrong pace for a man who heard the voice; the fight teaches the
@@ -381,6 +385,9 @@ greybox by design: everything below is a stand-in on purpose until the plan is w
 - **The maddened need two bodies**, suited and unsuited (Andrei, 2026-09-19: miners wear suits, and some
   of the maddened still do), so the player learns nothing false about who wears one.
 - The Heart is the most important object in the game and has no shape. Amber, arranged, wrong for a mine.
+- **The missing man's voice is the road's whole point** and it is a vortigaunt's. The three whispers want a
+  human voice half-saying words, the same voice the maddened miner then uses when he turns; the crew's two
+  lines and the guard's two want to say what they mean ("he's been gone since second shift", "hand it in").
 - The mine has no textures of its own: rock, timber or steel sets, mesh, the rail, the lamps, and the
   amber crystal vein, which is the first texture the WAD was created for.
 

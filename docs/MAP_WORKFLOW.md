@@ -131,6 +131,23 @@ of `greybox.py`.
 | `light x y z [R G B BRIGHT] [style=N]` | A `light`; default `255 255 255 200` |
 | `node x y z` | An `info_node`; monsters need them |
 
+## Decompiled Half-Life maps
+
+Since 2026-09-19 Andrei keeps decompiles of the stock campaign under `E:\CustomAssets\maps\decompiled\`,
+made with the Half-Life Unified SDK's map decompiler (the log says "Decompiling map using Tree strategy",
+which is that tool's name for its brush-rebuilding mode). Each map comes as `<name>.map` in Valve 220, a
+`<name>_generated.wad` holding the textures the tool pulled out of the BSP, and a `<name>.log`. Present so
+far: the tram ride, `c0a0` to `c0a0e`, and Anomalous Materials, `c1a0` to `c1a0e` — the locker room, the
+lab corridors, the test chamber.
+
+**Not yet used, and whether to use them is an open grill** (ROADMAP.md, "Open questions"). The two
+readings: a reference for proportions and construction, to be read with `mapplan.py` and in J.A.C.K. and
+learned from (how wide a Black Mesa corridor is, how a tram track is built from `func_tracktrain` and
+`path_track`, how the locker room is furnished); or brushwork to lift into this mod's maps, which is
+Valve's copyrighted level geometry and a licensing question before it is a design one. A decompile is
+never a source of truth here: the `.map` it writes is a reconstruction, with the tool's own warnings about
+tiny volumes and unsplit brushes in the log.
+
 ## The mod's WAD
 
 Settled 2026-09-18. The mod has used valve's textures alone; the first it needs of its own is the
