@@ -673,7 +673,8 @@ every alien grunt: a punch the Pulse deflects still shoves, but no longer plays 
 **verified in game the same night** ("it works"). The mod's first human enemy: a miner who heard the
 voice, on the player's own body from the SDK sources (`models/maddened.mdl`, `maddened_build.py`), with a
 pick in his hand as a bodygroup and overalls or the suit as skins. The base AI's chase and melee, nothing
-scripted: he walks, always (the chase's run activity plays the walk), swings for `sk_maddened_dmg_swing`
+scripted: he walks unaware and runs when he chases (the grill said walk; the walking one read as no threat
+in play and the decision reversed the same night), swings for `sk_maddened_dmg_swing`
 (10/15/20, `DMG_CLUB`) at 64 units, has `sk_maddened_health` (50/60/70), mutters the alien slave's words
 every 4–8 s as his tell in the dark, and is `CLASS_MADDENED`: everyone's enemy, allied with his own kind,
 on a relationship table grown to 16×16. The default Perception Profile, backstabbable, no flinch. The first

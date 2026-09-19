@@ -1678,9 +1678,8 @@ who spent years around crystal, heard the voice, and did something with it.
 
   **The maddened miner, grilled 2026-09-19 evening, built and verified in game the same night ("it
   works"). Recorded in [PILLARS pillar 2](PILLARS.md#2-enhanced-combat) and in depth in
-  [MADDENED.md](MADDENED.md), which ends with the list for the grill that follows.** One correction
-  after the first sight of him: the chase's `ACT_RUN` had the real run animation, so he ran; it is the
-  walk now, per decision 2. What was built:
+  [MADDENED.md](MADDENED.md), which ends with the list for the grill that follows.** Decision 2 reversed
+  on play: he runs. What was built:
   `monster_maddened` (`dlls/maddened.cpp`), `models/maddened.mdl` from `E:\CustomAssets\scripts\maddened_build.py`,
   `CLASS_MADDENED` as row and column 15 of a relationship table grown to 16 (14 is the vehicle class, which
   Valve defined and never gave a row), `sk_maddened_health` 50/60/70 and `sk_maddened_dmg_swing` 10/15/20,
@@ -1695,8 +1694,10 @@ who spent years around crystal, heard the voice, and did something with it.
      to the hand bone, in the pickaxe's black), skin families for overalls and the suit, later the three
      suit colours. One keyvalue, suited or not, sets head and skin together. The origin drops from the
      player's 36 to 0. The swing is the player's crowbar swing with a damage event on the frame it lands.
-  2. **He walks, always.** The run is the cult's, later. Rejected: walk until seen, then run — the first
-     fight in the game should not be a sprint in the dark.
+  2. ~~**He walks, always.** The run is the cult's, later. Rejected: walk until seen, then run — the first
+     fight in the game should not be a sprint in the dark.~~ **Reversed on play the same night: he runs
+     when he chases.** The first build ran by accident, and it worked; the corrected walking one "looks
+     like no threat" (Andrei). So the rejected option is the one built: walk unaware, run when acquired.
   3. **Health 60, swing 15, reach 64, about 1.2 s a swing**, as skill cvars: three swings from the front,
      two with a Melee Damage node, one Backstab.
   4. **A relationship class of his own, everyone's enemy**, the player's, the soldiers', Xen's, allied with

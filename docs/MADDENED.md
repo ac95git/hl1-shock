@@ -20,7 +20,7 @@ is seen.
 | # | Decision | In the code |
 | --- | --- | --- |
 | 1 | The player's body, from the SDK sources | `models/maddened.mdl`, built by `E:\CustomAssets\scripts\maddened_build.py` |
-| 2 | He walks, always | `ACT_RUN` is mapped onto the walk animation in the QC; the chase asks for a run and gets the walk |
+| 2 | ~~He walks, always~~ **He runs when he chases** — reversed on play the same night: the walking miner "looks like no threat" (Andrei), the running one had already worked | `run` is the player's `new_run` at 40 fps under `ACT_RUN`; the base AI's chase uses it. Unaware, he stands and walks |
 | 3 | Health 60, swing 15, reach 64, about a second a swing | `sk_maddened_health` 50/60/70, `sk_maddened_dmg_swing` 10/15/20; the base AI's 64-unit melee test; the swing at 12 fps over 13 frames |
 | 4 | Everyone's enemy, allied with his kind | `CLASS_MADDENED` (15), a new row and column in the relationship table |
 | 5 | The default Perception Profile, backstabbable | Nothing overridden: `GetPerceptionProfile` returns the default and `CanBackstab` is true on every monster |
@@ -59,7 +59,7 @@ What the class supplies:
 - **Skill cvars** in `dlls/game.cpp`, read in `dlls/gamerules.cpp` into `gSkillData.maddenedHealth` and
   `maddenedDmgSwing`, declared in `dlls/skill.h`.
 
-What he does not have, on purpose or not yet: no run (decision 2), no flinch (the rig has no flinch
+What he does not have, on purpose or not yet: no flinch (the rig has no flinch
 animation, so a hit is blood and a number until one kills him), no Disturbance hearing (only Trained
 profiles listen), no ranged anything, no squad, no ritual state (the cult's, and it has to be his own
 spawn state rather than a script, because a scripted monster's Suspicion is frozen), no schedule of his
@@ -86,11 +86,10 @@ any monster on the player's rig.
   gloves and boots are the same on both. The three suit colours are not on him yet; when they are, they
   are three more families on the same textures, the way the suit pickup has them.
 - **Sequences and activities.** `idle` and `idle2` (`new_idle`, `new_idle2`, ACT_IDLE), `walk` (`new_walk`,
-  ACT_WALK, linear movement extracted), `run` (`new_walk` again, ACT_RUN: decision 2), `swing_down` and
+  ACT_WALK, linear movement extracted), `run` (`new_run`, ACT_RUN, 40 fps), `swing_down` and
   `swing_up` (`ref_swingdown_crowbar`, `ref_swingup_crowbar`, ACT_MELEE_ATTACK1, event 1 at frame 5, 12
   fps), `die_simple`, `die_backward`, `die_forward` (`player_die1`), `die_headshot`, `die_gutshot` (the
-  player's, with their body-drop events), `falling` (ACT_FALL). `new_run.smd` is copied into the source
-  folder and unused, for the cult.
+  player's, with their body-drop events), `falling` (ACT_FALL).
 - **The QC otherwise** is the player's: the Character Studio bone renames, the three hand attachments,
   the four spine controllers, the hitboxes. The origin is the feet (no `$origin`), where the player's is
   36 up at the hull's centre.
@@ -110,7 +109,7 @@ with `suited` 0 or 1, and `info_node`s, since he walks the node graph like any m
 | Swing | 15 on medium, `DMG_CLUB`; seven hits on an unsuited player with 100 health |
 | Reach | 64 to decide to swing, a 70-unit trace when it lands |
 | Cadence | about 1.1 s a swing, then the AI re-evaluates |
-| Walk | `new_walk` at 26 fps, its own extracted speed |
+| Walk, run | `new_walk` at 26 fps unaware; `new_run` at 40 fps in the chase; each its own extracted speed |
 | Mutter | every 4–8 s, half volume, pitch 85–95 |
 | Notice | the default profile: fill 1.0, drain 1.0; no Disturbances |
 
@@ -118,8 +117,10 @@ with `suited` 0 or 1, and `info_node`s, since he walks the node graph like any m
 
 Not decided, or decided for now and worth revisiting once he has been fought a few times:
 
-- **The run.** Decision 2 keeps him walking; the cult was to run. Whether the cult is a spawnflag on him or
-  a class of its own, and whether a maddened ever runs (when hurt, when close).
+- **The run, now that he has it.** He runs in the chase since the first fight. What the cult then has that
+  he does not, and whether the cult is a spawnflag on him or a class of its own. Whether the first fight in
+  the game, a man sprinting at the player in the dark with a pick, wants a beat of warning before it —
+  the mutter already is one.
 - **The flinch.** He takes hits without reacting. A short flinch on this rig would also give the player
   model one. Or a rule that a Backstab-arc hit staggers him and a frontal one does not.
 - **The profile.** A slower one of his own (fill 0.75, drain 1.5) was proposed and deferred; the cult and
