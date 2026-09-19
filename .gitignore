@@ -6,3 +6,6 @@
 .vs
 # Python tool caches (utils/sprtool, utils/mdltool)
 __pycache__/
+
+# J.A.C.K.'s rolling backup of the previous .map, not an editor format (docs/MAP_WORKFLOW.md)
+*.max
