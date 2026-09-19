@@ -64,6 +64,8 @@ Under `utils/maptool/`. Python 3, Pillow for the plan.
 | `wadpack.py OUT.wad PNG_DIR [--install]` / `--list X.wad [--dump DIR] [--limit N]` | Packs a folder of PNGs into a WAD3, one miptex per file: each texture quantised to its own 256-colour palette, the three smaller mips box-filtered and mapped back onto it, a `{` name treated as masked with alpha 0 at index 255 in the engine's blue. `--install` copies to `topmod/`. `--list` reads a WAD back; run on `halflife.wad` it reports the layout the engine expects (mips, a `256`, the 768-byte palette, two bytes of padding), and ours matches it. Needs Pillow. |
 | `greybox_proving.py OUT.map` | Wrote the proving map's greybox from a room list. Every interior volume gets six wall slabs; every interior volume is subtracted from every slab; volumes that touch are therefore open to each other and nothing else seals the map. **One-shot**: once the `.map` has been edited in J.A.C.K., re-running it overwrites the edits. A new map gets a copy of the script with its own room list, not this one re-parameterised. |
 | `greybox_minemap.py OUT.map` | Wrote `minemap` (2026-09-18), the test bed for mining and Stations, with the same construction and its own room list: a hall with the kit and the three Stations, a closet of forty keycards that fills the Grid, a tunnel of five stable deposits, a chamber with two unstable veins, a wall of cover and two monsters to lure, and an arena behind a door with a mixed squad of melee and hornet alien grunts. Deposits and Stations are brush entities written straight into the text. One-shot in the same way — and **spent**: J.A.C.K. has since saved `minemap.map`, and the Panthereye's den west of the hall was added to the `.map` text by a one-off script that cut the doorway out of the wall brush in its way, so the `.map` is the source now. |
+| `mapsemdiff.py OLD.map NEW.map` | **The reader-back for a J.A.C.K. save.** Compares two maps by meaning, not by text: every brush as its computed vertices and textures, every entity as its classname and keyvalues, and prints only what was removed, added or moved between entities. J.A.C.K. rewrites the whole file on save, so `git diff` shows thousands of lines for one pillar; this shows the pillar. Run against `git show HEAD:maps/<name>.map` after every hand edit, before compiling. |
+| `brushes_near.py MAP x0 y0 z0 x1 y1 z1` | Lists every brush with a vertex inside the box: its owner entity and brush number (the number `Ctrl+Shift+G` jumps to in J.A.C.K.), faces, computed vertices, extents, which axis a prism or point runs along, and how many vertices are off the 16 grid. This is how a wrong-way cylinder was diagnosed from the terminal. |
 | `mapplan.py IN.map OUT.png [--cuts Z,Z]` | Prints a classname count and draws a floor plan: a horizontal section at each cut height (one per storey; `40,-216` for the proving map), so walls, pillars, crates and stairs show and floors and ceilings do not. Brush entities outlined and labelled, pickups and monsters as dots. This is how the agent checks a map. `greybox.py` calls its `parse_text` and `draw` on a map it has not written yet. |
 
 Outside the repo, the compilers above, `Wally`-class WAD editors if one is ever wanted (none is installed
@@ -204,6 +206,9 @@ here and checked by a compile or a plan; "not" means either impossible from the 
 - **Anything that is not a box.** Ramps, arches, angled walls, vertex-edited brushes. The generator does
   not make them; the plan draws them as their bounding box; a hand-written non-axis-aligned plane has not
   been tried and is easy to get wrong (the point order sets the normal, and a flipped normal is a leak).
+  **The division that works, from 2026-09-20:** Andrei builds the shape in J.A.C.K. from steps the agent
+  writes, and the agent reads the save back with `mapsemdiff.py` and `brushes_near.py`, then compiles.
+  The record of those sessions is [CRAFT_LOG.md](CRAFT_LOG.md).
 - **Texturing and lighting as craft.** Alignment, scale, trims, which textures suit a room, light colour
   and falloff. The agent can place a `light` and choose a name that exists; it cannot judge the look.
   Painting a texture is Andrei's too; the agent packs it.
@@ -227,6 +232,7 @@ here and checked by a compile or a plan; "not" means either impossible from the 
 For a map J.A.C.K. has already saved. A new map starts with [the loop above](#the-loop-for-a-new-map).
 
 1. Edit `maps/<name>.map` — in J.A.C.K. (then export), or in the text for entity work.
+   After a J.A.C.K. save, `mapsemdiff.py` against `HEAD` says what actually changed.
 2. Copy it to `topmod/maps/`. Compile: CSG and BSP for layout, all four for anything the player will judge.
 3. Read the log for `LEAK`, `Error`, `Warning`, and that RAD reports the expected number of direct lights.
 4. Draw the plan if the layout moved; compare against the brief's placement table.
