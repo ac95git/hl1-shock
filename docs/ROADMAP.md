@@ -8,39 +8,13 @@ build on, and list the questions that have to be answered before the first line 
 is built, its content moves into PILLARS.md and the entry here is deleted — this file only ever shrinks
 from the top.
 
-**Last updated:** 2026-09-19, evening (the cold open grilled, specified and built as the campaign's first
-map, `shaft1`, through three cuts in a day: [The cold open](#the-cold-open--shaft1-grilled-2026-09-19)
-under Pillar 1 has the fifteen decisions, among them that miners wear suits, the Heart is carried in the
-Grid, the suit choice is made at the hub, the escape is unequipped so the Pulse moves after it, crystal is
-amber; the second cut was walked by Andrei and the third, built unattended on his notes — bigger, the dry
-as the locker room used twice, the road that foreshadows the miner — has its test rows there. The stock
-campaign's decompiles are a new [open question](#open-questions), 13).
-Before that, 2026-09-18, later (seven ideas from Andrei recorded, none grilled: the
-[energy rifle](#the-energy-rifle), [crafting](#crafting--idea-2026-09-18) and
-[vending machines](#vending-machines--idea-2026-09-18) as Stations, the Panthereye and Gargantua as
-[kin](#panthereye), [the Pulse against sustained fire](#the-pulse-against-sustained-fire), the
-[Nihilanth finisher as an ending choice](#the-nihilanth), and [soldiers who shoot on the move](#soldiers);
-then the rifle fires Cores, Cores become green batteries that give off light, and the Half-Life SDK's
-model sources were found — [HL_SDK.md](HL_SDK.md) — which answered the soldiers' and the Panthereye's model
-questions).
-Before that, 2026-09-18 overnight (built, and verified in game by Andrei the same morning except the
-Pulse tail's visual, which is open: the Carbon Pickaxe, crystal Shards,
-deposits and unstable deposits, the first two Stations, the Pulse's tail, the base Dash in the air, the
-melee alien grunt; their entries below are trimmed to what is left, and the test rows are in
-[MORNING_CHECKLIST.md](MORNING_CHECKLIST.md)). Before that, 2026-09-17 (the game shaped as a whole in a 29-question grill and reconciled here:
-[The shape of the game](#the-shape-of-the-game) is new and is read first; stealth is swallowed by combat;
-the double jump is a sixth Module, the base Dash works in the air and the directional Air Dash is gated
-behind the double jump; the Pulse gains a half-damage tail; the Hook drops to low priority; mining,
-Stations and Transmissions are shaped; the bosses have places and the Nihilanth a fight. No code). Before
-that, 2026-09-16 (branch `hl-shock` — one wave from five parallel agents on the Juggernaut
-foundation, reviewed and built together: the Stealth region's effects and the Night Vision Module that
-reveals them, moved into PILLARS pillar 6; the Hive nodes, into pillar 2; the Alien Route's first slice —
-Cores, the alien Module, `monster_ghost_slave` and the summon's left click — into pillars 2 and 3, with the
-Route's entry below trimmed to what is still open. None of it is verified in game yet. Earlier the same
-day, the Defense Matrix built as shaped, with Matrix on Kill and Decaying Armor, on a `+pulse`/`-pulse`
-pair that times the hold; the Juggernaut is whole and its entry below is the record; earlier still the
-Status page shaped in a grill and built: the Modules as fixed Slots on a doll of the suit, and the build's
-final stats beside them, in STATUS_PANEL.md; its entry moved to PILLARS pillar 5). Before that, 2026-09-14 (the Skill Tree becomes a matrix: Stat nodes as roads, every node one point, not completable, settled in SKILL_TREE.md and the Melee Route built whole on it the same day; the fitted node icon draw, the 256-id ceiling and the layout cvars too; later the same day, without a grill, the Weapon Specialist Route whole, the katana's blade as energy, Fast Reload on the shotgun, the move-wait leak fixed, the edge-adjacency overlay; the day before, all seven Routes shaped, the Dash and alien Modules with them, the katana reworked on paper, four Skills cut)
+**Last updated:** 2026-09-20, curated. Every statement that a later addition had amended, reversed or
+struck through now says the settled thing once; a rejected alternative stays only where it is a reason
+not to propose it again. The day-by-day changelog that used to sit here is `git log -- docs/ROADMAP.md`.
+
+**How to add to this file.** Change the sentence, do not append a correction to it. A decision that
+reverses an earlier one replaces it, with the earlier one kept in a clause only if someone might propose
+it again. Strike-through is for nothing.
 
 ## Shape legend
 
@@ -58,16 +32,12 @@ By pillar, because that is how the mod is already described and a feature that d
 is a feature that needs justifying. Two structural calls were made in writing this, both of which change
 PILLARS.md:
 
-**Stealth becomes pillar 6.** It is not "enhanced combat". It is the alternative to combat, and it moves
-enemy perception, player movement, weapon choice and level layout at the same time. Filing it under pillar 2
-would make that pillar mean "everything you do to things that are alive", which is a category and not a
-pillar. It gets a row in the PILLARS.md summary at **Not started**, the same as Exploration.
-
-**Amended 2026-09-17: stealth is swallowed by combat.** The reasoning above was about where the *work*
-files, and that stands — the section below keeps its name and PILLARS.md keeps its section 6. What changed
-is the ranking: the mod is exploration first, by far, then RPG, then combat, and stealth is one of the
-three ways to solve an encounter (fight it, sneak it, go around it), not something ranked beside them. See
-[The shape of the game](#the-shape-of-the-game).
+**Stealth is pillar 6 for filing, and inside combat for ranking.** It moves enemy perception, player
+movement, weapon choice and level layout at the same time, so its *work* files under a section of its own
+here and in PILLARS.md rather than under pillar 2, which would otherwise mean "everything you do to
+things that are alive". But it is not ranked beside the other pillars (settled 2026-09-17): the mod is
+exploration first, by far, then RPG, then combat, and stealth is one of the three ways to solve an
+encounter — fight it, sneak it, go around it. See [The shape of the game](#the-shape-of-the-game).
 
 **Modules do not become a pillar.** A Module is a thing you find that changes what you can do, which is
 what pillar 3 already is; the Pulse is the shape it takes, and the Modules tab is a pillar 5 concern. Making
@@ -80,15 +50,15 @@ Stations are pillar 1; sounds and icons are not roadmap items at all — see [Ar
 ## Contents
 
 - [The shape of the game](#the-shape-of-the-game) — settled 2026-09-17; the rules every entry below answers to
-- [The prediction problem](#the-prediction-problem) — solved for weapons, still open for movement
-- [Maps](#maps) — the other one
+- [The prediction problem](#the-prediction-problem) — solved for weapons; movement has its route, the physics key the Dash proved
+- [Maps](#maps) — no longer a blocker
 - [Pillar 6: Stealth](#pillar-6-stealth)
 - [Pillar 2: Weapons](#pillar-2-weapons)
 - [Pillar 2: Monsters and bosses](#pillar-2-monsters-and-bosses) — the cult, the maddened, Xen hell and where the bosses sit, 2026-09-17; the alien flyer, 2026-09-20
 - [Pillar 2: Decapitation](#pillar-2-decapitation) — a design to port, already read
 - [Pillar 3: Modules](#pillar-3-modules)
-- [Pillar 4: Routes](#pillar-4-routes) — builds; all seven Routes shaped; four Skills cut
-- [Pillar 1: Records](#pillar-1-records) — Ready: the Prompt on everything usable, then Records read with +use and kept in a fourth tab; audio later
+- [Pillar 4: Routes](#pillar-4-routes) — builds; all seven Routes shaped and built on the board, the Alien's ultimate and every number still open
+- [Pillar 1: Records](#pillar-1-records) — built 2026-09-18: the Prompt on everything usable, Records read with +use and kept in a fourth tab; audio later
 - [Pillar 1: The world](#pillar-1-the-world) — the facility, **the cold open (`shaft1`, grilled 2026-09-19)**, Xen, mining and Shards, Stations
 - [Art and audio](#art-and-audio)
 - [Proposed vocabulary](#proposed-vocabulary)
@@ -168,22 +138,24 @@ maddened**; see [Monsters and bosses](#pillar-2-monsters-and-bosses).
 
 ### What it made urgent, and what it did not
 
-Exploration is ranked first and PILLARS has it at **Not started**. What this session exposed as missing,
-roughly in the order the vertical slice needs it: the [Pulse's tail](#the-pulses-tail--settled-2026-09-17-not-built)
-and the base Dash in the air (both small); [the Prompt and Records](#pillar-1-records) in a fourth
-tab; [deposits, shards and Stations](#mining-and-crystal-shards); the maddened miner; the slave boss and
-the hub's vortigaunt; the hub and wing one as maps. Not urgent: the Hook, the double jump (second half),
-everything in Xen, the endings.
+Exploration is ranked first, and PILLARS had it at **Not started** until Records landed. What the session
+exposed as missing, roughly in the order the vertical slice needs it, with what has happened since: the
+[Pulse's tail](#the-pulses-tail--settled-2026-09-17-built-2026-09-18-overnight-visual-open) and the base
+Dash in the air (built 2026-09-18); [the Prompt and Records](#pillar-1-records) (built 2026-09-18);
+[deposits, shards and Stations](#mining-and-crystal-shards) (built 2026-09-18); the maddened miner (built
+2026-09-19); the slave boss and the hub's vortigaunt; the hub and wing one as maps. Not urgent: the Hook,
+the double jump (second half), everything in Xen, the endings.
 
-**Amended 2026-09-19:** the first real map is not the hub but [the cold open](#the-cold-open--shaft1-grilled-2026-09-19),
-`shaft1`, chosen because it is the most fully specified level in this document, needs no open question
-answered, is linear, and uses only what is built. Everything after it in the list above stands.
+**The first real map is not the hub but [the cold open](#the-cold-open--shaft1-grilled-2026-09-19)**,
+`shaft1` (2026-09-19): the most fully specified level in this document, needing no open question answered,
+linear, and using only what is built. It is built, walked, and in Andrei's hands in J.A.C.K.; the hub and
+wing one come after it.
 
 ---
 
 ## The prediction problem
 
-**Shape: Solved for weapons. Still open for movement.**
+**Shape: Solved for weapons; movement goes through the physics key, which the Dash proved.**
 
 This was seven features on one blocker. The weapon half is done — see
 [PILLARS pillar 4](PILLARS.md#4-skill-trees) for what was built and
@@ -196,78 +168,55 @@ What that leaves:
 
 | Feature | Where it lives | Still blocked on |
 | --- | --- | --- |
-| Dash | [Modules](#pillar-3-modules) | `pm_shared/` — but the long jump's physics-key route reaches it |
-| Hook | [Modules](#pillar-3-modules) | `pm_shared/` — same route. Low priority since 2026-09-17 |
-| Double jump | [Modules](#pillar-3-modules), new 2026-09-17 | `pm_shared/` — same route: a physics key gating a second impulse in `PM_Jump`, the long jump's own shape |
+| Dash | [Modules](#pillar-3-modules) | nothing — **built 2026-09-15** on the physics-key route below, in the air since 2026-09-18 |
+| Hook | [Modules](#pillar-3-modules) | `pm_shared/` — the same route. Low priority since 2026-09-17 |
+| Double jump | [Modules](#pillar-3-modules), new 2026-09-17 | `pm_shared/` — the same route: a physics key gating a second impulse in `PM_Jump`, the long jump's own shape |
 | Sprint speed (`SprintSpeed`, id 6) | cut from the tree for good, 2026-09-13 | nothing — cut by design, see the [Routes](#pillar-4-routes) |
 | High jump (`HighJump`, id 5) | cut from the tree for good, 2026-09-13 | nothing — cut by design, see the [Routes](#pillar-4-routes) |
-| ~~Crowbar swing speed (`CrowbarSpeed`, id 11)~~ | **built 2026-09-14** as Melee Speed, with the Melee Route | nothing — the halving rule was dropped and the Skill is in the tree |
-| ~~Draw speed~~ | **built 2026-09-14** as Quick Draw, with the animation sped up to match **2026-09-15** | nothing |
 
-**The movement four are a genuinely different problem.** `pm_shared/` runs from `playermove_t`, not from
+Melee Speed (2026-09-14, with the halving rule dropped) and Quick Draw (2026-09-14, the animation sped up
+to match on 2026-09-15) used to be rows here and are built; see [PILLARS pillar 4](PILLARS.md#4-skill-trees).
+
+**Movement is a genuinely different problem.** `pm_shared/` runs from `playermove_t`, not from
 `CBasePlayer`, so it cannot reach `m_skills` at all — the fix above does not extend to it.
 
-**But a route into it already exists, and the base game uses it.** The long jump module is a predicted
-movement verb gated on player state: the server sets a physics key (`"slj"`, `dlls/items.cpp:584`) and
-`PM_Jump` reads it from `pmove->physinfo` (`pm_shared/pm_shared.cpp:2662`). The same mechanism can carry a
-Module or a movement Skill. Noticed 2026-09-12 while shaping Modules; not yet tried for anything new.
-
-**Crowbar swing speed is no longer a prediction problem**, and the timer problem that sat behind it is gone
-too: `CCrowbar::Swing` used to read `m_flNextPrimaryAttack` to halve a follow-up swing, and the Melee Route
-dropped that rule on 2026-09-13, so every swing is full damage (found stale here on 2026-09-18).
+**But a route into it exists, the base game uses it, and the Dash proved it.** The long jump module is a
+predicted movement verb gated on player state: the server sets a physics key (`"slj"`, `dlls/items.cpp`)
+and `PM_Jump` reads it from `pmove->physinfo`. The Dash rides the same route (`DASH_KEY_*`, written by
+`CBasePlayer::DashSync`, read in `pm_shared/pm_shared.cpp`), and so does Phantom's speed. The Hook and
+the double jump go the same way.
 
 ---
 
 ## Maps
 
-**Shape: No longer a blocker, as of 2026-09-15.** Two decisions closed what this entry used to argue:
+**Shape: No longer a blocker, as of 2026-09-15.** This entry used to argue that six finished systems
+(Skill Points, Reset Tokens, Syringes, Row Grants, exploration itself, Records) were code nobody could
+reach in play, because vanilla maps cannot hold them. Two decisions closed it:
 
 - **The Skill Point economy is a non-issue.** The numbers in [SKILL_TREE.md](SKILL_TREE.md#the-economy-renumbered)
   stand as set; nothing waits on judging them against a map, and no feature should be held for it.
 - **The proving map is tested and closed.** It served its purpose as a showcase of coworking in mapping
-  ([PROVING_MAP.md](PROVING_MAP.md)). **`topmap` is the default test map**, and it already places Skill
-  Points, Reset Tokens, Row Grants and Syringes, so every pickup below is reachable in play there.
+  ([PROVING_MAP.md](PROVING_MAP.md)). **`topmap` is the default test map**, and it places Skill Points,
+  Reset Tokens, Row Grants and Syringes, so every pickup is reachable in play there. `shaft1` is the
+  campaign's first map ([the cold open](#the-cold-open--shaft1-grilled-2026-09-19)).
 
-The rest of this entry is the reasoning as it stood before, kept for the record.
-
-Not a feature, but it belongs here because six completed systems are unreachable without it. Everything in
-this list is **finished code with no way to encounter it in play**:
-
-| System | Placeable entity | Reachable today only via |
-| --- | --- | --- |
-| Skill Points | `item_skillpoint` | `skill_addpoints` |
-| Reset Tokens | `item_resettoken` | `skill_addtokens` |
-| Health Syringe | `item_syringe` | `give item_syringe` |
-| Row Grants | `item_rowgrant` | `inv_addrows` |
-| Exploration (pillar 1) | — | nothing |
-| Transmissions | *(not written)* | nothing |
-
-Vanilla Half-Life maps cannot be edited to hold any of it, so the economy in PILLARS pillar 4 — a tree
-completable only by near-exhaustive exploration — is entirely theoretical. Nobody has ever played it.
-
-**As of 2026-08-31 there is no code left in the way.** `item_rowgrant` was the last unwritten entity
-(see [MAP_BRIEF.md](MAP_BRIEF.md#the-one-code-dependency), now resolved), so every row in the table
-above except Transmissions is placeable today. What remains is entirely map work.
-
-This does not need to be the full campaign. **One map** that places Skill Points off the critical path, a
-Syringe, and a Row Grant would move pillars 1, 3, 4 and 5 from "designed" to "judged", and every tuning
-question in PILLARS.md is waiting on exactly that. It is the cheapest way to learn the most.
-
-See [The world](#pillar-1-the-world) for what the maps should eventually contain.
+What the campaign's maps should contain is under [The world](#pillar-1-the-world).
 
 ---
 
 ## Pillar 6: Stealth
 
 **Shape: Building. Steps 1–4 and 6 are done — everything that decides whether the player is noticed, and
-telling them about it. Step 5, everything after acquisition, is all that remains, and it was re-sliced on
-2026-09-17 around one decision: stealth is predator first.**
+telling them about it — and of step 5, everything after acquisition, the cost of a kill (5f) is built and
+tested. What remains is 5b, 5e and 5g, sliced on 2026-09-17 around one decision: stealth is predator
+first.**
 
 **Finish, then freeze — settled 2026-09-17 with [the shape of the game](#the-shape-of-the-game).** Stealth
-is one way to solve an encounter, inside combat, not a pillar ranked beside exploration. So: verify 5f,
-build 5b, 5e and 5g — they are what stops the loop being sticky, and 5g matters more than it did now that
-the game is hub and spokes and level transitions are constant — and then **no new stealth features until
-real maps exist**. Every open question below is waiting on a map, not on code. What stealth gained in that
+is one way to solve an encounter, inside combat, not a pillar ranked beside exploration. So: build 5b, 5e
+and 5g — they are what stops the loop being sticky, and 5g matters more than it did now that the game is
+hub and spokes and level transitions are constant — and then **no new stealth features until real maps
+exist**. Every open question below is waiting on a map, not on code. What stealth gained in that
 session is content, not features: ritual rooms (cultists busy, backs turned, perception live), the
 military wing with the assassin at its end, the maddened as the untrained-profile tutorial enemy, and
 soft gates a Stealth build can ghost. It already accommodates alien grunts and vortigaunts.
@@ -305,9 +254,9 @@ that already describes what it changes.
 | 1 | **Docs** | PERCEPTION.md, the CONTEXT.md terms, the two corrections, the CLAUDE.md index row. **Done 2026-08-31.** No code. |
 | 2 | **The Backstab** | `CanBackstab()`, the curated exclusion list, `FInRearArc`, two cvars, `adr/0010`, and the headshot entry under [pillar 2](#headshots-and-how-they-reconcile-with-this). **Done 2026-08-31.** |
 | 3 | **Suspicion** | Perception Profile, the meter, the `Look` gate, the `debug_suspicion` view (replaced by `debug_schedule` 2026-09-17), `SF_MONSTER_IGNORE_CONCEALMENT`, `adr/0009`. **Done 2026-09-01.** |
-| 4 | ~~**The readout**~~ | `gmsgConceal` plus `CHudConceal`, following `CHudPulse`'s send-on-change pattern. **Done 2026-09-02.** |
-| 5 | **[The post-aggro step](#the-post-aggro-step)** | Everything that happens *after* a monster acquires the player. Attempted 2026-09-02 and reverted; **re-sliced 2026-09-17**, cost of a kill first (witnesses, the Disturbance, the Search), then the give-up, then the captain's channel — see below. Aim-versus-facing is dropped. |
-| 6 | ~~**Noise**~~ | A deliberate multiplier on the computed noise volume for crouching and walking. **Done 2026-09-02**, pulled forward: without it a crouched player could not get within crowbar reach without being heard, so the Backstab's own approach did not work. |
+| 4 | **The readout** | `gmsgConceal` plus `CHudConceal`, following `CHudPulse`'s send-on-change pattern. **Done 2026-09-02.** |
+| 5 | **[The post-aggro step](#the-post-aggro-step)** | Everything that happens *after* a monster acquires the player. Attempted 2026-09-02 and reverted; **re-sliced 2026-09-17**, cost of a kill first (witnesses, the Disturbance, the Search — **done 2026-09-17, tested 2026-09-18**), then the give-up, then the captain's channel — see below. Aim-versus-facing is dropped. |
+| 6 | **Noise** | A deliberate multiplier on the computed noise volume for crouching and walking. **Done 2026-09-02**, pulled forward: without it a crouched player could not get within crowbar reach without being heard, so the Backstab's own approach did not work. |
 
 ### The post-aggro step
 
@@ -333,15 +282,14 @@ while its model faces elsewhere. **The turn is cosmetic — only the LKP is real
 | `TakeDamage` → `m_vecEnemyLKP = pevInflictor->origin` | shoot a monster from behind and it gets a perfect fix |
 | `SquadCopyEnemyInfo` | one squadmate with eyes on you feeds the whole squad |
 
-**So the seam is `ShootAtEnemy`, not the writers.** Clamp the shot to the monster's own cone — fire along
-facing when the LKP falls outside it — and "get behind it" means something for every monster at once, with
-no LKP bookkeeping and no per-monster schedule surgery. That is the change to try first.
-
-**But not "every monster at once" — that claim was wrong and is corrected here.** `ShootAtEnemy` carries the
-grunt's rifle and shotgun, the assassin, the alien slave's zap, Barney, the ichthyosaur and the Gargantua's
-flame. It does **not** carry the alien grunt, which aims its hornets straight at `m_vecEnemyLKP` itself
-(`dlls/agrunt.cpp:437`) and whose hornets then home in regardless; nor grenades, which are thrown at the LKP
-directly (`dlls/hgrunt.cpp:495-527`). Those need their own answers.
+**So the seam would be `ShootAtEnemy`, not the writers.** Clamp the shot to the monster's own cone — fire
+along facing when the LKP falls outside it — and "get behind it" means something with no LKP bookkeeping
+and no per-monster schedule surgery, for every monster that fires through it: the grunt's rifle and
+shotgun, the assassin, the alien slave's zap, Barney, the ichthyosaur and the Gargantua's flame. It does
+**not** carry the alien grunt, which aims its hornets straight at `m_vecEnemyLKP` itself
+(`dlls/agrunt.cpp:437`) and whose hornets then home in regardless; nor grenades, which are thrown at the
+LKP directly (`dlls/hgrunt.cpp:495-527`). Those would need their own answers. None of it is being built:
+5a is dropped, below.
 
 **Diagnose before designing.** `debug_monster_aim` (throwaway, `dlls/combat.cpp`) prints per shot: which
 monster fired, its schedule and task index, the yaw it is *at* versus the yaw it is *turning toward*, how
@@ -370,14 +318,13 @@ backwards *and* the freezing *and* the sparks as one fault rather than three, an
 evidence and a one-line fix in
 [TECH_DEBT.md](TECH_DEBT.md#a-leaked-move-wait-freezes-a-monster-for-up-to-99-seconds).
 
-~~**Fix it before judging anything else here.**~~ **Fixed and verified 2026-09-14**: `ChangeSchedule`
-clears the move-wait, so a freeze is scoped to the schedule that set it; the TECH_DEBT entry is closed.
-Post-aggro stealth behaviour could not be evaluated against a monster that may be frozen for 99 seconds,
-and the aim seam above may look less urgent now that a monster that loses the player actually turns
-around. **5a's question is the next thing to put.**
+**Fixed and verified 2026-09-14**: `ChangeSchedule` clears the move-wait, so a freeze is scoped to the
+schedule that set it, and the TECH_DEBT entry is closed. It had to come first, because post-aggro
+behaviour could not be judged against a monster that might be frozen for 99 seconds; with it fixed, a
+monster that loses the player actually turns around, and the aim seam above lost most of its urgency.
 
-~~**How this step is sliced** — agreed 2026-09-12, small commits with aim first.~~ **Re-sliced 2026-09-17
-under predator first.** The 2026-09-12 order put aim (5a) first and the give-up (5b) second. Both changed:
+**How this step is sliced — settled 2026-09-17 under predator first.** A first slicing on 2026-09-12 put
+aim (5a) first and the give-up (5b) second, in small commits. Both changed:
 
 **5a is dropped.** Under predator first, being hunted means the loop has already failed and the player is
 in vanilla combat, which the mod promises to leave byte-for-byte alone. Whether being behind a hunting
@@ -394,19 +341,19 @@ vanilla map. The order, each commit independently playable:
 
 | | | Settled |
 | --- | --- | --- |
-| **5f** | **Witnesses, the Disturbance, the Search.** The cost of a kill | 2026-09-17, below. **Built the same day**, with the silencer item, the Headhunter helmet skip, Shroud, and the Ambush and fill cvar changes. **Untested: [STEALTH_CHECKLIST.md](STEALTH_CHECKLIST.md) blocks every row under this pillar until it has results** |
+| **5f** | **Witnesses, the Disturbance, the Search.** The cost of a kill | 2026-09-17, below. **Built the same day**, with the silencer item, the Headhunter helmet skip, Shroud, Silent Kill's effect, and the Ambush and fill cvar changes. **Tested 2026-09-18** against [STEALTH_CHECKLIST.md](STEALTH_CHECKLIST.md), whose results are at its end: every row passed once the Search was made to walk (its path ended inside the victim's hull). Recorded in [PILLARS pillar 6](PILLARS.md#the-cost-of-a-kill--built-2026-09-17-tested-2026-09-18). `topmap` has no `info_node`s, so the Search around corners is still unjudged |
 | **5b** | **The give-up**, contact-keyed, into the same Search | 2026-09-17, below. Not built; its lines (`HG_LOST`) are already in `sound/sentences.txt` |
 | **5e** | **The captain's channel** — notice propagation | 2026-09-17, below |
 | 5g | The level-change reset | 2026-08-31, [PERCEPTION.md](PERCEPTION.md#losing-the-player--the-give-up-settled-2026-09-17-not-built) |
-| ~~5c, 5d~~ | ~~The Search, Posts~~ | Absorbed into 5f: the SDK already has both |
-| ~~5a~~ | ~~Monsters only shoot where they face~~ | Dropped |
+| 5c, 5d | The Search, Posts | Absorbed into 5f: the SDK already has both |
+| 5a | Monsters only shoot where they face | Dropped |
 
 Alongside 5f, two things outside this pillar that the intended play depends on: **the silenced pistol
 comes forward as a found item**, the first [Evolution](#weapon-evolutions), and **Headhunter ignores the
 grunt's helmet** with Ambush retuned to ×1.5 / ×2 ([SKILL_TREE.md](SKILL_TREE.md#stealth) has the
 arithmetic — without both, the stab-then-headshot play leaves a live grunt at 0.75 and rising).
 
-**What 5f is.** The full model is in [PERCEPTION.md part 2](PERCEPTION.md#death-witnesses-and-the-disturbance--settled-2026-09-17-not-built);
+**What 5f is.** The full model is in [PERCEPTION.md part 2](PERCEPTION.md#death-witnesses-and-the-disturbance--settled-and-built-2026-09-17-untested-in-game);
 the decisions, in the order they were made:
 
 - **A witness** is any hostile monster with a meter that passes a visibility trace on the victim as it
@@ -475,25 +422,23 @@ it stands, so its walk-back position drifts; the vanilla schedule drifts the sam
 
 Recorded so they are not rediscovered as gaps.
 
-~~**Silent weapons.**~~ **Brought forward 2026-09-17.** `dlls/glock.cpp:77` is `// pev->body = 1;`. Set it
-and the model switches to its silenced submodel, the shot drops to `QUIET_GUN_VOLUME` and `DIM_GUN_FLASH`
-(`dlls/glock.cpp:120-130`), and `GLOCK_ADD_SILENCER` (`dlls/weapons.h:490`) is a real attach animation
-already in `v_9mmhandgun.mdl`. The decision to expose it was deferred to [Evolutions](#weapon-evolutions)
-so as not to pre-decide the identity question; the predator loop's intended play needs it, so it arrives
-**as a found item, permanent once attached, and is the first Evolution** — which answers the question with
-the example it was written around rather than pre-deciding it. Built with 5f. The crossbow is already
-`QUIET_GUN_VOLUME` (`dlls/crossbow.cpp:322`) and is the mod's existing quiet weapon whether anyone intended
-it or not.
+**Silent weapons — no longer deferred: built with 5f, 2026-09-17.** The silencer is a found item,
+permanent once attached, and the first [Evolution](#weapon-evolutions). It was dormant in the SDK: the
+glock's silenced submodel, the `QUIET_GUN_VOLUME` and `DIM_GUN_FLASH` branch, and a real attach animation
+in `v_9mmhandgun.mdl`. Exposing it had been deferred to Evolutions so as not to pre-decide the identity
+question; the predator loop's intended play needed it, and it answers that question with the example it
+was written around instead. The crossbow is already `QUIET_GUN_VOLUME` and is the mod's existing quiet
+weapon whether anyone intended it or not.
 
 **A second Backstab tier.** The Backstab is positional and single-tier, so the damage model cannot tell a
 stealth kill from a flank. If "measurably better off" proves too thin in play, a larger multiplier when the
 victim has never acquired the player is the obvious lever, and it costs one branch on a test already being
 made.
 
-~~**Stealth Skills.**~~ **Built 2026-09-16**, Night Vision Module included; moved to
+**Stealth Skills — built 2026-09-16**, Night Vision Module included, and Silent Kill's effect with 5f the
+day after; moved to
 [PILLARS.md pillar 6](PILLARS.md#the-stealth-region-and-the-night-vision-module--built-2026-09-16-untested-in-game).
-Silent Kill waits on [the post-aggro step](#the-post-aggro-step); Cut the Head was dropped on 2026-09-17
-and Shroud takes its cell.
+Cut the Head was dropped on 2026-09-17 and Shroud takes its cell.
 
 **Generalising perception to monster-vs-monster.** Scoped to the player deliberately. The reasoning —
 including the muzzle-flash asymmetry that makes a naive generalisation exactly backwards — is under
@@ -502,10 +447,10 @@ building.
 
 ### Open questions
 
-- ~~Is stealth **optional** everywhere, or are there encounters designed to be unwinnable head-on?~~
-  **Answered 2026-09-17: optional, with declared exceptions, and nothing is unwinnable head-on.** This is a
-  run, think, shoot, live game; bosses, sieges and plain charging fights are fights, marked with the
-  mapper's spawnflag. Everything else can be solved quietly, loudly or by going around.
+- **Stealth is optional everywhere, with declared exceptions, and nothing is unwinnable head-on**
+  (2026-09-17). This is a run, think, shoot, live game; bosses, sieges and plain charging fights are
+  fights, marked with the mapper's spawnflag. Everything else can be solved quietly, loudly or by going
+  around.
 - **How dark is dark?** Vanilla Half-Life maps are lit for readability rather than for hiding, so the light
   term may do almost nothing until there are custom maps with dark places in them. What light level counts
   as concealing is a question only [Maps](#maps) can answer. **Tuning the light term was explicitly deferred
@@ -531,17 +476,20 @@ kill, not the measure.
 
 ### Custom weapons
 
-**Shape: Idea.** The stated approach for all of these is to import and reuse existing assets — vanilla or
-other mods — rather than author from scratch, and to accept placeholder quality on the first pass.
+**Shape: two built (the pickaxe and the katana), one Idea (the energy rifle).** The approach for all of
+them is to import and reuse existing assets rather than author from scratch, and to accept placeholder
+quality on the first pass; what Andrei makes by hand goes through the tier in
+[MODEL_WORKFLOW.md](MODEL_WORKFLOW.md).
 
 #### The Carbon Pickaxe
 
-~~Replaces the crowbar.~~ Heavier, slower, hits harder.
+Heavier, slower, hits harder, beside the crowbar rather than instead of it.
 
 **v1 built and verified in game 2026-09-18** — `weapon_pickaxe`, 25 damage at 1.5× the crowbar's swing time,
 the only mining tool, the crowbar in black metal; recorded in [PILLARS pillar 2](PILLARS.md#2-enhanced-combat).
-What is left here: a real pick head ([ART_DEBT.md](ART_DEBT.md#the-carbon-pickaxe--a-black-crowbar-and-the-crowbars-sounds-and-hud-icon)),
-and becoming the starting tool, which is campaign work.
+What is left here: a real pick head ([ART_DEBT.md](ART_DEBT.md#the-carbon-pickaxe--a-black-crowbar-and-the-crowbars-sounds-and-hud-icon),
+the first model on the hand-made ladder in [CRAFT_LOG.md](CRAFT_LOG.md)), and becoming the starting tool,
+which is campaign work.
 
 **The starting tool, and the mining tool — settled 2026-09-17.** The player is a miner: the pickaxe is
 what they hold in the cold open, check in at the end of the shift, and get back within the first 5–10
@@ -549,64 +497,60 @@ minutes; the crowbar becomes a find. It is also the only thing that breaks a
 [deposit](#mining-and-crystal-shards), which is what keeps it worth three Cells once the katana exists.
 The maddened miners carry one too.
 
-The mechanic is trivial — it is `dlls/crowbar.cpp` with different numbers and a different model. The cost
-is entirely in what the crowbar's name is load-bearing for:
-
-- ~~**Five Skill ids are named for it**~~ **Renamed 2026-09-14 with the Melee Route**: Melee Reach (1),
-  Melee Force (2), Melee Speed (11) and Follow-Up (18) are generic now, in enumerator, display string and
-  cvar. Ids unchanged. Nothing in the tree is named for the crowbar any more.
-- ~~**CONTEXT.md's Follow-Up entry says "crowbar swing"**~~ Reworded with the rename.
-- **`d_crowbar` is the icon for three Skills** (see [ART_DEBT.md](ART_DEBT.md)).
-- ~~`crowbar.cpp` compiles into both DLLs for prediction~~ and the first-swing/follow-up damage rule that
-  read the same timer is gone: the Melee Route dropped Valve's half-damage follow-up on 2026-09-13, so
-  every swing is full damage and a swing-rate change costs nothing (`CCrowbar::Swing` carries the reason).
-
-~~Open: does the player still find a crowbar somewhere, or is the pickaxe simply what melee *is* in this mod?~~
-**Answered 2026-09-13: the crowbar stays and the pickaxe joins it**, as one of a melee roster on the
-crowbar's base, each weapon leaning one way. See the [Melee Route](#melee). The rename of the crowbar-named
-Skills happened once, for the roster, on 2026-09-14.
+**It joins the crowbar rather than replacing it — settled 2026-09-13**, as one of a melee roster on the
+crowbar's base, each weapon leaning one way; see the [Melee Route](#melee). The mechanic is
+`dlls/crowbar.cpp` with different numbers and a different model. The cost was in what the crowbar's name
+was load-bearing for, and that is paid: the Skills named for it (Reach, Force, Speed, Follow-Up) went
+generic in enumerator, display string and cvar with the Melee Route on 2026-09-14, ids unchanged, and
+Valve's half-damage follow-up swing was dropped the day before, so a swing-rate change costs nothing. The
+one crowbar-named thing left is `d_crowbar`, the icon for three Skills ([ART_DEBT.md](ART_DEBT.md)).
 
 #### The Gauss Katana
 
-**Shape: Shaped, model first.** A gauss weapon shaped as a katana. Slow, bulky, and frightening.
+**Shape: Built, v1, and reworked onto the Energy Route's rules (2026-09-12 to 2026-09-15); the model is
+the open question.** A gauss weapon shaped as a katana. Slow, bulky, and frightening. What exists is in
+[PILLARS pillar 2](PILLARS.md#2-enhanced-combat); this entry keeps the decisions, the numbers that are
+only recorded here, and what is still open.
 
-**Settled 2026-09-12:**
+**The shape it settled into:**
 
-- **Slower attack speed, big damage.** A melee weapon, on the crowbar's shape: `dlls/crowbar.cpp` with
-  different numbers, a different model, and one new thing below.
-- **Swings create gauss arcs that leave "burning" decals on walls, the way the gauss gun does. Built,
-  v1, visual only.** `EV_KatanaArc` in `cl_dll/ev_hldm.cpp`, fired by `events/katana_arc.sc` from
-  `CKatana::PrimaryAttack` once per swing. It copies the gauss gun's wall hit exactly rather than
-  approximating it: the mark is the ordinary gunshot decal (`EV_HLDM_DecalGunshot` with
-  `BULLET_MONSTER_12MM`) and the *burning* is the gauss glow sprite fading over six seconds on top of it.
-  The arc itself is a crescent, a `)` standing in front of the player and tilted to the cut, that flies
-  forward and burns the first wall its belly or either tip meets. It is a temp entity with no model and a
-  per-frame callback (`EV_KatanaArcThink`) that moves it, redraws it as ten short beam segments bright at
-  the belly and thin at the tips, and traces three points forward. The first version was a fan of
-  lightning rays from the blade to the walls; the crescent replaced it at the user's request the same
-  day. Seven client cvars, all first guesses: `katana_arc` (on/off), `_range` (1200, which is also how far
-  it shrinks and dims to nothing, so running out never looks like a cut), `_radius` (70), `_sweep` (150°
-  of the circle), `_speed` (1200), `_roll` (30°, sign alternating swing to swing), `_lean` (90: how far
-  the belly turns from facing the player toward the line of flight, so it leads with its belly). The burn is glow only, one per
-  point of the crescent, so the wall shows the crescent's silhouette along its flight; the gunshot
-  decals were dropped because they read as bullet holes. A floor or ceiling does not end the flight; a
-  tip that meets one scrapes a glow along it and the wave flies on, because aiming down at a headcrab
-  used to kill the wave on the first floor tile.
-- **The wave hurts. Decided 2026-09-12, when aiming down at headcrabs made a wave that only looked
-  like an attack feel like a miss.** First as an instant trace at the swing (`CKatana::WaveAttack`, the
-  first thing on the aim line, falling off from birth), **since 2026-09-14 as `CKatanaWave`**
-  (`dlls/katana.cpp`), an unseen server projectile whose look is the crescent: born 32 units past the
-  blade on the aim, flying at `katana_wave_speed` (1200) to `katana_wave_range` (1200), each frame's step
-  swept as a line then the small hull, and everything damageable it meets struck once with energy damage
-  (`DMG_ENERGYBEAM`) at `katana_wave_damage` (15; a plain number, not a share of the slash's, since the
-  two are tuned apart), full out to `katana_wave_full_range` (800) and then falling off to nothing at the
-  range. The client reads those three cvars by name for the
-  crescent, so the drawn wave and the damage are one flight; the instant trace was kept for a day on the
-  grounds that the match was good enough, until a target 800 units out taking damage at the swing showed
-  it was not. The wave dies where the crescent's belly does, on a wall; a floor or ceiling the line meets
-  is scraped and flown through, and a step spent wholly inside the world ends it. The katana is therefore
-  a **ranged melee weapon**: the blade for what is in reach, the wave for what is not, at half strength,
-  and a crowd on the path is a crowd hit.
+- **A melee weapon on the crowbar's shape**: `dlls/crowbar.cpp` with different numbers and a different
+  model, so Backstab, Melee Force and Reach and the Follow-Up come along unchanged — the point of
+  subclassing rather than copying. `weapon_katana`, `dlls/katana.cpp`, `CCrowbar` with two hooks
+  overridden: base damage (`sk_plr_katana1-3`, 60 since 2026-09-14) and swing time
+  (`katana_swing_time_scale`, 2.4, so 0.6 s after a hit; it started at 2×, went to 1× when the wave still
+  rode on the swing and the slow swing read as waiting, and is slow again now that the slash is the burst
+  click and the wave the fast one). Both read from both DLLs because the delay is predicted. In the melee
+  bucket beside the crowbar; `impulse 101` gives it; the FGD places it.
+- **The wave is a crescent that flies and burns the wall it meets.** `EV_KatanaArc` in
+  `cl_dll/ev_hldm.cpp`, fired by `events/katana_arc.sc`: a `)` standing in front of the player and tilted
+  to the cut, a temp entity with no model and a per-frame callback (`EV_KatanaArcThink`) that moves it,
+  redraws it as ten short beam segments bright at the belly and thin at the tips, and traces three points
+  forward. The burn is the gauss glow sprite fading over six seconds, one per point of the crescent, so
+  the wall shows the crescent's silhouette. Seven client cvars, all first guesses: `katana_arc` (on/off),
+  `_range` (1200, which is also how far it shrinks and dims to nothing, so running out never looks like a
+  cut), `_radius` (70), `_sweep` (150° of the circle), `_speed` (1200), `_roll` (30°, sign alternating
+  swing to swing), `_lean` (90: how far the belly turns from facing the player toward the line of flight,
+  so it leads with its belly). A floor or ceiling does not end the flight: a tip that meets one scrapes a
+  glow along it and the wave flies on. Rejected on the way: a fan of lightning rays from the blade to the
+  walls (the first look, replaced at Andrei's request the same day); gunshot decals under the glow (they
+  read as bullet holes); ending the flight on the floor (aiming down at a headcrab killed the wave on
+  the first floor tile).
+- **The wave hurts, and its damage travels with it.** Decided 2026-09-12, when aiming down at headcrabs
+  made a wave that only looked like an attack feel like a miss. `CKatanaWave` (`dlls/katana.cpp`) is an
+  unseen server projectile whose look is the crescent: born 32 units past the blade on the aim, flying at
+  `katana_wave_speed` (1200) to `katana_wave_range` (1200), each frame's step swept as a line then the
+  small hull, and everything damageable it meets struck once (it pierces) with energy damage at
+  `katana_wave_damage` (15; a plain number, not a share of the slash's, since the two are tuned apart),
+  full out to `katana_wave_full_range` (800) and then falling off to nothing at the range. The client
+  reads those three cvars by name for the crescent, so the drawn wave and the damage are one flight. It
+  dies where the crescent's belly does, on a wall; a floor or ceiling the line meets is scraped and flown
+  through, and a step spent wholly inside the world ends it. The crossbow bolt was the template for the
+  entity, not for the look — a crescent cannot be a model, so it stays client-drawn from the event. An
+  instant trace at the swing was the first version, kept for a day on the grounds that the match was good
+  enough, until a target 800 units out taking damage at the swing showed it was not. The katana is
+  therefore a **ranged melee weapon**: the blade for what is in reach, the wave for what is not, at half
+  strength, and a crowd on the path is a crowd hit.
 - **The blade goes hot on the swing.** Two parts: a dynamic light at the hand (`katana_glow_light`, 3 s,
   decaying over its life, which is the fade the eye reads) and the blade's own texture swapping to a hot
   one (`katana_glow_hot`, 0.7 s), cooling back over its last `katana_glow_fade` (0.5 s) — the viewmodel
@@ -650,59 +594,40 @@ Skills happened once, for the roster, on 2026-09-14.
   through the API, state restored after — and the client now links `opengl32` (`-lGL` on Linux).
   Hardware renderer only. Two more lessons from the first build, both in MODEL_WORKFLOW.md:
   `$attachment` coordinates are bone-local, and the katana's had been model-space since v1.
-- **The weapon exists, v1.** `weapon_katana`, `dlls/katana.cpp`: `CCrowbar` with two hooks overridden,
-  base damage (`sk_plr_katana1-3`, 60 since the numbers were set on 2026-09-14; 40 before) and swing time
-  (`katana_swing_time_scale`, 2.4, so 0.6 s after a hit — it started at 2×, went to 1× when the wave still
-  rode on the swing and the slow swing read as waiting, and is slow again now that the slash is the burst
-  click and the wave, at `katana_wave_swing_time_scale` 1.0, the fast one; both read from both DLLs
-  because the delay is predicted), and its own models. Backstab, Crowbar Force and Reach, and
-  the Follow-Up come along unchanged, which is the point of subclassing rather than copying. In the
-  melee bucket beside the crowbar; `impulse 101` gives it; the FGD places it. See PILLARS.md.
 - **Viewmodel and world model are the mod's own.** The Dystopia blade on Half-Life's crowbar hands
   and the crowbar's eleven animations in their original order, so the crowbar's `CROWBAR_*` sequence
   indices drive it unchanged, and the Dystopia prop lying flat for the floor. Sources in
   `E:\CustomAssets\models\src\{v,w}_katana`, made by the loop in [MODEL_WORKFLOW.md](MODEL_WORKFLOW.md).
   The `p_` model, the sounds and the HUD icon are the crowbar's; [ART_DEBT.md](ART_DEBT.md) has them.
 
-**Rework, settled 2026-09-13 while shaping the [Energy Route](#energy). First step built 2026-09-14,
-with Cleave:**
+**The two clicks — settled 2026-09-13 while shaping the [Energy Route](#energy), built 2026-09-14 with
+Cleave:**
 
-- ~~**Left click is a plain melee slash.** No wave, no ammo. The blade still lights up.~~ **Built.** The
-  slash: blade only, full damage, Melee Speed applies, and it is the click that carries Cleave (an orange
-  air shock on the katana). Every swing heats the blade, through `events/katana_swing.sc`.
-- **Right click is a charged ranged attack.** Hold to charge, release a big wave. *Assumed* to spend
-  uranium, since only the left click was exempted; not said in those words. **Built as far as "the old
-  swing, on the right click, for uranium"**: the blade light (`katana_wave_blade_damage`, 10) and the wave,
-  at the crowbar's rate, Melee Speed scaling it too for now. **The numbers, set 2026-09-14 against the
-  gauss's two clicks**: slash 60 at 0.6 s is burst, blade 10 plus wave 15 per target at 0.25 s is DPS —
-  100 a second in reach, 60 per target down the path, for uranium. Cleave never spends on it. **The
-  cost is built (2026-09-14)**: `katana_wave_cost` (5) uranium per wave, divided by Energy Efficiency
-  (four with it), refused with the empty click and no swing when short. The katana carries uranium for
-  it — `KATANA_DEFAULT_GIVE` (20) on pickup, the gauss's figure, the uranium counter on the HUD — and can
-  always be drawn and is never switched away from empty, since the slash needs none. No charge yet.
-  **The lore, settled the same day:** swinging heats the energy in the blade at no loss; a thrown wave
-  spends some of it. The blade heats on both clicks.
-- ~~**The wave pierces**: it hits everything on its path, not the first thing.~~ **Built 2026-09-14**,
-  in `CKatanaWave`; each thing once.
-- ~~**The wave's damage travels with the projectile**, like the crossbow bolt.~~ **Built 2026-09-14**:
-  the wave is the projectile and the crescent its look, above. The bolt was the template for the entity,
-  not for the look — a crescent cannot be a model, so it stays client-drawn from the event.
-- **The katana always deals energy damage**, slash and wave, and **scales off both Melee and Energy
-  bonuses**. ~~The v1 slash inherits the crowbar's `DMG_CLUB`; that changes.~~ **The slash is energy since
-  2026-09-14** (`SwingDamageType`); the Energy bonus waits on the Energy Route.
+- **Left click is the slash.** Blade only, full damage, no ammo, Melee Speed applies, and it is the click
+  that carries Cleave (an orange air shock on the katana). Every swing heats the blade, through
+  `events/katana_swing.sc`.
+- **Right click is the wave, for uranium.** The blade light (`katana_wave_blade_damage`, 10) and the
+  wave thrown off it, at the crowbar's rate (`katana_wave_swing_time_scale`, 1.0), Melee Speed scaling it
+  too for now. **The numbers, set 2026-09-14 against the gauss's two clicks**: slash 60 at 0.6 s is
+  burst, blade 10 plus wave 15 per target at 0.25 s is DPS — 100 a second in reach, 60 per target down the
+  path, for uranium. Cleave never spends on it. The cost is `katana_wave_cost` (5) uranium per wave,
+  divided by Energy Efficiency (four with it), refused with the empty click and no swing when short. The
+  katana carries uranium for it — `KATANA_DEFAULT_GIVE` (20) on pickup, the gauss's figure, the uranium
+  counter on the HUD — and can always be drawn and is never switched away from empty, since the slash
+  needs none. **The lore, settled the same day:** swinging heats the energy in the blade at no loss; a
+  thrown wave spends some of it. The blade heats on both clicks.
+- **No charge.** The rework first wrote the right click as "hold to charge, release a big wave"; the wave
+  is thrown at the crowbar's rate instead, and Quick Charge was cut for it on 2026-09-15.
+- **The katana always deals energy damage**, slash and wave (`SwingDamageType`, 2026-09-14), and
+  **scales off both Melee and Energy bonuses**. `DMG_ENERGYBEAM` because nothing is immune to it, where
+  the alien slave is immune to `DMG_SHOCK`.
 
-The rest is *the katana's own story*, to be tuned as one piece: the charge, the cost's number, the wave's
-damage and the blade's share on the right click against the slash's.
+**Still to tune, as one piece**: the cost's number, the wave's damage and the blade's share on the right
+click against the slash's. Andrei tunes them against the gauss and the health table.
 
-Which answers the two questions that used to sit here: it consumes uranium (on the charged wave only), and
-it charges (on the right click).
-
-~~Still open: does it consume uranium, like the Gauss and Egon? Does it charge, the way
-`GAUSS_PRIMARY_CHARGE_VOLUME` implies for the gun?~~ `DMG_ENERGYBEAM` is the natural damage type and PILLARS
-records why (the alien slave is the only thing immune to `DMG_SHOCK`, and `DMG_ENERGYBEAM` has no immunity
-anywhere) — that reasoning applies here unchanged. Whether the crowbar's own swing animations are enough
-for a heavy weapon, or the Dystopia swings get retargeted onto the stock rig, is the first thing v1 in
-game will answer. Still a candidate for [Evolutions](#weapon-evolutions).
+**Still open: the animations.** Whether the crowbar's one-armed swings are enough for a heavy weapon, or
+the longsword moveset below takes over, is the identity question v1 in game raised and has not answered.
+Still a candidate for [Evolutions](#weapon-evolutions).
 
 **The longsword moveset — probe built 2026-09-16, not yet judged.** Age of Chivalry's `v_longsword`
 viewmodel (decompiled by Andrei to `E:\CustomAssets\models\decompiled\aoc\v_longsword`) carries a
@@ -906,13 +831,12 @@ textures; recorded in [ART_DEBT.md](ART_DEBT.md) for later.
 
 ## Pillar 2: Monsters and bosses
 
-**Shape: Idea. A roster was listed on 2026-09-12, to be explored one entry at a time; the Panthereye is
-first and is the only one explored so far.**
+**Shape: a roster, listed 2026-09-12 and explored one entry at a time. Three are built — the Panthereye,
+the melee alien grunt and the maddened miner; the rest are Shaped or Ideas.**
 
-Import and reuse existing monsters with light polish, with occasional custom AI. ~~**Kingpin**, a cut
-Half-Life monster, was named as a candidate before the roster and is not on it; it stays here until
-someone says whether it was dropped.~~ **Kingpin is the boss of Xen hell**, 2026-09-17, and the roster
-gained the human side the same day: [the cult, the maddened](#the-cult-and-the-maddened) and
+Import and reuse existing monsters with light polish, with occasional custom AI. **Kingpin is the boss of
+Xen hell** (2026-09-17), and the roster gained the human side the same day:
+[the cult, the maddened](#the-cult-and-the-maddened) and
 [Xen hell's cut monsters](#xen-hell-and-the-cut-monsters). Where each boss sits is under
 [Where the bosses sit](#where-the-bosses-sit).
 
@@ -920,8 +844,8 @@ gained the human side the same day: [the cult, the maddened](#the-cult-and-the-m
 
 | Entry | Kind | Starts from | Shape |
 | --- | --- | --- | --- |
-| [Panthereye](#panthereye) | Enemy | Half-Life's cut model and sounds; AI written new | **v1 built** 2026-09-18, untested |
-| [Melee alien grunt](#melee-alien-grunt) | Enemy | `CAGrunt`, bare arm | **Shaped** |
+| [Panthereye](#panthereye) | Enemy | Half-Life's cut model and sounds; AI written new | **v1 built** 2026-09-18 and played; the menace direction is next |
+| [Melee alien grunt](#melee-alien-grunt) | Enemy | `CAGrunt`, bare arm | **v1 built** 2026-09-18, verified |
 | [Shelled headcrab](#shelled-headcrab) | Enemy | `CHeadCrab`, recoloured | **Shaped** |
 | [Friendly alien slave](#friendly-alien-slave) | Non-combatant | The slave model on `CTalkMonster` | **Shaped** |
 | [Alien slave boss](#the-alien-slave-boss) | Boss, freed to become the friendly slave | `CISlave` | Idea |
@@ -929,7 +853,7 @@ gained the human side the same day: [the cult, the maddened](#the-cult-and-the-m
 | [Alien grunt boss](#the-alien-grunt-boss) | Boss | `CAGrunt` | Idea |
 | [Nihilanth](#the-nihilanth) | Boss | `CNihilanth`, new model | **Shaped** 2026-09-17: a pattern fight |
 | [Soldiers](#soldiers) | Enemy | `CHGrunt`; fire on the move | Idea 2026-09-18 |
-| [The maddened](#the-cult-and-the-maddened) | Enemy | A melee human: zombie-class schedules on a worker model; a loner grunt for security | **Shaped** 2026-09-17 |
+| [The maddened](#the-cult-and-the-maddened) | Enemy | A melee human on the player's rig, Ivan's body; a loner grunt for security | **v1 built** 2026-09-19, verified; Ivan's body 2026-09-20, not yet |
 | [Cultists](#the-cult-and-the-maddened) | Enemy, passive in ritual scenes | The maddened, plus a ritual spawn state | **Shaped** 2026-09-17 |
 | [Cult leader](#the-cult-and-the-maddened) | Boss | A melee human | Idea |
 | [Kingpin](#xen-hell-and-the-cut-monsters) | Boss | `valve/models/kingpin.mdl`; no AI | Idea |
@@ -941,14 +865,17 @@ given **custom attacks**, and two add something more (a dash, and turning into a
 
 ### Panthereye
 
-**Shape: Shaped 2026-09-13. v1 built 2026-09-18, untested in game** — recorded in
+**Shape: Shaped 2026-09-13. v1 built 2026-09-18 and played by Andrei the same day** — "super solid"
+mechanically, the animations "goofy", which is the menace direction below. Recorded in
 [PILLARS pillar 2](PILLARS.md#2-enhanced-combat): the stalk as a straight path (run off screen, crawl
 close or on screen), the spotted test, the claws, the pounce, the Predator profile, a den in `minemap`.
-What v1 settled in its grill that the text below did not: spotted is within 30° of the crosshair with a
+What v1's grill settled beyond the rules below: spotted is within 30° of the crosshair with a
 clear line to the centre or head, held 0.25 s, no light term and no range limit; hurt, spotted, **or its
 first slash** end the stalk; the alert sounds when it is spotted, not when it acquires; the growl is
 `pa_idle3` pitched to 75; the pounce is 150–450 units, capped at 900, 3 s apart, with a 0.55 s wind-up;
-v1 is always the blue body, and the red is kept for the alpha so the look never lies.
+v1 is always the blue body, and the red is kept for the alpha so the look never lies. Stats are the
+legacy cvars as `sk_panthereye_*` (health 60/70/80, claw 13/15/20, leap 20/25/35), unjudged against a
+map; the alpha has no numbers.
 
 **Left for later slices, in no set order:**
 
@@ -958,9 +885,14 @@ v1 is always the blue body, and the red is kept for the alpha so the look never 
   scent** (decided 2026-09-18: yes, the bullsquid's `bits_SOUND_CARCASS`/`MEAT`, but only once eating
   exists). Together they make an emergent feeding ambush — a Panthereye found over a houndeye it killed —
   and the placeable keyvalue is then just "start already eating". The Disturbance (v1, through Predator)
-  stays the player's-kills-only lead it hunts; the scent is any corpse, which it eats.
+  stays the player's-kills-only lead it hunts; the scent is any corpse, which it eats. A feeding
+  Panthereye wakes three ways: a map trigger, being hurt, or noticing the player through its own
+  Suspicion — which comes free as long as feeding is its own schedule and not a `scripted_sequence`
+  ([How the bullsquid feeds](#how-the-bullsquid-feeds)). `eat_idle` and `eat_turn` exist in the model
+  for it, untagged, so the schedule plays them by name like the crawl.
 - **The alpha**: the red body, set by a keyvalue with its stats, the way `item_suit`'s `variant` is; leaps
-  from further out, a shorter `panther_leap_windup`, and may skip the stalk.
+  from further out, a shorter `panther_leap_windup`, and may skip the stalk entirely and fight head-on
+  from the start ("may" is how it was put; the likely shape rather than a decision).
 - **The glowing-eye light** at the head, so it can be seen in the dark (below).
 - **Freeze when watched** — proposed 2026-09-18 and wanted by Andrei, deferred until the spotted test is
   proven in play: while it is on the player's screen but not yet spotted it stops dead, a Weeping Angel,
@@ -984,8 +916,8 @@ the animations read goofy, and the Panthereye has to become menacing:
   `Bip01 Spine` (bone 16), yaw ±90° and 0–50° on the second axis, which HL: Extended presumably used to aim
   the upper body. They turn everything above the spine, and the front legs hang off the neck (bones 21 and
   28 parent to 19), so aiming with them may twist the forelegs off the ground — to be seen in HLMV before
-  it is designed around. A controller on the neck or head alone would be a model edit (decompile,
-  `$controller`, recompile).
+  it is designed around. A controller on the neck or head alone is a QC edit and a recompile, since
+  Valve's source is in the SDK (below).
 
 **The two controllers as the menace's means — Andrei, 2026-09-18. Idea.** Valve's source for the model is
 in the SDK (`Monster Models/Diablo/diablo.qc`, [HL_SDK.md](HL_SDK.md)) and confirms both:
@@ -1000,9 +932,6 @@ that the first turns the upper body and the second is a rotation. His plan for e
   headcrab-style leap it already has, a trace for a wall in the leap's path, and a second velocity on the
   touch. What the ZR 0–50 axis actually does to the pose has to be seen in HLMV before it is designed
   around.
-
-Since the source is there, a controller on the neck or head alone is now a QC edit and a recompile, not a
-decompile.
 
 **Kin to the Gargantua — Andrei, 2026-09-18. Idea, not grilled.** The Panthereye reads as the Gargantua's
 little cousin: the same skin texture, the same red eye. Proposed to make the kinship mechanical:
@@ -1021,15 +950,14 @@ little cousin: the same skin texture, the same red eye. Proposed to make the kin
   is the question that decides the rest. The eye glow already exists as a sprite on attachment 1
   (`m_pEyeGlow`), which could dim while stunned.
 
-**The model is Half-Life legacy content**, a monster Valve cut, not another mod's art. The copy found on
-this machine is in *Half-Life: Extended* (`Half-Life/hl_extended`, per its `liblist.gam`), which ships
-`models/panthereye.mdl`, ten sounds in `sound/panthereye/`, an FGD entry and skill cvars. None of it is in
-this repo, `E:\CustomAssets` or `topmod` yet. Importing means copying the model into the repo's `models/`
-and `topmod/models/`, and the sounds into `topmod/sound/panthereye/`, which does not exist yet.
+**The model is Half-Life legacy content**, a monster Valve cut, not another mod's art. v1 took it from
+*Half-Life: Extended* (`Half-Life/hl_extended`, per its `liblist.gam`): `models/panthereye.mdl` and ten
+sounds, copied into the repo's `models/` and `sound/panthereye/`. Valve's own source, `Diablo`, was found
+in the SDK afterwards ([HL_SDK.md](HL_SDK.md)), so any model change is a recompile rather than a
+decompile.
 
-**Its AI exists, but only compiled.** `hl_extended/dlls/hlex.dll` contains the classes `CPanthereye` and
-`CCinePanther` (`monster_cine_panther`, on `models/cine-panther.mdl`, which is not in the folder). There is
-no source, so "needs AI" means writing it. The strings still show what the AI does:
+**Its AI in HL: Extended is compiled only** (`hlex.dll` has `CPanthereye` and `CCinePanther`, no source),
+so the mod's AI was written new. The strings showed what theirs did, and they set v1's numbers:
 
 | Evidence | What it says |
 | --- | --- |
@@ -1073,75 +1001,38 @@ Other facts about the model:
 - 49 bones including a tail, no attachments, 40 hitboxes.
 - Sounds: two alert, one attack, one death, four idle, two pain.
 
-**What exists to write the AI from.** The headcrab's leap is the template for the jump: an anim event
-(`HC_AE_JUMPATTACK`, `dlls/headcrab.cpp:29`) sets a velocity, and a touch function deals the damage
-(`LeapTouch`, `:341`). Bullsquids and houndeyes are the squad-capable animal pattern. Both attacks would be
-`DMG_SLASH`, which is on the Shield's list ([ADR-0005](adr/0005-the-shield-negates-a-curated-damage-list.md)),
-so the Pulse counters them with no extra work. It needs a Perception Profile (every monster has one) and an
-answer to whether it can be backstabbed.
+#### The rules — settled 2026-09-13, and what v1 built them as
 
-#### Settled 2026-09-13
-
-- **It stalks.** Once it knows about the player it closes in from cover to cover, crawling on its belly
-  toward them, and growls quietly the whole time. The growl is the player's warning. It is the monster side
-  of pillar 6: here the player is the one being hunted.
+- **It stalks.** Once it knows about the player it closes in, crawling on its belly toward them, and
+  growls quietly the whole time. The growl is the player's warning. It is the monster side of pillar 6:
+  here the player is the one being hunted. The stalk starts when it acquires the player — `Look`, gated by
+  Suspicion, gives it an enemy exactly as it does every other monster, so stalking is simply what it does
+  with an enemy it has not been spotted by, and no map trigger is needed (one stays a later option). v1
+  stalks in a straight line; cover to cover is a later slice, because `CBaseMonster::FindCover` finds a
+  node the threat cannot see but never prefers one *closer* to the threat, and that is a new search on the
+  same node graph.
 - **Close up, it slashes.** In claw range it attacks whether or not it has been spotted.
 - **Spotted, it rushes and pounces.** When the player sees it, it stops hiding, runs at them and leaps from
-  moderate range.
-- **It never pounces unspotted.** A leap the player could not have seen coming is not fun, so the pounce is
-  only ever the answer to being seen. Being attacked out of nowhere is limited to the slash, and the growl
-  warns before that.
-- **Alone.** No squad code for now: a `CBaseMonster`, not a `CSquadMonster`, and the FGD's `SquadLeader`
-  flag is dropped.
-- **Feeding is a placeable ambush.** A mapper can place it eating, using `eat_idle` and `eat_turn`, which
-  exist for this. The player can come across it busy and choose to sneak past, strike first, or leave.
-- **The red one is the alpha.** Different stats, and it leaps more aggressively. *Assumed:* "the red eye"
-  means body 0, the red body. Both bodies have the same red eyes, so the eyes cannot tell them apart, and
-  the blue body is the normal one.
-
-#### What the settled behaviour costs
-
-- **"Spotted" is a new test, the reverse of Suspicion.** Everything in [PERCEPTION.md](PERCEPTION.md) is a
-  monster perceiving the player. This is the Panthereye asking whether *the player* can see *it*: is it
-  inside the player's view cone, with a clear line from the player's eyes. It has to be written, and its
-  tuning decides the whole encounter. Too wide and it pounces the moment it enters the edge of the screen;
-  too narrow and it is never spotted at all. Its glowing eyes help the test be fair in the dark.
-- **Cover to cover does not exist yet.** `CBaseMonster::FindCover` (`dlls/monsters.cpp:2270`) finds a node
-  the threat cannot see within a distance band, but it does not prefer nodes *closer* to the threat. Getting
-  closer through hidden nodes is a new search, built from the same node graph.
-- **The crawl has no activity tag**, so the base AI will never choose it. Movement plays `ACT_WALK` or
-  `ACT_RUN` (`dlls/schedule.cpp:1128-1151`). The Panthereye picks `crawl_on_belly` by name while stalking,
-  with `crouch_to_crawl` and `walk_to_stand_*` as the transitions. Feeding is picked by name the same way.
-- **There is no growl sound, as far as the names go.** The ten sounds are alert, attack, death, idle and
-  pain. An idle might pass for a growl; if not, it is a new sound and an [ART_DEBT.md](ART_DEBT.md) entry.
-  It plays at low volume and short range. It is a cue for the player and never enters `CSoundEnt`, which a
-  monster's own sounds do not anyway.
-- **The alpha is a keyvalue, not a second classname**: the body picks the stats, the way `item_suit`'s
-  `variant` does.
-
-#### Also settled 2026-09-13
-
-- **Spotted is permanent.** Once spotted, it switches to full combat for good: rush, slash, pounce. Looking
-  away does not send it back to stalking. The encounter has two modes, **stalking** and **combat**, and
-  moves one way between them.
-- **Hurting it counts as being spotted.** A Panthereye the player damages goes straight to combat.
-- **The alpha leaps from further away**, and may skip the stalk entirely and fight head-on from the start.
-  "May" is how it was put; it is the likely shape rather than a decision.
-- **The stalk starts the easy way: when it acquires the player.** Its own perception already exists: `Look`,
-  gated by Suspicion, gives it an enemy exactly as it does every other monster. Acquiring the player *is*
-  the start of the stalk, since stalking is simply what it does with an enemy it has not been spotted by.
-  That needs no code, where a map trigger would need a `Use` handler. The trigger stays a later option if
-  mappers want one.
-- **A feeding Panthereye wakes three ways:** a map trigger, being hurt, or noticing the player through its
-  own Suspicion. Noticing was only wanted if it came cheap, and it does, as long as feeding is the
-  Panthereye's own behaviour rather than a map's `scripted_sequence`. See
-  [How the bullsquid feeds](#how-the-bullsquid-feeds).
-
-Because spotted is one-way, a wrong answer from the "spotted" test is permanent too. A test that fires when
-the Panthereye is only at the very edge of the screen costs the whole stalk, so the test should lean strict.
-
-**Stats are deferred**, by decision: they are set later, against a map. The legacy cvars (60–100 health,
-claw 13–25, leap 20–35) are where the normal one starts; the alpha has no numbers.
+  moderate range. **It never pounces unspotted**: a leap the player could not have seen coming is not fun,
+  so the pounce is only ever the answer to being seen; being attacked out of nowhere is limited to the
+  slash, and the growl warns before that.
+- **"Spotted" is the reverse of Suspicion**: the Panthereye asking whether *the player* can see *it*, a
+  test this mod wrote (the numbers are in the header above). **Spotted is permanent** — the encounter has
+  two modes, stalking and combat, and moves one way between them; looking away does not send it back.
+  **Hurting it counts as being spotted.** Because spotted is one-way, a wrong answer from the test is
+  permanent too, so the test leans strict: firing at the very edge of the screen costs the whole stalk.
+- **Alone.** A `CBaseMonster`, not a `CSquadMonster`; the FGD's `SquadLeader` flag is dropped.
+- **The crawl is picked by name.** `crawl_on_belly` carries no activity tag, so the base AI would never
+  choose it; the Panthereye selects it, with `crouch_to_crawl` and `walk_to_stand_*` as the transitions,
+  and feeding will be picked the same way. The growl is a cue for the player at low volume and short
+  range and never enters `CSoundEnt`.
+- **The red one is the alpha**, a keyvalue rather than a second classname, the body picking the stats.
+  Both bodies have the same red eyes, so the eyes cannot tell them apart; the blue body is the normal one.
+  Not in v1, above.
+- **Both attacks are `DMG_SLASH`**, which is on the Shield's list
+  ([ADR-0005](adr/0005-the-shield-negates-a-curated-damage-list.md)), so the Pulse counters them with no
+  extra work. The leap is the headcrab's pattern: an anim event sets a velocity and a touch function deals
+  the damage. Its Perception Profile is Predator, and it can be backstabbed.
 
 #### How the bullsquid feeds
 
@@ -1184,12 +1075,11 @@ Three traps it shows up:
   `|=`, `:249` and `:257`), and its comment says the opposite of what the test does: it ignores smells for 20
   seconds *after* being hurt. Vanilla behaviour, not worth copying as written.
 
-**Not decided: should the Panthereye also hunt for food like the bullsquid?** The machinery is there for
-free. A Panthereye drawn to corpse scents would come to the player's kills, so a trail of bodies would bring
-the stalker to the player. That is a strong stealth idea, but nobody has asked for it. It also overlaps the
-planned **Disturbance** marker ([PERCEPTION.md](PERCEPTION.md#death-witnesses-and-the-disturbance)), the
-mod's own version of "a death leaves something behind". The two should be reconciled before either is used
-for this.
+**The Panthereye will also hunt for food like the bullsquid** — decided 2026-09-18, once eating exists
+(the feeding bullet under *Left for later slices*). A trail of bodies brings the stalker to the player. It
+overlaps the **Disturbance** ([PERCEPTION.md](PERCEPTION.md#death-witnesses-and-the-disturbance--settled-and-built-2026-09-17-untested-in-game)), and
+the reconciliation is: the Disturbance is the player's-kills-only lead it hunts, the scent is any corpse,
+which it eats.
 
 ### Melee alien grunt
 
@@ -1297,10 +1187,10 @@ Discharge, which are energy? A model with a shield is new art, like the chainsaw
 
 #### Still open
 
-- ~~**Classname or keyvalue?**~~ **Answered 2026-09-18: a classname**, `monster_alien_grunt_melee`. Stock
-  maps are unchanged either way, and the squad code only demands a matching classname of
-  `CLASS_ALIEN_MONSTER`, so mixed squads form on their own. A shielded grunt would be a third classname.
 - **The chainsaw's design**, from the ground up, and the charge animation. Both wait on model work.
+- **The unarmoured body**, so the melee variant looks like what it is.
+- **The shielded variant**, above, would be a third classname beside `monster_alien_grunt` and
+  `monster_alien_grunt_melee`.
 
 ### Shelled headcrab
 
@@ -1571,9 +1461,10 @@ models.
 `env_shake` and `env_fade`, and a `scripted_sentence` for a first free word. When it finishes, the boss
 removes itself and the global state turns on. All of it is map entities; the only code in the ending is the
 boss knowing its health floor has been reached and firing a target instead of dying.
-- ~~**Which Module?**~~ **Answered 2026-09-13: a fourth one.** The alien Module, a platform for Core-powered
-  alien weapons, whose first weapon summons ghost slaves. Designed under the [Alien Route](#alien). The
-  fiction of the slave teaching an alien ability now fits exactly.
+- **The Module he gives is the alien Module** (2026-09-13, confirmed 2026-09-17): a platform for
+  Core-powered alien weapons, whose first weapon summons ghost slaves, designed under the
+  [Alien Route](#alien). The fiction of the slave teaching an alien ability fits exactly. Until his fight
+  exists, `item_alienmodule` stands in for the hand-over.
 - **How do the items arrive?** Handed straight into the Inventory, where a full Grid refuses them, or left in
   a Box, which is not built yet.
 - Custom attacks: none written down yet.
@@ -1601,8 +1492,9 @@ here is proposed, not confirmed.
 
 **Its Perception Profile becomes Predator when the boss is built** (decided 2026-09-18, when the Predator
 profile was made for the [Panthereye](#panthereye)): fill ×2.0 and drain ×0.25 where Trained is ×1.5 and
-×0.5. Not before, because the assassin is one of the four primaries 5f's numbers were checked against and
-[STEALTH_CHECKLIST.md](STEALTH_CHECKLIST.md) holds pillar 6 until it has results.
+×0.5. Not before: the assassin is one of the four primaries 5f's numbers were checked against, and now
+that [STEALTH_CHECKLIST.md](STEALTH_CHECKLIST.md) has its results (2026-09-18) nothing holds the change
+but the boss itself. Today it is still Trained.
 
 ### The alien grunt boss
 
@@ -1613,7 +1505,8 @@ and the test of whatever build the player has made.
 
 ### The Nihilanth
 
-**Shape: Idea.** Custom attacks and a revamped model.
+**Shape: Shaped 2026-09-17 — a pattern fight, and the sphere puzzle is gone.** Custom attacks and a
+revamped model.
 
 **`CNihilanth` is not schedule AI.** It runs on think functions (`HuntThink`, `Flight`, `NextActivity`),
 with energy spheres it absorbs and throws (`CNihilanthHVR`), and it is a puzzle boss: the spheres protect
@@ -1623,10 +1516,8 @@ it (`AbsorbSphere`, `dlls/nihilanth.cpp:984`). New attacks go into `NextActivity
 (`float`, `walk_r/l/u/d`, `recharge`, `attack1_open`, `attack1`, `attack2`, `die1`,
 `dlls/nihilanth.cpp:469-839`).
 
-~~Open: does "custom attacks" keep the sphere puzzle, or turn it into a straight fight like the other
-three?~~ **Answered 2026-09-17: neither. A pattern fight, and the sphere puzzle is gone.**
-
-**The fight — shaped 2026-09-17.** It was asked for as a bullet hell. A first-person player sees a quarter
+**The fight — shaped 2026-09-17.** Neither the sphere puzzle kept nor a straight fight like the other
+three. It was asked for as a bullet hell. A first-person player sees a quarter
 of the sky and the engine's projectiles are full networked entities against a 900-edict default, so it is
 **patterns, not swarms**: a small vocabulary of readable shapes, each telegraphed (a flash, then the
 discharge), each with an answer from the base kit. Skills make an answer forgiving and are never needed.
@@ -1670,43 +1561,38 @@ still [the last thing designed](#open-questions).
 Nihilanth's reach through the crystals stops at **planting ideas**, so nobody is a puppet. These are staff
 who spent years around crystal, heard the voice, and did something with it.
 
-- **The maddened** are miners with pickaxes and some security members. A maddened miner is a melee human —
-  the zombie's schedule set is the cheapest base, on a worker model that does not exist yet
-  ([ART_DEBT.md](ART_DEBT.md) when built) — **backstabbable**, with an **untrained Perception Profile**:
-  slow to notice, lethal up close. They are the fair melee enemy of the first hour and the stealth tutorial
-  before the soldiers arrive. A maddened security member is a grunt that spawns as a loner, which 5f
-  already treats differently (the mob rule).
+- **The maddened** are miners with pickaxes and some security members. A maddened miner is a melee human,
+  **backstabbable**, slow to notice and lethal up close: the fair melee enemy of the first hour and the
+  stealth tutorial before the soldiers arrive. A maddened security member is a grunt that spawns as a
+  loner, which 5f already treats differently (the mob rule); not built.
 
-  **The maddened miner, grilled 2026-09-19 evening, built and verified in game the same night ("it
-  works"). Recorded in [PILLARS pillar 2](PILLARS.md#2-enhanced-combat) and in depth in
-  [MADDENED.md](MADDENED.md), which ends with the list for the grill that follows.** Decision 2 reversed
-  on play: he runs. What was built:
-  `monster_maddened` (`dlls/maddened.cpp`), `models/maddened.mdl` from `E:\CustomAssets\scripts\maddened_build.py`,
-  `CLASS_MADDENED` as row and column 15 of a relationship table grown to 16 (14 is the vehicle class, which
-  Valve defined and never gave a row), `sk_maddened_health` 50/60/70 and `sk_maddened_dmg_swing` 10/15/20,
-  the FGD entry with its `suited` choice, and shaft1's vein now holds him, unsuited, instead of the zombie.
-  His stand-ins are in [ART_DEBT.md](ART_DEBT.md#the-maddened-miner--ivan-in-blue-a-black-crowbar-no-flinch).
-  Seven decisions:
-  1. **Body: the player's rig, from the SDK sources** (`Player Models/`, [HL_SDK.md](HL_SDK.md)),
-     built by a script into `models/maddened.mdl`. Rejected: the zombie's rig (attacks exist, the mesh is
-     a corpse, the miner would be hand modelling from minute one) and the scientist's (a hundred
-     animations of a man at work, no attack, no source, a Bip02 nothing else shares). The weapon as a
-     bodygroup (the pick: `reference_crowbar`, the crowbar mesh already skinned to the hand bone, in the
-     pickaxe's black). One keyvalue, suited or not, picks the body. The origin drops from the player's 36
-     to 0. The swing is the player's crowbar swing with a damage event on the frame it lands.
-     **Amended twice after the first build was verified.** The evening of 2026-09-19: two of the SDK's
-     deathmatch characters on the same rig, the sealed-helmet suit and the scientist in a blue coat,
-     because a face and clothes for the unsuited man are hand modelling Andrei cannot do yet. Then
-     2026-09-20, Andrei's find: **Ivan**, Half-Life's original protagonist as the 25th anniversary
-     shipped him, decompiled by Andrei, "the look of a madman" in a bulkier suit of his own, washed to
-     the work blue. **One body, the only variant**: the suited keyvalue is gone from class, FGD, map and
-     spec. The swing is now one pitch-blended sequence held level, as Valve's QC has it, which ends the
-     swing at the floor or the ceiling. The deathmatch roster stays the pool for later bodies (Barney's
-     for the maddened security member). Not yet verified in game.
-  2. ~~**He walks, always.** The run is the cult's, later. Rejected: walk until seen, then run — the first
-     fight in the game should not be a sprint in the dark.~~ **Reversed on play the same night: he runs
-     when he chases.** The first build ran by accident, and it worked; the corrected walking one "looks
-     like no threat" (Andrei). So the rejected option is the one built: walk unaware, run when acquired.
+  **The maddened miner: grilled 2026-09-19 evening, built and verified in game the same night ("it
+  works"), given Ivan's body on 2026-09-20.** Recorded in [PILLARS pillar 2](PILLARS.md#2-enhanced-combat)
+  and in depth in [MADDENED.md](MADDENED.md), which ends with the list for the grill that follows. What
+  was built: `monster_maddened` (`dlls/maddened.cpp`), `models/maddened.mdl` from
+  `E:\CustomAssets\scripts\maddened_build.py`, `CLASS_MADDENED` as row and column 15 of a relationship
+  table grown to 16 (14 is the vehicle class, which Valve defined and never gave a row),
+  `sk_maddened_health` 50/60/70 and `sk_maddened_dmg_swing` 10/15/20, the FGD entry, and shaft1's vein
+  holds him instead of the zombie. His stand-ins are in
+  [ART_DEBT.md](ART_DEBT.md#the-maddened-miner--ivan-in-blue-a-black-crowbar-no-flinch). The decisions:
+  1. **Body: Ivan, on the player's rig from the SDK sources** (`Player Models/`, [HL_SDK.md](HL_SDK.md)),
+     built by a script into `models/maddened.mdl`. Ivan is Half-Life's original protagonist as the 25th
+     anniversary shipped him, decompiled by Andrei — "the look of a madman" in a bulkier suit of his own,
+     washed to the work blue. **One body, no variants**: there is no suited keyvalue, so the one at
+     shaft1's vein is not a choice. The weapon is a bodygroup (the pick: `reference_crowbar`, the crowbar
+     mesh already skinned to the hand bone, in the pickaxe's black). The origin drops from the player's 36
+     to 0. The swing is the player's crowbar swing, one pitch-blended sequence held level as Valve's QC
+     has it, with a damage event on the frame it lands. Rejected: the zombie's rig (attacks exist, the
+     mesh is a corpse, the miner would be hand modelling from minute one); the scientist's (a hundred
+     animations of a man at work, no attack, no source, a Bip02 nothing else shares); and the two bodies
+     that stood in first — the player's own with Gordon's face, verified in game, then the sealed-helmet
+     suit and the blue-coated scientist from the SDK's deathmatch roster, because a face and clothes for
+     an unsuited man are hand modelling Andrei cannot do yet. That roster stays the pool for later bodies
+     (Barney's for the maddened security member). Ivan's body is not yet verified in game.
+  2. **He walks unaware and runs when he chases.** The grill said walk always, the run being the cult's
+     later, so that the first fight in the game would not be a sprint in the dark; the first build ran by
+     accident and it worked, and the corrected walking one "looks like no threat" (Andrei). Reversed on
+     play the same night.
   3. **Health 60, swing 15, reach 64, about 1.2 s a swing**, as skill cvars: three swings from the front,
      two with a Melee Damage node, one Backstab.
   4. **A relationship class of his own, everyone's enemy**, the player's, the soldiers', Xen's, allied with
@@ -1717,12 +1603,10 @@ who spent years around crystal, heard the voice, and did something with it.
   6. **Sounds, all stand-ins:** the road's whisper (the slave's words) as his idle every 4–8 s, so what the
      player heard down the tunnel is him and it is his tell in the dark; the crowbar's miss and body hit
      pitched down; Barney's pain and death.
-  7. ~~**The one at the vein in shaft1 is unsuited** — lost, a stray.~~ Moot since Ivan: one body. The
-     zombie's line in the map became his.
 
-  **Debt it creates, for ART_DEBT when built:** one face for all of them; the black crowbar as the pick
-  until the hand-made head exists; no flinch, since the player never flinches; a planted swing, since it
-  is an upper-body animation; the voice.
+  **Debt it created, in ART_DEBT:** one face for all of them; the black crowbar as the pick until the
+  hand-made head exists; no flinch, since the player never flinches; a planted swing, since it is an
+  upper-body animation; the voice.
 - **The cult** is the organised form, with a leader. **Hostile everywhere, with one exception: ritual
   scenes**, where cultists stay passive until the player is noticed or crosses a map trigger.
 - **The ritual has to be the cultist's own state**, not a `scripted_sequence`: Suspicion is frozen while a
@@ -1748,8 +1632,8 @@ who spent years around crystal, heard the voice, and did something with it.
 
 What it meets in the code:
 
-- ~~**The model has no move-and-shoot sequence.**~~ **It does, and it is not wired up** (Andrei,
-  2026-09-18, confirmed from Valve's source in the SDK, [HL_SDK.md](HL_SDK.md)). `strafeleft` and
+- **The model has a move-and-shoot sequence, and it is not wired up** (Andrei, 2026-09-18, confirmed
+  from Valve's source in the SDK, [HL_SDK.md](HL_SDK.md)). `strafeleft` and
   `straferight` are made from animations named `strafefire_l2` and `strafefire_r2`. The weapon visibly
   fires in them, they are tagged `ACT_STRAFE_LEFT`/`_RIGHT`, and they carry **no fire events**, where
   `standing_mp5` fires at frames 10, 12 and 14. Two ways to use them: add the events in the QC and recompile
@@ -1901,9 +1785,8 @@ Two things this pillar should not rediscover:
   boss attacks are counterable. A new boss whose signature attack is not on that list is a boss the Pulse
   is useless against — which may be the point, but should be a choice.
 
-~~Open: is a boss a **combat** encounter or a **puzzle**?~~ The roster answers it for three of the four:
-the slave, assassin and alien grunt bosses are fights. ~~The Nihilanth is the one still open, above.~~
-The Nihilanth is a pattern fight, 2026-09-17, above.
+A boss is a **fight**, not a puzzle: the slave, assassin and alien grunt bosses are fights with custom
+attacks, and the Nihilanth is a pattern fight (2026-09-17, above).
 
 ---
 
@@ -2041,7 +1924,7 @@ knows the hitgroup, the damage and the impact point at once.
 
 #### What the extra blood actually costs
 
-Not nothing, and an earlier draft of this entry implied otherwise. Checked 2026-09-01:
+Not nothing. Checked 2026-09-01:
 
 **Damage does not visibly scale the existing spray.** `SpawnBlood` (`dlls/weapons.cpp:132`) emits exactly
 one `TE_BLOODSPRITE` through `UTIL_BloodDrips` (`dlls/util.cpp:1185`), and the only thing damage controls
@@ -2094,10 +1977,10 @@ already carries: it must not share a timbre with the sound landing in the same i
 - **Which monsters, and in what order?** Zombies first is the obvious call: they are the mod's most-fought
   melee enemy, the Follow-Up is already tuned against them, and a shambling headless zombie is the image
   that sells the feature.
-- **Does the tree touch it?** A Skill that lowers the damage floor or raises the head multiplier is a
-  server-side damage modifier read where the effect is computed — the exact pattern every existing Skill
-  uses. Tempting, and it would give the Armaments column something that is not a flat number. Against it:
-  the tree is at 15 Skills across seven columns and was deliberately curated down to that.
+- **The tree already touches it.** Headhunter (id 38, the Weapon Specialist's, built 2026-09-14) raises
+  the head multiplier for player hits, so it raises how often the lethality test passes with no new hook.
+  Whether a node should lower the damage floor as well is open, and whether a Headhunter rank makes
+  decapitation more likely or only the hit bigger is a question the Route's entry also carries.
 - **Does a decapitated monster still `DeathSound`?** Half-Life's death sounds are voiced. A headless
   scientist screaming is a bug the player will find in the first ten minutes.
 
@@ -2135,8 +2018,8 @@ can never assume, and because the same comfort goal is met better inside the Pul
 
 | Module | What it does | Replaces |
 | --- | --- | --- |
-| **Pulse** | The existing Pulse, no longer available from the start — **but found in the first minutes (settled 2026-09-17)**: it is mining safety gear, kept in wall cabinets for crystal that flashes and then discharges, taken during the escape from the cafeteria and for a few minutes the player's only verb. It gains [a half-damage tail](#the-pulses-tail--settled-2026-09-17-not-built). **Built 2026-09-16, untested in game**: `item_pulsemodule` opens its gate, and without it the key, the bar and every Pulse node are absent ([ADR-0013](adr/0013-the-pulse-is-a-found-module.md)). The pickup is a stand-in like the alien Module's | Suit hardware — the Pulse came with the suit at Anomalous Materials until 2026-09-16 |
-| **Dash** | A short, fast movement burst. Built 2026-09-15. **Works in the air from the start — settled 2026-09-17, built 2026-09-18**: along the movement keys, the ground Dash's own rule, because a Dash glued to the ground cannot cross a gap. The *directional* dash stays the [Shinobi Major](#the-dash-route-name-pending) | **The long jump module**, which serves the same purpose |
+| **Pulse** | The existing Pulse, no longer available from the start. **Built 2026-09-16** as a found Module: `item_pulsemodule` opens its gate, and without it the key, the bar and every Pulse node are absent ([ADR-0013](adr/0013-the-pulse-is-a-found-module.md)); the pickup is a stand-in like the alien Module's. **Found at the hub or just after it** (2026-09-19), where the suit is put back on — not in a safety cabinet in the first minutes as 2026-09-17 had it, because the escape after the cafeteria is made with no suit and the Pulse needs one ([the cold open](#the-cold-open--shaft1-grilled-2026-09-19)). It is mining safety gear in the fiction, kept for crystal that flashes and then discharges. It gains [a half-damage tail](#the-pulses-tail--settled-2026-09-17-built-2026-09-18-overnight-visual-open) | Suit hardware — the Pulse came with the suit until 2026-09-16 |
+| **Dash** | A short, fast movement burst. Built 2026-09-15. **Works in the air from the start — settled 2026-09-17, built 2026-09-18**: along the movement keys, the ground Dash's own rule, because a Dash glued to the ground cannot cross a gap. The *directional* dash stays the [Shinobi Major](#shinobi) | **The long jump module**, which serves the same purpose |
 | **Hook** | A grappling hook, in the manner of Opposing Force's barnacle grapple. **Low priority since 2026-09-17**: kept as an alternative for navigation and combat, and nothing in the game is designed to need it | — |
 | **Double jump** | A second jump in the air. **New 2026-09-17, the sixth Module**, found later in Xen, filling the **legs Slot** the Status page left open. It also unlocks the Air Dash node. Where exactly it is found is open (the vortigaunt's first hand-over after the teleport was proposed) | — |
 | **The alien Module** (unnamed) | A platform for alien weapons that run on **Cores**; the summon weapon is its first. **Built 2026-09-16, untested in game, via a stand-in pickup** — the freed alien slave's actual hand-over is not built. | — |
@@ -2176,77 +2059,67 @@ Dash replacing the long jump means the thing to extend is already the right shap
 ### The Pulse as a Module — two branches instead of a swap
 
 The Pulse's Skills split into **two branches** that answer the parry-comfort problem without removing the
-Pulse:
+Pulse, and both live in the [Juggernaut Route](#juggernaut--resilient):
 
-- **Timing** — the Pulse as it is now: press to raise a Shield, reward for reading an attack. The four
-  existing Skills (`PulseWindow` 12, `PulseRecharge` 15, `PulseDischarge` 16, `PulseRebound` 17) and the
-  `CrowbarFollowUp` (18) that hangs off a deflect all belong here.
-- **Passive** — a **separate, rechargeable health pool** that protects without being timed, for a player
-  who does not want to parry. New Skills, new ids. Named the **Defense Matrix** on 2026-09-13 and shaped
-  the same day under the [Juggernaut Route](#juggernaut--resilient), where it came out as neither separate
-  nor passive: the Pulse key *held* for a second, armour as the pool, a larger armour share while up, a 20%
-  slow. The timing branch lives in the same Route.
+- **Timing** — the Pulse as it is: press to raise a Shield, reward for reading an attack. Pulse Window
+  (12), Pulse Recharge (15), Pulse Discharge (16), Pulse Rebound (17) and the Follow-Up (18) that hangs
+  off a deflect.
+- **The Defense Matrix** — for a player who does not want to parry. Proposed 2026-09-12 as a separate,
+  passive, rechargeable health pool; shaped 2026-09-13 and built 2026-09-16 as neither separate nor
+  passive: the Pulse key *held* for a second raises it, armour is the pool, nothing reaches health while
+  it stands, the player is slowed 20% while it is up. There is no second bar and nothing refills by
+  waiting.
 
-**Settled 2026-09-12:**
+**Settled 2026-09-12, as it stands today:**
 
-- **The unskilled Pulse is the Pulse as it is today** — the timed press. Neither branch changes what the
-  Module does before a Skill is spent. **Amended 2026-09-17**: the base Pulse gains
-  [a tail](#the-pulses-tail--settled-2026-09-17-not-built), so that a player who is not into precise
-  parrying is not put off the mod's first verb.
+- **The unskilled Pulse is the timed press**, with [the tail](#the-pulses-tail--settled-2026-09-17-built-2026-09-18-overnight-visual-open)
+  since 2026-09-18 so that a player who is not into precise parrying is not put off the mod's first verb.
+  Neither branch changes what the Module does before a Skill is spent.
 - **The branches are not exclusive, but investing in both is meant to be inefficient.** No lockout rule,
   no new line style in the tree: the tree stays AND-only, and the cost of spreading points across both is
-  carried by pricing. A player who goes deep in one branch should be clearly better served than one who
-  splits.
-- **The passive branch is a separate rechargeable health pool.** Damage lands on the pool before armour
-  and health, and the pool refills on its own.
+  carried by pricing. Both sit in one Route, so "splitting" is within the Juggernaut rather than across
+  Routes.
 - **The Pulse is found in the world, early.** It is the player's first Module, and the stretch of game
-  that cannot assume it is short. **Moved 2026-09-19:** the escape after the cafeteria is made with no
-  suit at all, and the Pulse needs one, so "the safety cabinet in the first minutes" becomes the hub or
-  just after it, where the suit is put back on. See [the cold open](#the-cold-open--shaft1-grilled-2026-09-19).
+  that cannot assume it is short: at the hub or just after it, where the suit is put back on
+  (2026-09-19, [the cold open](#the-cold-open--shaft1-grilled-2026-09-19)).
+- **Order in `CBasePlayer::TakeDamage`**: a standing Shield refuses the hit outright, then the Matrix's
+  armour share, then armour, then health.
 
-**The pool sits next to two things that already absorb damage**, and the design has to say how it differs
-from each:
-
-- **Armour.** The HEV battery is already a second pool in front of health, and `BatteryRegen` (id 14)
-  already makes it refill passively. What separates the Pulse pool from armour today is only the curated
-  damage list and the recharge rule — worth making sharper than that, or the passive branch reads as
-  "more armour".
-- **The timed Shield.** Order in `CBasePlayer::TakeDamage` becomes: a standing Shield refuses the hit
-  outright, then the pool, then armour, then health.
-
-This **reverses a recorded decision**. PILLARS pillar 2 said the Pulse is suit hardware because *"Skills
-evolve a verb the player already has rather than granting it, which lets level design assume it."* As a
-Module, level design may assume it only after its acquisition point. ~~That wants an ADR when it is
-built~~ **Built 2026-09-16 with [ADR-0013](adr/0013-the-pulse-is-a-found-module.md).**
+**This reversed a recorded decision, and [ADR-0013](adr/0013-the-pulse-is-a-found-module.md) records it.**
+PILLARS pillar 2 said the Pulse was suit hardware because *"Skills evolve a verb the player already has
+rather than granting it, which lets level design assume it."* As a Module, level design may assume it
+only after its acquisition point, and every Pulse node is absent until the Module is found, so a player
+cannot spend on a verb they do not have.
 
 ### The Pulse's tail — settled 2026-09-17, built 2026-09-18 overnight, visual open
 
-**Verified in game 2026-09-18: the mechanic is right, the visual is not.** Andrei: "the visual indicator
-needs to be addressed in order for the mechanic to be clear and rewarding to the player." Today the tail is
-one dim ring at its start and a low clang on a braced hit; the bar shows it only as recharge. That is the
-next thing to do here — **deferred by Andrei on 2026-09-18** ("leave them for another time"). Proposed and
-not yet chosen, to be put to him when it comes back: (1) the bar gives the tail its own dimmer segment that
-drains before the recharge starts, which needs a new client state; (2) the dim ring repeats and fades across
-the whole tail, so its length reads in the world; (3) a braced hit gets its own payoff, a half-bright ring
-flash and a brief screen-edge tint in the suit's colour beside the low clang — a small win, clearly smaller
-than a parry. **Also open, lower priority:** whether a *successful* deflect should be followed by a
-tail. Today it is not — a deflect ends as it always did, and the rest of that second is unprotected.
+**Built and verified in game 2026-09-18: the mechanic is right, the visual is not** — and since
+2026-09-20 the tail is **a candidate for removal**, not merely an unfinished visual. Recorded in
+[PILLARS pillar 2](PILLARS.md#2-enhanced-combat).
 
-**Still deferred 2026-09-20**, and now deliberately so rather than by omission. When
-[the Shield in first person](#the-shield-in-first-person--settled-2026-09-20-built-and-seen) was settled, the
-tail was put to Andrei as a thing the new visual could carry for free — a distinct vanish would have told
-"I parried" from "I braced" without a number, which is rule 4 above. He declined: *"the tail is something
-that might not make it to the finals so for this v1 lets not take it into consideration for extra
-treatment."* So the tail is a candidate for removal, not merely an unfinished visual, and nothing should
-be built on top of it until that is decided.
+Today the tail shows as a low clang on a braced hit and as recharge on the bar; its dim ring went with
+every other ring when [the Shield in first person](#the-shield-in-first-person--settled-2026-09-20-built-and-seen)
+was built. Andrei's verdict on 2026-09-18 — "the visual indicator needs to be addressed in order for the
+mechanic to be clear and rewarding to the player" — was deferred the same day ("leave them for another
+time"). When the first-person Shield could have carried it for free on 2026-09-20, a distinct vanish
+telling "I parried" from "I braced", he declined: *"the tail is something that might not make it to the
+finals so for this v1 lets not take it into consideration for extra treatment."* So nothing is built on
+top of it, and [the Pulse's timing grill](#the-pulses-timing--urgent-grill-booked-for-the-morning-of-2026-09-21)
+decides whether it merges into a longer window or goes.
 
-Recorded in [PILLARS pillar 2](PILLARS.md#2-enhanced-combat). Two calls made while building it: the tail
-follows only a window that deflected nothing (a deflect ends exactly as before, so nothing verified moves),
-and its length is `skill_matrix_hold` rather than a cvar of its own, since rule 5 makes them one moment —
-so one new cvar, `pulse_tail_scale`, not two. The settled rules, kept for the record:
+If it stays, the proposals recorded 2026-09-18 and not chosen: (1) the bar gives the tail its own dimmer
+segment that drains before the recharge starts, which needs a new client state; (2) a repeating, fading
+cue across the whole tail, so its length reads in the world; (3) a braced hit gets its own payoff, a
+half-bright flash and a brief screen-edge tint in the suit's colour beside the low clang — a small win,
+clearly smaller than a parry. **Also open, lower priority:** whether a *successful* deflect should be
+followed by a tail. Today it is not — a deflect ends as it always did, and the rest of that second is
+unprotected.
 
-The deflect window stays (`pulse_window`, 0.25 s, full negation). The Pulse then **persists to one second
-in total, and the tail takes half damage.** The rules that keep the skill ceiling where it is:
+**The rules, as built.** The deflect window stays (`pulse_window`, 0.25 s, full negation). The Pulse then
+**persists to one second in total, and the tail takes half damage** (`pulse_tail_scale`, 0.5). Its length
+is `skill_matrix_hold` rather than a cvar of its own, since rule 5 makes them one moment, and it follows
+only a window that deflected nothing, so a deflect ends exactly as it did before the tail existed. The
+rules that keep the skill ceiling where it is:
 
 1. **Only the window is a deflect.** The short recharge (`pulse_recharge_hit`), the Discharge, the Rebound,
    the Follow-Up's prime and the [shelled headcrab's](#shelled-headcrab) punish window all stay on it. A
@@ -2255,15 +2128,14 @@ in total, and the tail takes half damage.** The rules that keep the skill ceilin
    Falls and drowning are not on it and are not halved.
 3. **Pulse Window (12) widens the negate part inside the second**; it does not extend the total. The node
    converts tail into window.
-4. **The two states look and sound different** — a dimmer ring, a duller sound — so "I parried" and "I
-   braced" are told apart without a number. [ART_DEBT.md](ART_DEBT.md) already records the first Pulse
-   sounds failing because two cues shared a timbre a tenth of a second apart.
+4. **The two states must look and sound different**, so "I parried" and "I braced" are told apart without
+   a number. Today only the sound differs, a duller clang. [ART_DEBT.md](ART_DEBT.md) already records the
+   first Pulse sounds failing because two cues shared a timbre a tenth of a second apart.
 5. **The tail runs exactly to the moment a hold raises the [Defense Matrix](#juggernaut--resilient)**
    (the key held for one second). Window, tail, Matrix: one motion, where today there is an unprotected gap.
 
 Mashing the key buys about a second of cover per four-second cycle, most of it at half — roughly 12%
-average reduction at today's `pulse_recharge_miss` of 3 s. A cushion, not a build. Two new cvars: the
-tail's length and its scale.
+average reduction at today's `pulse_recharge_miss` of 3 s. A cushion, not a build.
 
 ### The Pulse's timing — URGENT GRILL, booked for the morning of 2026-09-21
 
@@ -2351,15 +2223,15 @@ model answer, a hard swap of `pev->viewmodel` with no holster time, is parked in
 2. **It covers the whole view.** `CPlayerPulse::WouldNegate` (`dlls/player_pulse.cpp:975`) takes no
    direction at all — a shotgun in the back is negated exactly as one in the face. Anything held in front
    of the player would teach a facing rule the game will never reward. The player is *inside* the Shield.
-3. **Clear at the crosshair, dense at the periphery.** This was argued during the grill as physics — "what
-   the inside of a sphere looks like, oblique at the edges" — and **that reasoning is wrong.** From the
-   exact centre of a sphere every surface element is face-on, and the path length through a thin shell is
-   identical in every direction; there is no fresnel to reproduce. Corrected here and in the code header
-   so nobody tunes against a model that does not exist. The falloff is **authored**, and its justification
-   is the real one: the player must be able to see what they are shooting during the one quarter-second
-   that matters. In v1 it is the *only* structural cue besides the travelling edge, so it carries the
-   surface read alone. `pulse_shield_spread` and `pulse_shield_falloff` shape it, `pulse_shield_centre`
-   sets what is left at the crosshair itself.
+3. **Clear at the crosshair, dense at the periphery.** The falloff is **authored**, and its justification
+   is that the player must be able to see what they are shooting during the one quarter-second that
+   matters. In v1 it is the *only* structural cue besides the travelling edge, so it carries the surface
+   read alone. `pulse_shield_spread` and `pulse_shield_falloff` shape it, `pulse_shield_centre` sets what
+   is left at the crosshair itself. Trap, recorded here and in the code header so nobody tunes against a
+   model that does not exist: the grill argued this as physics — "what the inside of a sphere looks like,
+   oblique at the edges" — and that is wrong. From the exact centre of a sphere every surface element is
+   face-on, and the path length through a thin shell is identical in every direction; there is no fresnel
+   to reproduce.
 4. **The motion is a fill, not an inflation.** The sphere sits at a fixed radius and the *material*
    spreads across it behind a bright leading edge. Rejected: inflation (the surface crosses the camera on
    its way out) and facet assembly (most work, most generic, and it is a texture decision rather than a
@@ -2377,20 +2249,17 @@ model answer, a hard swap of `pev->viewmodel` with no holster time, is parked in
    mechanically up. The reverse empties the periphery first, which is the part the player is not watching,
    and its last frames are a bright ring shrinking to a point at the crosshair — an unmissable "you are
    unprotected now" cue delivered to the fovea, which an ability with a 1.5–3 s Recharge wants.
-7. **Fixed sweep, variable hold** — as decided, though see the note below on what the tuned value did to
-   it. Sweep in and sweep out are a fixed duration *always*; `PulseWindowFor`'s extra 150 ms at
-   Pulse Window (`dlls/player_pulse.cpp:151`, 0.25 s → 0.40 s) goes entirely into the hold. Sweep speed is
-   a property of the suit, not of the player's build; the Skill buys time protected, not a lazier Shield.
-   The entrance therefore looks identical every time, which is what makes it learnable as a confirmation
-   that the press registered.
-
-   **Then it was tuned, and the tuning made the decision inert.** `pulse_shield_sweep` went from 0.08 to
-   **0.5** on first sighting. The sweep is clamped to at most half the window, and half of 0.25 s is
-   0.125 s — so at the default window the Shield now spends its *entire* life travelling, out for half
-   and back for half, with no hold phase at all, and every duration scales with the window again. That is
-   option B, the one A was chosen over. Recorded rather than quietly reconciled: the structure is still
-   right and reasserts itself the moment the window grows or the sweep drops back under half of it, but
-   nobody should read rule 7 and expect a hold at today's numbers.
+7. **Fixed sweep, variable hold — decided, and inert at today's numbers.** The decision: sweep in and
+   sweep out are a fixed duration *always*, and `PulseWindowFor`'s extra 150 ms at Pulse Window
+   (`dlls/player_pulse.cpp`, 0.25 s → 0.40 s) goes entirely into the hold, because sweep speed is a
+   property of the suit, not of the player's build, and an entrance that looks identical every time is
+   learnable as a confirmation that the press registered. What the tuning did: `pulse_shield_sweep` went
+   from 0.08 to **0.5** on first sighting, and the sweep is clamped to at most half the window, so at the
+   default window the Shield spends its *entire* life travelling — out for 0.125 s and back for 0.125 s —
+   with no hold at all, and every duration scales with the window again, which is the option this one
+   was chosen over. The structure reasserts itself the moment the window grows or the sweep drops back
+   under half of it; until then nobody should read this rule and expect a hold. That is the observation
+   [the timing grill](#the-pulses-timing--urgent-grill-booked-for-the-morning-of-2026-09-21) exists for.
 8. **No texture in v1.** Pure vertex colour; the travelling edge and the obliquity falloff do all the
    work. Hex facets are an [ART_DEBT.md](ART_DEBT.md) entry, deliberately not a prerequisite — if the two
    procedural cues do not sell a surface on their own, that is worth learning for the cost of an evening
@@ -2440,10 +2309,9 @@ protecting you from reads as a bug. Drawing over the viewmodel is the accepted c
 weapon is washed in the suit's colour on every press, on every weapon including the two-handed ones that
 killed the ghost arm — a free preview of the energised-gear reading before the Matrix version is built.
 
-**Built on raw GL, not `pTriAPI` — this reverses what this entry first said**, and the reversal came out
-of writing it. Two reasons, neither visible at design time. v1 has no texture, so the API's one real
-service, binding a sprite, is not wanted; and turning the depth test *off* is the entire point of drawing
-here, which the API gives no way to do. So the Shield is hardware-renderer only, like the katana trail and
+**Built on raw GL, not `pTriAPI`**, for two reasons that only showed up in the writing: v1 has no
+texture, so the API's one real service, binding a sprite, is not wanted; and turning the depth test *off*
+is the entire point of drawing here, which the API gives no way to do. So the Shield is hardware-renderer only, like the katana trail and
 the blade's cooling, and the software renderer draws nothing at all. That is precisely why
 `hud_pulse_tint` was kept rather than deleted — it is not a courtesy to old configs, it is the software
 path. When the hex facets land (ART_DEBT), the texture binding can come back through `pTriAPI` or through
@@ -2451,15 +2319,14 @@ GL directly; the depth-test requirement will still rule out the API on its own.
 
 #### What goes, what stays
 
-- **Every ring — deleted**, and with them `pulse_ring_style` and `pulse_ring_scale`. This happened in two
-  steps on the same day. The `TE_BEAMCYLINDER` branch went first, during the grill (*"as for the houndeye
-  ripple delete it"*) — it was the houndeye's floor blast from `dlls/houndeye.cpp:576-616`. The
-  `TE_BEAMTORUS` pair was kept "for now, unjudged until seen beside the Shield", and lasted exactly as
-  long as that took: on first sighting Andrei called it — *"disable or remove the torus/rings all
-  together, they are ugly compared to what we have on our hand."* The tail's dim ring went with them,
-  which costs nothing it was not already losing, since the tail was deliberately left out of v1 anyway.
-  `sprites/shockwave.spr` is no longer precached or referenced; the Pulse draws no sprite in the world at
-  all.
+- **Every ring — deleted**, and with them `pulse_ring_style` and `pulse_ring_scale`, on the day the
+  Shield was first seen. The `TE_BEAMCYLINDER` branch was the houndeye's floor blast from
+  `dlls/houndeye.cpp` and went during the grill (*"as for the houndeye ripple delete it"*); the
+  `TE_BEAMTORUS` pair was kept to be judged beside the Shield and lasted exactly as long as that took —
+  *"disable or remove the torus/rings all together, they are ugly compared to what we have on our
+  hand."* The tail's dim ring went with them, which costs nothing it was not already losing, since the
+  tail was deliberately left out of v1 anyway. `sprites/shockwave.spr` is no longer precached or
+  referenced; the Pulse draws no sprite in the world at all.
 - `hud_pulse_tint` — **default 0, cvar kept**. It is `FCVAR_ARCHIVE` and already written into configs, so
   deleting it would make an existing setting silently do nothing; at 0 it costs four lines and gives an
   instant A/B in the console while judging the Shield in play.
@@ -2491,9 +2358,8 @@ GL directly; the depth-test requirement will still rule out the API on its own.
 - Numbers ship as cvars, dialled by eye per `pulse_ring_scale`'s precedent: `pulse_shield` (off switch),
   `_sweep`, `_alpha`, `_edge`, `_edge_width`, `_spread`, `_falloff`, `_centre`, `_flare`, `_live`. The
   Shield respects `HIDEHUD_ALL` as `CHudPulse::Draw` does. **Radius and tessellation are constants, not
-  cvars**, against what this entry first said: with the depth test off and the sphere centred on the eye,
-  the radius has no visual effect at all — only each vertex's *direction* matters — and a cvar that does
-  nothing is worse than none.
+  cvars**: with the depth test off and the sphere centred on the eye, the radius has no visual effect at
+  all — only each vertex's *direction* matters — and a cvar that does nothing is worse than none.
 
 #### Backlog this created
 
@@ -2542,34 +2408,22 @@ change the lesson. Directions worth putting to Andrei, none decided:
 
 ### Open questions
 
-- ~~**What the pool absorbs.**~~ ~~**How the pool recharges.**~~ ~~**How the pool is shown.**~~ **Answered
-  2026-09-13** under the [Juggernaut Route](#juggernaut--resilient): there is no pool. Armour is the pool,
-  the Matrix raises armour's share while held, nothing refills by waiting, and the armour readout tints.
-- **How "inefficient to split" is priced.** The 35-point tree and a 60–70% critical-path budget are the
-  lever; ~~a proving map is what tells whether the pricing does it~~ (the economy is a non-issue as of
-  2026-09-15, see [Maps](#maps)). Both branches now sit in one Route, so
-  "splitting" is within the Juggernaut rather than across Routes.
-- **Pulse Skills before the Module is found.** A player could spend points on a branch for a verb they do
-  not have. The [alien column](PILLARS.md#wanted-the-alien-column) already wants "hidden until the player
-  carries it" — the Pulse branch is a second customer for the same rendering machinery, and a reason to
-  build it once.
-- ~~**Dash's input.**~~ **Answered 2026-09-13** under the [Dash Route](#the-dash-route-name-pending): a
-  tap of shift, in the direction of movement, ground only until the Route's major node puts it in the air.
-  Walk is rebound.
+- **How "inefficient to split" is priced.** Both branches sit in one Route, so "splitting" is within the
+  Juggernaut rather than across Routes, and the economy is a non-issue (2026-09-15, [Maps](#maps));
+  whether the pricing does it is a play question.
 - **Is the Hook a weapon or a verb?** Opposing Force's grapple occupies a weapon slot. A Module as defined
   above is a verb, which argues for its own key — to be read against the reference code. Low priority
   since 2026-09-17; nothing waits on the answer.
 - **Where is the double jump found**, and where the Dash? Proposed 2026-09-17, neither confirmed: the
   double jump as the vortigaunt's first hand-over after the teleport, the Dash from the assassin boss.
-- ~~**Vanilla maps place `item_longjump`.**~~ **Answered 2026-09-15:** it keeps its classname and gives
-  both the long jump and the Dash.
-- ~~**Acquisition** — walk-over like the long jump, or the Pickup Prompt the suit moved to?~~
-  **Answered 2026-09-13: walk-over.** Every pickup is, since
-  [ADR-0011](adr/0011-pickups-are-walk-over.md); the suit itself moved back.
-- ~~**"Dash: upgradeable"**~~ **Answered 2026-09-13: by Skill Points**, the [Dash Route](#the-dash-route-name-pending).
-- ~~**Where are they shown?**~~ **Answered 2026-09-16:** on a third tab, **Status**, as fixed Slots on a
-  doll of the suit beside the build's final stats — [STATUS_PANEL.md](STATUS_PANEL.md). A Module
-  occupies no Cells, like a Reset Token.
+
+Answered, and recorded where the answer lives: the Dash's input is a tap of shift in the direction of
+movement, walk rebound to ALT ([Shinobi](#shinobi)); `item_longjump` in vanilla maps keeps its classname
+and gives both the long jump and the Dash (2026-09-15); every pickup is walk-over
+([ADR-0011](adr/0011-pickups-are-walk-over.md)); the Dash is upgraded by Skill Points; Modules are shown
+as fixed Slots on the Status tab, occupying no Cells ([STATUS_PANEL.md](STATUS_PANEL.md)); Pulse nodes
+are absent until the Module is found (ADR-0013), so nobody spends on a verb they do not have; and there is
+no passive pool — armour is the pool, under the [Juggernaut](#juggernaut--resilient).
 
 ---
 
@@ -2580,12 +2434,9 @@ in a grilling session. What remains is the order of building, the numbers, and t
 below.** The agreed tree as one reference, with every node, the prerequisite structure and the
 cross-Route links, is [SKILL_TREE.md](SKILL_TREE.md); this section is the reasoning behind it.
 
-The tree is 16 Skills and 35 points, and the number that is wanted is closer to 50–70. Two things were
-decided about how it gets there, and they pull in opposite directions on purpose:
-
-- **More Skills are definitely needed.**
-- **Diluting the tree is not good design**, in an engine that is already being pushed hard. A bigger tree
-  of flat numbers, each a little more of the same, is the failure mode.
+The tree started 2026-09-13 at 16 Skills and 35 points, wanting closer to 50–70, under two rules that
+pull in opposite directions on purpose: **more Skills are definitely needed**, and **diluting the tree is
+not good design** — a bigger tree of flat numbers, each a little more of the same, is the failure mode.
 
 The resolution is **builds**. Skills are added so that *combining* specific bonuses scales exponentially,
 not so that each one is worth a little on its own. The example given: several Backstab damage bonuses
@@ -2593,18 +2444,16 @@ stacked with several energy damage bonuses culminate in **backstabbing a Gargant
 [ADR-0010](adr/0010-the-backstab-is-positional.md) already says this is intended, so the tree's job is to
 make the path to it exist and cost most of a campaign.
 
-**And, since 2026-09-14, the path is literal.** The tree becomes a matrix of small **Stat nodes** — one
-flat bonus each, one point each, themed by Route — that are the roads between Skills and the whole of
-their price. Settled in [SKILL_TREE.md](SKILL_TREE.md#the-matrix--settled-2026-09-14), which is the
-reference; the short form is: every node costs one, nothing is printed on a node, reachability and the
-roots are unchanged, Routes connect through curated roads, and the tree is deliberately not completable.
-The anti-dilution rule above is amended rather than broken — flat numbers as roads, never as destinations —
-and the amendment is written beside the rule in SKILL_TREE.md.
+**And the path is literal.** Since 2026-09-14 the tree is a matrix of small **Stat nodes** — one flat
+bonus each, one point each, themed by Route — that are the roads between Skills and the whole of their
+price; since 2026-09-15 it is a 15×15 board of nine regions with the suit as its one start, about 140
+nodes against 100 findable points, deliberately not completable. Settled in
+[SKILL_TREE.md](SKILL_TREE.md#the-matrix--settled-2026-09-14), which is the reference. The anti-dilution
+rule is amended rather than broken — flat numbers as roads, never as destinations — and the amendment is
+written beside the rule there.
 
-A **Route** is a build path, which is not the same as a column: a Route may cross columns, and the seven
-below are what the tree is curated toward. Note the tension with the decapitation entry above, which argued
-against adding to a tree "deliberately curated down to 15". That reasoning is superseded by this section,
-and wants an ADR when the first Route lands.
+A **Route** is a build path, a region of the board since 2026-09-15, and the seven below are what the tree
+is curated toward.
 
 ### Settled 2026-09-13
 
@@ -2682,14 +2531,14 @@ in [ADR-0012](adr/0012-the-skill-tree-has-one-start-and-open-roads.md).
   value on each side of the rim (first-cut reading: Fortitude, Battery Capacity, Marksman, Melee Force).
 - **The Dash Route is named Shinobi.**
 - **The Stealth Route is shaped**, seven nodes on Concealment roads, all reading a monster's own meter at
-  an action: Soft Step, Ambush (22, the merged unaware-damage node, all weapons; ×1.25 below Spotted /
-  ×1.5 below Noticed as built, **×1.5 / ×2 settled 2026-09-17**), Phantom (23, an Unseen Backstab kill buys
-  4 s at ×1.5 speed with silent movement; 2 s at ×1.2 on a hit was the first shape), Nightfall, Slip Away,
-  ~~Cut the Head~~ (dropped 2026-09-17; **Shroud**, ×0.8 on the fill, takes its cell), and the Major
-  **Silent Kill** (a kill below Spotted is unheard — no Disturbance — and nothing more; a witness in
-  sight reacts in full, settled 2026-09-17). The Major waits on the post-aggro step. The Gargantua stack
-  was checked: Stealth alone reaches 405 of 800 at the built tiers, 540 at the settled ones, and needs
-  Melee and Energy for the rest. See [SKILL_TREE.md](SKILL_TREE.md#stealth).
+  an action: Soft Step, Ambush (22, the merged unaware-damage node, all weapons; ×1.5 below Spotted / ×2
+  below Noticed since 2026-09-17, up from ×1.25 / ×1.5 as first built), Phantom (23, an Unseen Backstab
+  kill buys 4 s at ×1.5 speed with silent movement; 2 s at ×1.2 on a hit was the first shape), Nightfall,
+  Slip Away, Shroud (×0.8 on the fill; it took Cut the Head's cell when that was dropped on 2026-09-17),
+  and the Major **Silent Kill** (a kill below Spotted is unheard — no Disturbance — and nothing more; a
+  witness in sight reacts in full, settled 2026-09-17 and built with 5f). The Gargantua stack was
+  checked: Stealth alone reaches 540 of 800 and needs Melee and Energy for the rest. See
+  [SKILL_TREE.md](SKILL_TREE.md#stealth).
 - **A fifth Module, Night Vision**, gates the Stealth region and replaces the flashlight when found; the
   flashlight stays until then. Adapted from Opposing Force's, source at `E:\Projects\halflife-op4-updated`.
 - **Energy's two loose ends closed**: Egon Focus is the SDK's narrow beam on right click, as it is; Quick
@@ -2731,14 +2580,12 @@ the ADR assumed.
 
 - **The Gargantua takes only energy, crush, mortar and blast** (`GARG_DAMAGE`, `dlls/gargantua.cpp:47`).
   Everything else is zeroed in `TraceAttack` and scaled by 0.01 in `TakeDamage`.
-- ~~**The katana's blade is club damage today.**~~ **Built 2026-09-14.** `CCrowbar::SwingDamageType` is
+- **The katana's blade is energy damage outright** (built 2026-09-14): `CCrowbar::SwingDamageType` is
   the blade's type against a monster, `DMG_CLUB` by default and `DMG_ENERGYBEAM` on the katana, for the
   single hit and the Cleave arc alike. Anything that is not a monster still takes `DMG_CLUB` from every
   roster weapon, because `func_breakable` keys its crowbar rules on that bit and a blade through a crate is
-  still a blow. A katana Backstab on a Gargantua now passes the filter; ADR-0010's note is closed.
-- ~~So the build needs one of: the blade becoming energy damage outright, or a Skill that makes it so.~~
-  **Settled in the Energy Route: outright**, and built as above. A node that made it so was rejected as
-  leaving the katana half a weapon until bought.
+  still a blow. A katana Backstab on a Gargantua passes the filter; ADR-0010's note is closed. A node that
+  *made* the blade energy was rejected as leaving the katana half a weapon until bought.
 - The Backstab is a multiplier on the blade only. The wave never reaches `CanBackstab`, and there is no
   reason it should.
 
@@ -2751,14 +2598,14 @@ to build on, so that curation starts from the code rather than from the note.
 
 #### Juggernaut — resilient
 
-**Shape: Built 2026-09-16, whole, untested in game.** The Defense Matrix, Matrix on Kill and Decaying Armor
-were built as settled below, every number a first guess in a cvar
+**Shape: Built 2026-09-16, whole, and tuned in play the same day.** The Defense Matrix, Matrix on Kill
+and Decaying Armor were built as settled below, every number a first guess in a cvar
 ([instructions/04](../instructions/04-CUSTOM-FEATURES.md)); what exists is in
-[PILLARS pillar 2](PILLARS.md#2-enhanced-combat). The Pulse key became a `+pulse`/`-pulse` pair, the
-"honest shape" named under *What it costs to build*, carrying the press and the release as two impulses so
-the hold is timed on the server. The text below is kept as the reasoning. Shaped 2026-09-13, in a grilling
-session. **Low mobility, high defense**, and it holds the whole of the Pulse: the timing branch that
-exists, the Defense Matrix that replaces the passive branch, and the armour both lean on.
+[PILLARS pillar 2](PILLARS.md#2-enhanced-combat). The Pulse key became a `+pulse`/`-pulse` pair, carrying
+the press and the release as two impulses so the hold is timed on the server. The text below is kept as
+the reasoning. Shaped 2026-09-13, in a grilling session. **Low mobility, high defense**, and it holds the
+whole of the Pulse: the timing branch that exists, the Defense Matrix that replaces the passive branch,
+and the armour both lean on.
 
 ##### The Defense Matrix — settled
 
@@ -2778,8 +2625,9 @@ through three shapes in one session and came out as none of them. What it is:
   engine feeds the player's own `maxspeed` into `pmove->maxspeed`, which `pm_shared/` clamps against
   (`pm_shared/pm_shared.cpp:1144`, `:2940`), and the server sets that value per player. A cap change, not
   a rule change, which is why it survives the rule that cut Sprint and High Jump. To be measured in play.
-- **It drops on release, at 6 seconds, or at zero armour**, whichever first. **10-second cooldown** after it
-  drops. *Amended 2026-09-16 in play: not on release. The hold only raises it; it keeps its own time.*
+- **It drops at 6 seconds or at zero armour**, whichever first, and **not on release**: the hold only
+  raises it, and it keeps its own time (Andrei, 2026-09-16, after the first play; "drops on release" was
+  the first shape). **10-second cooldown** after it drops.
 - **The HUD tints the armour readout while it is up**, and nothing else changes.
 
 Rejected on the way, so they are not proposed again: a passive pool that refills after 10 seconds without
@@ -2806,10 +2654,10 @@ at the moment of damage and had a line to the player.
 Shield's answer and before the suit's report: `skill_ricochet_chance` (0.2) per bullet hit while armour is
 above zero, the hit refused, the shooter dealt the full damage as `DMG_BULLET` with the player as
 inflictor, a `TE_TRACER` from the player's centre to theirs and the stock ricochet spark at the player.
-The tracer's look waits on the Route's region. ~~The ranks~~ do not exist under the matrix: a rank is a
-Stat node on the road and the Juggernaut's road stat is Max Armour, so Ricochet is one node at its cvar.
-A Ricochet-chance stat of its own is a **low-priority reevaluation** once the Route has been played, not
-a promise (settled 2026-09-16).
+The tracer's look waits on the Route's region. It has no ranks: under the matrix a rank is a Stat node on
+the road, and the Juggernaut's road stat is Max Armour, so Ricochet is one node at its cvar. A
+Ricochet-chance stat of its own is a **low-priority reevaluation** once the Route has been played, not a
+promise (settled 2026-09-16).
 
 ##### The nodes — settled
 
@@ -2821,19 +2669,19 @@ one node each.
 | Fortitude (8) | +25 max health | Exists. Root |
 | Armor Expert (9) | Less gets past armour | Exists. Ranks |
 | Battery Capacity (13) | More max armour | Exists. Ranks |
-| Ricochet | As above | New. Ranks |
+| Ricochet | As above | New. One node, no ranks |
 | Pulse Window (12) | Longer Shield | Exists. The timing branch, brought inside the Route |
 | Pulse Recharge (15) | Shorter Recharge | Exists |
 | Pulse Discharge (16) | Negated hits vent at the crosshair | Exists |
 | Pulse Rebound (17) | A deflect skips the Recharge | Exists |
 | Defense Matrix | The gate: hold for 1 s | New. Needs the Pulse Module |
 | Matrix on Kill | A kill while the Matrix is up restores some armour | New. The Route's one way to sustain, and the opposite of idling |
-| Major node | **+100 decaying armour on activation** | New. Numbers to be toned down; the philosophy is below |
+| Decaying Armor | **+100 decaying armour on activation** | New, the Major. Numbers to be toned down; the philosophy is below |
 
 **The major node is the Energy tie.** The Energy Route's own major node makes energy weapons drain armour
 as fuel. So a player with both raises the Matrix, gains a hundred decaying armour, and fires the egon into
-it: **the armour is consumed at an alarming rate and the damage is enormous**. What the earlier draft of this
-section called the one *conflict* between Routes is the intended build.
+it: **the armour is consumed at an alarming rate and the damage is enormous**. What was first read as the
+one *conflict* between Routes is the intended build.
 
 Two things held back on purpose: refill rate and refill delay are not nodes, because shortening a wait is
 the idling lever returning through a side door; and no node touches the slow, because the slow is the
@@ -2842,7 +2690,7 @@ price.
 **The Follow-Up (18) stays where it is**, gated on Crowbar Force and Pulse Recharge. It is now a Melee ×
 Juggernaut link, which is exactly what a cross-gated node is for.
 
-##### ~~What it costs to build~~ Built 2026-09-16
+##### How it was built, 2026-09-16
 
 - **A decaying armour grant has to sit above the cap.** Every armour ceiling goes through `PlayerMaxArmor`
   (the rule in [instructions/04](../instructions/04-CUSTOM-FEATURES.md)); a grant that respects it does
@@ -2872,31 +2720,28 @@ Juggernaut link, which is exactly what a cross-gated node is for.
 ##### Still open
 
 - Every number: the share, the slow (20% is the starting guess), 6 s, 10 s, the grant (100 is "to be
-  toned down"), Ricochet's chance, Matrix on Kill's amount (15, a first guess). All cvars now.
-- **Low priority, later:** whether Ricochet wants a Stat node of its own to raise its chance. Under the
-  matrix it has no ranks; see the Ricochet note above.
-  ~~Its decay~~ is derived: the grant fades over the Matrix's duration, gone as it drops (tuned in play
+  toned down"), Ricochet's chance, Matrix on Kill's amount (15, a first guess). All cvars. The grant's
+  decay is derived — it fades over the Matrix's duration and is gone as it drops (tuned in play
   2026-09-16 from a 10-per-second first guess).
-- ~~The major node's name~~ (**Decaying Armor** in the table since 2026-09-15), and the Matrix's own icon.
+- **Low priority, later:** whether Ricochet wants a Stat node of its own to raise its chance.
 - Whether Ricochet's tracer is the gauss's or its own.
-- ~~Whether a save mid-Matrix should come back with it standing.~~ It does, since the key is no longer
-  held through it (Andrei, 2026-09-16, after the first play: the hold only raises the Matrix, which then
-  keeps its own time). Up and its end time are saved.
-- The Matrix's sounds and its raise light are placeholders ([ART_DEBT.md](ART_DEBT.md)). ~~The Matrix has
-  no readout of its own beyond the white armour figure~~ — since the first play it has a bar beside the
-  Pulse's, an edge tint while up and a ready chime; see PILLARS.
-- **The layout was redrawn after the first play** (Andrei, 2026-09-16): Ricochet off the road to the
-  Matrix, the Pulse block west, the Matrix trio east and disconnected from it. In
-  [SKILL_MAP.md](SKILL_MAP.md).
+- The Matrix's sounds and its raise light are placeholders ([ART_DEBT.md](ART_DEBT.md)), and it has no
+  icon of its own. Its readout exists: a bar beside the Pulse's, an edge tint while up and a ready chime,
+  since the first play.
+
+Settled in the first play (Andrei, 2026-09-16), so not open: a save mid-Matrix comes back with it
+standing, since the key is not held through it (up and its end time are saved); and the layout was
+redrawn — Ricochet off the road to the Matrix, the Pulse block west, the Matrix trio east and
+disconnected from it, in [SKILL_MAP.md](SKILL_MAP.md).
 
 #### Medical
 
-**Shape: Building since 2026-09-14.** The region, Med Expert as its root, the four Healing Stat nodes
-(Potency's ranks, as the matrix turns ranks into roads), Leech and Overheal are built; see
-[SKILL_TREE.md](SKILL_TREE.md#medical) and [PILLARS.md](PILLARS.md). **Last Stand is reserved**, with
-one question to answer first: whether the killing blow still lands and
-the Infusion races it, or the player is held at 1 health for the Syringe to work. Shaped 2026-09-13, the
-last of the seven. The smallest Route, and deliberately: with Regeneration (10) cut alongside Battery
+**Shape: Built, whole.** The region, Med Expert as its root, the four Healing Stat nodes (Potency's
+ranks, as the matrix turns ranks into roads), Leech and Overheal on 2026-09-14, and Last Stand on
+2026-09-15 once its one question was answered — the player is held at 1 health, invincible for 3 s, the
+Syringe fires, 60 s cooldown; the killing blow does not land and race the Infusion. See
+[SKILL_TREE.md](SKILL_TREE.md#medical) and [PILLARS.md](PILLARS.md). Shaped 2026-09-13, the last of the
+seven. The smallest Route, and deliberately: with Regeneration (10) cut alongside Battery
 Regen, **there is no passive healing in it at all**. Every node is on an action: using a thing, hitting a
 thing, or being about to die.
 
@@ -2913,7 +2758,7 @@ What exists under it: Med Expert (19), the Infusion and its three cvars (`dlls/p
 | Potency | An Infusion heals more per second, **and** a medkit heals more | New. Ranks. `infusion_rate` where the tick lands, and the medkit's one value. Name provisional |
 | Overheal | A Syringe used at full health raises health **above the maximum** for the Infusion's length, then it decays back | New. ADR-0007 already lets a Syringe be used at full health and today that is a waste; this makes it a decision. The Juggernaut's decaying armour grant is the same shape |
 | Leech | Melee hits heal a fraction of the damage dealt | New. All melee weapons, not only the chainsaw: **the chainsaw's lifesteal becomes its own base property**, and Leech is what every melee weapon gets. Medical × Melee, the sustain the glass-cannon build lacks |
-| Major node | **Last Stand**: a hit that would kill the player **spends an unused Syringe from the Inventory automatically** and starts the Infusion at once; and **all Infusion healing is doubled while health is below 50** | New. The only node in the tree that spends an item for the player. The below-50 doubling is what makes it felt before the day it saves anyone: a Syringe used while low is already the Route's best heal |
+| Last Stand (49) | A hit that would kill the player leaves 1 health and 3 s of invincibility, **spends an unused Syringe from the Inventory automatically** and starts the Infusion at once, on a 60 s cooldown; and **all Infusion healing is doubled while health is below 50** | The Major. The only node in the tree that spends an item for the player. The below-50 doubling is what makes it felt before the day it saves anyone: a Syringe used while low is already the Route's best heal. Glass Cannon arms it permanently |
 
 **Cut:** *Field Medic* (medkits and wall chargers heal more; folded into Potency for the medkit half, the
 charger left alone) and a *reserved Station slot* ([Stations](#stations) do not exist; when they do, a node
@@ -2926,8 +2771,8 @@ declined.
 
 ##### Still open
 
-- Every number: Potency's ranks, Overheal's ceiling and decay, Leech's fraction, Last Stand's cooldown if
-  it needs one.
+- Every number: Potency's ranks, Overheal's ceiling and decay, Leech's fraction, Last Stand's 3 s and
+  60 s.
 - Whether Last Stand should also fire for a Syringe that is *dropped* rather than in the Grid. No: it reads
   the Inventory, and that is the point of carrying one.
 
@@ -2941,11 +2786,11 @@ one Route built on a new **Module**, and the Module came out of the grill as the
 
 ##### The alien Module — built 2026-09-16, untested in game
 
-- **The summon is a Module**, the fourth after Pulse, Dash and Hook. **Handed over by a stand-in
-  pickup, `item_alienmodule`, rather than by the [freed alien slave](#friendly-alien-slave)** — the boss
-  fight it should follow is not built, so the answer to the boss entry's *"Which Module?"* is still open.
-  A weapon whose right click does nothing reads as broken, so both verbs work from the hand-over and
-  the Route is what makes them grow — but only the left click exists so far.
+- **The summon is a Module**, the fourth after Pulse, Dash and Hook, and it is what the
+  [freed alien slave](#friendly-alien-slave) gives (confirmed 2026-09-17). **Handed over by a stand-in
+  pickup, `item_alienmodule`**, until his fight exists. A weapon whose right click does nothing reads as
+  broken, so both verbs should work from the hand-over and the Route is what makes them grow — but only
+  the left click exists so far.
 - **The Module and its ammunition serve several weapons. Marked for refinement.** The Module is a platform:
   gaining it grants access to alien weapons that run on **Cores**, and the summon weapon below is the first
   of them. What the others are is not decided (the alien chainsaw is the obvious candidate). The
@@ -3042,14 +2887,14 @@ shared with it; and the Pulse's `CanHolster`-style refusal for the ultimate's ho
 
 #### Energy
 
-**Shape: Building since 2026-09-14.** The region, Energy Damage as its root, the four Energy Damage Stat
-nodes (the root's ranks, as the matrix turns ranks into roads), Energy Efficiency (Egon Efficiency until
-the katana's wave spent uranium) and Insulation are built;
-see [SKILL_TREE.md](SKILL_TREE.md#energy) and [PILLARS.md](PILLARS.md). **Reserved**: Egon Focus (details
-to be decided), Quick Charge (waits on the katana's charge) and the major (the armour drain, name
-pending). **Still to be curated**: the road from Melee's region to Energy's; today they sit at opposite
-ends of the tree. Shaped 2026-09-13, in a grilling session. **The energy weapons are the katana and the
-egon**; the gauss is probably removed. The Pulse's Discharge and the Alien Route's volley deal energy too.
+**Shape: Built, whole.** The region, Energy Damage as its root, the four Energy Damage Stat nodes (the
+root's ranks, as the matrix turns ranks into roads), Energy Efficiency (Egon Efficiency until the
+katana's wave spent uranium) and Insulation on 2026-09-14; Egon Focus (the SDK's narrow beam on right
+click, as it is) and the Major, **Overdraw**, on 2026-09-15, when Quick Charge (57) was cut because the
+wave has no charge. See [SKILL_TREE.md](SKILL_TREE.md#energy) and [PILLARS.md](PILLARS.md). Energy's
+region is the south-west corner of the board, touching Melee's on the west edge ([SKILL_MAP.md](SKILL_MAP.md)).
+Shaped 2026-09-13, in a grilling session. **The energy weapons are the katana and the egon**; the gauss
+is probably removed. The Pulse's Discharge and the Alien Route's volley deal energy too.
 
 ##### What "energy" is — settled
 
@@ -3068,8 +2913,8 @@ Gargantua accepts**, which the Route's tooltips should say rather than a node.
 
 ##### The katana rework — settled, recorded under [the Gauss Katana](#the-gauss-katana)
 
-Left click is a plain melee slash with no wave and no ammo; right click is a charged ranged attack that
-releases a big, piercing wave whose damage travels with the projectile. Not a Route change, but the Route's
+Left click is a plain melee slash with no wave and no ammo; right click throws a piercing wave, for
+uranium, whose damage travels with the projectile; there is no charge. Not a Route change, but the Route's
 nodes are written against it.
 
 ##### The nodes — settled
@@ -3077,11 +2922,13 @@ nodes are written against it.
 | Node | Effect | Note |
 | --- | --- | --- |
 | Energy Damage | Energy damage dealt up | Root. Ranks 1 → 2 → 3. The katana, the egon, the Discharge and the Alien volley all read it |
-| Egon Focus | Secondary fire unlocks the egon's **narrow beam** | Dormant code: `CEgon::PrimaryAttack` hard-sets `FIRE_WIDE` (`dlls/egon.cpp:217`) and the narrow mode, single target, its own damage (`plrDmgEgonNarrow`) and ammo cadence, is complete and unreachable. Details to be decided |
+| Egon Focus | Secondary fire unlocks the egon's **narrow beam** | Dormant code the SDK shipped: `CEgon::PrimaryAttack` hard-sets `FIRE_WIDE` and the narrow mode, single target, its own damage (`plrDmgEgonNarrow`) and ammo cadence, was complete and unreachable. Built as it is, 2026-09-15 |
 | Energy Efficiency | Uranium drains slower | Ranks. One chokepoint, `CEgon::UseAmmo` (`:127`), the `DefaultReload` pattern. Also cheapens the katana's wave (built 2026-09-14), so it pays twice; renamed from Egon Efficiency that day |
-| Quick Charge | The katana's charged wave charges faster | The first to cut if the rework's charge is already short |
 | Insulation | Less energy **and shock** damage taken | Shock included so it means something in Xen: controller balls (`dlls/controller.cpp:1410`) and `env_laser`/`env_beam` hazards are energy; the slave's, controller's (`:1228`) and Nihilanth's (`dlls/nihilanth.cpp:1501`) zaps are shock |
-| Major node | **Energy attacks drain armour as well, for bonus damage. Always on, never below a floor** | Below |
+| Overdraw | **Energy attacks drain armour as well, for bonus damage. Always on, never below a floor** | The Major. Below |
+
+Cut: *Quick Charge* (57), which would have made the katana's charged wave charge faster; the wave has no
+charge (2026-09-15).
 
 **The major node.** Every energy hit spends armour and gets the bonus; the drain never takes the last
 portion of the bar (20 is the starting guess), and below the floor the attack does base damage. No switch
@@ -3089,8 +2936,8 @@ and no mode: a player who does not want the trade does not buy the node. **It re
 that is its purpose:
 
 - **The Juggernaut**, with a deep armour bar and the Matrix's decaying grant to burn: raise the Matrix,
-  fire the egon, and armour goes at an alarming rate for enormous damage. What an earlier draft called the
-  one *conflict* between Routes is the intended build; see the [Juggernaut](#juggernaut--resilient).
+  fire the egon, and armour goes at an alarming rate for enormous damage. What was first read as the one
+  *conflict* between Routes is the intended build; see the [Juggernaut](#juggernaut--resilient).
 - **The glass-cannon "ninja"**, who dashes and slashes with the katana: all damage, no defence, and the
   little armour they carry is fuel. Melee × Energy × the Dash Route. *"Ninja"* is the first word anyone has
   used for the Dash Route and is noted as a candidate name, not a decision.
@@ -3102,26 +2949,22 @@ wave does). Dropped from the idea list: a Siphon (chargers refilling uranium) an
 `PlayerMaxArmor` still governs the drain's ceiling and the floor is the drain's other bound; both live
 where the armour is spent.
 
-#### The Dash Route (name pending)
+#### Shinobi
 
 **Shape: Shaped 2026-09-13**, in a grilling session that shaped the Dash Module with it, the way the Alien
-grill shaped its Module. Was called *Agility* until that collided with the Suit Variant codename
-([CONTEXT.md](../CONTEXT.md#the-suit)), which keeps the word. *"Ninja"*, the glass-cannon dash-and-slash
-build, is the one candidate name so far.
-
-**Amended 2026-09-17, not built.** Two lines below are superseded: "Ground only at first" and "In the air,
-only through the Route". **The base Dash works in the air from the start**, along the movement keys like
-the ground Dash, because a Dash glued to the ground cannot cross a gap. The Major keeps what made it a
-Major — in the air it goes **where the player aims, upward included** — and is
-[gated behind the double jump Module](#settled-2026-09-17--the-fuel-the-processors-the-air-dash-gate).
-The code change is the ground check coming off the base Dash and staying on the aim-direction branch.
+grill shaped its Module; the Dash, Reprisal and the Air Dash built 2026-09-15, the base Dash in the air
+2026-09-18. Named **Shinobi** on 2026-09-15: it was *Agility* until that collided with the Suit Variant
+codename ([CONTEXT.md](../CONTEXT.md#the-suit)), which keeps the word, and *Ninja*, the glass-cannon
+dash-and-slash build, was the candidate in between.
 
 ##### The Dash — settled here, for the [Modules](#pillar-3-modules) entry
 
 - **A burst in the direction of movement, on a key press.** Not the long jump renumbered: the long jump
-  throws the player along their *view* (`pm_shared/pm_shared.cpp:2662-2683`, 560 units/s forward with a
-  vertical kick, jump-during-duck on the ground while moving); the Dash goes where the player is *moving*,
-  so sideways and backwards dashes exist and it is a dodge as much as a crossing. Ground only at first.
+  throws the player along their *view* (`pm_shared/pm_shared.cpp`, 560 units/s forward with a vertical
+  kick, jump-during-duck on the ground while moving); the Dash goes where the player is *moving*, so
+  sideways and backwards dashes exist and it is a dodge as much as a crossing. **On the ground and in the
+  air alike, from the start** (2026-09-17, built 2026-09-18): a Dash glued to the ground cannot cross a
+  gap. "Ground only at first" was the 2026-09-13 shape.
 - **The key is shift, tap only. Walk is rebound.** Shift is `+speed` in Half-Life, and this mod made
   walking matter (the noise multiplier, Concealment's stance term), so the Dash key is the stealth key. A
   tap-to-dash / hold-to-walk split was considered and rejected; walk gets a new default in the mod's
@@ -3131,9 +2974,11 @@ The code change is the ground check coming off the base Dash and staying on the 
 - **Charges and a cooldown.** One charge at the base, a cooldown between dashes: combat pacing, like the
   Pulse's Recharge, not idling. Built as a count from the start, the `m_iRebounds` shape, so a node raises
   the ceiling with one edit.
-- **In the air, only through the Route** (the major node below), and in the air it goes **where the player
+- **The directional Air Dash is the Major**: through it, in the air the Dash goes **where the player
   aims, upward included**. That is how high places get reached without touching jump height, which is
-  what High Jump's cut asked for. The Hook remains the other answer, and is its own Module.
+  what High Jump's cut asked for. Because the upward dash is the one tool that out-reaches the double
+  jump, the node is [gated behind the double jump Module](#settled-2026-09-17--the-fuel-the-processors-the-air-dash-gate)
+  (2026-09-17). The Hook remains the other answer, and is its own Module.
 - **No bullet time.** Dropped: the engine's only time scale slows the player with the world, so a "bullet
   time" node would be the tree's first tooltip that lies, and a world-slows-player-does-not version is the
   freeze's cost again. If the feel is wanted it is presentation on the air dash, not a node.
@@ -3148,7 +2993,7 @@ The code change is the ground check coming off the base Dash and staying on the 
 | Second Wind | A second Dash charge | The count raised from 1 to 2 |
 | Reprisal | **A one-shot melee kill refills a Dash** | A single melee hit that kills a monster that had not been hurt before: a Backstab kill counts, a Cleave opener counts, finishing a wounded grunt does not. Name provisional |
 | Phase | **No damage taken during the Dash itself** | A dodge, not immunity: the dash lasts a fraction of a second. Where the glass cannon's defence comes from. One flag for the dash's duration. **The first to cut if it proves too strong**, since a dodge with no damage window makes every melee enemy a free hit |
-| Major node | **Air Dash**: the Dash works in the air, and in the air it goes where the player aims | The evolution, and the thing that reaches high places |
+| Major node | **Air Dash**: in the air the Dash goes where the player aims, upward included | The evolution, and the thing that reaches high places. Gated behind the double jump |
 
 Held back on purpose: nothing that changes ground speed or jump height, since the Route's premise is that
 the normal movement rules stay; nothing that touches the Hook. Kill-replenish alternatives considered and
@@ -3157,9 +3002,8 @@ special), a Backstab kill (Melee-only), any melee kill.
 
 ##### Still open
 
-- ~~**The Route's name.**~~ **Shinobi**, 2026-09-15.
-- ~~The burst's speed and length, the cooldown.~~ **Built 2026-09-15** as cvars, see
-  [PILLARS](PILLARS.md#the-dash--built-2026-09-15-untested-in-game).
+- The burst's speed and length and the cooldown are cvars (built 2026-09-15, see
+  [PILLARS](PILLARS.md#the-dash--built-2026-09-15-untested-in-game)), every one a first guess.
 - **The Air Dash, settled 2026-09-15:**
   - **It stops dead.** Gravity is off during the burst, and at the end speed drops to run speed with no
     upward carry. One straight up reaches about 120 units, the burst's length.
@@ -3171,13 +3015,14 @@ special), a Backstab kill (Melee-only), any melee kill.
     cap on the fall speed an Air Dash leaves behind; or no fall damage from a dive after all.
   - **Direction:** along the crosshair only; the movement keys do nothing in the air (revised 2026-09-15 —
     the key rotation was built and dropped). The ground Dash keeps following the movement keys.
-- ~~**Walk's new default key.**~~ **ALT**, 2026-09-15. The mod ships no `default.cfg`, so it lives only in
-  the install's `config.cfg` for now.
-- ~~`item_longjump` in stock maps.~~ **Kept, and it gives both**, 2026-09-15: the long jump stays and the
-  Dash comes with it.
-- Phase has no effect yet. Reprisal and the Air Dash were built 2026-09-15, on the rules below.
-- ~~Acquisition: walk-over like the long jump, or the Pickup Prompt.~~ **Walk-over**, like every pickup
-  since [ADR-0011](adr/0011-pickups-are-walk-over.md).
+- **Walk's new default key is ALT** (2026-09-15). The mod ships no `default.cfg`, so it lives only in the
+  install's `config.cfg` for now.
+- **Phase has no effect yet.** The node is placed; the no-damage flag for the Dash's duration is not
+  written.
+
+Settled, so not open: `item_longjump` in stock maps keeps its classname and gives both the long jump and
+the Dash (2026-09-15); acquisition is walk-over, like every pickup since
+[ADR-0011](adr/0011-pickups-are-walk-over.md).
 
 #### Weapon Specialist
 
@@ -3220,7 +3065,6 @@ it works against the mapper the moment maps exist.
 - Every number, and the Surge's window and cooldown.
 - Headhunter against Decapitation's damage floor: whether a Headhunter rank makes decapitation more
   likely, or only the hit bigger.
-- Whether Quick Draw needs its animation to read at all, or a faster stock draw already feels right.
 
 #### Melee
 
@@ -3239,8 +3083,8 @@ one way.
 | Weapon | Lean | State |
 | --- | --- | --- |
 | Crowbar | All-round, good stats | Exists |
-| Gauss Katana | The ultimate melee weapon; always energy damage, scales off Melee *and* Energy | Exists, [reworked on paper](#the-gauss-katana) |
-| Carbon Pickaxe | Slower, stronger | [Entry above](#the-carbon-pickaxe); "replaces the crowbar" is superseded, it joins it |
+| Gauss Katana | The ultimate melee weapon; always energy damage, scales off Melee *and* Energy | Exists, [reworked](#the-gauss-katana) |
+| Carbon Pickaxe | Slower, stronger | Exists, v1 ([entry above](#the-carbon-pickaxe)) |
 | Knife | Higher Backstab base | New |
 | Pipe wrench, others | Maybe | Named as the kind of thing, not committed |
 
@@ -3249,10 +3093,9 @@ Each is `CCrowbar` with a few numbers overridden, which the katana already prove
 Inventory makes the roster self-limiting for free: every weapon costs three Cells, so carrying four melee
 weapons is a Row decision, which is pillar 5 doing its job.
 
-**The nodes go generic in name**: Melee Reach, Melee Force, Melee Speed. Ids 1, 2 and 11 are frozen; the
-C++ enumerators and display strings change, which the pickaxe entry already said was free. Open question 4
-below is answered: the crowbar is not replaced, so the rename happens once, for the roster, not for the
-pickaxe.
+**The nodes went generic in name**: Melee Reach, Melee Force, Melee Speed. Ids 1, 2 and 11 are frozen; the
+C++ enumerators and display strings changed, which was free. The crowbar is not replaced, so the rename
+happened once, for the roster, not for the pickaxe.
 
 ##### Valve's rapid-swing halving is dropped — settled
 
@@ -3311,68 +3154,39 @@ Route:
 
 ### Infrastructure notes from the same session
 
-Facts found while sizing a bigger tree, so they are not found twice.
+Facts found while sizing a bigger tree, so they are not found twice. All of the infrastructure is built
+and recorded in [PILLARS pillar 4](PILLARS.md#4-skill-trees); what stands as a rule:
 
-- ~~**Grow the id space once, to a ceiling.**~~ **Built 2026-09-13**: `k_SkillIdCeiling` (96) sizes the
-  saved array and the sync mask, and adding a Skill no longer changes either. See PILLARS pillar 4.
-- **The stealth ids are not actually reserved.** The stealth entry says ids 22 and 23 are `SKILL_RESERVED`;
-  `_Count` is 22 and neither is in the enum. Add them when the Route that wants them is curated.
-- **Layout.** Around 30 nodes wants 7×5 or 9×4. Rows are cheap above 1280 wide (five rows scale to about
-  0.8 on a 720-high screen); a ninth column risks the 0.55 floor. ~~The fix PILLARS already names is to
-  draw node icons through the fitted `SPR_DrawGeneric` path the Grid uses, so node size follows the layout
-  rather than the art. That is the first UI commit of any Route.~~ **Built 2026-09-14**: icons are fitted
-  into layout-sized nodes, and `skilltree_preview_cols` / `_rows` draw ghost cells for a grid of any size
-  so the footprint can be judged before the nodes exist. See PILLARS pillar 4. Which of 7×5 and 9×4 is
-  still open, and is now something to look at rather than compute.
-- ~~**Ranks cost no ids or wire.** Chained ids drawn as one node showing 2/3.~~ **Withdrawn 2026-09-14**:
-  a rank is a Stat node on the road, drawn like any other. Ranks therefore *do* cost ids, which is part of
-  why the ceiling moves (below).
-- **The economy.** One pickup is one point, and the brief is one point per optional space. ~~A 60-point
-  tree doubles the optional spaces a campaign must hold, or `item_skillpoint` grows a value keyvalue, or the
-  tree stops being completable.~~ **Resolved 2026-09-14: the tree stops being completable**, by design.
-  50–70 findable points against 120–180 one-point nodes. This reverses the stance PILLARS pillar 4
-  recorded, and PILLARS says so.
-- **The sum, once all seven were shaped.** Juggernaut 11, Alien 7, Weapon Specialist 7, Dash 7, Energy 6,
-  Melee 6, Medical 5: **49 Skills with ranks counted once**, and about sixteen carry two or three ranks.
-  Under the matrix each rank is a Stat node and each Skill has Stat nodes on the road to it, so the tree
-  lands somewhere in 120–180 nodes. ~~At today's prices that is roughly 100 points against a 50–70 target,
-  and one of them moves.~~ Both moved: every node costs one and the tree is not completable. ~~**What 50–70
-  points buys is the pricing pass now**, and it is a question of where the roads run. Against a map.~~
-  **A non-issue as of 2026-09-15**: the 100-point numbers stand, and no map is waited on to judge them.
-- ~~**The id ceiling moves once more, to 256.**~~ **Built 2026-09-14.** `k_SkillIdCeiling` was 96, sized
-  for a tree of about fifty; 180 nodes needs 256 (32 mask bytes on the wire, length-checked on both sides
-  from the same constant). The saved field is `m_bUnlocked256` now, so a 96-entry save resets rather than
-  over-reads — the same move the first ceiling made.
-- ~~**Square nodes, and the step follows the Stat node.**~~ **Built 2026-09-14**: one 96-pixel step on
-  both axes, square nodes of 32 (Stat), 44, 54 and 64 (Major). A first cut of 64 put the Majors edge to
-  edge (seen in a capture) and a 16×10 preview used only two thirds of the tree area at 1720 wide, so the
-  step went up; `skilltree_step` overrides it for judging by eye. `k_MinScale` (0.55) stays for the cost
-  text and goes with the cost, when the first matrix Route flips `skilltree_show_cost`.
-- ~~**`ENodeTier` gains a fourth value**, below Minor, for the Stat node.~~ **Built 2026-09-14** as
-  `ENodeTier::Stat`; the existing three were renumbered above it, which is safe because a tier is neither
-  saved nor sent.
-- ~~**A layout check before the third Route.**~~ **Built 2026-09-14**: the `static_assert` that no two
-  rows share a cell (`SkillDefsOnePerCell`), and the `skilltree_debug_edges` overlay for an edge whose
-  ends are not adjacent. 180 hand-placed rows in a header is where the mistakes will live; see PILLARS
-  pillar 4.
+- **The id ceiling is 256** (`k_SkillIdCeiling`, 2026-09-14; 96 the day before). It sizes the saved
+  array (`m_bUnlocked256`, so an older save resets rather than over-reads) and the 32-byte sync mask,
+  length-checked on both sides from the same constant, and adding a Skill changes neither. Ranks cost ids,
+  since under the matrix a rank is a Stat node on the road drawn like any other.
+- **The economy.** One pickup is one point. The tree is deliberately not completable (2026-09-14): about
+  140 nodes against 100 findable points, 40 on the critical path and 60 in optional spaces, which
+  reverses the stance PILLARS pillar 4 first recorded and PILLARS says so. The numbers stand as set, and
+  no map is waited on to judge them (2026-09-15, [Maps](#maps)).
+- **The sum, once all seven were shaped**: Juggernaut 11, Alien 7, Weapon Specialist 7, Dash 7, Energy 6,
+  Melee 6, Medical 5, 49 Skills with ranks counted once, before the Stealth Route added seven.
+- **The board.** 15×15 at 1:1 with drag to pan; one 112-pixel step on both axes, square nodes of 36 / 50
+  / 62 / 74 with the processor at 92; `ENodeTier::Stat` below Minor; icons fitted into layout-sized
+  nodes, so node size follows the layout rather than the art; `skilltree_step` and
+  `skilltree_preview_cols` / `_rows` for judging a footprint by eye. A `static_assert` that no two rows
+  share a cell (`SkillDefsOnePerCell`) and the `skilltree_debug_edges` overlay guard the hand-placed rows
+  in `k_SkillDefs`, which is where the mistakes will live.
 
 ### Open questions
 
-- ~~How is a Route drawn?~~ **Answered 2026-09-15**: a region with a faint colour wash over a circuit
-  substrate, its name in the tooltip only; see the settled block above and the ART_DEBT brief.
-- ~~**The Stat node's bonuses.**~~ **All chosen as of 2026-09-15** (see SKILL_TREE.md, the road stats);
-  only the hub's two sizes are still to be set, when the hub is built.
-- **The suit node in the table.** Cost 0 against a cost-one `static_assert`, held on spawn and after a
-  Reset, not counted by `SpentPoints`: a build question, not a design one.
 - **The other three hub corners.** Follow-Up takes the Melee–Juggernaut corner; the Juggernaut–Specialist,
   Specialist–Medical and Medical–Melee corners are open for cross-Route Skills.
-- ~~**Which Route is built first.**~~ Melee, then Weapon Specialist, both on 2026-09-14. Of the five
-  left, Energy and Medical need nothing new; ~~the Juggernaut needs the `+pulse`/`-pulse` pair~~ (built
-  with the Matrix, 2026-09-16); the Dash
-  Route and the Alien Route each need their Module first.
-- ~~The Dash Route's name.~~ **Shinobi**, 2026-09-15.
-- ~~Does the Dash Route keep bullet time?~~ Dropped, 2026-09-13.
-- ~~Where does the Pulse's timing branch live?~~ Inside the Juggernaut, 2026-09-13.
+- **The hub's two stat sizes**, to be set when the hub's Minors are judged in play.
+- **What is left to build in the Routes**: the Alien ultimate and the ghost following the player, Phase's
+  effect, the Air Dash's dive damage, the charge and chainsaw the melee grunt waits on, and every number.
+
+Answered, so not open: a Route is drawn as a region with a faint colour wash over a circuit substrate,
+its name in the tooltip only (2026-09-15); every road stat is chosen (SKILL_TREE.md); the suit node costs
+0 against the cost-one `static_assert` and is held on spawn and after a Reset; the build order was Melee
+then Weapon Specialist (2026-09-14), the rest as their needs allowed; the Dash Route is Shinobi; bullet
+time is dropped (2026-09-13); the Pulse's timing branch lives inside the Juggernaut (2026-09-13).
 
 ### Done when
 
@@ -3383,8 +3197,11 @@ Gargantua in visibly different ways, one of them with a knife.
 
 ## Pillar 1: Records
 
-**Shape: Ready. Shaped 2026-09-17 in two grills** — the game as a whole, then this feature on its own —
-**and the first commit is obvious: [the Prompt](#the-prompt).** Renamed from *Transmissions* the same day:
+**Shape: Built, whole, 2026-09-18, and verified in game the same day** — the Prompt on everything usable,
+Records read in the world and kept in a fourth tab, Guidance, locks and the mapper's controls; recorded in
+[PILLARS pillar 1](PILLARS.md#1-exploration). Shaped 2026-09-17 in two grills, the game as a whole and then
+this feature on its own. What is left here: audio, the reader's styling, and the stand-in document model
+([ART_DEBT.md](ART_DEBT.md)). Renamed from *Transmissions* the same day:
 the feature stopped being audio logs, and a clipboard is not transmitted. **Entry** was the working word
 and is taken ([CONTEXT.md](../CONTEXT.md): one occupant of an Inventory), so the thing is a **Record**,
 the tab is **Records**, the suit **registers** a Record in its memory, and *Transmission* narrows to a
@@ -3513,22 +3330,20 @@ only gains `FCAP_IMPULSE_USE` when its *Use Only* flag is set. So a named door w
 inert: no touch, no use press, no Prompt of its own. The keypad beside it is the only way through, which
 is two entities for a locked door instead of four.
 
-### Build order
+### How it was built, 2026-09-18
 
-Each slice judgeable in game on its own. None of it is stealth, so
-[STEALTH_CHECKLIST.md](STEALTH_CHECKLIST.md) does not block it.
+Four slices, each judged in game on its own, all verified by Andrei the same day.
 
-1. ~~**The Prompt, widened** — defaults by class, the real key. No Records. Judged in any vanilla map.~~
-   **Built and verified in game 2026-09-18**: `game_shared/prompt_defs.h` is the table, the server
-   classifies in `dlls/player_inventory.cpp`, the message gained a third byte. The mod's own pickups that
-   never reach the Grid (Skill Point, Reset Token, Row Grant, the Modules, the silencer, the Core) and all
-   ammunition get a Prompt and a use press takes them, through a new `EEntryKind::Pickup`. **Left over:
-   ammunition reads a generic *Ammunition* and should get its own names**; no override, suppress or state
-   lines yet (slices 3 and 4); still the console font. Found on the way: `Key_LookupBinding` wants the
-   command without its `+`, which had the Status page's Pulse tooltip reading `[UNBOUND]` — fixed.
-2. ~~**Records, the core** — the file and parser, the found-set and its sync, the world entity and its
-   glow, the reader, the tab. The first code pillar 1 has ever had.~~ **Built and verified in game
-   2026-09-18.** `records.txt` at the repo root, copied to the mod directory by hand like `sprites/`,
+1. **The Prompt, widened** — defaults by class, the real key, judged in a vanilla map.
+   `game_shared/prompt_defs.h` is the table, the server classifies in `dlls/player_inventory.cpp`, the
+   message gained a third byte. The mod's own pickups that never reach the Grid (Skill Point, Reset Token,
+   Row Grant, the Modules, the silencer, the Core) and all ammunition get a Prompt and a use press takes
+   them, through a new `EEntryKind::Pickup`. Found on the way: `Key_LookupBinding` wants the command
+   without its `+`, which had the Status page's Pulse tooltip reading `[UNBOUND]` — fixed. Still the
+   console font.
+2. **Records, the core** — the file and parser, the found-set and its sync, the world entity and its
+   glow, the reader, the tab; the first code pillar 1 ever had.
+   `records.txt` at the repo root, copied to the mod directory by hand like `sprites/`,
    parsed line-by-line by `cl_dll/records.cpp` (a tokeniser eats the blank lines that make paragraphs)
    and reloadable in place with `records_reload`. The found-set is `CPlayerRecords`
    (`dlls/player_records.*`), 512 ids, saved as a `"RECORDS"` block and synced as a 64-byte mask.
@@ -3539,19 +3354,17 @@ Each slice judgeable in game on its own. None of it is stealth, so
    player keeps moving and looking while reading, and the Records tab. Prompt row is *Record* / `Read`.
    Cheats: `record_spawn <id>`, `record_forget`. Found on the way: **the glow is the object, not the
    room** (three attempts — see "Reading one"), and tuning cvars have to be re-read on a clock, because a
-   look cannot be judged through a console command. Left over: the Prompt names a generic *Record*
-   rather than the document's title, which wants slice 4's overrides.
-3. ~~**`record_grant`, Guidance, `record_lock`**, and the first-read target.~~ **Built and verified in
-   game 2026-09-18.** All three, plus the Prompt's **state line**, which the lock needed and which every
+   look cannot be judged through a console command.
+3. **`record_grant`, Guidance, `record_lock`**, and the first-read target. All three, plus the Prompt's
+   **state line**, which the lock needed and which every
    hard gate now inherits (see "The Prompt" and "A Record can open something"). `record_grant` grants,
    revokes, or both in one trigger, with an Only-once flag, and fires its target whether or not anything
    changed so a Guidance chain cannot stall on a line the player already had. The first-read target is on
    `record` and `record_brush` and fires once, because a Record stays in the world and is re-readable.
-   Cheats: `record_grant <id>`, `record_revoke <id>`. Left over: the lock says `Enter code` rather than
-   the digits, which is per-entity text and so is slice 4's.
-4. ~~**The mapper's controls** — the three prompt keyvalues, the FGD (and its sync rule), CONTEXT terms
-   (Record, Prompt, Guidance), the ADR-0011 exception written into the ADR itself. PILLARS pillar 1, an
-   ART_DEBT line for the stand-in document model~~ — **all done, 2026-09-18**, the last two with slice 2.
+   Cheats: `record_grant <id>`, `record_revoke <id>`.
+4. **The mapper's controls** — the three prompt keyvalues, the FGD (and its sync rule), CONTEXT terms
+   (Record, Prompt, Guidance), the ADR-0011 exception written into the ADR itself, PILLARS pillar 1, an
+   ART_DEBT line for the stand-in document model.
    `prompt_title`, `prompt_action` and `prompt_suppress` work on **every** entity: they are read in
    `DispatchKeyValue`, the one chokepoint every keyvalue passes through, because a good many KeyValue
    overrides in this SDK answer their own keys and return without chaining to their base — which would
@@ -3562,48 +3375,29 @@ Each slice judgeable in game on its own. None of it is stealth, so
    (`gmsgPickupPrompt` is variable-length now, clamped at 48 characters each) and it is affordable for
    the reason the Prompt was cheap to begin with: it is sent when what the player is looking at changes,
    not per frame. The change test gained the entity index with it, or two renamed buttons would have
-   looked identical. **Also closed here:** ammunition and the vanilla pickups that are not Item Types
-   now name themselves — *Shotgun shells*, *Uranium*, *HEV battery* — instead of reading *Ammunition*
-   and *Item*, which was slice 1's leftover.
+   looked identical. Ammunition and the vanilla pickups that are not Item Types name themselves —
+   *Shotgun shells*, *Uranium*, *HEV battery* — instead of reading *Ammunition* and *Item*; the Prompt
+   names a document by its title; the lock says `Enter code` rather than the digits, which stays.
 
-### Before the grill
+### Open
 
-The closest existing machinery: Half-Life's sentence system (`sentences.txt` and the `!SENTENCE` form used
-throughout, e.g. the Syringe's `!HEV_HEAL7`), `ambient_generic` for placed sound sources, and
-`CHudTextMessage` / `gmsgTextMsg` for on-screen text. A "currently playing" indicator is nearly free —
-`CHudStatusIcons` is wired up as of pillar 3, so a durable status icon is one `MESSAGE_BEGIN`.
+- **Audio.** A Record's format leaves room for a `sound` field, its body then the transcript. The sentence
+  system (`!SENTENCE`), `ambient_generic` and `CHudStatusIcons` for a "playing" icon are the machinery,
+  all existing.
+- **The reader and the Prompt are drawn in the engine's console font.** Widening the Prompt was the
+  reason to style it; it is not styled.
+- **The stand-in document model**, in [ART_DEBT.md](ART_DEBT.md).
 
-The interesting question is not playback, it is **where a found Transmission goes.** Two shapes, and the
-mod already has one of each:
-
-- *Like an Item Type* — it occupies a Cell, can be dropped, can be lost. Wrong, almost certainly: a lore
-  pickup that competes with a medkit for space will simply never be picked up.
-- *Like a Reset Token* — banked as a count, occupying no Cells, spent or replayed from a panel. This is
-  the right precedent, and the token already proves the pattern works end to end.
-
-Which means a Transmissions list is a new tab or a new panel, not an Inventory change.
-
-### Open questions
-
-**All four answered 2026-09-17, above** — re-readable, read in the world and kept in a tab, text standing
-in for subtitles, informative. Kept for the record, in the old word.
-
-- Are Transmissions **replayable** after the first listen, or heard once? Replayable implies a list UI;
-  once implies they are pure flavour and a much smaller feature.
-- Do they play **in the world** (the player triggers a terminal and it plays aloud, interruptible by
-  combat) or **from the panel** (a menu the player reads at leisure)? The first is far better for pacing
-  and far worse for anyone who walks away mid-log.
-- **Subtitles?** Half-Life has no subtitle system to speak of. Without one, a Transmission playing during
-  a firefight is lost, and audio the player cannot re-hear is content that was never delivered.
-- Do they carry **information** — a door code, a Station recipe, the location of a cache — or only fiction?
-  Information makes them worth finding and makes missing one punishing.
+Answered 2026-09-17, so not open: Records are re-readable, read in the world and kept in a tab, text
+stands in for subtitles, and they carry information. A Record occupying a Cell was rejected because a
+lore pickup that competes with a medkit for space is never picked up; it banks like a Reset Token.
 
 ---
 
 ## Pillar 1: The world
 
-**Shape: Shaped in structure 2026-09-17; the places themselves are Ideas.** ~~Everything here is blocked
-on [Maps](#maps)~~ and most of it *is* maps. The structure — hub and spokes, hard and soft gates, restored
+**Shape: Shaped in structure 2026-09-17; the places themselves are Ideas, except the cold open, which is
+built.** Most of it *is* maps. The structure — hub and spokes, hard and soft gates, restored
 infrastructure as global states, the reactor, the hazard course — is under
 [The shape of the game](#the-shape-of-the-game).
 
@@ -3620,28 +3414,27 @@ Secret areas, vents, shortcuts, elevators and trains. Structurally this is level
 Half-Life already ships `func_train`, `func_tracktrain`, `func_door`, `func_plat`, `func_button` and
 `func_breakable`, all working, all used by the base campaign.
 
-~~The reason it belongs in this document rather than a level editor is that pillar 1's reward loop is
-designed and unbuilt: PILLARS states the target as a tree completable only by near-exhaustive exploration,
-with roughly one Skill Point per optional space and 5–10 Reset Tokens across the campaign, the first around
-20% in. Those numbers are a level-design brief. Nobody has written a map against them.~~ The Skill Point
-economy is a non-issue as of 2026-09-15 (see [Maps](#maps)), so these areas are level design for its own
-sake, not a test of the numbers.
+The Skill Point economy is a non-issue as of 2026-09-15 (see [Maps](#maps)), so these areas are level
+design for its own sake, not a test of the numbers; the brief stays roughly one Skill Point per optional
+space and 5–10 Reset Tokens across the campaign, the first around 20% in.
 
 ### The cold open — `shaft1`, grilled 2026-09-19
 
-**Shape: Ready.** The spec is `maps/shaft1.rooms.txt`, in the loop [MAP_WORKFLOW.md](MAP_WORKFLOW.md) sets:
-plan first (`maps/shaft1.plan.png`), then the `.map`, then J.A.C.K. once. Andrei has not read the plan yet.
-Why this map first: the session opened on feeling blocked, and the diagnosis was a design-complete,
-play-zero project — five pillars Playable and no level anyone has played. The cold open is the most fully
-specified level in this document, needs none of the open questions answered, is linear, and uses only what
-is built. The decisions, in the order they were made:
+**Shape: Built through three cuts on 2026-09-19, walked and confirmed by Andrei, and his since in
+J.A.C.K.** The spec is `maps/shaft1.rooms.txt`, in the loop [MAP_WORKFLOW.md](MAP_WORKFLOW.md) sets:
+plan first (`maps/shaft1.plan.png`), then the `.map` from the generator, then J.A.C.K., where the layout
+is frozen and the generator is not run again. Since 2026-09-20 his hand-built work is in it — the
+chamber's pillars, the crystal deposit units — with each session in [CRAFT_LOG.md](CRAFT_LOG.md). Why
+this map first: the session opened on feeling blocked, and the diagnosis was a design-complete, play-zero
+project — five pillars Playable and no level anyone has played. The cold open is the most fully specified
+level in this document, needs none of the open questions answered, is linear, and uses only what is
+built. The decisions, in the order they were made:
 
-1. **Miners wear suits.** The player's own is **Agility**, with the pickaxe. ~~Both are given by the map
-   at the spawn~~ **Amended in the third cut, 2026-09-19 evening, on Andrei's ask for a locker room:** the
-   player lands in overalls and takes both from their own open locker in the dry, on the station's
-   mezzanine, thirty seconds from the cage; the HUD wakes there. The same locker is where the kit is
-   handed in at the end (decision 12). No code either way. The maddened are miners too, so some wear
-   suits and some do not.
+1. **Miners wear suits.** The player's own is **Agility**, with the pickaxe. The player lands in overalls
+   and takes both from their own open locker in the dry, on the station's mezzanine, thirty seconds from
+   the cage; the HUD wakes there (the third cut, on Andrei's ask for a locker room; the first two cuts
+   gave both at the spawn). The same locker is where the kit is handed in at the end (decision 12). No
+   code either way.
 2. **The suit choice is made at the hub**, under an hour in, not in a changeroom at minute one and not in
    the escape. Suit Variants are meant to carry specialization (stat bonuses or Skill unlocks — Andrei,
    2026-09-19; PILLARS still records them as cosmetic with codenames), so the choice has to be informed.
@@ -3658,19 +3451,21 @@ is built. The decisions, in the order they were made:
    and the arcs already are; the deposit code's "unsettled" comment can go.
 8. **The Heart is carried in the Grid**, not on a cart: a unique Entry three Cells wide, **not
    droppable** (a soft-lock otherwise, and the Grid cannot be freed of it, which is the point of it being
-   big). Four deposits encase it, one unstable; mining at least one reaches it. The hoist is a Station's
-   cousin that takes a named Entry and fires the cage.
+   big). Deposits encase it — eight units of crystal since 2026-09-20, built by Andrei, north and south
+   unstable; four slabs before — and mining at least one reaches it. The hoist is a Station's cousin that
+   takes a named Entry and fires the cage.
 9. **The way back collapses** when the Heart is taken (a quake; the one hard gate), and the old workings,
    unlit, lead out to the landing from the other side. The map is a loop.
-10. **One attacker in the dark**, at a vein in the old workings, a zombie standing in for the maddened
-    miner, who is a monster still to write.
+10. **One attacker in the dark**, at a vein in the old workings: the [maddened miner](#the-cult-and-the-maddened),
+    written that same evening and in the map since (a zombie stood in for the third cut's walk).
 11. **Two secrets**: a stope with two deposits off the haulage way, and a wordless shrine in a dead end.
     No Skill Point: the tree is the suit's fuel and the suit comes off at the top of the shaft.
-12. **Mined Shards are handed in with the kit** ~~at the pithead~~ **in the dry at the pit bottom, in
-    this map (third cut)**: after the hoist, security sends the player on break, the hand-in button on
-    the locker strips suit, pick and Shards, and only then does the cage button work; the ride and map
-    two begin with no suit. The company owning the ore is the first showing of who owns what. **Later
-    option, recorded**: a stash — hide Shards, or deposit them for retrieval later in the campaign.
+12. **Mined Shards are handed in with the kit in the dry at the pit bottom, in this map** (the third
+    cut; the pithead in the first two): after the hoist, security sends the player on break, the hand-in
+    button on the locker strips suit, pick and Shards, and only then does the cage button work; the ride
+    and map two begin with no suit. The company owning the ore is the first showing of who owns what.
+    **Later option, recorded**: a stash — hide Shards, or deposit them for retrieval later in the
+    campaign.
 13. **Start at the shaft bottom**, the cage just landed, and walk in under the lamps, so the lit half is
     seen before the dark half and the loop closes where it opened.
 14. The foreman fires the blast; the player's own act is cutting the Heart.
@@ -3709,7 +3504,8 @@ under the shrine, and past the vein a ladderway up to the missing man's camp; th
 the hoist and the hand-in have both fired, through two multisources. Every stand-in is in ART_DEBT.
 
 **Walk it — the test rows for the third cut**, in order. **All confirmed by Andrei, 2026-09-19.** They
-stay as the regression list for the editor pass:
+stay as the regression list for the editor pass; the chamber row has changed since (crystal units, and
+the maddened at the vein), and [map-check](MAP_WORKFLOW.md) reads back each export:
 
 | Row | What should happen |
 | --- | --- |
@@ -3722,7 +3518,7 @@ stay as the regression list for the editor pass:
 | The face | The worried line, the foreman's word, the blast at about six seconds; the rock face breaks |
 | The chamber | Amber, tall, four pillars; mine a deposit, the unstable one flashes then arcs; the Heart walks over into the Grid as a three-wide Entry with no Drop button |
 | The quake | Rubble fills the breach; the south wall opens; autosave |
-| The road | Drips, then wind; a whisper far off, a second nearer, a third close; the flooded dip is ankle deep; the shrine's dead end and its sound; the vein and the zombie |
+| The road | Drips, then wind; a whisper far off, a second nearer, a third close; the flooded dip is ankle deep; the shrine's dead end and its sound; the vein and the maddened miner |
 | The camp | Past the vein, a ladder in the ceiling; a bedroll, a lamp, three Shards |
 | The climbs | Five ramps; out on the gallery; the gate opens from the button beside it; the drop into the station |
 | The hoist | Takes the Heart, the cage rises empty and returns; the line about the dry |
@@ -3742,7 +3538,7 @@ it is done.
 
 ### Xen and underground Xen
 
-~~No detail recorded beyond the intent to build them as areas.~~ **Shaped in outline 2026-09-17.** A brief
+**Shaped in outline 2026-09-17.** A brief
 excursion before the midpoint (one or two maps, an errand for the survivors' plan, arriving at the far end
 of the anchor: the same arranged crystal, intact and enormous). After the teleport, Xen wings off the same
 hub, one per piece, in a soft order, with Xenian presence escalating by pieces held. Xen introduces
@@ -3754,9 +3550,8 @@ level design rather than a revisit. How many pieces (three proposed) and the thi
 
 **Shape: Shaped 2026-09-17. Built 2026-09-18 overnight, verified in game the same day** — the Shard, `func_deposit`
 and its unstable form are recorded in [PILLARS pillar 1](PILLARS.md#1-exploration), with the grill that
-settled the details in [OVERNIGHT_BRIEF.md](OVERNIGHT_BRIEF.md). What stays here is what was not built:
-the point-and-model deposit (waits on a crystal model) and the two open questions at the end. The
-mod's resource loop — small, finite, authored.
+settled the details in [OVERNIGHT_BRIEF.md](OVERNIGHT_BRIEF.md). What stays here is the design and the
+one open question at the end. The mod's resource loop — small, finite, authored.
 
 - **Deposits** are placed by hand, mostly off the critical path, and never respawn; a few dozen in the
   game. **Only a mining tool breaks one**, and the [pickaxe](#the-carbon-pickaxe) is that tool.
@@ -3774,14 +3569,15 @@ mod's resource loop — small, finite, authored.
 - Shards as a second faucet of Skill Points was rejected except for the bounded
   [fuel processors](#settled-2026-09-17--the-fuel-the-processors-the-air-dash-gate).
 
-~~Open: shard stack size and how many Cells~~ (answered 2026-09-18: one Cell, a Stack of ten). Open:
-whether any second-half deposit is remembered for the endings (stripping Xen's crystal, which the Xenians
-are desperate for). ~~And the deposit as a model, for veins that are objects rather than carved
-brushwork.~~ **Answered 2026-09-20: brush, as a pasted unit.** Seven crystals in a 64 cube, built by
-Andrei in J.A.C.K. and pasted around the Heart, each unit its own `func_deposit`; a `light_surface`
-makes every crystal face emit. Brush because a face can emit light and a model cannot, because the
-entity already traces its real shape, and because Valve's crystals are brushes. The record is in
-[CRAFT_LOG.md](CRAFT_LOG.md). A model stays possible for small wall outcrops later.
+**A deposit is brushwork, as a pasted unit** (2026-09-20): seven crystals in a 64 cube, built by Andrei
+in J.A.C.K. and pasted around the Heart, each unit its own `func_deposit`; a `light_surface` makes every
+crystal face emit. Brush rather than a model because a face can emit light and a model cannot, because
+the entity already traces its real shape, and because Valve's crystals are brushes. The record is in
+[CRAFT_LOG.md](CRAFT_LOG.md). A model stays possible for small wall outcrops later. A Shard is one Cell,
+a Stack of ten (2026-09-18).
+
+Open: whether any second-half deposit is remembered for the endings (stripping Xen's crystal, which the
+Xenians are desperate for).
 
 ### Stations
 
@@ -3805,11 +3601,10 @@ placement, so a Station is server-side code calling into `CPlayerInventory` dire
 question, no new sync path. `TryAdd` already handles first-fit placement and Stack top-up, and already
 refuses when there is no room.
 
-Which surfaces the one genuinely new rule: **what happens when the output does not fit?** The Inventory
-refuses politely everywhere else. A Station that consumes inputs and then cannot deliver the output has
-destroyed the player's belongings, which is the same class of bug as the three `CWeaponBox` hazards PILLARS
-records under "Deliberately deferred". The transaction has to check for room *before* consuming, or spawn
-the output on the floor.
+Which surfaced the one genuinely new rule, **what happens when the output does not fit**, answered by
+construction on 2026-09-18: the Station refuses, and nothing is taken unless the whole output fits. A
+Station that consumed inputs and then could not deliver would have destroyed the player's belongings,
+the same class of bug as the three `CWeaponBox` hazards PILLARS records under "Deliberately deferred".
 
 #### Crafting — Idea, 2026-09-18
 
@@ -3853,15 +3648,15 @@ half-supports: `env_beverage` (`dlls/effects.cpp:2147`) is a point entity that, 
 
 ### Open questions
 
-- ~~Is recycling **item → materials** (a new resource type, and therefore a new identity space) or
-  **item → item**?~~ **Answered 2026-09-17: item → item.** Crystal is the one material and it is an Item
-  Type — no new identity space, no new UI, no save change. Whether Stations also *recycle* (break an
-  unwanted item down into shards) is not decided.
-- ~~Are recipes **known** from the start, found as [Records](#pillar-1-records), or discovered by
-  experiment?~~ **Answered 2026-09-18 by construction: known** — the Prompt states every trade. A recipe
-  found as a Record remains possible for a Station type added later.
-- ~~Are Stations **fixed in the world** or **carried**?~~ **Answered 2026-09-18: fixed** — a brush built into
-  a wall, which is the stronger answer for pillar 1 and cost nothing extra.
+- **Whether Stations also *recycle*** — break an unwanted item down into Shards. Not decided. What is
+  decided (2026-09-17): a Station trades **item → item**, crystal is the one material and it is an Item
+  Type — no new identity space, no new UI, no save change — which [crafting](#crafting--idea-2026-09-18)
+  above would reopen with scrap.
+- **Recipes found as Records**, for a Station type added later. Today every recipe is known: the Prompt
+  states each trade (2026-09-18).
+
+Answered, so not open: Stations are fixed in the world, a brush built into a wall (2026-09-18), the
+stronger answer for pillar 1 at no extra cost.
 
 ---
 
@@ -3879,18 +3674,17 @@ Evolution, every Station and every Module needs a model, an icon and a sound set
 faster than it is paid down for the foreseeable future, and that is fine as long as each entry says what is
 wrong with its stand-in.
 
-**Generated icons must clear a bar the register already specifies.** The Skill Tree entry in ART_DEBT.md is
-marked *blocking rather than cosmetic*, and it sets hard constraints that any generation approach has to
-respect: **one fixed size, not a resolution-bucketed set**; small enough that seven columns fit
-`panelW - 264` (roughly ≤64px); greyscale for anything drawn additively and tinted. The genuinely hard
-requirement is that each icon be **distinguishable from every other at 20×20**, which is where generated
-icon sets usually fail — they come back stylistically consistent and mutually indistinct, which is exactly
-today's problem with `suit_full` on five Skills. The size constraints hold only while the tree draws its
-icons at native size; the Inventory Grid no longer does (PILLARS pillar 5, where the Inventory's Icons —
-decided and built 2026-09-12 as full-colour world-model renders — are recorded), and the tree could follow.
+**Icons must clear a bar the register already specifies.** The Skill Tree entry in ART_DEBT.md is marked
+*blocking rather than cosmetic*, and its brief sets the constraints: **one fixed size, not a
+resolution-bucketed set**, fitted into the board's node frames (36 to 74 pixels at 1:1, the draw fitted
+since 2026-09-14); greyscale for anything drawn additively and tinted. The genuinely hard requirement is
+that each icon be **distinguishable from every other at 20×20**, which is where generated icon sets
+usually fail — they come back stylistically consistent and mutually indistinct, which is exactly today's
+problem with `suit_full` on five Skills. The Inventory Grid's Icons are full-colour world-model renders
+(PILLARS pillar 5), a different bar.
 
-**On sounds.** The user's note reads: *"sounds: here I have little experience and I can help"* — which is
-ambiguous between offering help and asking for it. See [Open questions](#open-questions).
+**On sounds.** Settled 2026-09-18 with the art workflow: Andrei makes them, in FL Studio, and
+[SOUND_WORKFLOW.md](SOUND_WORKFLOW.md) is the loop that ships them.
 
 What the register already establishes about this mod's audio, and what any new sound work should inherit:
 the Pulse entry records that the first attempt failed not because the samples were bad but because the
@@ -3907,46 +3701,37 @@ is designed, and may well change name first.
 
 | Provisional term | Proposed meaning | Notes |
 | --- | --- | --- |
-| **Module** | A mechanic the player does not start with, found partway through the game and kept for good — never swapped. | Deliberately echoes "the longjump module", which is the model. Graduates to CONTEXT.md when the first one is built. |
-| **Dash**, **Hook** | Two of the six Modules (Pulse, Dash, Hook, the alien Module, Night Vision, Double jump). ~~Dash replaces the long jump~~ — it comes with it since 2026-09-15. The Hook is low priority since 2026-09-17. | Plain, and hard to improve on. |
+| **Module** | A mechanic the player does not start with, found partway through the game and kept for good — never swapped. | Deliberately echoes "the longjump module", which is the model. Five are built and the word is still not in CONTEXT.md; it should graduate. |
+| **Hook** | One of the six Modules (Pulse, Dash, Hook, the alien Module, Night Vision, Double jump); the Dash is in CONTEXT.md already. The Dash comes with the long jump rather than replacing it (2026-09-15). The Hook is low priority since 2026-09-17. | Plain, and hard to improve on. |
 | **Shinobi** | The Route built on the Dash Module. | Named 2026-09-15; *Ninja* was the candidate, *Agility* stays with the suit. |
 | **Night Vision** | The fifth Module: replaces the flashlight when found, gates the Stealth region. | Settled 2026-09-15. Adapted from Opposing Force. |
 | **Overdraw** | The Energy Route's Major: energy attacks drain armour as well, for bonus damage. | Named 2026-09-15. |
 | **Evolution** | A durable alteration to a weapon that keeps the weapon's identity — silencer, second barrel, extended magazine. | Avoid *attachment* and *mod*; the first implies removable hardware, the second collides with "the mod". |
-| **Record** | A document, screen, notice or piece of advice the suit has **registered** in its memory: read with +use in the world, kept in the **Records** tab, occupying no Cells. | 2026-09-17. **Not an Entry** — that is an occupant of the Inventory. Avoid *entry*, *log* (the console), *note*, *datapad*, *lore*. |
-| **Transmission** | ~~A recorded log found in a level and played back.~~ Since 2026-09-17, a *category* of Record: what was radioed, intercepted or, later, voiced. | Avoid *log*, *tape*, *audio diary*, *datapad*. |
-| **Guidance** | The Records tab's pinned section: what an advisor last asked for, granted and revoked by the map. | 2026-09-17. Avoid *objective*, *quest*, *mission*, *task*. |
-| **Prompt** | The text shown in the vicinity of anything that can be interacted with: a title, and the action or actions under it. The Pickup Prompt is its oldest case. | 2026-09-17. CONTEXT.md avoids *use prompt*, *hint*, *tooltip*; hence the bare word. |
-| ~~**Station**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#inventory) on 2026-09-18, when the first two were built. | |
+| **Transmission** | A *category* of Record: what was radioed, intercepted or, later, voiced. It was the whole feature's name until 2026-09-17. | Avoid *log*, *tape*, *audio diary*, *datapad*. |
 | **Decapitation** | A lethal head hit that removes the head: headless submodel, thrown skull, blood from the stump. | Distinct from *gibbing*, which is the whole body and already means something in this codebase. **Headless** names the resulting state. |
-| ~~**Carbon Pickaxe**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#weapons) on 2026-09-18, when v1 was built. | |
 | **Route** | A build path through the Skill Tree: the set of Skills whose bonuses multiply into one way of playing. A region of the tree since 2026-09-15. | Named 2026-09-13. Avoid *class*, *spec* and *tree* — the tree is the whole thing. |
 | **Hub** | The centre region of the Skill Tree: the suit, the generic suit stats, and the cross-Route Skills in its corner cells. | Settled 2026-09-15. Avoid *core* (the alien ammo) and *centre* alone. |
 | **Seam** | The shared border of two Routes' regions, where a cross-Route build pays in the neighbour's stat. | Settled 2026-09-15. Avoid *bridge*, *link* (a link is an effect that reads another Route). |
 | **Keystone** | A Skill Tree node with a real downside. Glass Cannon is the first. | Settled 2026-09-15, Path of Exile's word kept on purpose. Avoid *curse*, *trade-off node*. |
 | **Trace** | A drawn connector in the Skill Tree: thin between neighbours, thick for a Skill's gate, lit when powered. | Presentation term, 2026-09-15. Avoid *edge* in player-facing text (kept in code and the debug overlay). |
 | **The Heart** | The purest crystal of the anchor under the mine, cut free by the player in the cold open and seated in the rig. | Provisional, 2026-09-17. The grill called it the *keystone*; **Keystone** is taken, two rows up. |
-| ~~**Deposit**, **Shard**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#inventory) on 2026-09-18, when both were built. | |
-| ~~**Fuel processor**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#inventory) on 2026-09-18. | |
-| ~~**Tail**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#the-pulse) on 2026-09-18, when it was built. | |
 | **Double jump** | The sixth Module; fills the legs Slot. | 2026-09-17. Name as plain as Dash and Hook; a fiction name for the hardware is open. |
 | **Wing**, **Piece** | A spoke of the hub; one of the things collected in the second half to take the facility home. | 2026-09-17. How many Pieces is open (three proposed). |
 | **Hard gate**, **Soft gate** | Sealed by construction and looking it; or an intended key plus at least one deliberate alternative. | 2026-09-17. Map-brief terms, not player-facing. |
-| ~~**The maddened**, **the cult**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#the-humans) on 2026-09-19, when the maddened miner was built. | |
-| ~~**Stat node**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#skills) on 2026-09-14, when the Melee Route built the first nine. | |
-| **Defense Matrix** | The Juggernaut Route's stance: the Pulse key held for a second raises it, armour takes a far larger share of every hit while it is up, the player is slowed. Drops on release, at 6 s, or at zero armour. | Settled 2026-09-13. **Not a Shield** — that word is the Pulse's field in CONTEXT.md. |
-| ~~**Core**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#the-alien-route) on 2026-09-16, when Cores were built as a real ammo type. | |
-| ~~**Ghost slave**~~ | Graduated to [CONTEXT.md](../CONTEXT.md#the-alien-route) on 2026-09-16 as **Ghost**, when `monster_ghost_slave` was built; the classname already says slave once. | |
 
-**Graduated 2026-08-31**, when the stealth design was settled: **Concealment** and **Backstab** are now in
-[CONTEXT.md](../CONTEXT.md), joined there by **Suspicion**, **Search**, **Post**, **Perception Profile**,
-**Disturbance**, and the **Unseen / Noticed / Spotted** readout states. Backstab's meaning changed on the
-way across — the proposal here required the victim to be unaware, and the settled term does not; it is
-purely a matter of where the attacker stands.
+**Graduated** into [CONTEXT.md](../CONTEXT.md), each when the thing it names was built, so no longer
+proposed here: Concealment, Backstab, Suspicion, Search, Post, Perception Profile, Disturbance and the
+Unseen / Noticed / Spotted states (2026-08-31; Backstab's meaning changed on the way across — the proposal
+required the victim to be unaware, and the settled term is purely a matter of where the attacker stands);
+Stat node (2026-09-14); Core and Ghost (2026-09-16; *ghost slave* lost the second word because the
+classname already says slave once); Defense Matrix and Decaying Armor; the Dash; Station, Fuel processor,
+Deposit, Shard, Tail, Carbon Pickaxe, Record, Guidance and Prompt (2026-09-18); the maddened and the cult
+(2026-09-19).
 
-Note what is deliberately *absent*: there is no proposed term for whatever a recycling Station consumes or
-produces. That is the [open question](#open-questions) about materials, and inventing a noun before
-answering it would settle the design by accident.
+Note what is deliberately *absent*: there is no proposed term for the scrap that
+[crafting](#crafting--idea-2026-09-18) would consume or the currency
+[vending machines](#vending-machines--idea-2026-09-18) would take. Inventing a noun before the design is
+grilled would settle it by accident.
 
 ---
 
@@ -3954,35 +3739,25 @@ answering it would settle the design by accident.
 
 Ranked by how much else is waiting on the answer.
 
-1. ~~**Are Modules limited or unlimited?**~~ **Answered 2026-09-12: neither swappable nor available from
-   the start** — found through the game and kept, like the long jump. Level design may assume a Module
-   past the point it is found. See [Modules](#pillar-3-modules).
-2. ~~**Does the Pulse become a Module?**~~ **Answered 2026-09-12: yes**, with its Skills split into a timing
-   branch and a passive health-pool branch so a player need not parry. Found early; branches not exclusive
-   but priced so splitting is inefficient. The pool's details are open under [Modules](#pillar-3-modules).
-3. ~~**Are weapon handling upgrades Skills or Evolutions?**~~ **Answered 2026-09-13 by the
-   [Weapon Specialist Route](#weapon-specialist): numbers are Skills, identity is an Evolution.** Reload and
-   draw speed are nodes; a silencer or a second barrel is an Evolution.
-4. ~~**Does the Carbon Pickaxe replace the crowbar entirely?**~~ **Answered 2026-09-13: no.** The crowbar
-   stays as the all-rounder in a melee roster; the crowbar-named Skills are renamed once, to generic melee
-   names, for the roster. See the [Melee Route](#melee).
-5. ~~**Is stealth optional everywhere?**~~ **Answered 2026-09-17: yes, with declared exceptions** — bosses,
-   sieges and plain charging fights. See [Stealth](#pillar-6-stealth).
-6. ~~**Recycling: item → materials, or item → item?**~~ **Answered 2026-09-17: item → item**; crystal
-   Shards are an Item Type. See [Stations](#stations).
-7. ~~**What was the boss moveset example?**~~ **Answered 2026-09-12 by the roster**: four bosses, each an
-   existing monster with custom attacks. See [Monsters and bosses](#pillar-2-monsters-and-bosses).
-8. **Sounds — offering help or asking for it?** *"here I have little experience and I can help"* reads
-   both ways, and the two readings imply very different plans. Audio logs being deferred behind text
-   entries (2026-09-17) takes the pressure off, not the question.
-9. **The endings.** Multiple, read from choices and secrets, and deliberately the last thing designed
+1. **The Pulse's timing** — the [grill booked for 2026-09-21](#the-pulses-timing--urgent-grill-booked-for-the-morning-of-2026-09-21),
+   with [the Pulse against sustained fire](#the-pulse-against-sustained-fire) folded in. Whether 0.25 s
+   is a state at all; what happens to the tail.
+2. **How many Pieces, and what are the wings?** Three Pieces were proposed and not confirmed; no wing in
+   either half has an identity yet, and the vertical slice — the hub and wing one — needs the first.
+3. **Where are the Dash and the double jump found?** Proposed: the assassin boss, and the vortigaunt's
+   first hand-over after the teleport.
+4. **The names**: the player, the facility, the company, the Heart, and whether *miner* is the final word.
+5. **The decompiled stock maps** (2026-09-19, `E:\CustomAssets\maps\decompiled\`, the tram ride and
+   Anomalous Materials): a reference for proportions and construction to learn from, or brushwork to
+   lift, which is a licensing question first. See [MAP_WORKFLOW.md](MAP_WORKFLOW.md#decompiled-half-life-maps).
+   Not used until grilled.
+6. **The endings.** Multiple, read from choices and secrets, and deliberately the last thing designed
    (2026-09-17). Nothing waits on it except the rule that a moment which might matter sets a global.
-10. **How many Pieces, and what are the wings?** Three Pieces were proposed and not confirmed; no wing in
-    either half has an identity yet, and the vertical slice — the hub and wing one — needs the first.
-11. **Where are the Dash and the double jump found?** Proposed: the assassin boss, and the vortigaunt's
-    first hand-over after the teleport.
-12. **The names**: the player, the facility, the company, the Heart, and whether *miner* is the final word.
-13. **The decompiled stock maps** (2026-09-19, `E:\CustomAssets\maps\decompiled\`, the tram ride and
-    Anomalous Materials): a reference for proportions and construction to learn from, or brushwork to
-    lift, which is a licensing question first. See [MAP_WORKFLOW.md](MAP_WORKFLOW.md#decompiled-half-life-maps).
-    Not used until grilled.
+
+Answered, with the answer recorded in its entry: Modules are found and kept, never swapped, and level
+design may assume one past where it is found (2026-09-12); the Pulse is a Module with a timing branch
+and the Defense Matrix (2026-09-12, 2026-09-13); numbers are Skills and identity is an Evolution
+(2026-09-13); the pickaxe joins the crowbar rather than replacing it (2026-09-13); stealth is optional
+everywhere with declared exceptions (2026-09-17); Stations trade item for item (2026-09-17); a boss
+moveset is an existing monster with custom attacks (2026-09-12); sounds are Andrei's to make
+(2026-09-18).

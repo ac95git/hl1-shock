@@ -511,7 +511,7 @@ create, not a promise they make.
 
 Named **Shinobi** on 2026-09-15 (*Ninja* was the candidate; *Agility* stays with the suit). Built on the **Dash Module**: a tap of shift, a burst in the
 direction of movement, ground only until the major node; charges and a cooldown; walk is rebound.
-[ROADMAP](ROADMAP.md#the-dash-route-name-pending).
+[ROADMAP](ROADMAP.md#shinobi).
 
 | Node | Id | Effect | Ranks | State |
 | --- | --- | --- | --- | --- |
