@@ -93,6 +93,24 @@ inline int gmsgPulse = 0;
 // only on a change, like the Pulse's; the armour readout tints while it is up.
 inline int gmsgMatrix = 0;
 
+// A hit the Shield turned away: 3 coords, where it came from.  An EVENT, not a
+// state -- one message per negated hit, and several inside one window is normal
+// because the window never closes early (CPlayerPulse::Think).
+//
+// It exists because the negation destroys information.  A hit that lands sends
+// gmsgDamage with a vecFrom and the suit draws its damage compass from it; a hit
+// the Shield eats returns out of CBasePlayer::TakeDamage before that ever
+// happens, so a successful parry currently tells the player nothing about where
+// they were shot from.  This gives that back, and the client paints it on the
+// Shield (cl_dll/pulse_shield.cpp) using the same direction maths the vanilla
+// compass uses.
+//
+// The origin is the inflictor's Center(), matching gmsgDamage exactly, and
+// falls back to the player's own origin for a hit with no inflictor -- which
+// the vanilla code comments as "comes from inside me" and which
+// CalcDamageDirection turns into all four quadrants at once.
+inline int gmsgPulseHit = 0;
+
 // Concealment state: 1 byte (EConcealState).  Sent only on a threshold
 // crossing -- the whole point of quantising a continuous meter to three states
 // is that the wire sees three events rather than a value every frame.

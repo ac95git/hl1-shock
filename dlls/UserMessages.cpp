@@ -124,6 +124,8 @@ void LinkUserMessages()
 
 	gmsgMatrix = REG_USER_MSG("Matrix", 2);
 
+	gmsgPulseHit = REG_USER_MSG("PulseHit", 6);
+
 	gmsgConceal = REG_USER_MSG("Conceal", 1);
 
 	gmsgStatusIcon = REG_USER_MSG("StatusIcon", -1);

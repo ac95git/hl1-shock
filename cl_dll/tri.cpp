@@ -20,6 +20,7 @@
 
 #include "particleman.h"
 #include "tri.h"
+#include "pulse_shield.h"
 extern IParticleMan* g_pParticleMan;
 
 /*
@@ -51,4 +52,11 @@ void DLLEXPORT HUD_DrawTransparentTriangles()
 
 	if (g_pParticleMan)
 		g_pParticleMan->Update();
+
+	// The Shield, drawn in first person (pulse_shield.cpp).  Here rather than in
+	// the HUD layer because it is world-space geometry around the eye, and here
+	// rather than in the studio pass because it must be drawn AFTER the
+	// viewmodel, which it washes in the suit's colour.  A no-op when no Shield
+	// stands.
+	PulseShield_Draw();
 }

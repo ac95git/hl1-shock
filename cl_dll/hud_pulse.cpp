@@ -13,12 +13,14 @@
 #include "hud.h"
 #include "cl_util.h"
 #include "parsemsg.h"
+#include "pulse_shield.h"
 
 #include <string.h>
 #include <stdio.h>
 
 DECLARE_MESSAGE(m_Pulse, Pulse)
 DECLARE_MESSAGE(m_Pulse, Matrix)
+DECLARE_MESSAGE(m_Pulse, PulseHit)
 
 // Mirrors EPulseState in dlls/player_pulse.h.
 #define PULSE_READY 0
@@ -45,6 +47,7 @@ bool CHudPulse::Init()
 {
 	HOOK_MESSAGE(Pulse);
 	HOOK_MESSAGE(Matrix);
+	HOOK_MESSAGE(PulseHit);
 
 	m_iState = PULSE_READY;
 	m_flStateStart = 0;
@@ -53,8 +56,15 @@ bool CHudPulse::Init()
 	m_flMatrixStateStart = 0;
 	m_flMatrixStateEnd = 0;
 
-	// Alpha of the screen tint while a Shield stands; 0 turns it off.
-	m_pCvarTint = CVAR_CREATE("hud_pulse_tint", "48", FCVAR_ARCHIVE);
+	// Alpha of the flat screen tint while a Shield stands; 0 turns it off.
+	//
+	// Off by default since 2026-09-20: the Shield is drawn as a surface now
+	// (pulse_shield.cpp), and this flat rectangle is the "seeing blue" that
+	// replaced.  Kept rather than deleted for two reasons -- it is FCVAR_ARCHIVE
+	// and already written into configs, so removing it would make an existing
+	// setting silently do nothing; and it is the only thing the SOFTWARE
+	// renderer can show, since the drawn Shield is GL and hardware-only.
+	m_pCvarTint = CVAR_CREATE("hud_pulse_tint", "0", FCVAR_ARCHIVE);
 
 	// The Defense Matrix's edge tint: the alpha of the outermost band, and the
 	// bands' total depth as a fraction of the screen's height.  0 turns it off.
@@ -89,6 +99,10 @@ void CHudPulse::Reset()
 	m_iMatrixState = MATRIX_NONE;
 	m_flMatrixStateStart = 0;
 	m_flMatrixStateEnd = 0;
+
+	// The drawn Shield keeps its own clock, so it has to be told too -- a level
+	// change must not leave one standing on screen.
+	PulseShield_Reset();
 }
 
 bool CHudPulse::MsgFunc_Pulse(const char* pszName, int iSize, void* pbuf)
@@ -100,6 +114,31 @@ bool CHudPulse::MsgFunc_Pulse(const char* pszName, int iSize, void* pbuf)
 
 	m_flStateStart = gHUD.m_flTime;
 	m_flStateEnd = gHUD.m_flTime + flDuration;
+
+	// The drawn Shield runs off the same message (pulse_shield.cpp).  It is told
+	// every state, not just PULSE_SHIELD, because anything else is its cue to
+	// stop -- the server has already said the Shield is down.
+	PulseShield_SetState(m_iState, flDuration);
+
+	return true;
+}
+
+// A blow the Shield turned away, and where it came from.  An event, not a
+// state: one message per negated hit, and several inside one window is normal
+// because the window never closes early (dlls/player_pulse.cpp).
+//
+// Hooked here because CHudPulse owns the Pulse's wire; the work is all in
+// pulse_shield.cpp, which paints it on the Shield.
+bool CHudPulse::MsgFunc_PulseHit(const char* pszName, int iSize, void* pbuf)
+{
+	BEGIN_READ(pbuf, iSize);
+
+	Vector vecFrom;
+	vecFrom.x = READ_COORD();
+	vecFrom.y = READ_COORD();
+	vecFrom.z = READ_COORD();
+
+	PulseShield_Deflect(vecFrom);
 
 	return true;
 }

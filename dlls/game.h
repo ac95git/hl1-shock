@@ -160,8 +160,6 @@ extern cvar_t pulse_recharge_scale;
 extern cvar_t pulse_discharge_scale;
 extern cvar_t pulse_discharge_min;
 extern cvar_t pulse_discharge_max;
-extern cvar_t pulse_ring_style;
-extern cvar_t pulse_ring_scale;
 extern cvar_t pulse_deflect_punch;
 extern cvar_t pulse_discharge_melee;
 extern cvar_t pulse_followup_time;

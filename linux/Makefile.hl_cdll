@@ -54,6 +54,7 @@ HL1_OBJS = \
 	$(HL1_OBJ_DIR)/hud_msg.o \
 	$(HL1_OBJ_DIR)/hud_pickupprompt.o \
 	$(HL1_OBJ_DIR)/hud_pulse.o \
+	$(HL1_OBJ_DIR)/pulse_shield.o \
 	$(HL1_OBJ_DIR)/hud_redraw.o \
 	$(HL1_OBJ_DIR)/hud_update.o \
 	$(HL1_OBJ_DIR)/in_camera.o \

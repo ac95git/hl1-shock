@@ -208,7 +208,10 @@ _Avoid_: parry, block, dodge, guard
 
 **Shield**:
 The field a Pulse raises around the player. It exists only for the Pulse Window and is gone once that
-closes.
+closes. In first person it is **drawn as a surface the player is inside**, formed and withdrawn from the
+crosshair (settled 2026-09-20, [ROADMAP.md](docs/ROADMAP.md#the-shield-in-first-person--settled-2026-09-20-built-and-seen)) —
+which makes the Avoid list below a live temptation rather than a theoretical one. It is the Shield seen
+from within; it is not a bubble and not a barrier.
 _Avoid_: bubble, barrier, aura, forcefield
 
 **Pulse Window**:

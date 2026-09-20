@@ -2156,6 +2156,14 @@ flash and a brief screen-edge tint in the suit's colour beside the low clang —
 than a parry. **Also open, lower priority:** whether a *successful* deflect should be followed by a
 tail. Today it is not — a deflect ends as it always did, and the rest of that second is unprotected.
 
+**Still deferred 2026-09-20**, and now deliberately so rather than by omission. When
+[the Shield in first person](#the-shield-in-first-person--settled-2026-09-20-built-and-seen) was settled, the
+tail was put to Andrei as a thing the new visual could carry for free — a distinct vanish would have told
+"I parried" from "I braced" without a number, which is rule 4 above. He declined: *"the tail is something
+that might not make it to the finals so for this v1 lets not take it into consideration for extra
+treatment."* So the tail is a candidate for removal, not merely an unfinished visual, and nothing should
+be built on top of it until that is decided.
+
 Recorded in [PILLARS pillar 2](PILLARS.md#2-enhanced-combat). Two calls made while building it: the tail
 follows only a window that deflected nothing (a deflect ends exactly as before, so nothing verified moves),
 and its length is `skill_matrix_hold` rather than a cvar of its own, since rule 5 makes them one moment —
@@ -2180,6 +2188,258 @@ in total, and the tail takes half damage.** The rules that keep the skill ceilin
 Mashing the key buys about a second of cover per four-second cycle, most of it at half — roughly 12%
 average reduction at today's `pulse_recharge_miss` of 3 s. A cushion, not a build. Two new cvars: the
 tail's length and its scale.
+
+### The Pulse's timing — URGENT GRILL, booked for the morning of 2026-09-21
+
+**Raised by Andrei on 2026-09-20, the evening the first-person Shield first ran.** His words: *"the pulse
+presentation is now gated by the actual mechanic: 0.25 is impossible to fit expansion and contraction of
+the shield."*
+
+Nothing here is decided. This is a brief, not an answer — do not pre-empt it.
+
+**The observation, and why it is not a presentation problem.** The Shield's sweep is clamped to at most
+half the window, so at `pulse_window` 0.25 s the entrance and the exit are 0.125 s each and there is no
+hold between them at all. The Shield never *stands*; it arrives and immediately leaves. Raising
+`pulse_shield_sweep` cannot fix that, because the clamp exists for a real reason — a sweep longer than
+half the window would still be forming while the window closed. The presentation is not badly tuned. It
+is correctly reporting that **the window is too short to be a state**, and it took drawing the thing
+honestly for that to become visible.
+
+This inverts the usual direction: presentation normally serves mechanics, and here the presentation has
+produced evidence about the mechanic that no amount of playing it could.
+
+**The numbers it runs into** (all defaults, `dlls/game.cpp`):
+
+| | |
+|---|---|
+| `pulse_window` | 0.25 s, 0.40 s with the Pulse Window Skill |
+| tail | to 1.0 s total, at `pulse_tail_scale` 0.5 |
+| `pulse_recharge_hit` / `_miss` | 1.5 s / 3.0 s |
+| `skill_matrix_hold` | 1.0 s — doubles as the tail's length |
+
+**Questions to put, none of them answered:**
+
+1. Is 0.25 s the right window, and what was it ever chosen against? It predates everything built on top
+   of it, and nothing on record says it was measured.
+2. Does the Shield want a **hold** at all — a state you are in — or is "arrives and leaves" the honest
+   shape of an instant parry, with the presentation problem being that a sweep is the wrong motion for it?
+   These are opposite conclusions and both are live.
+3. If the window grows, what pays for it? A longer Recharge, a smaller damage list
+   ([ADR-0005](adr/0005-the-shield-negates-a-curated-damage-list.md)), no Discharge on cheap hits?
+4. What happens to the **tail**, which already occupies 0.25–1.0 s, is already a candidate for removal,
+   and would be the obvious thing to merge into a longer window?
+5. Does Pulse Window (Skill 12) still make sense if the base window changes?
+
+**Fold in [The Pulse against sustained fire](#the-pulse-against-sustained-fire)**, which is the same grill
+from the other end: grunts spam hitscan, a 0.25 s window catches part of a burst, and the verb teaches
+badly against the enemy the player meets most. That entry has been open since 2026-09-18 with no answer
+chosen. One session should close both or neither.
+
+**Do not re-grill** the Shield's *look* — it is settled below and Andrei's verdict on it was "it looks
+amazing". What is in question is the mechanic underneath it.
+
+### The Shield in first person — settled 2026-09-20, built and seen
+
+**Shape: settled by grill 2026-09-20, built the same day. Andrei's verdict on first sighting: "it looks
+amazing."** But see [The Pulse's timing](#the-pulses-timing--urgent-grill-booked-for-the-morning-of-2026-09-21)
+above — drawing it honestly exposed that the 0.25 s window is too short to fit an entrance and an exit,
+which is a question about the *mechanic*, not about anything in this entry.
+
+**Every call below is Andrei's.** Vocabulary note
+first, because the grill did not obey it: the thing being drawn is the **Shield**
+([CONTEXT.md](../CONTEXT.md)), and *bubble*, *barrier* and *forcefield* are on that entry's Avoid list.
+Code, comments and commits say Shield.
+
+**What it replaces.** `CHudPulse::Draw` (`cl_dll/hud_pulse.cpp:238-248`) fills the whole screen with a
+flat `FillRGBA` rectangle at `hud_pulse_tint` 48 for as long as a Shield stands, and that is the entire
+first-person treatment. Andrei: *"instead of 'seeing blue' like the current functionality, a Shield
+rapidly forming around you and vanishing is much cooler."* **The motion is the point** — not the colour,
+not a texture. Everything below serves that sentence.
+
+**How it got here.** The session started on giving the Pulse a *model* animation, and both model routes
+died on inspection. A holster-play-draw costs ~1 s against a 0.25 s window, disarms the player during the
+second they pressed a defensive key, and breaks the Follow-Up. A per-weapon animation is three poses
+(window, tail, Matrix) across the 16 viewmodels in `models/` — ~48 hand-animated sequences, against a
+modelling ladder on rung one. A single off-hand model was killed by Andrei in one line: *"some weapons are
+held with two hands, so a ghost arm cannot just appear"* — true of the MP5, shotgun, crossbow, gauss,
+egon, RPG and tripmine, with the grenade and satchel showing the off hand mid-animation. The one surviving
+model answer, a hard swap of `pev->viewmodel` with no holster time, is parked in the backlog below.
+
+#### The settled shape
+
+1. **A surface, not energised gear.** Two readings were put: the gear you hold lights up, or something
+   stands between you and the world. Andrei took the second — *"b is the correct answer with a kept in
+   backlog for maybe fitting better on the defense matrix."* That split is sharper than it looks: a
+   surface in front of you for 0.25 s is fine, for the Matrix's 6 s it would be unbearable, and a glow on
+   your gear is the reverse.
+2. **It covers the whole view.** `CPlayerPulse::WouldNegate` (`dlls/player_pulse.cpp:975`) takes no
+   direction at all — a shotgun in the back is negated exactly as one in the face. Anything held in front
+   of the player would teach a facing rule the game will never reward. The player is *inside* the Shield.
+3. **Clear at the crosshair, dense at the periphery.** This was argued during the grill as physics — "what
+   the inside of a sphere looks like, oblique at the edges" — and **that reasoning is wrong.** From the
+   exact centre of a sphere every surface element is face-on, and the path length through a thin shell is
+   identical in every direction; there is no fresnel to reproduce. Corrected here and in the code header
+   so nobody tunes against a model that does not exist. The falloff is **authored**, and its justification
+   is the real one: the player must be able to see what they are shooting during the one quarter-second
+   that matters. In v1 it is the *only* structural cue besides the travelling edge, so it carries the
+   surface read alone. `pulse_shield_spread` and `pulse_shield_falloff` shape it, `pulse_shield_centre`
+   sets what is left at the crosshair itself.
+4. **The motion is a fill, not an inflation.** The sphere sits at a fixed radius and the *material*
+   spreads across it behind a bright leading edge. Rejected: inflation (the surface crosses the camera on
+   its way out) and facet assembly (most work, most generic, and it is a texture decision rather than a
+   motion one). The geometry never moves, so nothing can ever pass through the eye.
+5. **The origin is the crosshair, live.** Recommended against and overruled, correctly — Andrei: *"the
+   frontal protection is the most important in the heat of the moment... the pulse happens quickly so I
+   don't see a big issue with turning around."* The player's eyes are already at the crosshair, so
+   feedback that begins there is perceived in the first frame, where a sweep rising from the screen edge
+   costs perceptual time a 0.25 s window does not have. Latching the direction in world space at the press
+   was offered as strictly more robust; it is *one member variable dearer*, not cheaper, so it ships as a
+   cvar branch to judge by eye, the way `pulse_ring_style` was meant to be judged.
+6. **The vanish is the fill reversed.** The boundary retreats back toward the crosshair and winks out
+   where it began. A trailing-edge sweep (one wave crossing the view, arriving and departing) was the
+   prettier option and was rejected for lying: it empties the centre of the view while the Shield is still
+   mechanically up. The reverse empties the periphery first, which is the part the player is not watching,
+   and its last frames are a bright ring shrinking to a point at the crosshair — an unmissable "you are
+   unprotected now" cue delivered to the fovea, which an ability with a 1.5–3 s Recharge wants.
+7. **Fixed sweep, variable hold** — as decided, though see the note below on what the tuned value did to
+   it. Sweep in and sweep out are a fixed duration *always*; `PulseWindowFor`'s extra 150 ms at
+   Pulse Window (`dlls/player_pulse.cpp:151`, 0.25 s → 0.40 s) goes entirely into the hold. Sweep speed is
+   a property of the suit, not of the player's build; the Skill buys time protected, not a lazier Shield.
+   The entrance therefore looks identical every time, which is what makes it learnable as a confirmation
+   that the press registered.
+
+   **Then it was tuned, and the tuning made the decision inert.** `pulse_shield_sweep` went from 0.08 to
+   **0.5** on first sighting. The sweep is clamped to at most half the window, and half of 0.25 s is
+   0.125 s — so at the default window the Shield now spends its *entire* life travelling, out for half
+   and back for half, with no hold phase at all, and every duration scales with the window again. That is
+   option B, the one A was chosen over. Recorded rather than quietly reconciled: the structure is still
+   right and reasserts itself the moment the window grows or the sweep drops back under half of it, but
+   nobody should read rule 7 and expect a hold at today's numbers.
+8. **No texture in v1.** Pure vertex colour; the travelling edge and the obliquity falloff do all the
+   work. Hex facets are an [ART_DEBT.md](ART_DEBT.md) entry, deliberately not a prerequisite — if the two
+   procedural cues do not sell a surface on their own, that is worth learning for the cost of an evening
+   rather than a sprite. Concentric ripples were rejected outright: rings travelling outward would fight a
+   boundary travelling outward and read as two events.
+9. **Suit Variant colour.** On the client that is `RGB_SUIT`, which `cl_dll/hud.h:36` defines as
+   `gHUD.SuitColour()` and which already tracks the Variant — the same source the flat rectangle it
+   replaces was already using, and the same the bar at `cl_dll/hud_pulse.cpp:35` uses. No new colour
+   plumbing; the server's `GetSuitVariant` (`dlls/player_pulse.cpp:591`) is the world rings' equivalent
+   and stays where it is.
+
+#### The deflect flare
+
+A deflect today is a sound and nothing else, and it *destroys information*: the negated hit returns at
+`dlls/player.cpp:438` before `gmsgDamage` is ever sent, so a hit you successfully parried tells you
+nothing about where it came from, while a hit that lands gives you the suit's damage compass. The flare
+repairs that loss — the strongest justification an effect can have.
+
+- **Vanilla's math verbatim**, Andrei's call: `CHudHealth::CalcDamageDirection` (`cl_dll/health.cpp:238`).
+  Forward and right dots, 0.3 to store, 0.4 to draw, `V_max` accumulation, decay `m_flTimeDelta * 2`
+  (~0.3 s, near enough `pulse_window`). Two gifts fall out free: several hits inside one window all stack,
+  which is correct because the window never closes early (`dlls/player_pulse.cpp:614-621`); and inside 50
+  units all four quadrants light at 1.0, so a melee deflect floods the whole Shield rather than one side,
+  which is what a claw at arm's length deserves.
+- **Painted as a broad quadrant gradient**, not as patches at vanilla's offsets. The player sees vanilla's
+  real trapezoids in the same firefight whenever a hit actually lands; same shape and position would make
+  "I was hit" and "I parried" hard to separate at a glance, which is the exact distinction the effect
+  exists to teach. A region of a surface lighting says *object*; a patch at a fixed screen offset says
+  *HUD*.
+- **White-hot core** falling back to the Shield's hue. A contrasting accent was rejected on Suit Variants
+  alone — a colour chosen to pop against blue can vanish against amber, and it would need retuning against
+  every Variant forever. Same-hue-brighter has no headroom, since the periphery where most flares land is
+  already bright and additive. Luminance is the only axis that works against every hue, and it keeps three
+  signals distinct at once: the pain ramp is red/yellow (`GetPainColor`), the Shield is the suit's hue, a
+  deflect is white-hot in that hue.
+- Needs a small new message carrying the direction. `TryNegate`'s call site
+  (`dlls/player.cpp:436`, inside `CBasePlayer::TakeDamage`) has `pevInflictor` and `pevAttacker` in scope.
+  The state enum is *not* touched — `EPulseState` stays as it is.
+
+#### Where it draws
+
+`HUD_DrawTransparentTriangles` (`cl_dll/tri.cpp:47`, today only the particle manager), after the world and
+after the viewmodel, **with no depth test**. Depth-testing was rejected on where this lives: `shaft1` and
+`minemap` are tight corridors where walls sit nearer than any radius giving useful curvature, so the
+Shield would not clip occasionally but *most of the time*, and a Shield sliced open by the wall it is
+protecting you from reads as a bug. Drawing over the viewmodel is the accepted cost and a dividend: the
+weapon is washed in the suit's colour on every press, on every weapon including the two-handed ones that
+killed the ghost arm — a free preview of the energised-gear reading before the Matrix version is built.
+
+**Built on raw GL, not `pTriAPI` — this reverses what this entry first said**, and the reversal came out
+of writing it. Two reasons, neither visible at design time. v1 has no texture, so the API's one real
+service, binding a sprite, is not wanted; and turning the depth test *off* is the entire point of drawing
+here, which the API gives no way to do. So the Shield is hardware-renderer only, like the katana trail and
+the blade's cooling, and the software renderer draws nothing at all. That is precisely why
+`hud_pulse_tint` was kept rather than deleted — it is not a courtesy to old configs, it is the software
+path. When the hex facets land (ART_DEBT), the texture binding can come back through `pTriAPI` or through
+GL directly; the depth-test requirement will still rule out the API on its own.
+
+#### What goes, what stays
+
+- **Every ring — deleted**, and with them `pulse_ring_style` and `pulse_ring_scale`. This happened in two
+  steps on the same day. The `TE_BEAMCYLINDER` branch went first, during the grill (*"as for the houndeye
+  ripple delete it"*) — it was the houndeye's floor blast from `dlls/houndeye.cpp:576-616`. The
+  `TE_BEAMTORUS` pair was kept "for now, unjudged until seen beside the Shield", and lasted exactly as
+  long as that took: on first sighting Andrei called it — *"disable or remove the torus/rings all
+  together, they are ugly compared to what we have on our hand."* The tail's dim ring went with them,
+  which costs nothing it was not already losing, since the tail was deliberately left out of v1 anyway.
+  `sprites/shockwave.spr` is no longer precached or referenced; the Pulse draws no sprite in the world at
+  all.
+- `hud_pulse_tint` — **default 0, cvar kept**. It is `FCVAR_ARCHIVE` and already written into configs, so
+  deleting it would make an existing setting silently do nothing; at 0 it costs four lines and gives an
+  instant A/B in the console while judging the Shield in play.
+
+  **The trap that follows from that, hit within minutes of the first build (2026-09-20):** changing an
+  `FCVAR_ARCHIVE` cvar's default does nothing for anyone who already has it in their `config.cfg`, which
+  the engine replays on every launch. Andrei's config pinned `hud_pulse_tint "48"`, so the first test
+  showed the old flat rectangle drawing over the new Shield and read as "no change is evident" — the new
+  code was running the whole time, provably, because the `pulse_shield_*` cvars had been written to that
+  same config at their new defaults. `hud_pulse_tint 0` in the console once is the whole fix, and it
+  persists on quit. Worth remembering before assuming a changed default has taken.
+- `TE_DLIGHT` — **kept**, and it is now the *only* thing the Pulse puts in the world. This is the carve-out
+  that matters, and it survived the rings being cut because the argument for it is different in kind. It
+  throws suit-coloured light onto the walls, which is the one thing a first-person overlay fundamentally
+  cannot do. Losing the rings costs a shape nobody likes; losing the dlight costs the Pulse its only
+  physical presence in the room.
+
+#### Deliberately not in v1
+
+- **The tail gets nothing.** Andrei: *"the tail is something that might not make it to the finals so for
+  this v1 lets not take it into consideration for extra treatment."* This leaves
+  [the tail's visual](#the-pulses-tail--settled-2026-09-17-built-2026-09-18-overnight-visual-open) open
+  where it already was, and removes it as a blocker here.
+- **The Matrix is untouched**, keeping its edge bands. A hold therefore shows the Shield form and retreat
+  over 0.25 s, then a **0.75 s hole**, then the bands at 1.0 s. Left honest on purpose: the Shield
+  genuinely is down in that gap, and holding the visual through a closed window would teach the wrong
+  timing for an ability whose whole skill expression is timing. How bad the gap feels in play is direct
+  evidence for how urgently the Matrix needs its own treatment — evidence that does not exist today.
+- Numbers ship as cvars, dialled by eye per `pulse_ring_scale`'s precedent: `pulse_shield` (off switch),
+  `_sweep`, `_alpha`, `_edge`, `_edge_width`, `_spread`, `_falloff`, `_centre`, `_flare`, `_live`. The
+  Shield respects `HIDEHUD_ALL` as `CHudPulse::Draw` does. **Radius and tessellation are constants, not
+  cvars**, against what this entry first said: with the depth test off and the sphere centred on the eye,
+  the radius has no visual effect at all — only each vertex's *direction* matters — and a cvar that does
+  nothing is worse than none.
+
+#### Backlog this created
+
+- **Energised gear on the Defense Matrix** — the (a) reading, parked at question one for exactly the state
+  it suits: 6 s, fought through, weapon must stay in hand. The edge bands at
+  `cl_dll/hud_pulse.cpp:181` already keep the middle clear to fight in, so the instinct is half-built.
+- **A hard `pev->viewmodel` swap** — the one model answer that survives two-handed weapons. No holster
+  time, one `v_pulse.mdl`, covering the tap only. Its unknown is prediction: `cl_dll/hl/hl_weapons.cpp:756`
+  reads `from->client.viewmodel` in and `:829` writes the predicted value back out, and whether a
+  server-side swap survives that round trip is reasoning, not evidence. Two-line test before any model.
+- **Hex facets** for the Shield's surface — [ART_DEBT.md](ART_DEBT.md).
+- **Ripples from the impact point** across the surface, on top of the quadrant flare.
+- **Rebuilding the world effect to agree with the Shield.** Andrei: *"the drawshieldring is more like a
+  placeholder than actually desired mechanic."* The dependency now runs the other way — the first-person
+  Shield is the primary, and the world's rings should be rebuilt to match it rather than the reverse.
+
+#### Two traps to record
+
+- `cl_dll/health.cpp:262-263` — `front` holds the **right** dot and `side` holds the **forward** dot. The
+  names are backwards and the behaviour is correct. Somebody will try to fix it.
+- The grill's working words were *bubble* and *barrier*. Both are on the Shield's Avoid list in
+  [CONTEXT.md](../CONTEXT.md). They must not reach code, comments or commit messages.
 
 ### The Pulse against sustained fire
 

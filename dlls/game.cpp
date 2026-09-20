@@ -761,13 +761,15 @@ cvar_t pulse_tail_scale = {"pulse_tail_scale", "0.5"};
 cvar_t pulse_discharge_scale = {"pulse_discharge_scale", "0.75"};
 cvar_t pulse_discharge_min = {"pulse_discharge_min", "15"};
 cvar_t pulse_discharge_max = {"pulse_discharge_max", "60"};
-// Shield ring geometry, presentation only.  Style 0 is TE_BEAMCYLINDER (a ring
-// expanding along the ground), 1 is TE_BEAMTORUS (screen-aligned, centred on
-// the player).  Nothing else in the SDK uses the torus, so the right scale for
-// it is not known from any existing call site -- these exist to be dialled in
-// by eye rather than by rebuilding.
-cvar_t pulse_ring_style = {"pulse_ring_style", "1"};
-cvar_t pulse_ring_scale = {"pulse_ring_scale", "320"};
+// The Shield's ring geometry used to be tuned here, by pulse_ring_style and
+// pulse_ring_scale.  Both are gone as of 2026-09-20, along with every ring they
+// described: the TE_BEAMCYLINDER (the houndeye's floor blast,
+// dlls/houndeye.cpp:576-616) went first, then the TE_BEAMTORUS pair once the
+// first-person Shield could be seen next to them.  Andrei: "they are ugly
+// compared to what we have on our hand."  The Shield's world presence is now a
+// dlight and nothing more; its real presentation is cl_dll/pulse_shield.cpp,
+// whose numbers are client cvars.  See docs/ROADMAP.md, "The Shield in first
+// person".
 // How much of a melee attacker's view kick survives a deflect. 1 is untouched,
 // 0 removes it entirely. Deliberately not 0: a blow that glances off the Shield
 // should still register as something happening, just not as something landing.
@@ -1124,8 +1126,6 @@ void GameDLLInit()
 	CVAR_REGISTER(&pulse_discharge_scale);
 	CVAR_REGISTER(&pulse_discharge_min);
 	CVAR_REGISTER(&pulse_discharge_max);
-	CVAR_REGISTER(&pulse_ring_style);
-	CVAR_REGISTER(&pulse_ring_scale);
 	CVAR_REGISTER(&pulse_deflect_punch);
 	CVAR_REGISTER(&pulse_discharge_melee);
 	CVAR_REGISTER(&infusion_rate);

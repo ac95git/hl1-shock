@@ -154,9 +154,14 @@ struct CPlayerPulse
 	void Think(CBasePlayer* pPlayer);
 
 	// Answers "does the Shield turn this away?".  When it does, this has
-	// already fired the Discharge and made its noise -- the caller only has
-	// to refuse the damage.
-	bool TryNegate(CBasePlayer* pPlayer, float flDamage, int bitsDamageType);
+	// already fired the Discharge, made its noise and told the client where the
+	// blow came from -- the caller only has to refuse the damage.
+	//
+	// pevInflictor is what threw the blow (the grenade, not the grunt), which is
+	// the same thing gmsgDamage reports a direction from.  It may be null: a hit
+	// with no inflictor is reported as coming from the player's own origin,
+	// which the client's direction maths reads as "all around me".
+	bool TryNegate(CBasePlayer* pPlayer, float flDamage, int bitsDamageType, entvars_t* pevInflictor);
 
 	// The tail's share of a hit the Shield did not negate: pulse_tail_scale
 	// while braced and the damage is on the Shield's list, 1 otherwise.  Makes
@@ -170,6 +175,9 @@ struct CPlayerPulse
 	void DampenDeflectPunch(CBasePlayer* pPlayer);
 
 private:
+	// Tells the client where a deflected blow came from, on gmsgPulseHit.
+	void ReportDeflect(CBasePlayer* pPlayer, entvars_t* pevInflictor);
+
 	// Pushes the current state to the client if it has changed.
 	void SyncClient(CBasePlayer* pPlayer);
 	// Keeps the Follow-Up's primed icon in step with the window.

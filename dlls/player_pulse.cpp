@@ -68,7 +68,6 @@ static constexpr int k_PulseMeleeDamage = DMG_SLASH | DMG_CLUB;
 static const char* const k_PulseSoundFire    = "weapons/cbar_miss1.wav";
 static const char* const k_PulseSoundReady   = "player/recharged.wav";
 static const char* const k_PulseSoundDenied  = "items/suitchargeno1.wav";
-static const char* const k_PulseSpriteShield = "sprites/shockwave.spr";
 
 // Hit sounds, not hitbod -- a deflect is metal turning something away, not
 // something being struck. Randomised across the two, and pitched on top of
@@ -90,8 +89,6 @@ static const char* const k_MatrixSoundDrop  = "weapons/electro5.wav";
 // Matrix on Kill: the charger's "ok" -- armour coming back, which is exactly
 // what it says.
 static const char* const k_MatrixSoundKill  = "items/suitchargeok1.wav";
-
-static short g_sModelIndexPulseShield = 0;
 
 // How far a Discharge reaches.  Generous -- it is an energy bolt, not a swing.
 static constexpr float k_DischargeRange = 4096.0f;
@@ -131,8 +128,10 @@ bool PulseRestore(CPlayerPulse& pulse, CRestore& restore)
 //=========================================================
 void PulsePrecache()
 {
-	g_sModelIndexPulseShield = PRECACHE_MODEL(k_PulseSpriteShield);
-
+	// No sprite: the Shield's rings went on 2026-09-20 and nothing the Pulse
+	// draws in the world needs a model index any more.  The dlight and the
+	// Discharge's beam are the only world effects left, and the Discharge uses
+	// g_sModelIndexLaser, which the SDK precaches for everyone.
 	PRECACHE_SOUND(k_PulseSoundFire);
 	PRECACHE_SOUND(k_PulseSoundReady);
 	PRECACHE_SOUND(k_PulseSoundDenied);
@@ -187,66 +186,27 @@ static int PulseMaxRebounds(const CBasePlayer* pPlayer)
 }
 
 //=========================================================
-// DrawShieldRing
-//
-// One expanding ring centred on the player.
-//
-// TE_BEAMTORUS is screen-aligned and centred on a point, so it reads as a
-// bubble around the player; TE_BEAMCYLINDER expands along the ground and
-// reads as a ring at their feet (it is the houndeye's blast, borrowed from
-// dlls/houndeye.cpp:576-616).  Nothing else in this SDK uses TE_BEAMTORUS,
-// so which one looks right is a judgement call rather than a known answer --
-// hence pulse_ring_style, which switches between them live.
-//
-// Both take the same fields; only the byte at the front differs.
-//=========================================================
-static void DrawShieldRing(CBasePlayer* pPlayer, float flScale, int width, int r, int g, int b)
-{
-	const Vector& vecOrigin = pPlayer->pev->origin;
-
-	const bool bTorus = pulse_ring_style.value != 0;
-
-	// The torus is centred on the player; the cylinder starts at their feet
-	// and grows upward, so it wants a lower anchor.
-	const float flAnchorZ = bTorus ? vecOrigin.z : vecOrigin.z - 16;
-
-	MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, vecOrigin);
-	WRITE_BYTE(bTorus ? TE_BEAMTORUS : TE_BEAMCYLINDER);
-	WRITE_COORD(vecOrigin.x);
-	WRITE_COORD(vecOrigin.y);
-	WRITE_COORD(flAnchorZ);
-	WRITE_COORD(vecOrigin.x);
-	WRITE_COORD(vecOrigin.y);
-	WRITE_COORD(flAnchorZ + flScale); // axis and radius
-	WRITE_SHORT(g_sModelIndexPulseShield);
-	WRITE_BYTE(0);     // startframe
-	WRITE_BYTE(0);     // framerate
-	WRITE_BYTE(2);     // life, in tenths
-	WRITE_BYTE(width); // width
-	WRITE_BYTE(0);     // noise
-	WRITE_BYTE(r);
-	WRITE_BYTE(g);
-	WRITE_BYTE(b);
-	WRITE_BYTE(255);   // brightness
-	WRITE_BYTE(0);     // speed
-	MESSAGE_END();
-}
-
-//=========================================================
 // DrawShieldEffect
 //
-// Everything the player sees when a Shield goes up: nested rings, plus a
-// dynamic light so the Pulse actually lights the room around them.
+// What the WORLD sees when a Shield goes up: a dynamic light, and nothing else.
+//
+// There used to be rings here -- two nested TE_BEAMTORUS, and before that a
+// TE_BEAMCYLINDER alternative that was the houndeye's floor blast
+// (dlls/houndeye.cpp:576-616).  All of it deleted 2026-09-20, the cylinder
+// first and the torus a few minutes later once the first-person Shield could be
+// seen beside them.  Andrei: "disable or remove the torus/rings all together,
+// they are ugly compared to what we have on our hand."
+//
+// The dlight stays, and is the whole point of this function still existing: it
+// throws suit-coloured light onto real walls, which is the one thing a
+// first-person overlay fundamentally cannot do.  Losing it would leave the
+// Pulse with no physical presence in the room at all.
+//
+// docs/ROADMAP.md, "The Shield in first person", has the reasoning.
 //=========================================================
 static void DrawShieldEffect(CBasePlayer* pPlayer, int r, int g, int b)
 {
 	const Vector& vecOrigin = pPlayer->pev->origin;
-	const float flScale = pulse_ring_scale.value;
-
-	// Nested, at different widths, so the edge reads as a surface rather than
-	// a single line.
-	DrawShieldRing(pPlayer, flScale, 12, r, g, b);
-	DrawShieldRing(pPlayer, flScale * 0.5f, 6, r, g, b);
 
 	MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, vecOrigin);
 	WRITE_BYTE(TE_DLIGHT);
@@ -640,12 +600,18 @@ void CPlayerPulse::Think(CBasePlayer* pPlayer)
 				// braced, and its Recharge -- the long one, a miss's -- waits
 				// for it.  A window that DID deflect never gets here: it ends
 				// exactly as it always has, so the parry, the short Recharge
-				// and the Rebound are untouched by any of this.  A dimmer,
-				// smaller ring, so "I braced" is told from "I parried" without
-				// a number.
+				// and the Rebound are untouched by any of this.
+				//
+				// The tail has NO visual of its own as of 2026-09-20.  It used
+				// to get a dimmer, smaller ring so "I braced" could be told from
+				// "I parried" without a number; that ring went with all the
+				// others when the first-person Shield landed.  Deliberate, and
+				// Andrei's call: the tail may not survive to the final game, so
+				// it was left out of the Shield's v1 rather than given a
+				// treatment that might be thrown away.  Its duller braced sound
+				// (TailScale) is the only cue it has left.  See docs/ROADMAP.md,
+				// "The Pulse's tail".
 				m_bTailUp = true;
-				const SuitVariantDef& suit = GetSuitVariant(pPlayer->pev->skin);
-				DrawShieldRing(pPlayer, pulse_ring_scale.value * 0.6f, 6, suit.r / 3, suit.g / 3, suit.b / 3);
 			}
 			else
 			{
@@ -1004,14 +970,52 @@ float CPlayerPulse::TailScale(CBasePlayer* pPlayer, int bitsDamageType)
 }
 
 //=========================================================
+// CPlayerPulse::ReportDeflect
+//
+// Tells the client where a turned-away blow came from, so the Shield can flare
+// on that side (cl_dll/pulse_shield.cpp).
+//
+// The origin is chosen exactly as gmsgDamage chooses its vecFrom
+// (dlls/player.cpp, UpdateClientData): the inflictor's Center(), falling back to
+// the player's own origin when there is no inflictor.  Matching it matters --
+// the client runs both through the same CalcDamageDirection, so any difference
+// here would make a deflect point somewhere a landed hit would not.
+//
+// Sent per negated hit rather than per window.  Several hits inside one window
+// are all negated (see Think: the window never closes early), and each deserves
+// its own flare.
+//=========================================================
+void CPlayerPulse::ReportDeflect(CBasePlayer* pPlayer, entvars_t* pevInflictor)
+{
+	if (gmsgPulseHit == 0)
+		return;
+
+	Vector vecFrom = pPlayer->pev->origin;
+
+	if (pevInflictor)
+	{
+		if (CBaseEntity* pInflictor = CBaseEntity::Instance(pevInflictor))
+			vecFrom = pInflictor->Center();
+	}
+
+	MESSAGE_BEGIN(MSG_ONE, gmsgPulseHit, NULL, pPlayer->pev);
+	WRITE_COORD(vecFrom.x);
+	WRITE_COORD(vecFrom.y);
+	WRITE_COORD(vecFrom.z);
+	MESSAGE_END();
+}
+
+//=========================================================
 // CPlayerPulse::TryNegate
 //=========================================================
-bool CPlayerPulse::TryNegate(CBasePlayer* pPlayer, float flDamage, int bitsDamageType)
+bool CPlayerPulse::TryNegate(CBasePlayer* pPlayer, float flDamage, int bitsDamageType, entvars_t* pevInflictor)
 {
 	if (!pPlayer || !WouldNegate(bitsDamageType))
 		return false;
 
 	m_bAbsorbed = true;
+
+	ReportDeflect(pPlayer, pevInflictor);
 
 	// Remember the view kick as it stands *now*. Melee attackers set punchangle
 	// after this returns, so what they add can only be scaled back later --

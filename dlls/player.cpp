@@ -433,7 +433,7 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 	// suit's damage report, before m_lastDamageAmount. Nothing downstream should
 	// see a hit the player did not take. TryNegate has already fired the
 	// Discharge and made its noise by the time it returns true.
-	if (m_pulse.TryNegate(this, flDamage, bitsDamageType))
+	if (m_pulse.TryNegate(this, flDamage, bitsDamageType, pevInflictor))
 	{
 		return false;
 	}

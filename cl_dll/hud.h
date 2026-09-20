@@ -516,6 +516,9 @@ public:
 	bool Draw(float flTime) override;
 	bool MsgFunc_Pulse(const char* pszName, int iSize, void* pbuf);
 	bool MsgFunc_Matrix(const char* pszName, int iSize, void* pbuf);
+	// A blow the Shield turned away, and where from.  Painted on the drawn
+	// Shield by pulse_shield.cpp; this element only owns the wire.
+	bool MsgFunc_PulseHit(const char* pszName, int iSize, void* pbuf);
 
 	// Right edge of the Pulse icon and its charge bar, in screen pixels.
 	// Anything laid out after the Pulse -- the Concealment icon -- starts from

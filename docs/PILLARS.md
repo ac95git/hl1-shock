@@ -249,10 +249,17 @@ the same timbre and was simply not heard. The set is placeholder but the *proper
 [ART_DEBT.md](ART_DEBT.md), which makes "the Pulse and the deflect must not share a timbre" the bar any
 replacement has to clear.
 
-The ring geometry is cvar-driven — `pulse_ring_style` picks `TE_BEAMCYLINDER` (a ring expanding along the
-ground, borrowed from the houndeye) or `TE_BEAMTORUS` (screen-aligned and centred on the player, so it
-reads as a bubble), and `pulse_ring_scale` sizes it. Nothing else in the SDK uses the torus, so there was
-no existing call site to take a correct scale from; these exist to be dialled in by eye.
+**In the world the Shield is a dynamic light and nothing else.** It used to draw rings — two nested
+`TE_BEAMTORUS`, plus a `TE_BEAMCYLINDER` alternative behind `pulse_ring_style` that was the houndeye's
+floor blast — and all of it was deleted on **2026-09-20**, cvars (`pulse_ring_style`, `pulse_ring_scale`)
+and sprite precache included, once the first-person Shield could be seen beside them. Andrei: "they are
+ugly compared to what we have on our hand." The dlight stayed because it throws suit-coloured light onto
+real walls, which a first-person overlay cannot do at any price.
+
+The Shield's real presentation is now `cl_dll/pulse_shield.cpp`: a surface the player is drawn *inside*,
+formed and withdrawn from the crosshair, with a white-hot flare on the quadrant a deflected blow came
+from. Its numbers are client cvars, `pulse_shield*`. See
+[ROADMAP.md](ROADMAP.md#the-shield-in-first-person--settled-2026-09-20-built-and-seen).
 
 **The readiness readout** — `CHudPulse` (`cl_dll/hud_pulse.cpp`), sitting immediately right of the armour
 readout on the same baseline. The `suit_full` sprite with a vertical charge bar beside it filling
@@ -705,8 +712,8 @@ leap 20/25/35 — HL: Extended's numbers, not yet tuned. The model's head hitbox
 
 - ~~Attack-rate modifiers — see Crowbar Speed above.~~ Built as Melee Speed, 2026-09-14.
 - A custom Shield sprite; `sprites/shockwave.spr` is standing in.
-- **Tuning.** Every number is a first guess, and `pulse_ring_style` still has to be judged one way or the
-  other so the winner can become the default.
+- **Tuning.** Every number is a first guess. `pulse_ring_style` used to be listed here as needing a
+  verdict; it got one on 2026-09-20 — the cylinder was cut and the cvar with it.
 
 ### Design — the Pulse
 

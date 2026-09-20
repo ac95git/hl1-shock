@@ -13,36 +13,77 @@ third, *Night vision — imported from Opposing Force*, shipped 2026-09-16.
 Distinct from [TECH_DEBT.md](TECH_DEBT.md): that register is about code that needs fixing. This one is
 about assets that need making.
 
-## The Pulse — Shield sprite
+## ~~The Pulse — Shield sprite~~ — CLOSED 2026-09-20, by deletion
+
+**Resolved by removing the thing that needed the art.** Kept here rather than deleted because the way it
+closed is the useful part.
+
+The debt was `sprites/shockwave.spr` — the **houndeye's sonic blast** texture (`dlls/houndeye.cpp:576-616`)
+— drawn as two nested rings around the player, borrowed because it was the only ring-shaped thing already
+in the game. The complaint on record was that it read as a houndeye attack because it *was* one, that a
+soft diffuse shockwave is the wrong substance for hard protective equipment, and that tinting a greyscale
+sprite gave a muddy colour rather than a luminous one. The brief was a crisp-edged energy-field texture
+with some internal structure.
+
+None of it was ever drawn. On 2026-09-20 the Shield got a **first-person** treatment instead — a surface
+the player is drawn inside, `cl_dll/pulse_shield.cpp`, see
+[ROADMAP.md](ROADMAP.md#the-shield-in-first-person--settled-2026-09-20-built-and-seen) — and once that could be
+seen beside the rings, Andrei cut them: *"disable or remove the torus/rings all together, they are ugly
+compared to what we have on our hand."* The cylinder had already gone earlier the same day. The cvars
+(`pulse_ring_style`, `pulse_ring_scale`), the precache and the sprite reference are all gone with them.
+The Pulse now draws **no sprite in the world at all** — a `TE_DLIGHT` and nothing else, kept because
+lighting real walls is the one thing a first-person overlay cannot do.
+
+**The transferable lesson:** this entry sat open for weeks describing art to replace a placeholder, and
+the answer turned out to be that the placeholder's *whole feature* was in the wrong place. Worth asking of
+any long-lived entry here — is this a stand-in that wants better art, or a stand-in for something that
+should not exist? The successor debt is
+[The Shield in first person — surface texture](#the-shield-in-first-person--surface-texture) below, which
+is a genuinely different brief: a tiling facet pattern seen from inside, not a beam texture tiled along a
+ring.
+
+## The Shield in first person — surface texture
 
 ### Scope
-`dlls/player_pulse.cpp`, `DrawShieldRing` / `DrawShieldEffect`.
+The first-person Shield's drawn surface, in `HUD_DrawTransparentTriangles` (`cl_dll/tri.cpp`). Designed
+2026-09-20, [ROADMAP.md](ROADMAP.md#the-shield-in-first-person--settled-2026-09-20-built-and-seen); not built
+at the time of writing, so this entry describes a stand-in that does not exist yet.
 
 ### Current stand-in
-`sprites/shockwave.spr`, drawn as two nested rings plus a `TE_DLIGHT` flash. The sprite is the
-**houndeye's sonic blast** texture, borrowed from `dlls/houndeye.cpp:576-616` because it was the only
-ring-shaped thing already in the game.
+**No texture at all.** v1 is pure vertex colour. The surface is read entirely from two procedural cues:
+the bright leading edge sweeping out from the crosshair and back, and the obliquity falloff that makes
+the Shield near-invisible where you are looking and dense toward the screen edge.
+
+Deliberate, not an oversight. The decision was to find out whether those two cues sell a *surface* on
+their own before spending drawing time on one — a question answerable in an evening, where the sprite is
+a session of hand work.
 
 ### What's wrong with it
-- It reads as a houndeye attack, because it *is* one. A player who has fought houndeyes will recognise it.
-- It is a soft, diffuse shockwave. The Shield is hard protective equipment — it wants a crisp edge, an
-  energy-field look, something that suggests a surface rather than a pressure wave.
-- The colour is applied as a tint over a greyscale sprite, so the cyan is muddy rather than luminous.
+Possibly nothing, and that is the point of shipping it this way. The failure mode to watch for is that
+without internal structure the Shield reads as **a nicer gradient rather than an object** — which would
+be the same criticism that killed the thing it replaced, the flat `hud_pulse_tint` rectangle. If a player
+in a real firefight cannot tell they are inside a surface, the procedural cues were not enough.
 
 ### What to look for
-A ring/energy-field texture that suits a **suit-projected barrier**: crisp bright edge, ideally with some
-internal structure (hex, scanline, interference pattern) so it doesn't read as a plain circle. It is drawn
-by `TE_BEAMTORUS` or `TE_BEAMCYLINDER`, so it is used as a *beam texture* tiled along the ring — a tall
-thin sprite, not a circular one.
+A **tiling facet pattern** in spherical coordinates — hexes being the obvious first try, panels the
+second. It must survive three things the world rings never had to:
 
-Candidates already in `valve/sprites` worth trying before authoring anything: `plasma.spr`,
-`xenobeam.spr`, `zbeam1-6.spr`, and `gwave1.spr` (a large wave sprite the SDK never references).
+- **Every Suit Variant.** The Shield is tinted from `RGB_SUIT` (`cl_dll/hud.h:36`, `gHUD.SuitColour()`),
+  which follows the Variant, so the texture is luminance only: greyscale on black, per
+  [SPRITE_WORKFLOW.md](SPRITE_WORKFLOW.md), with no hue of its own.
+- **Additive blending over a bright periphery.** Most of the visible surface is the dense oblique band at
+  the screen edge. A pattern that only reads at low brightness will be washed out exactly where it is
+  needed.
+- **The white-hot deflect flare drawn on top of it.** The flare is a broad quadrant gradient; the facets
+  have to stay legible under it rather than disappearing into it.
 
-`pulse_ring_style` and `pulse_ring_scale` exist to judge geometry by eye; swapping the sprite still needs
-a code change, so consider a cvar for the sprite name if this turns into much iteration.
+Pole distortion is a real constraint: spherical UVs pinch at the zenith and nadir, and unlike most
+spherical mappings, **both poles are reachable here** — the player can look straight up or straight down.
+Either the pattern tolerates the pinch or the mapping is not spherical.
 
 ### Done when
-The effect is recognisably the mod's own, and nobody mistakes it for a houndeye.
+A player who has never been told there is a Shield can say, from one press, that something curved is
+around them — and can still read the deflect flare through it.
 
 ## The Backstab — hit cue
 
