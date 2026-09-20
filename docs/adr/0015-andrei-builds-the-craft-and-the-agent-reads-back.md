@@ -46,11 +46,30 @@ The split is reset so that the middle of the work is his.
    thing. The next map after `shaft1` is blocked out by him with no generator.
 5. **Less unasked agent output.** No roadmap entries from the agent's own ideas, no overnight sessions
    that build new systems, shorter docs. Nothing he has not asked for in his own words gets built.
-6. **A code feature now and then is his**, with a written brief and the agent as reviewer only. The
-   friendly alien slave is the first candidate.
+6. **A code feature now and then is his.** Not a rule for every feature, a standing option he takes
+   when he wants one. The shape of such a slice: the agent writes a brief first (what the feature does
+   in play, the files it touches, the pattern in the codebase to copy, the test rows he will judge it
+   by), he writes the code, the agent reviews it as a reviewer would (reads the diff, builds both DLLs,
+   points at what a fresh reader would trip on) and does not rewrite it, and he tests it in game before
+   it is committed like any other slice. The candidates named so far: the friendly alien slave
+   (`CTalkMonster` on the slave's model, four small things, all listed in ROADMAP), and a small
+   `env_model` entity for decorative models if props ever become common. The rest of the code stays
+   the agent's, with him owning the numbers (rule 3) and the intent (rule 2).
+7. **He brings a reference, the agent turns it into numbers.** A picture of what a thing should look
+   like becomes a coordinate table he builds from and departs from at will; the deposit unit came out
+   of one picture, a scale argument (240 tall, then 32, settled at 64) and his own liberties. The
+   agent's table is a starting point, never the spec.
+8. **The agent's own tooling is fair game.** Read-back scripts, checkers and skills that run a procedure
+   are agent work and need no asking. A *skill* is for a procedure the agent runs and gets wrong when
+   rebuilt from memory (the map read-back, later the model read-back); knowledge stays in the docs.
 
 Two skill ladders carry this, one rung per technique on one room or one model, each checked by a
-read-back and a compile. They are at the head of CRAFT_LOG.md.
+read-back and a compile. They are at the head of CRAFT_LOG.md. **Mapping**, on `shaft1`: texture fit,
+trim and timber, shapes that are not boxes (done), lighting, detail from brushes, scripting in the
+editor, then map two greyboxed by him. **Modelling**: the pickaxe's second cut, the alien grunt's
+melee weapon from nothing, the energy rifle, then improving existing models, textures first and a mesh
+edit on a decompile after. No monster from scratch; the hand-made tier's rule in CLAUDE.md
+(sources under `E:\CustomAssets`, a script turns them into what ships) stands unchanged.
 
 ## Considered
 
@@ -58,7 +77,13 @@ read-back and a compile. They are at the head of CRAFT_LOG.md.
 block, and it makes the mod less his with every commit.
 
 **Overnight and one-hour delegated sessions as the main mode.** Deferred by Andrei: still welcome
-sometimes, not now.
+sometimes, not now. When one runs, it runs under the unattended rules already agreed (commit per slice
+marked "Not verified in game", best-judgment decisions written down with the rejected alternative, stop
+freely) and builds only what he asked for in his words.
+
+**The player's agency instead.** "Improve my agency" had two readings, his in the project and the
+player's in the game, and the agent put both to him. He chose his own. The player's (choices the game
+remembers, soft gates, the suit choice at the hub) stays where the roadmap has it.
 
 **The agent editing the `.map` text for craft** (shapes, textures, lights). Rejected: the agent cannot
 see the result, and the point is his hands on the editor. The agent edits map text for entity work only.
@@ -78,5 +103,14 @@ Blender scene is data over the MCP, and both can be checked exactly, which a scr
 - **The desktop agent cannot compile or read the file back** when its shell is unavailable; on that
   surface a craft session is steps and screenshots only, and the CLI agent closes the loop after.
 - **The roadmap stops growing on its own.** Entries are added when Andrei asks for them in his words.
+  Ideas of the agent's that come up in a session go into the reply, not into ROADMAP.
+- **One round trip per mistake is the accepted cost of tutoring.** The agent gives the whole step
+  (tool, hotkey, value) and a way to tell it went wrong; he does it and says "done"; the read-back
+  finds what did not land and the next message fixes only that. The first pillar took two.
+- **Owed by the agent, from this decision:** the cvar cheat sheet (rule 3); a brief for the first code
+  slice when he asks for it (rule 6); the model read-back skill when the modelling ladder starts.
+- **Where the record lives.** This ADR is the decision; CRAFT_LOG.md is the sessions and what each
+  taught; the memory notes carry the same for the agent's own recall. The `/map-check` skill and
+  `utils/maptool/mapcheck.py` are the first tooling built for it.
 - The first two rungs (the chamber's pillars and the crystal deposit unit) were built and committed the
   same day, which is the evidence the split works.
