@@ -23,11 +23,59 @@ rifle (several parts, weights to the hand bone, world and player versions); 4 im
 textures first, then a mesh edit on a decompile — the freed slave without his collar and bracelets is the
 first real customer.
 
+**Animation, in Blender** — ~~1 keyframes on an object; 2 the Graph Editor and the three interpolations;
+3 an armature: build bones in Edit Mode, bind with automatic weights, key in Pose Mode; 4 Actions, one
+per sequence, swapped in the Action Editor~~ all four done below on a block; 5 an Action through Source
+Tools to `anims/*.smd`, the converter, a QC `$sequence` and HLMV (the gap MODEL_WORKFLOW.md names as
+unexplored); 6 weights by hand, one bone per vertex; 7 a sequence on a real rig, a stock weapon's hands
+or the miner's swing.
+
 How the agent takes part: it writes the steps (tool, dialog, number), reads the saved file back
 (`utils/maptool/mapsemdiff.py` and `brushes_near.py` for a map; the Blender MCP for a scene), compiles,
 and installs. It does not build the thing.
 
 ---
+
+## 2026-09-20, evening — animation from nothing (animation rungs 1 to 4)
+
+**Built by Andrei in Blender 5.2**, on a fresh file, nothing kept: the default cube keyed at frame 1
+and at frame 24 three metres up; the same rise seen as a curve in the Graph Editor and switched between
+Bezier, Linear and Constant; the cube made a 4 m block (scale applied, six subdivisions), an armature of
+two bones (`Bone` floor to 1 m, `Bone.001` to the top) built in Edit Mode, bound with automatic weights,
+and the upper bone keyed in Pose Mode to a 45° lean, which bent the block like a finger; then that
+Action named `bend`, a second Action `twist` (90° about Z) keyed from a blank, both shielded, and the two
+swapped in the Action Editor. Every rung read back over the MCP: keys, bone hierarchy, modifier, weight
+groups, the two Actions with their fake users. The file was not saved; it was practice.
+
+**What was learned:**
+
+- **"The cube moves but there is no loop."** The keys were right; the playback range still ended at 250,
+  so one second of motion sat in ten of waiting. Blender plays the range it is given and nothing tells
+  it where an animation ends. The Timeline's `End` field is the first thing to set.
+- **Ease is real and it ships.** At frame 12 of a 1-to-24 rise, Z read 1.40 where a straight line gives
+  1.435. Bezier eases both ends, Linear is one speed with a hard stop, Constant is a snap. Studiomdl
+  reads no curves: the exporter writes every bone on every frame, so the interpolation chosen in the
+  Graph Editor is baked into the SMD. Bezier for a body, Linear for a mechanism, Constant for a switch.
+- **Three modes, three jobs.** Object Mode places things, Edit Mode on an armature builds bones
+  (extrude from a tip with `E`), Pose Mode moves them and is the only place to key them. `Ctrl+Tab`
+  toggles Pose Mode on an armature.
+- **Before `Ctrl+P` with automatic weights:** `Ctrl+A` All Transforms on the mesh, or the exporter reads
+  the wrong size; tick `In Front` on the armature's viewport display, or the bones are invisible inside
+  the mesh; click the mesh first and the armature last, the active object becomes the parent.
+- **Bones rotate as quaternions by default**, which is why a bone's Rotation shows W X Y Z. Fine for
+  SMD; a read-back of a 45° lean about X is W 0.92, X 0.38.
+- **An Action with no user is deleted on save.** The shield (Fake User) beside the name in the Action
+  Editor keeps it. Unlink (`X`) before `New`, or `New` copies the assigned Action instead of starting
+  blank. The browse dropdown swaps Actions on the rig; Action names are for the author, the QC's
+  `$sequence` order is what the code reads.
+- **Automatic weights blend a vertex between bones.** GoldSrc gives a vertex one bone; `smd_goldsrc.py`
+  collapses the blend on every export, so it works, and a real model wants its weights painted single.
+- **For the agent's read-back in Blender 5:** an Action has no `fcurves`. Curves live under
+  `action.layers[].strips[].channelbags[].fcurves`.
+
+**Next rung:** 5, the block's `bend` through Source Tools to an SMD, converted, compiled with a two-line
+QC and opened in HLMV. That is the mod's own unexplored step, and the block is the cheapest thing to
+try it on.
 
 ## 2026-09-20, later — the deposits as crystal masses, and the glow
 
