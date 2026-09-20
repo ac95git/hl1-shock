@@ -17,7 +17,8 @@ The two ladders, each rung one technique on one room, checked by a read-back and
 editor (the crew's `scripted_sequence` and sentence triggers wired in the entity dialog); 7 the autonomy
 milestone: map two greyboxed by Andrei from a plan he drew, no generator.
 
-**Modelling** — 1 the pickaxe's second cut (thin it, fix the head's form; steps in its brief); 2 the alien
+**Modelling** — ~~1 the pickaxe's second cut (thin it, fix the head's form; steps in its brief)~~ done
+below, its texturing pass still open; 2 the alien
 grunt's melee weapon from nothing (mirror modifier, loop cuts, seams, a 256-colour texture); 3 the energy
 rifle (several parts, weights to the hand bone, world and player versions); 4 improving existing models,
 textures first, then a mesh edit on a decompile — the freed slave without his collar and bracelets is the
@@ -35,6 +36,73 @@ How the agent takes part: it writes the steps (tool, dialog, number), reads the 
 and installs. It does not build the thing.
 
 ---
+
+## 2026-09-21, small hours — the pickaxe's second cut (modelling rung 1)
+
+**Built by Andrei** in the saved `v_pickaxe.blend`, opened on his own sentence, "lets improve the
+pickaxe model". The head came from 19.45 units end to end to **11.9**, from 5.89 tall to 2.87, and from
+a uniform 1.41 slab to a profile that runs 0.99 at the eye to 0.09 out along the blade; the square poll
+became a short **upturned back spike** — his design, not the brief's shrink-and-bevel — merged from its
+three corners and given a ridge and a notch of its own, so the head reads as a miner's pick with a long
+sweeping blade one way and a spike the other, at no cost in width. The shaft was ovalled to 1.0 × 0.81,
+cut into nine rings, and flared into a ferrule under the head and a swell where the glove closes. Then
+the whole addition was smooth-shaded and switched from flat grey placeholders to chrome. 403 → **503
+triangles**. Installed to the repo and the mod, uncommitted, not yet seen in game. Every number was
+measured off the live mesh over the MCP before the step was written; the full record, including the
+recovery procedures, is in `E:\CustomAssets\models\blender\v_pickaxe\BRIEF.md`.
+
+**What was learned:**
+
+- **Loop Cut destroys geometry, silently, when a modifier displays on the edit cage.** The Armature
+  modifier's *On Cage* / *Display in Edit Mode* toggles make `Ctrl+R` solve its slide against the
+  deformed mesh. Blender says only "Loop cut does not work well on deformed edit mesh display" and then
+  puts every cut at the ends of the piece, where they are invisible: six cuts left the shaft carrying
+  **74 vertices and 99 faces** where 16 and 10 belonged, three coincident copies of each ring, plus a
+  zero-area triangle spanning the whole shaft and three non-manifold edges. Turn both toggles off before
+  any loop cut on a rigged mesh. The recovery, with only the piece selected: `M` → By Distance 0.01,
+  Clean Up → Degenerate Dissolve, Clean Up → Delete Loose, Clean Up → Limited Dissolve at 1°.
+- **An SMD import carries custom split normals, and they override face smooth flags.** `Shade Smooth`
+  on imported-then-edited geometry does nothing at all until `Alt+N` → **Reset Vectors** rewrites them.
+  Nor can the object-level *Shade Auto Smooth* be used: it adds a modifier instead of writing mesh data,
+  and it reaches the stock gloves, 225 of whose 400 edges exceed 35°. The safe shape of it is Edit Mode
+  with the gloves hidden — material-select, `Shift+H`, Face ▸ Shade Smooth, Select All by Trait ▸ Sharp
+  Edges, Edge ▸ Mark Sharp, `A`, `Alt+N` ▸ Reset Vectors, `Alt+H`.
+- **The smoothing angle is a measurement, not a habit.** The head's edges are either ≤45° (the blade's
+  length runs) or ≥75° (the rim, the spine ridge, the collar corners) with nothing in between; the
+  shaft's octagon facets are 45°, up to 54° once ovalled. 60° smooths the blade and rounds the shaft
+  into a cylinder while every rim stays sharp — and the habitual 35° would have left the shaft fully
+  faceted. Read the distribution first.
+- **Smooth Vertices has per-axis checkboxes.** Unticking X and Y flattens a kink in a silhouette without
+  bunching the vertices along the piece or undoing a thickness profile. Its *Repeat* resets to 1 unless
+  the operator panel is opened, which is why the first pass moved a fifth of what was asked.
+- **A chrome texture is an environment map sampled by the surface normal, so it ignores the UVs
+  entirely.** That means the unwrap can be deferred while a model is on chrome, and that smooth shading
+  matters twice as much, because a flat-shaded chrome facet is one flat tone. It also means
+  `render_smd.py` cannot show chrome: it applies the BMP through the UVs as diffuse, so a sphere map
+  renders near-black. Silhouette and shading are trustworthy in those renders; the material is not.
+  Chrome is judged in HLMV. The two maps used were not painted — they are `pickaxe_black.py`'s own
+  `chrome.bmp` and `chrome_red.bmp`, already tuned dark for this weapon.
+- **studiomdl matches a material to a texture file by name, extension included, and its chrome test is
+  case-insensitive.** The PNG in `textures/` must be named exactly as the Blender material or the
+  compile dies with `./NAME.bmp not found`; `pickheadChrome` came out `0x03 flatshade,chrome`, the same
+  flags as Valve's `rubbergloveCHROME.bmp`.
+
+**Andrei's judgment afterwards, and what it sets up:** "definitely a big improvement from the first
+model", with three things for the texturing pass. The **shaft's swells do not read** — soft flares were
+the wrong choice and he wants tactical rings or some other crisp detail instead, which matches the
+measurement that the ferrule's ring breaks at only 5.1° and the grip's at 1.6°. **Chrome will not
+carry the head**: unlike the crowbar's thin bar, the pick head is a large piece and one uniform
+environment map on it looks poor. And **the head looks asymmetrical in game**, the visible side being
+the worse one. That last one was checked against the mesh: the geometry is symmetric to within
+**0.005** (the whole head is centred on y = −0.005 rather than 0, a leftover from the first cut, which
+is half a percent of its thickness), so what he is seeing is not the shape. It is the surface — either
+the two Smart-UV islands, whose texel density already spans 4.5× across the head, or the fact that the
+two big faces are 22-gons that triangulate differently on export while studiomdl's `flatshade` on a
+chrome texture lights per triangle. Both are the texturing pass's to settle, and the second argues for
+triangulating the head by hand before the export that carries paint.
+
+**Next rung:** 2, the alien grunt's melee weapon from nothing — but the pickaxe's texturing pass comes
+first, and its steps are in the model's brief.
 
 ## 2026-09-20, evening — animation from nothing (animation rungs 1 to 4)
 
