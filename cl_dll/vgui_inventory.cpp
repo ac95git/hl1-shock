@@ -16,6 +16,7 @@
 #include "util.h"
 #include "cbase.h"
 #include "vgui_inventory.h"
+#include "vgui_deferred_text.h"
 #include "suit_defs.h"
 #include <string>
 #include <VGUI_Label.h>
@@ -534,14 +535,9 @@ void CInventoryPanel::paintBackground()
 
     // Text drawn between sprite passes gets overwritten by the sprites that
     // follow it -- a known quirk of this VGUI draw path. Everything textual is
-    // collected here and flushed at the very end, after all sprite work.
-    struct DeferredText
-    {
-        int  x, y;
-        char text[48];
-        int  len;
-    };
-    std::vector<DeferredText> deferredText;
+    // collected here and flushed at the very end, after all sprite work
+    // (vgui_deferred_text.h, the one type for it).
+    CDeferredText deferredText;
 
     // ----------------------------------------------------------------
     // LEFT COLUMN
@@ -646,13 +642,11 @@ void CInventoryPanel::paintBackground()
 
                 if (m_pSmallFont)
                 {
-                    DeferredText label{};
-                    snprintf(label.text, sizeof(label.text), "%d / %d",
+                    char text[CDeferredText::k_MaxLen];
+                    snprintf(text, sizeof(text), "%d / %d",
                         gWR.CountAmmo(ae.ammoType), ae.iMax);
-                    label.len = (int)strlen(label.text);
-                    label.x = colX + 8 + AMMO_ICON_COL_W + 8;
-                    label.y = rowY + (contentH - AMMO_TEXT_H) / 2;
-                    deferredText.push_back(label);
+                    deferredText.Add(colX + 8 + AMMO_ICON_COL_W + 8,
+                        rowY + (contentH - AMMO_TEXT_H) / 2, text);
                 }
 
                 rowY += rowH;
@@ -692,16 +686,7 @@ void CInventoryPanel::paintBackground()
 
     // Flush the ammo readout text. Collected earlier, drawn here so the grid's
     // sprite pass above cannot overwrite it.
-    if (m_pSmallFont && !deferredText.empty())
-    {
-        drawSetTextFont(m_pSmallFont);
-        drawSetTextColor(200, 230, 255, 0);
-        for (const DeferredText& label : deferredText)
-        {
-            drawSetTextPos(label.x, label.y);
-            drawPrintText(label.text, label.len);
-        }
-    }
+    deferredText.Flush(this, m_pSmallFont, 200, 230, 255, 0);
 
     // Draw nav labels after sprite-heavy sections to avoid stale text cursor state
     // affecting later sprite draws inside the same frame.

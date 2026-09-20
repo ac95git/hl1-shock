@@ -103,7 +103,12 @@ CBeam* CBeam::BeamCreate(const char* pSpriteName, int width) { return NULL; }
 void CSprite::Expand(float scaleSpeed, float fadeSpeed) {}
 
 
-CBaseEntity* CBaseMonster::CheckTraceHullAttack(float flDist, int iDamage, int iDmgType) { return NULL; }
+CBaseEntity* CBaseMonster::CheckTraceHullAttack(float flDist, int iDamage, int iDmgType, bool* pbLanded)
+{
+	if (pbLanded)
+		*pbLanded = false;
+	return NULL;
+}
 void CBaseMonster::Eat(float flFullDuration) {}
 bool CBaseMonster::FShouldEat() { return true; }
 void CBaseMonster::BarnacleVictimBitten(entvars_t* pevBarnacle) {}

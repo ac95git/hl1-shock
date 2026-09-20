@@ -579,8 +579,11 @@ approach.
 ### Recommended Next Steps
 1. Find the actual state leak between `drawPrintText`/`drawSetTextPos` and `SPR_DrawAdditive`.
 2. If it can be reset explicitly, wrap it in one helper and delete the deferral lists.
-3. Failing that, give panels a tiny shared "deferred text" collector so the workaround is
-   one type rather than re-invented per file.
+3. ~~Failing that, give panels a tiny shared "deferred text" collector so the workaround is
+   one type rather than re-invented per file.~~ **Done 2026-09-20, not verified in game:**
+   `CDeferredText` in `cl_dll/vgui_deferred_text.h` (`Add`, `Flush`) replaces `DeferredText` in the
+   inventory panel and `DeferredCountLabel` in the grid view. The entry stays open on step 1; the
+   workaround is now one type, and the Skill Tree's and Status tab's own text ordering was left as it is.
 
 ### Acceptance Criteria For Closure
 - A panel can draw sprites and text in natural order without text loss.

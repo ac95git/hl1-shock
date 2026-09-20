@@ -120,6 +120,7 @@ class CInventoryPanel : public vgui::Panel, public vgui::CDefaultInputSignal
     friend class CStatusView;
     friend class CRecordsView;
     friend class CRecordReaderView; // the Records tab paints through it
+    friend class CDeferredText;     // the draw-order workaround's flush (vgui_deferred_text.h)
 
 private:
     vgui::Label*  m_pLabel;

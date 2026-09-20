@@ -2,6 +2,7 @@
 #include "cl_util.h"
 #include "vgui_inventory.h"
 #include "vgui_inventory_grid.h"
+#include "vgui_deferred_text.h"
 #include "spr_fit.h"
 #include "ammohistory.h"
 #include <VGUI_App.h>
@@ -339,13 +340,9 @@ void CInventoryGridView::Paint(
 	ctx->drawOutlinedRect(x0, y0, x0 + gridW, y0 + gridH);
 
 	// ---- Entries ----
-	struct DeferredCountLabel
-	{
-		int  textX, textY;
-		char text[8];
-		int  textLen;
-	};
-	std::vector<DeferredCountLabel> deferredCountLabels;
+	// Stack counts are collected during the sprite pass and drawn after it
+	// (vgui_deferred_text.h; docs/TECH_DEBT.md, the VGUI draw-order rule).
+	CDeferredText deferredCountLabels;
 
 	for (int i = 0; i < (int)entries.size(); ++i)
 	{
@@ -470,34 +467,20 @@ void CInventoryGridView::Paint(
 			// Only Stacks are worth labelling; a lone item needs no "x1".
 			if (e.count > 1 && ctx->m_pSmallFont)
 			{
-				DeferredCountLabel label{};
-				snprintf(label.text, sizeof(label.text), "x%d", e.count);
-				label.textLen = (int)strlen(label.text);
+				char text[8];
+				snprintf(text, sizeof(text), "x%d", e.count);
 
 				// Measured, not guessed: a guessed height put the label
 				// below the footprint on any font taller than it.
 				int textW = 0, textH = 0;
-				ctx->m_pSmallFont->getTextSize(label.text, textW, textH);
-				label.textX = ix + iw - textW - 2;
-				label.textY = iy + ih - textH - 1;
-				deferredCountLabels.push_back(label);
+				ctx->m_pSmallFont->getTextSize(text, textW, textH);
+				deferredCountLabels.Add(ix + iw - textW - 2, iy + ih - textH - 1, text);
 			}
 		}
 	}
 
 	// ---- Stack counts, drawn last so nothing overlaps them ----
-	if (ctx->m_pSmallFont)
-	{
-		ctx->drawSetTextFont(ctx->m_pSmallFont);
-		ctx->drawSetTextColor(lr, lg, lb, 0);
-
-		for (const DeferredCountLabel& label : deferredCountLabels)
-		{
-			ctx->drawSetTextPos(label.textX, label.textY);
-			for (int c = 0; c < label.textLen; ++c)
-				ctx->drawPrintChar(label.text[c]);
-		}
-	}
+	deferredCountLabels.Flush(ctx, ctx->m_pSmallFont, lr, lg, lb, 0);
 }
 
 // =====================================================================

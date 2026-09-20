@@ -139,7 +139,13 @@ building clean.
 | `fb310a9` | 5g — the level-change reset | L |
 | `873734d` | Phase's effect | H |
 | `079f42e` | The deflected melee root cause | F |
-| reserve 1 | 5e — the captain's channel | K |
+| `ee79dd8` | 5e — the captain's channel | K |
+| the last commit | One deferred-text collector for the VGUI panels, and the client-side fix for slice 3 | V |
+
+**One thing to know before bisecting:** slice 3's commit (`079f42e`) does not build the client on its own.
+It changed `CheckTraceHullAttack`'s signature, and the client's stub of it in `cl_dll/hl/hl_baseentity.cpp`
+was not updated until the last commit, because the first three slices were built server-side only. Every
+commit from the last one on builds both DLLs.
 
 ## Test rows
 
@@ -210,7 +216,41 @@ Approach so that **one** grunt can see you and the others face away.
 | K7 | A lone grunt (`give monster_human_grunt` once, far from the others) crosses Noticed | Nothing printed, no line |
 | K8 | Kill a grunt in view of one member with the others facing away (the 5f witness case) | Unchanged from the checklist: the witness jumps to 0.75 and speaks `HG_WITNESS`; the others are **not** lifted by that jump |
 
+### V. The deferred-text collector
+
+A refactor with no intended change: the two inventory panels draw their text through one type. Two looks.
+
+| # | Do | Expect |
+| --- | --- | --- |
+| V1 | Open the Inventory with a few weapons and some ammo | The ammo readout in the left column reads `n / max` beside each icon, exactly as before, on every row |
+| V2 | With a Stack in the Grid (`give item_shard` a few times) | The `x3` count sits in the footprint's bottom-right corner as before, on top of the icon, not under it |
+
 ## Decisions I made
 
-*The pre-made ones are above under each slice; anything decided during the hour goes here with the
-alternative rejected.*
+The pre-made ones are above under each slice. Decided during the hour:
+
+- **5g touches only COMBAT, ALERT and HUNT**, not every enemyless state. Rejected: "any monster with no
+  enemy goes IDLE", which would stand a corpse up (DEAD) and break PRONE and PLAYDEAD. The spec's "not in a
+  script" is `m_pCine == NULL`; SCRIPT is outside the three states anyway.
+- **5g clears `m_bSuspicionHadTarget` with the meter**, so the first Look on the far side cannot fire
+  Slip Away off a stale "was seen" flag from the near side.
+- **Phase refuses time-based ticks** along with attacks. Rejected: excepting `DMG_TIMEBASED` as well as
+  falls and drowning; a tick inside a 200 ms burst is noise either way, and the shorter rule wins.
+- **A claw that hits something that takes no damage is now silent** (the world, a `func_wall`), where
+  vanilla played the hit-flesh sound. Accepted as a consequence of gating on `TakeDamage`'s answer rather
+  than special-cased; a swing into a wall sounding like flesh was never right.
+- **5e fires on the crossing of the notice line, not on the level**, and the leader lifts to exactly the
+  line. Rejected: lifting to the crosser's own value, which would climb with every Look and re-fire.
+- **5e sets no floor.** The spec's table says "lift every member to the notice line" and nothing about
+  priming; the floor is a kill's mark. Rejected: a notice floor, which would make one glip permanent.
+- **5e speaks only when someone was actually lifted** (`iLifted > 0`), so a squad already at the line does
+  not repeat "stay alert" on every fresh crosser.
+- **The collector's `Flush` is a template plus a friend declaration**, not a change to the panel's
+  access. The VGUI1 draw calls are protected on `vgui::Panel`; the panel names `CDeferredText` a friend the
+  way it names its views, and the pointer must be `CInventoryPanel*`. Rejected: making the draw calls
+  public on the panel, which widens what every file can do to it for one helper's sake.
+- **The grid's per-character `drawPrintChar` loop became one `drawPrintText`**, the call the inventory's
+  own flush already used for the same font. If the Stack counts come out wrong (V2), that is the first
+  suspect.
+- **`CDeferredText` is not listed in the `.vcxproj`.** A header needs no entry to compile, and the memory
+  records a BOM trap on editing that file; add it when the project file is next touched for a reason.
