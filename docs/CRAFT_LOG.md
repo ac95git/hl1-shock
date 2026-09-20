@@ -70,6 +70,9 @@ chips also benefit from.
   compiler's FGD; RAD reports the faces in its direct-light count.
 - Still purple: the two deposits at the abandoned face and the one at the vein, old slabs in `CRYS_1A`,
   the next place to paste the unit. Prefab libraries are not in J.A.C.K.'s manual; the clipboard did.
+- **The unit's source is `maps/prefabs.map`**, Andrei's own: a lit 576-unit test box with a player
+  start and the unit standing in it as a `func_deposit`. Open it beside a map, copy the unit from there.
+  Every hand-made unit from now on lives in that file.
 
 ## 2026-09-20 — the chamber's four crystal pillars (mapping rung 3)
 
