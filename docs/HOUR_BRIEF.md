@@ -138,7 +138,8 @@ building clean.
 | --- | --- | --- |
 | `fb310a9` | 5g — the level-change reset | L |
 | `873734d` | Phase's effect | H |
-| slice 3 | The deflected melee root cause | F |
+| `079f42e` | The deflected melee root cause | F |
+| reserve 1 | 5e — the captain's channel | K |
 
 ## Test rows
 
@@ -191,6 +192,23 @@ up.
 | F7 | A zombie slashes a scientist or a grunt | The hit sound plays: a blow that lands still sounds |
 | F8 | Under Last Stand's window, take a zombie's slash | Silent from the zombie, like a deflect: nothing landed |
 | F9 | Pulse into a bullsquid's bite or tail whip | As before (those attacks have no hit sound of their own): shove, no damage |
+
+### K. 5e — the captain's channel
+
+A grunt squad of three or more (`topmap`'s, or `give monster_human_grunt` three times close together so
+they recruit; the leader wears the beret). `debug_schedule 1` shows each grunt's meter when you aim at it.
+Approach so that **one** grunt can see you and the others face away.
+
+| # | Do | Expect |
+| --- | --- | --- |
+| K1 | Let one member see you until the icon reaches Noticed, then duck back | The console prints `captain: monster_human_grunt crossed notice, leader lifts N`; the leader says "stay alert people" (or one of the other two `HG_LOST` lines) |
+| K2 | Aim at the members who did not see you | Their meters sit at the notice line (0.35), the Concealment icon over them dim, not at 0 |
+| K3 | Stay hidden | Every meter drains as normal from there; nobody searches, nobody comes (no kill, no Disturbance) |
+| K4 | Let the **leader** be the one who sees you | The same: he lifts the others and speaks |
+| K5 | Show yourself again to a member already at the line | No second line and no `captain:` print until someone has drained below the line and crossed it again |
+| K6 | Kill the leader first (the beret), then K1 on a survivor | Nothing printed, nobody lifted, no line: a squad without its captain is loners |
+| K7 | A lone grunt (`give monster_human_grunt` once, far from the others) crosses Noticed | Nothing printed, no line |
+| K8 | Kill a grunt in view of one member with the others facing away (the 5f witness case) | Unchanged from the checklist: the witness jumps to 0.75 and speaks `HG_WITNESS`; the others are **not** lifted by that jump |
 
 ## Decisions I made
 

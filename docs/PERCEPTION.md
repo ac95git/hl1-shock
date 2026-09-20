@@ -707,8 +707,14 @@ end: `HG_WITNESS`, `HG_SEND`, `HG_NOSIGN` (built, spoken by the grunt's three `O
 `HG_LOST` (for 5b and 5e, not yet spoken). Copied to the install by hand like `sprites/`. The assassin,
 alien grunt and alien slave search in silence; [ART_DEBT.md](ART_DEBT.md) records it.
 
-**The notice propagation itself is not built.** Only the leader's dispatch and the free dissolution exist
-today.
+**The notice propagation is built — 2026-09-20, not verified in game.** `CBaseMonster::SuspicionNoticePropagate`
+(`dlls/perception.cpp`) runs when a member's own meter *crosses* `suspicion_notice` in `UpdateSuspicion`
+(the crossing, not the level, so a member the leader lifted — sitting exactly at the line — does not fire
+it again). The leader lifts every living member below the line to it through `SuspicionJump`, sets no
+floor, and speaks `HG_LOST` through `OnSquadAlerted`, the grunt's fourth speech hook. A witness's 0.75
+jump does not go through this path, so 5f's "the rest hold, meters at the jump" is unchanged.
+`debug_schedule` prints `captain: … leader lifts N`. The dispatch and the free dissolution were already
+built; the give-up (5b) is the row still open.
 
 ### Perception Profiles — built 2026-09-01
 

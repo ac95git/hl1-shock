@@ -136,6 +136,7 @@ public:
 	void OnWitnessedKill() override;
 	void OnSearchDispatched() override;
 	void OnSearchDone() override;
+	void OnSquadAlerted() override;
 	void HandleAnimEvent(MonsterEvent_t* pEvent) override;
 	bool FCanCheckAttacks() override;
 	bool CheckMeleeAttack1(float flDot, float flDist) override;
@@ -394,6 +395,17 @@ void CHGrunt::OnSearchDone()
 	if (FOkToSpeak())
 	{
 		SENTENCEG_PlayRndSz(ENT(pev), "HG_NOSIGN", HGRUNT_SENTENCE_VOLUME, GRUNT_ATTN, 0, m_voicePitch);
+		JustSpoke();
+	}
+}
+
+// The captain's channel: the leader, having lifted the squad to the notice
+// line, says "stay alert" -- HG_LOST is the group written for 5b and 5e.
+void CHGrunt::OnSquadAlerted()
+{
+	if (FOkToSpeak())
+	{
+		SENTENCEG_PlayRndSz(ENT(pev), "HG_LOST", HGRUNT_SENTENCE_VOLUME, GRUNT_ATTN, 0, m_voicePitch);
 		JustSpoke();
 	}
 }

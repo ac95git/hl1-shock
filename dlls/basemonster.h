@@ -238,6 +238,11 @@ public:
 	// witness's 0.75, and the give-up's.  Never lowers it.
 	void SuspicionJump(float flValue);
 
+	// The captain's channel (5e).  Called by UpdateSuspicion on the member
+	// whose meter just crossed the notice line; its squad leader, if any,
+	// lifts every other member to that line and speaks.  docs/PERCEPTION.md.
+	void SuspicionNoticePropagate();
+
 	// The cost of a kill.  Called from Killed for player-dealt deaths only:
 	// every hostile with a meter that can see THIS (the victim) becomes a
 	// witness, and the death spot enters the sound list as a Disturbance
@@ -254,10 +259,12 @@ public:
 
 	// Speech hooks, no-ops here; the grunt fills them in.  Called on every
 	// witness; on the leader when it sends someone else; on the searcher when
-	// it turns for home.
+	// it turns for home; on the leader when it lifts the squad to the notice
+	// line (5e).
 	virtual void OnWitnessedKill() {}
 	virtual void OnSearchDispatched() {}
 	virtual void OnSearchDone() {}
+	virtual void OnSquadAlerted() {}
 
 	// The audible sound of the given type, if any, regardless of which one
 	// PBestSound would call nearest.

@@ -91,6 +91,56 @@ void CBaseMonster::SuspicionJump(float flValue)
 }
 
 //=========================================================
+// SuspicionNoticePropagate -- 5e, the captain's channel (docs/PERCEPTION.md,
+// "The captain's channel", built 2026-09-20).  Called on the member whose own
+// meter just crossed suspicion_notice.  Its leader lifts every living member
+// below the line up to it -- a lift, never a lowering, through SuspicionJump
+// -- and says so.  Loners have no leader and never do this; a squad whose
+// leader has died is loners from that frame (SquadRemove nulls every handle
+// and the SDK has no promotion), which is what makes the captain the first
+// target.  No floor is set: the room is primed only by a kill.
+//=========================================================
+void CBaseMonster::SuspicionNoticePropagate()
+{
+	CSquadMonster* pSquad = MySquadMonsterPointer();
+
+	if (pSquad == NULL || !pSquad->InSquad())
+		return;
+
+	CSquadMonster* pLeader = pSquad->MySquadLeader();
+
+	if (pLeader == NULL || !pLeader->IsLeader() || !pLeader->IsAlive())
+		return;
+
+	int iLifted = 0;
+
+	for (int i = 0; i < MAX_SQUAD_MEMBERS; i++)
+	{
+		CSquadMonster* pMember = pLeader->MySquadMember(i);
+
+		if (pMember == NULL || pMember == pSquad || !pMember->IsAlive())
+			continue;
+		if (pMember->m_IdealMonsterState == MONSTERSTATE_DEAD)
+			continue;
+
+		if (pMember->m_flSuspicion < suspicion_notice.value)
+		{
+			pMember->SuspicionJump(suspicion_notice.value);
+			iLifted++;
+		}
+	}
+
+	if (debug_schedule.value != 0)
+	{
+		ALERT(at_console, "captain: %s crossed notice, leader lifts %d\n",
+			STRING(pev->classname), iLifted);
+	}
+
+	if (iLifted > 0)
+		pLeader->OnSquadAlerted();
+}
+
+//=========================================================
 // ConcealmentOf -- how hidden pTarget is from THIS monster right now.
 // 0 is fully exposed, 1 is invisible.
 //
@@ -265,12 +315,21 @@ bool CBaseMonster::UpdateSuspicion(CBaseEntity* pTarget)
 		if (pTarget->IsPlayer())
 			flFillScale *= PlayerConcealmentScale(static_cast<CBasePlayer*>(pTarget));
 
+		const float flBefore = m_flSuspicion;
+
 		m_flSuspicion += (1.0f - flConcealment) * suspicion_fill.value * flFillScale * flDelta;
 
 		if (m_flSuspicion > 1.0f)
 			m_flSuspicion = 1.0f;
 
 		m_bSuspicionHadTarget = true;
+
+		// 5e, the captain's channel: the moment a squad member crosses the
+		// notice line by its own eyes, its leader lifts the rest of the squad
+		// to that line.  The crossing, not the level, so a member the leader
+		// lifted (which sits exactly at the line) does not fire it again.
+		if (flBefore < suspicion_notice.value && m_flSuspicion >= suspicion_notice.value)
+			SuspicionNoticePropagate();
 	}
 	else
 	{
