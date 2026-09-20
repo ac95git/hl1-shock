@@ -27,9 +27,12 @@ in-memory copy and the edit vanishes without a word — which is exactly how fou
 
 - **The source is Valve 220 text.** A `.map` is a list of entities; the first is `worldspawn` and holds
   the world brushes; every brush is a list of planes, each given by three points, a texture name and two
-  texture axes. Anything that can write text can write a map. J.A.C.K.'s own format is `.jmf` (binary);
-  keep the `.jmf` beside the `.map` for the editor's sake, but the `.map` is what is versioned and
-  compiled.
+  texture axes. Anything that can write text can write a map. J.A.C.K.'s own format is `.jmf` (binary):
+  **Ctrl+S saves the `.jmf`, and the `.map` only changes on File → Export**, by hand, every time. The
+  `.jmf` files live in `E:\Projects\jack\` (`shaft1.jmf`, `prefabs.jmf`, `topmap.jmf`) and are not
+  versioned; the export goes to `maps/<name>.map` in the repo, which is what is versioned, read back and
+  compiled. A save without an export leaves the agent reading a stale map, which is how the pillars
+  once seemed to vanish on 2026-09-20 and came back on the next export.
 - **The compile is four programs run in order** from J.A.C.K.'s folder, `D:\Apps\J.A.C.K.\halflife\`:
   `hlcsg`, `hlbsp`, `hlvis`, `hlrad`, each taking the map path without extension, all with `-low`, CSG
   also with `-wadautodetect`. They write `<name>.log` beside the map, and that log is the record of what
@@ -95,7 +98,7 @@ loop puts the layout work where it is cheap and the craft where the eyes are:
 4. **J.A.C.K. opens once**, for what the generator cannot do and the agent cannot judge: texture, light,
    detail, and the shapes that are not boxes. From here the `.map` is edited in J.A.C.K. or in the text,
    and the generator is not run on it again.
-5. **Both are committed.** The `.map` (and `.jmf`) as the source, and the `.rooms.txt` beside it as the
+5. **Both are committed.** The exported `.map` as the source, and the `.rooms.txt` beside it as the
    record of what the layout was meant to be — the intent the hand edits departed from, and the thing to
    read before asking why a room is where it is.
 
@@ -212,9 +215,10 @@ here and checked by a compile or a plan; "not" means either impossible from the 
 - **Texturing and lighting as craft.** Alignment, scale, trims, which textures suit a room, light colour
   and falloff. The agent can place a `light` and choose a name that exists; it cannot judge the look.
   Painting a texture is Andrei's too; the agent packs it.
-- **J.A.C.K. itself.** Everything said about its dialogs, hotkeys and `.jmf` handling is from general
-  knowledge of the editor, not from driving it. The `.jmf` format is binary and is not read or written
-  here.
+- **J.A.C.K. itself.** The agent does not drive it. What it says about dialogs and hotkeys comes from
+  the editor's own manual, `D:\Apps\J.A.C.K\VDKManual.pdf` (89 pages; hotkeys on pages 81–83; the text
+  extracts with `pypdf`), checked by Andrei's hands in the sessions CRAFT_LOG.md records. The `.jmf`
+  format is binary and is not read or written here.
 - **Editing a hand-edited map with the generator.** It would overwrite the edits. After J.A.C.K. has
   touched a map, the agent edits the `.map` text directly, or the `.ent` via ripent.
 - **Monster behaviour in the space.** `info_node` density, `path_corner` loops, whether a grunt actually
@@ -238,4 +242,14 @@ For a map J.A.C.K. has already saved. A new map starts with [the loop above](#th
 4. Draw the plan if the layout moved; compare against the brief's placement table.
 5. Andrei plays it. Findings go to PILLARS.md if they move a number, to PROVING_MAP.md if they change the
    map, to this file if they change how maps are made.
-6. Commit the `.map` (and `.jmf`), never the `.bsp`.
+6. Commit the exported `.map`, never the `.bsp`.
+
+## Prefabs
+
+J.A.C.K. has no prefab library (its manual does not mention one). **`maps/prefabs.map` is the container
+instead**, Andrei's file since 2026-09-20: a lit 576-unit box with a player start, holding every
+hand-built unit meant to be reused, the crystal deposit unit first. J.A.C.K. switches between open maps
+freely, so a unit travels by Ctrl+C in `prefabs.map` and Ctrl+V in the target, then a drag into place.
+A unit is kept as world brushes, or as the entity it will be in play if every paste is one entity of its
+own, as the deposit unit is. Its `.jmf` is `E:\Projects\jack\prefabs.jmf`; the export is committed like
+any other map.
