@@ -136,7 +136,8 @@ building clean.
 
 | Commit | Slice | Rows |
 | --- | --- | --- |
-| slice 1 | 5g — the level-change reset | L |
+| `fb310a9` | 5g — the level-change reset | L |
+| slice 2 | Phase's effect | H |
 
 ## Test rows
 
@@ -156,6 +157,21 @@ enough). `topmap` has no transition.
 | L3 | Be Noticed by a grunt (icon dim) but not acquired, cross | Meter 0 on the far side, the floor gone: a second kill there is not primed |
 | L4 | A scientist mid-script (talking, or on a scripted sequence) crosses with you | The script plays as it always did |
 | L5 | A monster killed before the crossing whose body crosses | Still a corpse, not standing up |
+
+### H. Phase
+
+`give item_longjump` for the Dash, `skill_unlock_all` or buy Phase (Shinobi, behind the Dash gate), a
+zombie or a headcrab as the attacker, `debug_damage 1`.
+
+| # | Do | Expect |
+| --- | --- | --- |
+| H1 | Dash through a zombie's swing so the claw lands mid-burst | No damage; the console prints `phase: dodged` with the milliseconds of burst left; the shove and the small view kick still happen |
+| H2 | Stand still and take the same swing | Full damage, no `phase` line |
+| H3 | Take a hit just after the burst ends (the ~200 ms after the Dash) | Full damage: the dodge is only the burst |
+| H4 | Dash across a tripmine's beam or into a grenade's blast timed to the burst | No damage from the blast if it lands inside the burst |
+| H5 | Air Dash straight down into the floor from height, with Phase | Fall damage as before: falls are not dodged |
+| H6 | Without Phase (respec or a fresh save), H1 again | Damage lands; nothing prints |
+| H7 | Judge it | Does a dodge with no damage window make melee enemies a free hit? The roadmap marks Phase the first to cut if so |
 
 ## Decisions I made
 

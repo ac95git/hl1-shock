@@ -454,6 +454,27 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 		return false;
 	}
 
+	// Phase (the Shinobi Route): no damage during the Dash's burst itself.
+	// The server sees the burst in fuser1 -- non-zero while it runs, positive
+	// for the flat Dash, negative for an Air Dash (pm_shared.cpp, "The Dash"),
+	// and the movement code zeroes it the tick the burst ends -- so the dodge
+	// needs no state of its own. A dodge, not immunity: falls and drowning
+	// still land, so an Air Dash dive that meets the floor inside its burst is
+	// still a fall, and the dive's damage stays the open review it is
+	// (docs/ROADMAP.md, Shinobi). Everything else is refused, time-based ticks
+	// included -- a poison tick inside a 200 ms burst is noise either way, and
+	// one rule beats a list. After Last Stand, which refuses everything, and
+	// before Ricochet, so no downstream system sees a hit that never landed.
+	if (pev->fuser1 != 0 && (bitsDamageType & (DMG_FALL | DMG_DROWN)) == 0 && m_skills.HasSkill(ESkillId::Phase))
+	{
+		if (debug_damage.value != 0)
+		{
+			ALERT(at_console, "phase: dodged, %.0f ms of burst left, dmg %.0f blocked\n",
+				fabs(pev->fuser1), flDamage);
+		}
+		return false;
+	}
+
 	// Ricochet (the Juggernaut Route): a chance per bullet, while the player
 	// has armour, to turn it away entirely and send its full damage back at
 	// whoever fired it, with a tracer from the player to them. Only bullets:

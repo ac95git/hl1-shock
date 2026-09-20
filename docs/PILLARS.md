@@ -876,7 +876,11 @@ gap. Walk moved to **ALT**.
   Recovery (−`skill_dash_recovery` 0.25 of the recharge), each Dash Recovery Stat node
   (−`skill_stat_dash_recovery` 0.05), summed and floored at ×0.2; Second Wind (two charges); **Reprisal** —
   a melee hit that kills a monster at full health gives a charge back (`CCrowbar::ReprisalRefill`, at both
-  hit sites, once per victim of a Cleave); **Air Dash** — below. Phase still has none.
+  hit sites, once per victim of a Cleave); **Phase** — built 2026-09-20, not verified in game: while the
+  burst runs (the player's `fuser1` is non-zero) every hit is refused in `CBasePlayer::TakeDamage`, after
+  Last Stand and before Ricochet, except falls and drowning, so an Air Dash dive into the floor is still a
+  fall and the dive's damage stays its own open review; `debug_damage` prints `phase: dodged` with the
+  burst left; **Air Dash** — below.
 - **The Air Dash.** With the major held (physinfo `dsa`), a Dash started in the air goes along the
   crosshair instead — up and down included — and the movement keys do nothing in the air. Since
   2026-09-18 it is the *directional* dash rather than the only one that leaves the ground, and its tooltip

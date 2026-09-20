@@ -3017,8 +3017,9 @@ special), a Backstab kill (Melee-only), any melee kill.
     the key rotation was built and dropped). The ground Dash keeps following the movement keys.
 - **Walk's new default key is ALT** (2026-09-15). The mod ships no `default.cfg`, so it lives only in the
   install's `config.cfg` for now.
-- **Phase has no effect yet.** The node is placed; the no-damage flag for the Dash's duration is not
-  written.
+- **Phase is built** (2026-09-20, not verified in game): every hit during the burst is refused except
+  falls and drowning, so the dive's damage above is still a separate question. Recorded in
+  [PILLARS pillar 4](PILLARS.md#4-skill-trees).
 
 Settled, so not open: `item_longjump` in stock maps keeps its classname and gives both the long jump and
 the Dash (2026-09-15); acquisition is walk-over, like every pickup since
@@ -3179,8 +3180,8 @@ and recorded in [PILLARS pillar 4](PILLARS.md#4-skill-trees); what stands as a r
 - **The other three hub corners.** Follow-Up takes the Melee–Juggernaut corner; the Juggernaut–Specialist,
   Specialist–Medical and Medical–Melee corners are open for cross-Route Skills.
 - **The hub's two stat sizes**, to be set when the hub's Minors are judged in play.
-- **What is left to build in the Routes**: the Alien ultimate and the ghost following the player, Phase's
-  effect, the Air Dash's dive damage, the charge and chainsaw the melee grunt waits on, and every number.
+- **What is left to build in the Routes**: the Alien ultimate and the ghost following the player, the
+  Air Dash's dive damage, the charge and chainsaw the melee grunt waits on, and every number.
 
 Answered, so not open: a Route is drawn as a region with a faint colour wash over a circuit substrate,
 its name in the tooltip only (2026-09-15); every road stat is chosen (SKILL_TREE.md); the suit node costs
