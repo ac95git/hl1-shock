@@ -3440,7 +3440,12 @@ mod's resource loop — small, finite, authored.
 
 ~~Open: shard stack size and how many Cells~~ (answered 2026-09-18: one Cell, a Stack of ten). Open:
 whether any second-half deposit is remembered for the endings (stripping Xen's crystal, which the Xenians
-are desperate for); and the deposit as a model, for veins that are objects rather than carved brushwork.
+are desperate for). ~~And the deposit as a model, for veins that are objects rather than carved
+brushwork.~~ **Answered 2026-09-20: brush, as a pasted unit.** Seven crystals in a 64 cube, built by
+Andrei in J.A.C.K. and pasted around the Heart, each unit its own `func_deposit`; a `light_surface`
+makes every crystal face emit. Brush because a face can emit light and a model cannot, because the
+entity already traces its real shape, and because Valve's crystals are brushes. The record is in
+[CRAFT_LOG.md](CRAFT_LOG.md). A model stays possible for small wall outcrops later.
 
 ### Stations
 

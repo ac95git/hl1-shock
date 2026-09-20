@@ -29,6 +29,48 @@ and installs. It does not build the thing.
 
 ---
 
+## 2026-09-20, later — the deposits as crystal masses, and the glow
+
+**Decided first: brush, not model.** Andrei asked whether a deposit that reads as a mass of crystals
+should be a model or a brush, and how GoldSrc shows a model with no function at all. Brush won on three
+counts: a brush face can emit light and a model cannot (a model is lit from one lightmap sample under its
+origin); `func_deposit` already traces its real shape for the arc's surface and the pick's chips, and a
+model form would collide as a box; and Valve's own crystals are brushes, which is what the amber set's
+cap texture is for. The model form keeps one use for later, small wall outcrops, once he can model an
+organic mass. The scan of Valve's maps that answered the second question: 126 decorative model
+placements in the whole campaign, 82 `monster_generic` (the hologram, bones, forklifts), 39 `cycler`
+(hair, fungus, bubbles), 3 `cycler_sprite`, 2 `monster_furniture`; everything else is brushwork. So: a
+model only where a brush cannot (organic, animated) or a script needs a body.
+
+**Built by Andrei in J.A.C.K.:** a **deposit unit**, seven crystals in a 64×64×64 box, each a six-sided
+prism with a six-sided point, leaning outward, tips pushed off-centre, from a table of local coordinates
+(origin at the unit's south-west floor corner; he took liberties from there). Sizes were argued down
+from a first table that reached 240 tall (his call: "enormous"), tried at 32 (too small, faces 2 units
+wide) and settled at 64, which is also just over the crouch-jump, so a ring of units still seals the
+Heart. The unit is world brushes on the clipboard, pasted eight times around the Heart and tied to
+`func_deposit` per unit, so each is its own deposit; the four slabs are gone. Two units, north and
+south, are Unstable (the spec had one). A `light_surface` entity at the chamber's ceiling names
+`CRYS_3A` at brightness 150, so every crystal face in the map emits: RAD's direct lights went from 57 to
+1748. His verdict in play: solid pathing, and "each crystal has its own hitbox", which the arc and the
+chips also benefit from.
+
+**What was learned:**
+
+- **A unit's base stays in the world.** The first plan had a rock block inside the entity so the ring
+  would seal; Andrei's correction: the base does not break with the crystals, so it is world brushwork
+  and the crystals alone are the entity.
+- **J.A.C.K. writes every FGD default into an entity** once its properties are opened (`health 120`,
+  `yield 3`, `material 0`...). They match the code's defaults, so it is noise, but the read-back shows
+  them as differences.
+- **"Ambiguous leafnode content" warnings**, 71 of them, all in the deposits' clipping hulls: the
+  widened collision copies of crystals that pass through each other disagree about what is solid. The
+  compiler resolves each; tested by walking against every side and jumping at the ring, nothing snags.
+  Noise, kept.
+- **Texture lights are one entity, no side file:** `light_surface` with `_tex` and `_light`, from the
+  compiler's FGD; RAD reports the faces in its direct-light count.
+- Still purple: the two deposits at the abandoned face and the one at the vein, old slabs in `CRYS_1A`,
+  the next place to paste the unit. Prefab libraries are not in J.A.C.K.'s manual; the clipboard did.
+
 ## 2026-09-20 — the chamber's four crystal pillars (mapping rung 3)
 
 **Built by Andrei in J.A.C.K.:** the four 64×64×288 boxes at `shaft1`'s chamber corners replaced with
