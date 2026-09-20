@@ -1811,7 +1811,9 @@ up without them. It is written up in [PERCEPTION.md part 2](PERCEPTION.md#part-2
 and [ROADMAP.md](ROADMAP.md#the-post-aggro-step) holds the order, the numbers and the sentences.
 
 **Finish, then freeze — 2026-09-17.** [STEALTH_CHECKLIST.md](STEALTH_CHECKLIST.md) first; then 5b, 5e and
-5g, which stop the loop being sticky; then no new stealth features until real maps exist. What stealth
+5g, which stop the loop being sticky; then no new stealth features until real maps exist. **5g is built
+(2026-09-20, not verified in game)**: a monster that crosses a level change with no enemy leaves its COMBAT,
+ALERT or HUNT state behind and arrives idle, meter and floor cleared; a plain load changes nothing. What stealth
 needs after that is content — ritual rooms, the military wing, soft gates a Stealth build can ghost — not
 code.
 

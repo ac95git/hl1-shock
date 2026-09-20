@@ -144,14 +144,32 @@ bool CBaseMonster::Restore(CRestore& restore)
 	// A level change launders a room's alert state; a plain save/load does
 	// not (docs/PERCEPTION.md, "Losing the player").  The two run through
 	// this same Restore and are told apart by the landmark, exactly as
-	// CBasePlayer::Restore tells them apart.  Only the floor and the meter
-	// here -- pushing an enemyless monster back to IDLE is 5g's.
+	// CBasePlayer::Restore tells them apart.  The floor and the meter clear;
+	// the Post (m_vecSearchTarget, m_vecLastSearch) is not saved and so is
+	// already gone.  5g, built 2026-09-20: a monster that crossed with no
+	// enemy -- an EHANDLE to the player never survives a transition -- would
+	// otherwise sit in ALERT for good, since GetIdealState's only exit from
+	// COMBAT is a null enemy and nothing walks ALERT back to IDLE.  Only the
+	// states the chase made sticky are touched, so a corpse stays dead and a
+	// scripted monster keeps its script.
 	SAVERESTOREDATA* pSaveData = (SAVERESTOREDATA*)gpGlobals->pSaveData;
 	if (pSaveData != NULL && 0 != pSaveData->fUseLandmark)
 	{
 		m_flSuspicionFloor = 0.0f;
 		if (m_hEnemy == NULL)
+		{
 			m_flSuspicion = 0.0f;
+			m_bSuspicionHadTarget = false;
+
+			const bool bChasing = m_MonsterState == MONSTERSTATE_COMBAT ||
+								  m_MonsterState == MONSTERSTATE_ALERT ||
+								  m_MonsterState == MONSTERSTATE_HUNT;
+			if (bChasing && m_pCine == NULL)
+			{
+				m_MonsterState = MONSTERSTATE_IDLE;
+				m_IdealMonsterState = MONSTERSTATE_IDLE;
+			}
+		}
 	}
 
 	return status;

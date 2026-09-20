@@ -670,10 +670,12 @@ What holds an enemy is **contact** and never the meter, or a monster under fire 
 would quietly time out mid-firefight. The damage clause is why shooting from cover and waiting does not
 work.
 
-**Across a level change it does return to IDLE.** On restore with `fUseLandmark` set, Suspicion, the
-floor and the stored Post all clear, and a monster with no valid enemy that is not in a script is pushed
-to `MONSTERSTATE_IDLE`. A plain save/load changes nothing, so quickloading is not a "calm everyone down"
-button. (Settled 2026-08-31, unchanged.)
+**Across a level change it does return to IDLE — 5g, built 2026-09-20, not verified in game.** On restore
+with `fUseLandmark` set (`CBaseMonster::Restore`, `dlls/monsters.cpp`), Suspicion and the floor clear, and
+a monster with no enemy that is in COMBAT, ALERT or HUNT and not in a script is pushed to
+`MONSTERSTATE_IDLE`; the stored Post needs no clearing because neither Search field is saved. Only those
+three states are touched, so a corpse stays dead. A plain save/load changes nothing, so quickloading is
+not a "calm everyone down" button. (Settled 2026-08-31.)
 
 ### The captain's channel — settled 2026-09-17, not built
 

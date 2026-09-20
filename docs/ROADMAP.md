@@ -344,7 +344,7 @@ vanilla map. The order, each commit independently playable:
 | **5f** | **Witnesses, the Disturbance, the Search.** The cost of a kill | 2026-09-17, below. **Built the same day**, with the silencer item, the Headhunter helmet skip, Shroud, Silent Kill's effect, and the Ambush and fill cvar changes. **Tested 2026-09-18** against [STEALTH_CHECKLIST.md](STEALTH_CHECKLIST.md), whose results are at its end: every row passed once the Search was made to walk (its path ended inside the victim's hull). Recorded in [PILLARS pillar 6](PILLARS.md#the-cost-of-a-kill--built-2026-09-17-tested-2026-09-18). `topmap` has no `info_node`s, so the Search around corners is still unjudged |
 | **5b** | **The give-up**, contact-keyed, into the same Search | 2026-09-17, below. Not built; its lines (`HG_LOST`) are already in `sound/sentences.txt` |
 | **5e** | **The captain's channel** — notice propagation | 2026-09-17, below |
-| 5g | The level-change reset | 2026-08-31, [PERCEPTION.md](PERCEPTION.md#losing-the-player--the-give-up-settled-2026-09-17-not-built) |
+| 5g | The level-change reset | 2026-08-31, [PERCEPTION.md](PERCEPTION.md#losing-the-player--the-give-up-settled-2026-09-17-not-built). **Built 2026-09-20**, not verified in game |
 | 5c, 5d | The Search, Posts | Absorbed into 5f: the SDK already has both |
 | 5a | Monsters only shoot where they face | Dropped |
 
