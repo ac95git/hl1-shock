@@ -279,7 +279,7 @@ private:
 	static const char* pStompSounds[];
 	static const char* pBreatheSounds[];
 
-	CBaseEntity* GargantuaCheckTraceHullAttack(float flDist, int iDamage, int iDmgType);
+	CBaseEntity* GargantuaCheckTraceHullAttack(float flDist, int iDamage, int iDmgType, bool* pbLanded = nullptr);
 
 	CSprite* m_pEyeGlow; // Glow around the eyes
 	CBeam* m_pFlame[4];	 // Flame beams
@@ -974,7 +974,10 @@ void CGargantua::HandleAnimEvent(MonsterEvent_t* pEvent)
 	case GARG_AE_SLASH_LEFT:
 	{
 		// HACKHACK!!!
-		CBaseEntity* pHurt = GargantuaCheckTraceHullAttack(GARG_ATTACKDIST + 10.0, gSkillData.gargantuaDmgSlash, DMG_SLASH);
+		// The hit sound only for a blow that hurt; a deflect keeps the shove
+		// and the (scaled) kick and is heard as the Pulse's clang.
+		bool bLanded = false;
+		CBaseEntity* pHurt = GargantuaCheckTraceHullAttack(GARG_ATTACKDIST + 10.0, gSkillData.gargantuaDmgSlash, DMG_SLASH, &bLanded);
 		if (pHurt)
 		{
 			if ((pHurt->pev->flags & (FL_MONSTER | FL_CLIENT)) != 0)
@@ -985,7 +988,8 @@ void CGargantua::HandleAnimEvent(MonsterEvent_t* pEvent)
 				//UTIL_MakeVectors(pev->angles);	// called by CheckTraceHullAttack
 				pHurt->pev->velocity = pHurt->pev->velocity - gpGlobals->v_right * 100;
 			}
-			EMIT_SOUND_DYN(edict(), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pAttackHitSounds), 1.0, ATTN_NORM, 0, 50 + RANDOM_LONG(0, 15));
+			if (bLanded)
+				EMIT_SOUND_DYN(edict(), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pAttackHitSounds), 1.0, ATTN_NORM, 0, 50 + RANDOM_LONG(0, 15));
 		}
 		else // Play a random attack miss sound
 			EMIT_SOUND_DYN(edict(), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pAttackMissSounds), 1.0, ATTN_NORM, 0, 50 + RANDOM_LONG(0, 15));
@@ -1028,9 +1032,12 @@ void CGargantua::HandleAnimEvent(MonsterEvent_t* pEvent)
 // a percentage of his height (otherwise he swings over the
 // players head)
 //=========================================================
-CBaseEntity* CGargantua::GargantuaCheckTraceHullAttack(float flDist, int iDamage, int iDmgType)
+CBaseEntity* CGargantua::GargantuaCheckTraceHullAttack(float flDist, int iDamage, int iDmgType, bool* pbLanded)
 {
 	TraceResult tr;
+
+	if (pbLanded)
+		*pbLanded = false;
 
 	UTIL_MakeVectors(pev->angles);
 	Vector vecStart = pev->origin;
@@ -1043,10 +1050,14 @@ CBaseEntity* CGargantua::GargantuaCheckTraceHullAttack(float flDist, int iDamage
 	{
 		CBaseEntity* pEntity = CBaseEntity::Instance(tr.pHit);
 
+		// pbLanded as CBaseMonster::CheckTraceHullAttack's: did the victim take it.
+		bool bLanded = true;
 		if (iDamage > 0)
 		{
-			pEntity->TakeDamage(pev, pev, iDamage, iDmgType);
+			bLanded = pEntity->TakeDamage(pev, pev, iDamage, iDmgType);
 		}
+		if (pbLanded)
+			*pbLanded = bLanded;
 
 		return pEntity;
 	}

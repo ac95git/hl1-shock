@@ -395,7 +395,13 @@ public:
 	bool FShouldEat();				// see if a monster is 'hungry'
 	void Eat(float flFullDuration); // make the monster 'full' for a while.
 
-	CBaseEntity* CheckTraceHullAttack(float flDist, int iDamage, int iDmgType);
+	// pbLanded, when given, says whether the victim actually took the damage:
+	// false for a hit the player's Shield turned away, a Last Stand window, or
+	// a thing that does not take damage at all. The entity is returned either
+	// way, so the blow can still shove -- the Pulse blocks the damage, not the
+	// blow -- while the hit-flesh sound is gated on it (docs/TECH_DEBT.md, "A
+	// deflected melee attack still reports as a hit to the attacker").
+	CBaseEntity* CheckTraceHullAttack(float flDist, int iDamage, int iDmgType, bool* pbLanded = nullptr);
 	bool FacingIdeal();
 
 	bool FCheckAITrigger(); // checks and, if necessary, fires the monster's trigger target.

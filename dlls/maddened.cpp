@@ -206,7 +206,10 @@ void CMaddened::HandleAnimEvent(MonsterEvent_t* pEvent)
 	{
 	case MADDENED_AE_SWING:
 	{
-		CBaseEntity* pHurt = CheckTraceHullAttack(70, gSkillData.maddenedDmgSwing, DMG_CLUB);
+		// The hit sound only for a blow that hurt; a deflect keeps the shove
+		// and the (scaled) kick and is heard as the Pulse's clang.
+		bool bLanded = false;
+		CBaseEntity* pHurt = CheckTraceHullAttack(70, gSkillData.maddenedDmgSwing, DMG_CLUB, &bLanded);
 		if (pHurt)
 		{
 			if ((pHurt->pev->flags & (FL_MONSTER | FL_CLIENT)) != 0)
@@ -215,7 +218,8 @@ void CMaddened::HandleAnimEvent(MonsterEvent_t* pEvent)
 				pHurt->pev->punchangle.z = RANDOM_LONG(0, 1) ? 10 : -10;
 				pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_forward * 60;
 			}
-			EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pHitSounds), 1.0, ATTN_NORM, 0, 80 + RANDOM_LONG(0, 8));
+			if (bLanded)
+				EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pHitSounds), 1.0, ATTN_NORM, 0, 80 + RANDOM_LONG(0, 8));
 		}
 		else
 		{

@@ -1400,10 +1400,21 @@ void CBaseMonster::RadiusDamage(Vector vecSrc, entvars_t* pevInflictor, entvars_
 // other stuff to the victim (punchangle, etc)
 //
 // Used for many contact-range melee attacks. Bites, claws, etc.
+//
+// The return says what was struck, not whether it was hurt: TakeDamage's
+// answer used to be thrown away here, so every caller played its hit-flesh
+// sound on a blow the player's Shield had refused. pbLanded carries that
+// answer out (true when no damage was asked for, since nothing was refused).
+// The victim is still returned on a refusal so the shove and the view kick
+// happen -- the Pulse blocks the damage, not the blow, and the kick is scaled
+// by pulse_deflect_punch in CPlayerPulse::DampenDeflectPunch.
 //=========================================================
-CBaseEntity* CBaseMonster::CheckTraceHullAttack(float flDist, int iDamage, int iDmgType)
+CBaseEntity* CBaseMonster::CheckTraceHullAttack(float flDist, int iDamage, int iDmgType, bool* pbLanded)
 {
 	TraceResult tr;
+
+	if (pbLanded)
+		*pbLanded = false;
 
 	if (IsPlayer())
 		UTIL_MakeVectors(pev->angles);
@@ -1420,10 +1431,13 @@ CBaseEntity* CBaseMonster::CheckTraceHullAttack(float flDist, int iDamage, int i
 	{
 		CBaseEntity* pEntity = CBaseEntity::Instance(tr.pHit);
 
+		bool bLanded = true;
 		if (iDamage > 0)
 		{
-			pEntity->TakeDamage(pev, pev, iDamage, iDmgType);
+			bLanded = pEntity->TakeDamage(pev, pev, iDamage, iDmgType);
 		}
+		if (pbLanded)
+			*pbLanded = bLanded;
 
 		return pEntity;
 	}

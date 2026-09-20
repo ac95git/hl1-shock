@@ -675,6 +675,9 @@ every blow and ricochet it, which made it immune to the crowbar on most of its b
 wherever it is hit, and the Backstab and Follow-Up work on it. It looks armoured and is not — the model's
 plates, and the bare arm standing in for the chainsaw, are in [ART_DEBT.md](ART_DEBT.md). With it, for
 every alien grunt: a punch the Pulse deflects still shoves, but no longer plays the hit sound or draws blood.
+Since 2026-09-20 that is every melee monster's rule, not the grunt's alone: `CheckTraceHullAttack` reports
+whether the blow landed, and the zombie, alien slave, maddened miner, Panthereye and Gargantua gate their
+hit sound on it ([TECH_DEBT.md](TECH_DEBT.md), the deflected-melee entry). Not verified in game.
 
 **The maddened miner, v1** — `monster_maddened`, `CMaddened` in `dlls/maddened.cpp`, built 2026-09-19 and
 **verified in game the same night** ("it works"). The mod's first human enemy: a miner who heard the

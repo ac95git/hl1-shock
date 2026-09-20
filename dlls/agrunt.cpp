@@ -27,17 +27,11 @@
 #include "hornet.h"
 #include "player.h"
 
-// Did a punch that found a player land, or did the Pulse turn it away?
-// CheckTraceHullAttack hands back what it struck whether or not the damage
-// was taken, so the punch cannot tell from its result.  The window runs its
-// full length, so a Shield that negated this blow is still standing now.
 // A deflected punch still shoves -- the Pulse blocks the damage, not the
-// blow (docs/ROADMAP.md, "Melee alien grunt") -- but it no longer plays the
-// hit sound or draws blood on a player it did not hurt.
-static bool AGruntPunchDeflected(CBaseEntity* pHurt)
-{
-	return pHurt && pHurt->IsPlayer() && static_cast<CBasePlayer*>(pHurt)->m_pulse.WouldNegate(DMG_CLUB);
-}
+// blow (docs/ROADMAP.md, "Melee alien grunt") -- but plays no hit sound and
+// draws no blood on a player it did not hurt.  Whether it hurt comes back
+// from CheckTraceHullAttack's pbLanded, the same answer every melee monster
+// reads now; until 2026-09-20 this file asked the Shield directly instead.
 
 //=========================================================
 // monster-specific schedule types
@@ -535,7 +529,8 @@ void CAGrunt::HandleAnimEvent(MonsterEvent_t* pEvent)
 
 	case AGRUNT_AE_LEFT_PUNCH:
 	{
-		CBaseEntity* pHurt = CheckTraceHullAttack(AGRUNT_MELEE_DIST, gSkillData.agruntDmgPunch, DMG_CLUB);
+		bool bLanded = false;
+		CBaseEntity* pHurt = CheckTraceHullAttack(AGRUNT_MELEE_DIST, gSkillData.agruntDmgPunch, DMG_CLUB, &bLanded);
 
 		if (pHurt)
 		{
@@ -549,7 +544,7 @@ void CAGrunt::HandleAnimEvent(MonsterEvent_t* pEvent)
 				pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_right * 250;
 			}
 
-			if (!AGruntPunchDeflected(pHurt))
+			if (bLanded)
 			{
 				EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pAttackHitSounds), 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5, 5));
 
@@ -568,7 +563,8 @@ void CAGrunt::HandleAnimEvent(MonsterEvent_t* pEvent)
 
 	case AGRUNT_AE_RIGHT_PUNCH:
 	{
-		CBaseEntity* pHurt = CheckTraceHullAttack(AGRUNT_MELEE_DIST, gSkillData.agruntDmgPunch, DMG_CLUB);
+		bool bLanded = false;
+		CBaseEntity* pHurt = CheckTraceHullAttack(AGRUNT_MELEE_DIST, gSkillData.agruntDmgPunch, DMG_CLUB, &bLanded);
 
 		if (pHurt)
 		{
@@ -582,7 +578,7 @@ void CAGrunt::HandleAnimEvent(MonsterEvent_t* pEvent)
 				pHurt->pev->velocity = pHurt->pev->velocity + gpGlobals->v_right * -250;
 			}
 
-			if (!AGruntPunchDeflected(pHurt))
+			if (bLanded)
 			{
 				EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pAttackHitSounds), 1.0, ATTN_NORM, 0, 100 + RANDOM_LONG(-5, 5));
 

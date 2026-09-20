@@ -621,7 +621,10 @@ void CPanthereye::RunTask(Task_t* pTask)
 
 void CPanthereye::Claw()
 {
-	CBaseEntity* pHurt = CheckTraceHullAttack(PANTHER_CLAW_REACH, gSkillData.panthereyeDmgClaw, DMG_SLASH);
+	// The hit sound only for a blow that hurt; a deflect keeps the (scaled)
+	// kick and is heard as the Pulse's clang (docs/TECH_DEBT.md).
+	bool bLanded = false;
+	CBaseEntity* pHurt = CheckTraceHullAttack(PANTHER_CLAW_REACH, gSkillData.panthereyeDmgClaw, DMG_SLASH, &bLanded);
 
 	if (pHurt)
 	{
@@ -631,7 +634,8 @@ void CPanthereye::Claw()
 			pHurt->pev->punchangle.x = 5;
 		}
 
-		EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pAttackHitSounds), 1.0, ATTN_NORM, 0, 90 + RANDOM_LONG(-5, 5));
+		if (bLanded)
+			EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pAttackHitSounds), 1.0, ATTN_NORM, 0, 90 + RANDOM_LONG(-5, 5));
 	}
 	else
 	{

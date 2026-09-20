@@ -1158,10 +1158,10 @@ not to replace the stock grunt.
   looks armoured and is not. An unarmoured body is art, and a second ART_DEBT line. Half-Life: Extended's
   `agrunt_noarmor.mdl` shows the idea exists; where it came from is unknown.
 - **The charge knocks the player back, and the Pulse blocks only its damage.** A deflected charge still
-  shoves. The stock punch already behaves like this: `CheckTraceHullAttack` calls `TakeDamage` but ignores
-  its result and returns the entity it hit (`dlls/combat.cpp:1363-1372`), and the punch applies its shove to
-  whatever comes back. The one thing to fix while there is cosmetic: a deflected punch still plays the hit
-  sound and draws blood on the player, when nothing landed.
+  shoves. The stock punch already behaves like this: `CheckTraceHullAttack` returns the entity it hit
+  whether or not the damage was taken, and the punch applies its shove to whatever comes back. Since
+  2026-09-20 it also reports whether the blow landed (`pbLanded`), and the hit sound and blood are gated
+  on that for every melee monster ([TECH_DEBT.md](TECH_DEBT.md), the deflected-melee entry, resolved).
 - **The alien chainsaw should, ideally, be a weapon the player can take.** That makes it a new player weapon
   in Half-Life's `WeaponId` space ([ADR-0002](adr/0002-two-identity-spaces-for-weapons-and-items.md)), with
   a viewmodel, and a relative of the Carbon Pickaxe and the Gauss Katana: a third melee weapon, which forces

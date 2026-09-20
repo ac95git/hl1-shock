@@ -137,7 +137,8 @@ building clean.
 | Commit | Slice | Rows |
 | --- | --- | --- |
 | `fb310a9` | 5g — the level-change reset | L |
-| slice 2 | Phase's effect | H |
+| `873734d` | Phase's effect | H |
+| slice 3 | The deflected melee root cause | F |
 
 ## Test rows
 
@@ -172,6 +173,24 @@ zombie or a headcrab as the attacker, `debug_damage 1`.
 | H5 | Air Dash straight down into the floor from height, with Phase | Fall damage as before: falls are not dodged |
 | H6 | Without Phase (respec or a fresh save), H1 again | Damage lands; nothing prints |
 | H7 | Judge it | Does a dodge with no damage window make melee enemies a free hit? The roadmap marks Phase the first to cut if so |
+
+### F. The deflected melee root cause
+
+With the Pulse Module (`give item_pulsemodule`). One attacker of each kind; `minemap` has zombies,
+headcrabs and alien grunts, `topmap` the rest, or `give monster_zombie` etc. Listen with the game sound
+up.
+
+| # | Do | Expect |
+| --- | --- | --- |
+| F1 | Pulse into a zombie's slash | The Pulse's clang, the small (scaled) view kick, the sideways shove; **no** claw-strike hit sound from the zombie, and no miss whoosh either |
+| F2 | Let the same zombie hit you without a Pulse | The claw-strike hit sound as always, full kick, damage |
+| F3 | Zombie swings and misses you | The miss whoosh as always |
+| F4 | F1 against an alien slave's claw, the maddened miner's swing, a Panthereye's claw | Same as F1: clang, kick, no hit-flesh sound from the monster |
+| F5 | F1 against an alien grunt's punch | Unchanged from before: shove, no hit sound, no blood |
+| F6 | F1 against a Gargantua's slash (`give monster_gargantua`, `god` if you like) | Clang, the big shove and kick, no hit sound |
+| F7 | A zombie slashes a scientist or a grunt | The hit sound plays: a blow that lands still sounds |
+| F8 | Under Last Stand's window, take a zombie's slash | Silent from the zombie, like a deflect: nothing landed |
+| F9 | Pulse into a bullsquid's bite or tail whip | As before (those attacks have no hit sound of their own): shove, no damage |
 
 ## Decisions I made
 

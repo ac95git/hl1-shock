@@ -367,7 +367,10 @@ void CISlave::HandleAnimEvent(MonsterEvent_t* pEvent)
 	case ISLAVE_AE_CLAW:
 	{
 		// SOUND HERE!
-		CBaseEntity* pHurt = CheckTraceHullAttack(70, gSkillData.slaveDmgClaw, DMG_SLASH);
+		// The hit sound only for a blow that hurt; a deflect keeps the kick
+		// (scaled) and is heard as the Pulse's clang (docs/TECH_DEBT.md).
+		bool bLanded = false;
+		CBaseEntity* pHurt = CheckTraceHullAttack(70, gSkillData.slaveDmgClaw, DMG_SLASH, &bLanded);
 		if (pHurt)
 		{
 			if ((pHurt->pev->flags & (FL_MONSTER | FL_CLIENT)) != 0)
@@ -376,7 +379,8 @@ void CISlave::HandleAnimEvent(MonsterEvent_t* pEvent)
 				pHurt->pev->punchangle.x = 5;
 			}
 			// Play a random attack hit sound
-			EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pAttackHitSounds), 1.0, ATTN_NORM, 0, m_voicePitch);
+			if (bLanded)
+				EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pAttackHitSounds), 1.0, ATTN_NORM, 0, m_voicePitch);
 		}
 		else
 		{
@@ -388,7 +392,8 @@ void CISlave::HandleAnimEvent(MonsterEvent_t* pEvent)
 
 	case ISLAVE_AE_CLAWRAKE:
 	{
-		CBaseEntity* pHurt = CheckTraceHullAttack(70, gSkillData.slaveDmgClawrake, DMG_SLASH);
+		bool bLanded = false;
+		CBaseEntity* pHurt = CheckTraceHullAttack(70, gSkillData.slaveDmgClawrake, DMG_SLASH, &bLanded);
 		if (pHurt)
 		{
 			if ((pHurt->pev->flags & (FL_MONSTER | FL_CLIENT)) != 0)
@@ -396,7 +401,8 @@ void CISlave::HandleAnimEvent(MonsterEvent_t* pEvent)
 				pHurt->pev->punchangle.z = -18;
 				pHurt->pev->punchangle.x = 5;
 			}
-			EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pAttackHitSounds), 1.0, ATTN_NORM, 0, m_voicePitch);
+			if (bLanded)
+				EMIT_SOUND_DYN(ENT(pev), CHAN_WEAPON, RANDOM_SOUND_ARRAY(pAttackHitSounds), 1.0, ATTN_NORM, 0, m_voicePitch);
 		}
 		else
 		{

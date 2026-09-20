@@ -407,7 +407,35 @@ damage rules live in `TraceAttack`, with no compile error and no obvious symptom
 - A Discharge into an HGrunt's helmet or an AGrunt's armour plate behaves like any other hit there.
 - Hitgroup multipliers apply, or their absence is a documented decision rather than a side effect.
 
-## A Deflected Melee Attack Still Reports As A Hit To The Attacker — MITIGATED 2026-08-02
+## A Deflected Melee Attack Still Reports As A Hit To The Attacker — RESOLVED 2026-09-20
+
+Closed by step 1 below in its reconciled form, not verified in game. `CheckTraceHullAttack` (and the
+Gargantua's private copy) now carries `TakeDamage`'s answer out through an optional `bool* pbLanded`,
+and every melee site — the zombie's three slashes, the alien slave's two claws, the maddened miner, the
+Panthereye, both alien grunt punches and the Gargantua's slash — plays its hit-flesh sound only when the
+blow landed. The alien grunt's own `AGruntPunchDeflected` helper, which asked the Shield directly, is
+replaced by the same flag. The bullsquid's bite and tail whip play no sound of their own and are
+untouched; its zero-damage throw asks for no damage and reads as landed.
+
+**The acceptance criteria were reconciled before closing**, because two later decisions overtook the
+entry as written:
+
+- **The shove stays, and the view kick stays scaled**, not suppressed. Settled 2026-09-13 in the melee
+  grunt entry — *the Pulse blocks the damage, not the blow* — and the mitigation below had already judged
+  the scaled kick the better read. So the victim is still returned on a refusal and the callers' shove and
+  punch code is unchanged; only the sound is gated. "No view punch" in the original criteria is superseded.
+- **No miss sound either.** The blow connected with a Shield; the Pulse's own clang is its sound. Returning
+  `NULL` on a refusal (step 1 as first written) would have dropped the shove and played the miss whoosh for
+  a blow that landed, and was rejected for that.
+- **Consequences of gating on `TakeDamage`'s answer**, all judged correct: a blow inside a Last Stand
+  window is silent too (no downstream system sees a hit that never landed); a blow that strikes something
+  that takes no damage at all — the world, a `func_wall` — no longer plays the hit-flesh sound it did in
+  vanilla, and plays no miss sound either.
+
+The `gMultiDamage`-style hazard this leaves is the inverse one: any *new* melee site that calls
+`CheckTraceHullAttack` without reading `pbLanded` is back to the old behaviour, silently.
+
+The mitigation of 2026-08-02 and the original diagnosis follow, kept for the reasoning.
 
 The view kick is now **scaled rather than suppressed**, which turned out to be the better outcome: a
 deflect that produces no reaction at all reads as the blow having missed, where a small nudge reads as it

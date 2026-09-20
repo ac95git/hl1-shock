@@ -435,10 +435,14 @@ void PulseCrowbarFollowUpKnockback(CBaseEntity* pTarget, const Vector& vecDir)
 // and not like nothing happened at all -- so the attacker's view kick is
 // scaled rather than suppressed.
 //
-// It cannot be suppressed at the source without editing every melee monster:
-// CheckTraceHullAttack (dlls/combat.cpp:1153) hands back the entity it hit
-// whether or not the damage was taken, and monsters set punchangle off that
-// return value. By the time TryNegate runs, the kick has not been applied yet.
+// It is scaled here rather than at the source by choice: CheckTraceHullAttack
+// (dlls/combat.cpp) hands back the entity it hit whether or not the damage was
+// taken, and monsters set punchangle off that return value. Since 2026-09-20
+// it also reports whether the blow landed (pbLanded), and the melee monsters
+// gate their hit sound on that -- but the kick deliberately stays, scaled, so
+// a deflect reads as a blow glancing off (docs/TECH_DEBT.md, the
+// deflected-melee entry). By the time TryNegate runs, the kick has not been
+// applied yet.
 //
 // Only the part the attacker ADDED is scaled, so a kick the player was already
 // carrying from something else is left alone.
