@@ -72,3 +72,27 @@ in the doc for its area, with a pointer back here.
   are made from `strafefire_l2` and `strafefire_r2`, tagged `ACT_STRAFE_LEFT`/`_RIGHT`, and have **no fire
   events**. The standing and crouching MP5 sequences fire at frames 10, 12 and 14 (`event 4/5/6`, with a
   `5001` muzzle flash on each). The grunt's head controller is `$controller 0 "bip01 head" XR -70 70`.
+
+## Half-Life: Decay
+
+A **second** source, and not part of the SDK. The 2007 community PC port of the PS2 expansion is installed
+beside Half-Life:
+
+```
+D:\GameLibrary\steam\steamapps\common\Half-Life\decay
+```
+
+Unlike the SDK, **it holds no sources** — compiled `.mdl` files, a `decay.dll`, `.bsp` maps. What it is good
+for is content Half-Life itself does not have, and for reading the port team's entity design out of
+`decay.fgd` and out of the map entity blocks, which are plain text inside a `.bsp` and grep cleanly.
+
+Taking a model from here means a Crowbar decompile before it can gain sequences
+([MODEL_WORKFLOW.md](MODEL_WORKFLOW.md)), and the AI is written new either way — the port's code ships only
+as a DLL.
+
+| What | Where | Why the mod cares |
+| --- | --- | --- |
+| `flyer.mdl`, `flyer_gibs.mdl` | `models/` | [The alien flyer](ROADMAP.md#the-alien-flyer). A large organic craft with one `idle1` sequence, seven hitboxes, `STUDIO_TRACE_HITBOX` already set, and four gib pieces |
+| `decay.fgd` | root | The port's own entities. `monster_alienflyer` rides `path_corner`s that carry two added spawnflags, 8 "Alienflyer laser" and 16 "Alienflyer attack" |
+| `maps/*.bsp` | `maps/` | Entity blocks are greppable. `dy_fubar.bsp` is the only map with a flyer in it |
+| `sound/ambience/alienflyby2.wav` | `sound/` | Candidate flyer sound, unverified |

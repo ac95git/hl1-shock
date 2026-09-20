@@ -84,7 +84,7 @@ Stations are pillar 1; sounds and icons are not roadmap items at all — see [Ar
 - [Maps](#maps) — the other one
 - [Pillar 6: Stealth](#pillar-6-stealth)
 - [Pillar 2: Weapons](#pillar-2-weapons)
-- [Pillar 2: Monsters and bosses](#pillar-2-monsters-and-bosses) — the cult, the maddened, Xen hell and where the bosses sit, 2026-09-17
+- [Pillar 2: Monsters and bosses](#pillar-2-monsters-and-bosses) — the cult, the maddened, Xen hell and where the bosses sit, 2026-09-17; the alien flyer, 2026-09-20
 - [Pillar 2: Decapitation](#pillar-2-decapitation) — a design to port, already read
 - [Pillar 3: Modules](#pillar-3-modules)
 - [Pillar 4: Routes](#pillar-4-routes) — builds; all seven Routes shaped; four Skills cut
@@ -934,6 +934,7 @@ gained the human side the same day: [the cult, the maddened](#the-cult-and-the-m
 | [Cult leader](#the-cult-and-the-maddened) | Boss | A melee human | Idea |
 | [Kingpin](#xen-hell-and-the-cut-monsters) | Boss | `valve/models/kingpin.mdl`; no AI | Idea |
 | [Xen hell's residents](#xen-hell-and-the-cut-monsters) | Enemies | Half-Life's cut models; no AI | Idea |
+| [The alien flyer](#the-alien-flyer) | Enemy, or a moving surface | Decay's `flyer.mdl`; one idle sequence, no AI | Idea 2026-09-20 |
 
 This also answers the old question of what a boss "moveset" meant: all four bosses are an existing monster
 given **custom attacks**, and two add something more (a dash, and turning into an ally). None is a puzzle.
@@ -1785,7 +1786,82 @@ Panthereye as `Diablo` — with QCs, so a change is a recompile, not a decompile
 **All are models without AI**, so each is the
 [Panthereye's](#panthereye) cost again: read the sequences with `utils/mdltool/mdlinfo.py`, then write the
 monster. **Kingpin is its boss** and guards a piece. Stukabats and any other flyer matter beyond Xen hell:
-see [aerial melee](#settled-2026-09-17--the-fuel-the-processors-the-air-dash-gate).
+see [aerial melee](#settled-2026-09-17--the-fuel-the-processors-the-air-dash-gate) and
+[the alien flyer](#the-alien-flyer).
+
+### The alien flyer
+
+**Shape: Idea, from Andrei 2026-09-20. Not grilled.** A large organic craft in the Xen sky. It starts from
+the observation that vanilla's Xen flyers are brushwork on a track and therefore invulnerable — a thing that
+crosses the view and cannot be answered. **The mod's version is a model, and it can be shot down.** Nothing
+below the model facts is decided.
+
+**The asset already exists, compiled.** `flyer.mdl` and `flyer_gibs.mdl` in Half-Life: Decay's folder on
+this machine, `D:\GameLibrary\steam\steamapps\common\Half-Life\decay\models\` ([HL_SDK.md](HL_SDK.md#half-life-decay)).
+Read with `utils/mdltool/mdlinfo.py` and a one-off header reader, 2026-09-20:
+
+- **Seven bones, three chains off one root.** Bones 3–4 and 5–6 are mirror images of each other in their
+  hitboxes — two two-segment wings. Bones 1–2 are the third chain, a head or a tail. 73 vertices, two
+  meshes, one bodypart. It is a manta.
+- **Two textures, `FLYER_TOP.BMP` and `FLYER_BOTTOM.BMP`, 128×64 each.** It was built to be read from above
+  *and* below, which is a flying thing the player is meant to pass under.
+- **One sequence, `idle1`**, 30 fps, 31 frames, activity 0. No walk, no turn, no attack, no death, no
+  flinch. **Everything except the flap has to be authored**, which is the [Panthereye's](#panthereye) cost
+  again and then some — the Panthereye at least had a full set.
+- **It is large.** The reference pose spans 164 × 224 × 78 units; `idle1`'s own bounding box spans
+  441 × 356 × 111, so the flap travels a long way. A player is 32 × 32 × 72.
+- **Header flags `0x300`** = `STUDIO_DYNAMIC_LIGHT | STUDIO_TRACE_HITBOX`. Bullets already trace against its
+  seven hitboxes rather than its bounding box, so **per-wing damage is free** — shooting a wing off is a
+  question of code, not of the model.
+- **`flyer_gibs.mdl` is four distinct pieces** (`flyer_gib_01`–`_04`, each at two scales; the largest is 174
+  units across). **The thing was built to be destroyed.** That is the strongest evidence for what it is for.
+- **Candidate sound:** `decay/sound/ambience/alienflyby2.wav`. Unverified as its own.
+
+**How Decay used it, which is a shape and not a plan.** The 2007 community PC port's `decay.fgd` declares
+`monster_alienflyer` on `models/flyer.mdl`: base `Monster` plus `RenderFields`, a **`death_target`**
+keyvalue, a **Start Inactive** spawnflag, and a collision hull of `-32 -32 -32` to `32 32 32` — a 64-unit
+cube under a model three times that wide. It rides `path_corner`s, and the port added two path_corner
+spawnflags, **8 "Alienflyer laser"** and **16 "Alienflyer attack"**, so *the path says where it fires*. It
+appears exactly once in the whole game, in `dy_fubar.bsp`, the last level: `spawnflags 64`, `target
+af_wait`, `death_target previctory_mm`. A scripted, mortal, one-off set piece — not a monster you meet.
+
+**There is no source for it.** It is not in the Half-Life SDK (which has `Aflock`, `Bird` and `Stukabat`,
+and no flyer), and `decay.dll` is the port team's compiled code. So the AI is written new regardless, and
+gaining sequences means a **Crowbar decompile of `flyer.mdl`**, which is Andrei's to run
+([MODEL_WORKFLOW.md](MODEL_WORKFLOW.md)). Nothing has been copied into `models/` yet.
+
+**What it meets in the code.** A brush cannot be a monster: `SOLID_BSP` only pairs with `MOVETYPE_PUSH`,
+which is a door or a train, and every schedule that advances on animation needs sequences a BSP model does
+not have. A studio model on `MOVETYPE_FLY` with a hand-written think loop is the shape that works, and the
+repo already has two worked examples of a big damageable flyer built that way — `dlls/apache.cpp` and
+`dlls/osprey.cpp`. Neither uses schedules. The osprey also already gibs on death. Start there, not from
+`CBaseMonster`.
+
+Open, and the grill's to answer:
+
+- **What is it?** A hazard that crosses the sky, an enemy that hunts, a transport whose cargo matters, or a
+  moving surface the player lands on. Its size makes the last one real, and the reactor gauntlet
+  ([where the bosses sit](#where-the-bosses-sit), 6) is the one entry that wants moving surfaces. These are
+  different builds; picking one is the first question.
+- **One set piece or a population?** Decay's answer was one. A thing seen twice and killed once reads
+  differently from a thing in every Xen sky.
+- **Shot down how?** Anything, or a specific answer — the wings, a lit organ, the [Core](#mining-and-crystal-shards)
+  it runs on. The hitbox flag makes a weak point cheap. Falling, it is a hazard with a landing site, which
+  is exploration content for free.
+- **Does it fight back, and is the Pulse an answer?** An attack that is not on the Shield's damage list
+  ([ADR-0005](adr/0005-the-shield-negates-a-curated-damage-list.md)) is an attack the Pulse is useless
+  against.
+- **Is this what the aerial tools are for?** The air Dash, the double jump, the katana and the pencilled
+  Hook's one worthwhile form — a *pull* — all exist to reach something in the air, and the roster has no
+  flyer worth reaching yet ([aerial melee](#settled-2026-09-17--the-fuel-the-processors-the-air-dash-gate)).
+  A flyer that can only be shot wastes that.
+- **The collision hull**, deliberately: Decay's 64-unit cube under a 224-unit model means shots pass through
+  most of what is drawn. With `STUDIO_TRACE_HITBOX` set, bullets are fine; the hull is about where the
+  player and the world collide with it, which matters a great deal if it is a surface.
+- **Where it lives** — a Xen wing, Xen hell, or the sky over the facility as scenery first, earning its AI
+  later.
+- **Its name**, for [CONTEXT.md](../CONTEXT.md). "Flyer" is the filename and `monster_flyer_flock` already
+  owns the word in the SDK.
 
 ### Where the bosses sit
 
