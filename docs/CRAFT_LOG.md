@@ -17,8 +17,8 @@ The two ladders, each rung one technique on one room, checked by a read-back and
 editor (the crew's `scripted_sequence` and sentence triggers wired in the entity dialog); 7 the autonomy
 milestone: map two greyboxed by Andrei from a plan he drew, no generator.
 
-**Modelling** — ~~1 the pickaxe's second cut (thin it, fix the head's form; steps in its brief)~~ done
-below, its texturing pass still open; 2 the alien
+**Modelling** — ~~1 the pickaxe: second cut (thin it, fix the head's form), third cut (form and
+chrome groups)~~ both done below, only taste left; 2 the alien
 grunt's melee weapon from nothing (mirror modifier, loop cuts, seams, a 256-colour texture); 3 the energy
 rifle (several parts, weights to the hand bone, world and player versions); 4 improving existing models,
 textures first, then a mesh edit on a decompile — the freed slave without his collar and bracelets is the
@@ -36,6 +36,91 @@ How the agent takes part: it writes the steps (tool, dialog, number), reads the 
 and installs. It does not build the thing.
 
 ---
+
+## 2026-09-21 — the pickaxe's third cut: form where the screen can see it (modelling rung 1, closed)
+
+**Built by Andrei** across a long day in `v_pickaxe.blend`, opened on his sentence "pickaxe round 3".
+503 → **827 triangles**, 11 bones, 12 sequences, the gloves untouched. His verdict at the end: "the
+pickaxe look really good… now it is up to taste."
+
+**The shaft.** The second cut's three soft swells each got a plain-radius flank ring 0.45 either
+side, turning a shoulder spread over 3.4 units into one spread over 0.9, and the crests went up to
+0.80 and 0.78. Then the measurement that changed the plan: the fist covers z −7.79 to −4.05, but the
+*rendered frame* cuts the shaft at about **z 1.1** at rest, so three of those four features were
+built where no one would ever see them. Three grooves went on the open run instead — z 5.166, 1.749,
+−1.669, on the shaft's own 3.42 rhythm — and the rib inside the fist was flattened back to the
+taper, which also removed a poke-through against the glove's fingers. Later, the ring under the head
+became a proper **ferrule**: two more loops at r 0.800 making a 0.37-tall cylinder with 46° shoulders
+instead of a 32° cone, and its 32 vertical edges marked sharp so the collar reads as an eight-sided
+fitting on a round haft.
+
+**The head.** The two 22-gons were triangulated by hand so both cheeks export the same fan. The body
+got a **fuller**, which Andrei had identified as the offender before any measurement agreed with him;
+later he reshaped it from the outline-following pentagon into a parallelogram, which halved its area
+to match the blade's panels. He modelled **the back of the head himself** — two insets and an
+extrusion — and it came back with every face mirrored exactly. The blade's cutting edge was halved in
+thickness and two recessed panels cut into the inner sweep, both his placements. 153 of the head's
+211 interior edges are creased at a **13°** threshold taken from a measured gap in the distribution.
+
+**The textures.** `chrome_map.py` is new: a matcap generator with a hot spot, a horizon, a rim light,
+a `--step` and a `--cast`. The head became four chrome groups — edge, blade, body, haft — and the
+ferrule a fifth, carrying the Suit Variant accent as a new column in the QC's `$texturegroup`.
+
+**What was learned:**
+
+- **A recess's wall angle is `sink ÷ inset width`, not depth.** A chrome map is sampled by the
+  normal, so it reads *angle* and is blind to how deep a cut is. That single fact decided every
+  recess on the model: the body's fuller works at 0.07 deep because its ring is 0.12 wide (30°),
+  and a first attempt on the blade at 0.015 deep with a 0.35 ring gave **2.4°** — flatter than the
+  4.1° cheek it was cut into, and would have vanished. On thin geometry, **narrow the ring; never
+  deepen the cut.**
+- **Measure what the screen sees, not what the mesh has.** Two different limits, and the tighter one
+  was not the obvious one: the glove hides z −7.79…−4.05, but the frame's bottom edge at rest sits at
+  **z ≈ 1.1**. Three shaft features and the butt band were invisible before that was checked. Read
+  the pose render against the mesh coordinates before siting anything.
+- **A chrome map with no range throws geometry away.** `pickaxe_black.py`'s palette curve (floor 10,
+  ceil 175, gamma 1.7) put the shaft's map at **mean 23/255, max 132**, so two opposite walls of a
+  groove sampled tones a few levels apart. Andrei spotted it by eye — "the black chrome doesn't do it
+  honor in reading the shapes" — before it was measured. And a *gradient* horizon is not enough: the
+  first map had only a 6-level break across it. `--step` puts a real discontinuity there, which is
+  the only thing that lets the blade's 4.1–4.5° cheek flip tone through a swing.
+- **`Select All by Trait` extends the selection, it does not replace it.** Press `A` first and Mark
+  Sharp creases the whole mesh. This cost two full passes in one day. The sequence is always
+  `Alt+A` → trait select → Mark Sharp; the only `A` belongs to Reset Vectors at the end.
+- **The smoothing threshold is a measured gap.** The head's edge angles clustered at ≤11.3° and
+  ≥14.3° with nothing between, so 13° split form from sweep with **zero** edges misclassified either
+  way. Same discipline as the second cut's 60°, different number, because it is a different mesh.
+- **In Material Properties, `New` replaces the highlighted slot.** It does not add one — `+` does. Hit
+  in the wrong order it put the new material into the *shaft's* slot (173 faces on the edge texture),
+  orphaned `pickshaftChrome` where a save would have purged it, and renamed the **object** to match,
+  which would have broken the compile outright because Source Tools names the exported SMD after the
+  object. Recovery: rename the object back, re-link slot 0 through the material browse dropdown, then
+  `+` and fill the new slot.
+- **Never run `Alt+N` Reset Vectors with the gloves visible.** 45 glove edges carry sharp marks that
+  are inert only because Valve's imported custom normals override them. A reset would switch all 45
+  on at once. Verified after the fact by comparing corner normals against a recompute: the pickaxe
+  deviates by a median 1.7°, the gloves by 13.1° — still untouched.
+- **Materials live on faces, sharpness lives on edges.** Nothing carries a material but a polygon,
+  and there is no unassigned state — "removing" a texture is always assigning another. Removing a
+  *slot* that still has faces silently shifts every index above it and re-textures parts of the model.
+- **The shaft reads round because it was made round.** The second cut smoothed its octagon into a
+  cylinder at 60°, so everything mounted on it inherits that while the head is faceted and hard.
+  Andrei saw the seam — "the head reads very sharp while that ring reads curvy" — and the fix was to
+  facet the collar, not to soften the head.
+- **A part joins the Suit Variant through the QC, not through code.** Give it its own material, one
+  map per family with the accents from `game_shared/suit_defs.h`, and a column in the
+  `$texturegroup` beside the four glove textures. Family 0 is **cyan**, not orange. A saturated tint
+  is a multiply and costs luminance — red lost a third of it — so the three maps were balanced by
+  their printed means to within 5%. Confirmed by parsing the compiled `.mdl` header: 19 textures,
+  9 skin refs, 3 families, all five pickaxe textures flagged `0x3` flatshade,chrome.
+- **What the measurement killed.** A planned "grind the blade into a wedge" was retracted: quoted at
+  12°, it survives honest arithmetic at about 5°, and at 23 px per unit on screen *any* feature the
+  blade's 0.08–0.5 thickness can afford is 1 to 6 pixels wide. The blade is flat because it is a
+  blade. Its answer was the map, not the mesh.
+
+**Next:** rung 2, the alien grunt's melee weapon from nothing. The pickaxe's remaining work is taste
+(Andrei's own pass), then `w_pickaxe` — still a blackened crowbar from 2026-09-18 — and the Icon,
+which is what actually closes the ART_DEBT entry.
 
 ## 2026-09-21, small hours — the pickaxe's second cut (modelling rung 1)
 
