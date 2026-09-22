@@ -15,7 +15,10 @@ The two ladders, each rung one technique on one room, checked by a read-back and
 4 lighting (texture lights through `lights.rad`, lamp brushes, colour and falloff); 5 detail from brushes
 (the cars, the cage, the ladders; when a brush is a `func_wall` or `func_detail`); 6 scripting in the
 editor (the crew's `scripted_sequence` and sentence triggers wired in the entity dialog); 7 the autonomy
-milestone: map two greyboxed by Andrei from a plan he drew, no generator.
+milestone: map two designed by Andrei as its spec and plan, generated, and then his in the editor from
+the first walk — reworded 2026-09-22, when a hand greybox of a 57-room map was judged not deliverable
+and the generator kept for the blockout (docs/MAP_WORKFLOW.md, "The division of the work"). A unit
+that repeats is built once and cloned, never sixteen times.
 
 **Modelling** — ~~1 the pickaxe: second cut (thin it, fix the head's form), third cut (form and
 chrome groups)~~ both done below, only taste left; 2 the alien
@@ -34,6 +37,10 @@ or the miner's swing.
 How the agent takes part: it writes the steps (tool, dialog, number), reads the saved file back
 (`utils/maptool/mapsemdiff.py` and `brushes_near.py` for a map; the Blender MCP for a scene), compiles,
 and installs. It does not build the thing.
+
+What a session leaves here, from 2026-09-22: **only what was learned**, as bullets, and only when
+something was. The commit message says what was built and the diff shows it. The entries below this line
+predate that rule and are longer than the ones to come.
 
 ---
 

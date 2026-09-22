@@ -11,6 +11,23 @@ build product, like the DLLs. The `.map` is what `git` sees, and it is plain tex
 everything below possible. **A new map starts before that loop**, as a plan drawn from a room spec — see
 [The loop for a new map](#the-loop-for-a-new-map), settled 2026-09-18.
 
+**The division of the work, grilled 2026-09-22** (ten calls, Andrei's; the reasoning is in the sections
+they touch):
+
+1. Andrei designs a map as its spec and plan; the generator builds the greybox, as it is, slivers and all.
+2. The `.map` is the source of truth. J.A.C.K. cannot write one, so its `.jmf` is the editor's copy, kept
+   in `maps/jmf/` and ignored by git.
+3. Andrei opens the `.jmf`. After any text edit by the agent he opens the `.map` and overwrites the
+   `.jmf` at once; `mapcheck.py` warns from the timestamps when either has drifted.
+4. After the generator has written a map, the agent writes **entities only** into it, and only when
+   asked. Brushwork is Andrei's, in the editor.
+5. Andrei compiles from J.A.C.K.'s Run Map, which exports to both places and runs the four tools;
+   `mapcheck.py` is the read-back before a commit, on his "done".
+6. A hand-made unit is built once, in `prefabs.map`, and cloned; the generator's `sets` line places
+   placeholder timber on a new map.
+7. A session leaves learned-only bullets in CRAFT_LOG.md, and only when it taught something.
+8. A practice map stays out of the repo until a diff-based read-back is wanted, then gets a first commit.
+
 **`topmap` is deliberately outside that loop** (Andrei, 2026-09-18). It is the working test map, under
 constant edit, and J.A.C.K. exports straight into `topmod/maps/` — so versioning it would add a
 copy-back step to every single save for a map nobody ships. It lives in the mod directory only.
@@ -28,18 +45,23 @@ in-memory copy and the edit vanishes without a word — which is exactly how fou
 - **The source is Valve 220 text.** A `.map` is a list of entities; the first is `worldspawn` and holds
   the world brushes; every brush is a list of planes, each given by three points, a texture name and two
   texture axes. Anything that can write text can write a map. J.A.C.K.'s own format is `.jmf` (binary):
-  **Ctrl+S saves the `.jmf`, and the `.map` only changes on File → Export**, by hand, every time. The
-  `.jmf` files live in `E:\Projects\jack\` (`shaft1.jmf`, `prefabs.jmf`, `topmap.jmf`) and are not
-  versioned; the export goes to `maps/<name>.map` in the repo, which is what is versioned, read back and
-  compiled. A save without an export leaves the agent reading a stale map, which is how the pillars
-  once seemed to vanish on 2026-09-20 and came back on the next export.
+  **Ctrl+S saves the `.jmf`, and the `.map` only changes on File → Export**, by hand, every time. J.A.C.K.
+  cannot Save As `.map` (checked 2026-09-22), so the two files are permanent. **The `.map` is the source
+  of truth and the `.jmf` is the editor's copy of it**, kept in `maps/jmf/` (git-ignored, with `*.jmx`)
+  since 2026-09-22; before that they lived in `E:\Projects\jack\`. Andrei opens the `.jmf` to work.
+  **After any text edit by the agent, he opens the `.map` in J.A.C.K. and overwrites the `.jmf` at
+  once**, or his next export silently reverts the edit — the same trap as the pillars that seemed to
+  vanish on 2026-09-20, seen from the other side. A save without an export leaves the agent reading a
+  stale map. `mapcheck.py` reads both timestamps first and warns either way.
 - **The compile is four programs run in order** from J.A.C.K.'s folder, `D:\Apps\J.A.C.K.\halflife\`:
   `hlcsg`, `hlbsp`, `hlvis`, `hlrad`, each taking the map path without extension, all with `-low`, CSG
   also with `-wadautodetect`. They write `<name>.log` beside the map, and that log is the record of what
-  happened. J.A.C.K.'s Run Map dialog runs the same four; a shell can run them by hand — but **only with
-  the current drive set to `D:`**, because `worldspawn`'s `wad` paths are drive-relative
-  (`/apps/steam/...`) and CSG resolves them against the shell's drive, not the map's. From PowerShell,
-  `Push-Location D:\` first. A clean `topmap` compile is a few seconds, RAD included.
+  happened. **J.A.C.K.'s Run Map is Andrei's compile** (settled 2026-09-22): one press exports the `.map`
+  to the repo and to `topmod/maps/` in the same second and runs the four tools there, with no flags at
+  all, in about sixteen seconds for `shaft1`. A shell can run them by hand — but **only with the current
+  drive set to `D:`**, because `worldspawn`'s `wad` paths are drive-relative (`/apps/steam/...`) and CSG
+  resolves them against the shell's drive, not the map's. From PowerShell, `Push-Location D:\` first. A
+  clean `topmap` compile is a few seconds, RAD included.
 - **CSG and BSP alone give a playable, fullbright map in seconds.** Skip VIS and RAD while the layout is
   still moving. RAD with no `light` entities gives a black map, not a fullbright one.
 - **A leak fails the compile.** BSP reports `LEAK` and writes `<name>.lin`; J.A.C.K.'s *Map → Load
@@ -97,11 +119,21 @@ loop puts the layout work where it is cheap and the craft where the eyes are:
    and BSP, walk it fullbright. Layout faults found on foot go back to the spec, and the map is
    regenerated: the editor has not opened yet.
 4. **J.A.C.K. opens once**, for what the generator cannot do and the agent cannot judge: texture, light,
-   detail, and the shapes that are not boxes. From here the `.map` is edited in J.A.C.K. or in the text,
-   and the generator is not run on it again.
+   detail, and the shapes that are not boxes. From here the `.map` is edited in J.A.C.K., the generator
+   is not run on it again, and the agent's text edits are **entities only**, on request.
 5. **Both are committed.** The exported `.map` as the source, and the `.rooms.txt` beside it as the
    record of what the layout was meant to be — the intent the hand edits departed from, and the thing to
    read before asking why a room is where it is.
+
+Confirmed 2026-09-22 against the alternative of a hand greybox: **Andrei designs, the generator builds.**
+A 57-room map is days by hand and minutes generated, and the layout work that matters — arguing the
+rooms as text and a picture — happens before the generator runs either way. The generator's construction
+stays as it is, with the cost it carries: `shaft1`'s 57 rooms became 736 world brushes, about thirteen
+a room where a hand-built box is six, because every wall slab is subtracted by every room it touches and
+comes out as a ring of fragments. Moving a wall or cutting a doorway in a generated map means finding
+those fragments first; [JACK.md](JACK.md) has the clip-and-delete recipe for it. A rewrite to one brush
+per wall was offered and declined for now. The generator's `sets` line places placeholder timber in a
+new drift; the hand-built set replaces it where it should be seen.
 
 `topmap` stays outside this loop as it is outside the other one. `minemap` and `proving` predate it;
 their specs were never written and their `.map` files are the source. **`shaft1` is the first map through
@@ -193,6 +225,10 @@ here and checked by a compile or a plan; "not" means either impossible from the 
   table in the brief against what is actually there. The same works on the sandbox `topmap.map`.
 - **Editing entities in the text.** Keyvalues, origins, adding point entities, wiring `targetname` to
   `target`, `multi_manager` sequences, door and button keys. This is search-and-replace on a text file.
+  Since 2026-09-22 it is the *only* text edit made to a map J.A.C.K. has opened, and only when Andrei
+  asks, because each one costs him a reopen of the `.map` and whatever the `.jmf` alone held.
+- **Reading a map that is not in the repo.** A practice map in `topmod/maps/` can have its region listed
+  and its log read without a repo copy; only the semantic diff needs a committed baseline.
 - **Running the compile chain and reading the log.** Leaks, missing textures, warnings, light and patch
   counts. The four tools are invoked from a shell exactly as J.A.C.K. invokes them.
 - **The FGD.** Adding and correcting entity definitions, keeping the two copies identical.
@@ -236,16 +272,24 @@ here and checked by a compile or a plan; "not" means either impossible from the 
 
 For a map J.A.C.K. has already saved. A new map starts with [the loop above](#the-loop-for-a-new-map).
 
-1. Edit `maps/<name>.map` — in J.A.C.K. (then File → Export), or in the text for entity work.
-2. `python utils/maptool/mapcheck.py maps/<name>.map` (the `/map-check` skill): says what changed since
-   `HEAD`, copies to `topmod/maps/`, compiles (`--layout-only` for CSG and BSP while the layout moves,
-   all four for anything the player will judge) and summarises the log.
+1. Andrei edits in J.A.C.K., from the `.jmf`, and compiles with Run Map as often as he likes: build,
+   walk, fix, nobody watching. An agent entity edit in the text, when asked for, is followed at once by
+   his reopening the `.map` and overwriting the `.jmf`.
+2. When he says "done": `python utils/maptool/mapcheck.py maps/<name>.map` (the `/map-check` skill).
+   It warns if the `.jmf` and `.map` have drifted, says what changed since `HEAD`, copies to
+   `topmod/maps/`, compiles (`--layout-only` for CSG and BSP while the layout moves, all four for
+   anything the player will judge) and summarises the log.
 3. Read its summary: a leak, any error, warnings by kind, and that RAD reports the expected number of
-   direct lights.
+   direct lights. Report the diff in his terms — the unit, the flag — and what to test.
 4. Draw the plan if the layout moved; compare against the brief's placement table.
 5. Andrei plays it. Findings go to PILLARS.md if they move a number, to PROVING_MAP.md if they change the
-   map, to this file if they change how maps are made.
+   map, to this file if they change how maps are made. What the session *taught* goes to CRAFT_LOG.md as
+   bullets, and only if it taught something; what was built is the commit message's job.
 6. Commit the exported `.map`, never the `.bsp`.
+
+**A practice map** — a throwaway room for one technique, a leak to chase — lives in `topmod/maps/` and
+`maps/jmf/` and nowhere in git, like `topmap`. It joins the repo with a first commit on the day Andrei
+wants a diff against last time, and not before.
 
 ## Prefabs
 
@@ -254,5 +298,6 @@ instead**, Andrei's file since 2026-09-20: a lit 576-unit box with a player star
 hand-built unit meant to be reused, the crystal deposit unit first. J.A.C.K. switches between open maps
 freely, so a unit travels by Ctrl+C in `prefabs.map` and Ctrl+V in the target, then a drag into place.
 A unit is kept as world brushes, or as the entity it will be in play if every paste is one entity of its
-own, as the deposit unit is. Its `.jmf` is `E:\Projects\jack\prefabs.jmf`; the export is committed like
-any other map.
+own, as the deposit unit is. Its `.jmf` is `maps/jmf/prefabs.jmf`; the export is committed like any
+other map. A unit is built once here and cloned in the target with Shift-drag on the grid — sixteen
+timber sets down a drift is minutes that way, and never sixteen builds.

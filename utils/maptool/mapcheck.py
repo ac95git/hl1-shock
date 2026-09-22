@@ -7,6 +7,11 @@ listing, then install, compile with the four VHLT tools and summarise the log.
 --layout-only runs CSG and BSP alone (fullbright, seconds); the default runs all four.
 The compilers run with the current directory on D:, because worldspawn's wad paths are
 drive-relative. Paths for the tools and the install are the constants below.
+
+Before anything else it compares the .map's timestamp with its .jmf in maps/jmf/ (the editor's
+copy; the .map is the source of truth, docs/MAP_WORKFLOW.md): a .jmf newer than the .map means
+Andrei saved and did not export; a .map newer than the .jmf means a text edit is not in the
+editor yet and his next export would overwrite it.
 """
 import argparse
 import os
@@ -26,6 +31,23 @@ sys.stdout.reconfigure(line_buffering=True)
 TOOLS = r'D:\Apps\J.A.C.K\halflife'
 INSTALL = r'D:\Apps\steam\steamapps\common\Half-Life\topmod\maps'
 COMPILE_CWD = 'D:\\'
+
+
+def check_jmf(map_path):
+    """The two ways the .map and its .jmf drift apart, from timestamps alone."""
+    jmf = os.path.join(os.path.dirname(map_path), 'jmf',
+                       os.path.splitext(os.path.basename(map_path))[0] + '.jmf')
+    if not os.path.exists(jmf):
+        return
+    dt = os.stat(jmf).st_mtime - os.stat(map_path).st_mtime
+    age = f'{abs(dt) / 3600:.1f} h' if abs(dt) >= 3600 else f'{abs(dt) / 60:.0f} min'
+    if dt > 2:
+        print(f'  WARNING: {os.path.basename(jmf)} is {age} newer than the .map: '
+              'saved in J.A.C.K. and not exported? The diff below is against a stale map.')
+    elif dt < -2:
+        print(f'  WARNING: the .map is {age} newer than {os.path.basename(jmf)}: '
+              'a text edit J.A.C.K. has not seen. Open the .map in J.A.C.K. and overwrite the .jmf '
+              'before editing, or the next export loses it.')
 
 
 def git_show(ref, relpath):
@@ -119,6 +141,7 @@ def main():
     ap.add_argument('--layout-only', action='store_true')
     ap.add_argument('--no-compile', action='store_true')
     a = ap.parse_args()
+    check_jmf(a.map)
     semantic_diff(a.ref, a.map)
     if a.region:
         region(a.map, a.region)

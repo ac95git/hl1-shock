@@ -9,3 +9,9 @@ __pycache__/
 
 # J.A.C.K.'s rolling backup of the previous .map, not an editor format (docs/MAP_WORKFLOW.md)
 *.max
+
+# J.A.C.K.'s own working files. The .map beside them is the source of truth; a .jmf is the
+# editor's copy of it, overwritten from the .map after any text edit (docs/MAP_WORKFLOW.md)
+maps/jmf/
+*.jmf
+*.jmx
