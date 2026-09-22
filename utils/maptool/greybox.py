@@ -1,6 +1,6 @@
 """Generates a greybox .map from a room spec, and draws its plan before any .map exists.
 
-    python greybox.py SPEC.rooms.txt [OUT.map] [--plan OUT.png] [--cuts Z[,Z...]]
+    python greybox.py SPEC.rooms.txt [OUT.map] [--plan OUT.png] [--cuts Z[,Z...]] [--band LO,HI]
 
 The construction is greybox_proving.py's and greybox_minemap.py's, lifted out of the code so
 the layout is a document (docs/MAP_WORKFLOW.md, "The loop for a new map"): every interior volume
@@ -42,7 +42,10 @@ The geometry and the entities:
     door x0 y0 z0 x1 y1 z1 [tex=T] [key=value ...]
                                                a func_door with the generators' defaults: rises (angles
                                                "0 -1 0"), speed 100, lip 8, movesnd 2, stopsnd 1, wait 4,
-                                               or wait -1 when a targetname is given
+                                               or wait -1 when a targetname is given. A wait -1 door
+                                               opens once and never answers again unless spawnflags has
+                                               32 (Toggle): a lift, a cage, anything that must come back
+                                               on the next trigger, needs it (mines1's lifts, 2026-09-22)
     point CLASS x y z [key=value ...]          any point entity
     pickup CLASS x y z [key=value ...]         a point entity, and counted as a pickup in the summary
     encounter CLASS x y z [key=value ...]      a point entity, and counted as an encounter
@@ -381,6 +384,15 @@ def _no_extra(opts, lineno):
 
 
 def build(spec):
+    # A world brush cannot carry a name, so every room gets a marker: an info_target named
+    # room_<NAME> just inside its minimum corner, for J.A.C.K.'s go-to-entity and the entity
+    # report. Harmless in play (info_target is a beam anchor nothing points at).
+    if not getattr(spec, "_marked", False):
+        for name, r in spec.rooms.items():
+            spec.ents.append(("info_target", [("classname", "info_target"),
+                                              ("origin", "%d %d %d" % (r.x0 + 8, r.y0 + 8, r.z0 + 8)),
+                                              ("targetname", "room_" + name)], []))
+        spec._marked = True
     interiors = list(spec.rooms.values())
     world = []
     for v in interiors:
@@ -408,6 +420,7 @@ def main(argv):
         i = argv.index("--cuts")
         cuts = [float(c) for c in argv[i + 1].split(",")]
         del argv[i:i + 2]
+    band = mapplan.parse_band(argv)
     plan = None
     if "--plan" in argv:
         i = argv.index("--plan")
@@ -427,7 +440,8 @@ def main(argv):
             f.write(text)
         print("wrote " + argv[1])
     if plan:
-        mapplan.draw(mapplan.parse_text(text), plan, cuts)
+        rooms = {n: (b.x0, b.y0, b.z0, b.x1, b.y1, b.z1) for n, b in spec.rooms.items()}
+        mapplan.draw(mapplan.parse_text(text), plan, cuts, band, rooms)
 
 
 if __name__ == "__main__":

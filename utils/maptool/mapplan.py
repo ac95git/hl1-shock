@@ -1,6 +1,6 @@
 """Draws a top-down plan of a Valve 220 .map and prints what it places.
 
-    python mapplan.py IN.map OUT.png [--cuts Z[,Z...]]
+    python mapplan.py IN.map OUT.png [--cuts Z[,Z...]] [--band LO,HI]
 
 An architect's plan: a horizontal section at each cut height. A world brush is drawn (as its
 bounding rectangle) only where a cut passes through it, so floors and ceilings vanish and walls,
@@ -8,7 +8,9 @@ pillars, crates and stairs remain; the first cut is orange, the second blue, and
 is one cut at 40, eye height of a crouched player on a floor at 0; a two-storey map wants one
 cut per storey, e.g. --cuts 40,-216. Brush entities are outlined green and labelled at any
 height; point entities are red dots with their classname (lights and logic entities are skipped
-so the plan stays readable). Brushes that are not axis-aligned boxes are drawn by the bounds of
+so the plan stays readable). With --band only the entities between those two heights are drawn
+(a brush entity by its z extent, a point entity by its origin), which is how one storey of a
+tall map gets a picture of its own: --cuts 552 --band 512,1024. Brushes that are not axis-aligned boxes are drawn by the bounds of
 their face points, which is right for the plan even if it is not the shape. Needs Pillow.
 
 This is how the agent looks at a map without launching the game. It shows layout and placement;
@@ -22,7 +24,7 @@ from collections import Counter
 from PIL import Image, ImageDraw
 
 SKIP_POINT = {"light", "light_spot", "multi_manager", "game_text", "trigger_print", "ambient_generic",
-              "env_sound", "info_node", "path_corner", "multisource", "trigger_relay"}
+              "env_sound", "info_node", "path_corner", "multisource", "trigger_relay", "info_target"}
 
 
 def parse(path):
@@ -71,13 +73,27 @@ def main():
         i = sys.argv.index("--cuts")
         cuts = [float(c) for c in sys.argv[i + 1].split(",")]
         del sys.argv[i:i + 2]
+    band = parse_band(sys.argv)
     src, out = sys.argv[1], sys.argv[2]
-    draw(parse(src), out, cuts)
+    draw(parse(src), out, cuts, band)
 
 
-def draw(ents, out, cuts=(40.0,)):
+def parse_band(argv):
+    """Takes `--band LO,HI` out of argv and returns (LO, HI), or None when it is absent."""
+    if "--band" not in argv:
+        return None
+    i = argv.index("--band")
+    lo, hi = (float(v) for v in argv[i + 1].split(","))
+    del argv[i:i + 2]
+    return (min(lo, hi), max(lo, hi))
+
+
+def draw(ents, out, cuts=(40.0,), band=None, rooms=None):
     """Prints the classname count and writes the plan PNG. greybox.py calls this on a map it has
-    only generated in memory, so a plan exists before any .map is on disk."""
+    only generated in memory, so a plan exists before any .map is on disk. `band` is (LO, HI):
+    draw only the entities between those heights. `rooms` is {name: (x0, y0, z0, x1, y1, z1)},
+    the spec's rooms, each named at its centre when a cut passes through it (greybox.py has
+    them; a .map has forgotten them)."""
     counts = Counter(k.get("classname", "?") for k, _ in ents)
     for name, c in sorted(counts.items(), key=lambda t: (-t[1], t[0])):
         print("%4d  %s" % (c, name))
@@ -131,16 +147,27 @@ def draw(ents, out, cuts=(40.0,)):
         for b in world:
             if b[2] <= cut < b[5] and not is_slab(b):
                 d.rectangle([P(b[0], b[4]), P(b[3], b[1])], fill=col, outline=(90, 90, 90))
+    for name, r in (rooms or {}).items():
+        if not any(r[2] <= cut < r[5] for cut in cuts):
+            continue
+        cx, cy = (r[0] + r[3]) / 2, (r[1] + r[4]) / 2
+        w = d.textlength(name)
+        px, py = P(cx, cy)
+        d.text((px - w / 2, py - 6), name, fill=(60, 60, 60))
     for keys, bs in ents[1:]:
         cls = keys.get("classname", "?")
         if bs:
             bx0 = min(b[0] for b in bs); by0 = min(b[1] for b in bs)
             bx1 = max(b[3] for b in bs); by1 = max(b[4] for b in bs)
+            if band and (max(b[5] for b in bs) < band[0] or min(b[2] for b in bs) > band[1]):
+                continue
             d.rectangle([P(bx0, by1), P(bx1, by0)], outline=(0, 120, 0), width=2)
             d.text(P(bx0, by1 + 14), cls + (" " + keys["targetname"] if "targetname" in keys else ""),
                    fill=(0, 100, 0))
         elif "origin" in keys and cls not in SKIP_POINT:
-            x, y = [float(v) for v in keys["origin"].split()[:2]]
+            x, y, z = [float(v) for v in keys["origin"].split()[:3]]
+            if band and not (band[0] <= z <= band[1]):
+                continue
             px, py = P(x, y)
             d.ellipse([px - 3, py - 3, px + 3, py + 3], fill="red")
             d.text((px + 4, py - 6), cls.replace("item_", "").replace("weapon_", ""), fill=(120, 0, 0))

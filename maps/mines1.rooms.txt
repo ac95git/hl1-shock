@@ -1,0 +1,671 @@
+# mines1 -- the Pit Bottom. The campaign's first map, designed with Andrei on 2026-09-22.
+#
+# The shaft's foot is a worked-out chamber the company built into: a stepped void the cage
+# descends through, three tiers of terrace round its walls, the yard on its floor. The player
+# lands in overalls, is turned back at the drift by security ("suit up first"), finds the dry
+# on the first terrace, takes suit and pick from their own locker, and goes through the
+# decontamination airlock on the floor into the haulage way -- which is shaft1. shaft1's old
+# workings climb back out into this map through the gate on the first terrace marked no entry;
+# then the hoist takes the Heart, the kit is handed in at the dry, and the cage goes up. The
+# ride is map two. This is NOT the game's hub (ROADMAP, "The structure"); it is the mine's.
+# The terraces are the generator's honest version of a salt chamber: the volume widens as it
+# rises, so each tier's rim is a walkable ledge of rock 192 wide with the drop inside it.
+
+map mines1
+message mines1 -- the Pit Bottom
+wall -0TNNL_RCK1
+floor -0OUT_GRVL1
+ceil -0OUT_RK3
+
+brief The bottom of the shaft, and the biggest room the player sees until the facility: a
+  chamber cut when this was a salt mine, 3072 by 2048 and 1536 high, the company's pit
+  bottom built into it on three tiers. The yard on the floor: the rail haulage with cars and
+  a loco running east into the drift, the crusher and the conveyor climbing the north wall to
+  the bin, the processing hall behind a window, the sump and its pump, the lamp room and the
+  tool crib either side of the shaft. The first terrace, 512 up: the dry with the lockers,
+  the workshop, the electrical room, the fan station in the west wall, and the gate to the
+  old workings marked no entry. The second terrace, 1024 up: the foreman's office with its
+  window over the drop, and the canteen. Steel bridges cross the void at both terrace
+  heights. The shaft comes through the roof and the cage rides down in a mesh guide tower
+  the full height of the chamber. Work light in pools, dark rock between, the crystal
+  nowhere yet.
+  Beats, in order. The map starts with the cage still descending: three seconds of rock,
+  then the chamber opens under the player and the cage takes eighteen seconds to reach the
+  floor. Nothing else happens in that time. On the floor, security at the drift door turns
+  the player back until they are suited (the door is on a master the suit sets). The notice
+  wall by the shaft says where the dry is. Up the yard stair to the first terrace, past the
+  no-entry gate, east along the ledge to the dry: the player's own locker stands open with the
+  suit and the pick; the HUD wakes when the suit goes on. Back down to the floor and into
+  the airlock: the inner door opens now, the steam runs, the outer door opens onto the drift,
+  and the drift is shaft1. Two or three Records on the way tell the crew and the missing man.
+  Later, from shaft1's old workings, the player comes out behind the no-entry gate on the
+  first terrace, opens it from that side, goes down to the hoist by the shaft, and the hoist
+  takes the Heart and sends the cage up and back. Up to the dry: the kit is handed in (suit,
+  pick, Shards), and only then does the cage button work. The cage rides up; a trigger at
+  the top ends the map until map two exists.
+  Stand-ins in v1: scientists and Barneys for the crew and security, vanilla sentence groups
+  for their lines; the fan is a box Andrei replaces by hand; all transport is decoration;
+  stock rock, steel, glass and chainlink. Lit with point lights until the emitting-texture
+  pass in J.A.C.K.
+entrance The cage, in the shaft above the chamber's roof, already descending. Facing east.
+exit The same cage, after the hoist has taken the Heart and the kit has been handed in at the
+  dry. The button in the cage rides it up; a trigger at the top of the shaft ends the map with
+  a message until map two exists. And, twice, the level change into shaft1: through the
+  airlock into the haulage way, and back from shaft1's old workings through the gate.
+
+gate suitup hard: the airlock's inner door is on a master the suit sets; security says so
+gate airlock hard: the outer door opens only after the decontamination cycle; story, not a puzzle
+gate oldgate hard: the gate on the first terrace opens only from the old workings' side; seen locked at the start, opened from behind at the end
+gate cage hard: the cage button is dead until the Heart is hoisted and the kit handed in; the story's order, not a puzzle
+
+# ---------------------------------------------------------------------------
+# The chamber. x east, y north, z up. The floor is 0, the first terrace 512, the second 1024,
+# the roof 1536. Each tier is 192 wider than the one below on every side, so its floor slab
+# outside the lower tier's footprint is the terrace. The shaft comes through the roof at the
+# west end and the tube runs up to 2560.
+# ---------------------------------------------------------------------------
+room YARD      -1152  -640    0  1152  640  512
+room TIER1     -1344  -832  512  1344  832 1024
+room TIER2     -1536 -1024 1024  1536 1024 1536
+room SHAFT     -1024  -128 1536  -864  128 2560
+room SKIPSHAFT -1024   132 1536  -864  300 2560
+
+# Off the floor, west: the lamp room and the tool crib either side of the shaft
+room LAMPDOOR  -1184   288    0 -1152  352   96
+room LAMPROOM  -1440   192    0 -1184  448  112
+room CRIBDOOR  -1184  -352    0 -1152 -288   96
+room CRIB      -1440  -448    0 -1184 -192  112
+
+# Off the floor, north: the processing hall behind its window. A rail spur runs in through the
+# wide door: the crystal comes off the cars here, into the hopper, along the belt to the foot
+# of the elevator, and up the duct to the lab on the terrace above, which sits on the same x
+# behind the first terrace's north wall.
+room PROCDOOR    448   640    0   608  672  128
+room PROCWIN     640   640   48   960  672  160
+room PROCESS     384   672    0  1024 1088  224
+room DUCT        848   976  224   944 1072  512 tex=DUCT_WALL03
+room LABDOOR     640   832  512   704  864  608
+room LABWIN1     448   832  552   640  864  640
+room LABWIN2     704   832  552   960  864  640
+room LAB         384   864  512  1024 1280  704
+
+# In the floor, south-west: the sump; and past it, off the south wall, the passage to the
+# magazine, the explosives store behind a locked mesh gate (never opens; seen into)
+room SUMP      -1088  -576 -128  -832 -448    0
+room MAGWAY    -1056  -900    0  -992 -640  112
+room MAGAZINE  -1152 -1152    0  -896 -900  128
+
+# Off the floor, south wall: the niche in the rock for the miners' saint, raised, railed
+room NICHE      -800  -720   32  -704 -640  128
+
+# Off the floor, east wall north of the airlock: the refuge chamber
+room REFDOOR    1152   288    0  1184  352   96
+room REFUGE     1184   224    0  1440  480  112
+
+# Off the floor, south-east: the garage, a fenced bay where the big digging machine stands
+# (placeholder boxes; Andrei builds the machine by hand). Open to the yard across its whole
+# north side, the fence in the opening.
+room GARAGEWAY   640  -672    0  1024 -640  192
+room GARAGE      512 -1088    0  1152 -672  256
+
+# Off the floor, east: the airlock and the drift that is shaft1 (the man-way), and south of
+# it the rail portal with its roller door, never open in play, and the haulage drift behind
+# it with a loco idling (unreachable; the rails go through)
+room DOOR_IN    1152   -96    0  1184   96  160
+room AIRLOCK    1184  -160    0  1568  160  192
+room DOOR_OUT   1568   -96    0  1600   96  160
+room TRANSIT    1600  -128    0  1984  128  176
+room PORTALWAY  1152  -480    0  1184 -224  208
+room HAULAGE    1184  -512    0  1984 -192  208
+
+# Off the first terrace: the old workings' gate (south-west), the dry (south-east), the
+# workshop and the electrical room (east), the fan station (west)
+room OLDGATEWAY -1088  -864  512  -832 -832  632
+room OLDWAY     -1088 -1344  512  -832 -864  632
+room DRYDOOR      704  -864  512   768 -832  608
+room DRY          512 -1376  512  1024 -864  704
+room WORKDOOR    1344   -64  512  1376   64  608
+room WORKSHOP    1376  -320  512  1888  320  704
+room ELECDOOR    1344   448  512  1376  512  608
+room ELECTRICAL  1376   384  512  1632  640  640
+room FANDOOR    -1376   -64  512 -1344   64  608
+room FANROOM    -1888  -256  512 -1376  256  768
+
+# Off the second terrace, north-west: the survey store, the company's locked room with a
+# window, the two who are not miners inside it
+room SURVDOOR    -672  1024 1024  -608 1056 1120
+room SURVWIN     -960  1024 1064  -704 1056 1136
+room SURVEY     -1024  1056 1024  -576 1312 1152
+
+# Off the second terrace, north: the foreman's office with its window, and the canteen
+room OFFICEDOOR  -320  1024 1024  -256 1056 1120
+room OFFWIN      -480  1024 1064  -160 1056 1136
+room OFFICE      -512  1056 1024  -128 1312 1152
+room CANTDOOR     192  1024 1024   256 1056 1120
+room CANTEEN        0  1056 1024   512 1312 1152
+
+# Off the second terrace, north-east, over the lab: the maintenance room, where the
+# elevator's drive head and the hall's pipework come up to be serviced
+room MAINTDOOR    704  1024 1024   768 1056 1120
+room MAINT        544  1056 1024  1024 1312 1152
+
+# Off the first terrace, east of the dry: the toilets
+room TOILDOOR    1024 -1120  512  1056 -1056  608
+room TOILET      1056 -1216  512  1248 -1000  624
+
+# Off the second terrace, west wall: the mouth of the old salt working, bricked up with a
+# gap too narrow to pass, and the dark behind the bricks with a lamp still burning
+room OLDMOUTH   -1600  -128 1024 -1536  128 1152
+room BEHIND     -1888  -128 1024 -1600  128 1152
+
+# ---------------------------------------------------------------------------
+# The cage: a platform placed at the floor that rises 2304 (lip -2288 on a 16-thick door) and
+# STARTS at the top (spawnflag 1) and TOGGLES (spawnflag 32: without it a wait -1 door never
+# answers a second trigger). trigger_auto sends it down three seconds after the map starts;
+# it stays down (wait -1). The button in the tower sends it up with the player, and
+# that button is dead (master ride_ok) until the kit has been handed in. The mesh guide tower
+# keeps the player on it through the open chamber; 96 of clear height at the floor lets them
+# off. The Heart does not ride it: the sample hoist in the hall sends that up its own pipe.
+# Beside the tower, north, the skip: the ore compartment, a mesh cage of its own, closed at
+# the floor so nobody stands under it. The bin on the first terrace feeds it by a chute. It
+# rises 1520 into its own tube through the roof when the player first reaches either terrace
+# stair top (two triggers), stays six seconds, and comes back. The skip is three doors with
+# one name that move as one: the bucket, its rim, and the bail up to the rope; each has the
+# lip that makes its travel 1520 (lip = height - 1520).
+# ---------------------------------------------------------------------------
+door -1024 -128 0 -864 128 16 tex=METAL_BORD07 targetname=cage_plat lip=-2288 speed=128 wait=-1 spawnflags=33
+point trigger_auto -944 0 2400 target=cage_plat delay=3 spawnflags=1
+point info_player_start -944 0 2360 angles="0 0 0"
+brushent func_wall -1028 -128 112 -1024 128 1536 tex={CHAINLINK rendermode=4 renderamt=255 targetname=tower_w
+brushent func_wall  -864 -128 112  -860 128 1536 tex={CHAINLINK rendermode=4 renderamt=255 targetname=tower_e
+brushent func_wall -1028  128 112  -860 132 1536 tex={CHAINLINK rendermode=4 renderamt=255 targetname=tower_n
+brushent func_wall -1028 -132 112  -860 -128 1536 tex={CHAINLINK rendermode=4 renderamt=255 targetname=tower_s
+brushent func_button -1036 -16 24 -1028 16 56 tex=+0BUTTON1 target=cage_plat spawnflags=1 wait=-1 sounds=1 master=ride_ok prompt_title="Cage control" targetname=cage_button
+brushent trigger_once -1024 -128 2200 -864 128 2240 tex=AAATRIGGER target=end_text master=ride_ok targetname=end_trig
+point game_text -944 0 2450 targetname=end_text message="mines1 ends here. The ride up is map two." spawnflags=1 x=-1 y=0.4 holdtime=6 color="255 170 60" effect=0 fadein=0.5 fadeout=1
+point multisource -944 0 300 targetname=ride_ok
+brushent func_wall -1028  128   0  -860 132  112 tex={CHAINLINK rendermode=4 renderamt=255 targetname=skip_s
+brushent func_wall -1028  132   0 -1024 300 1536 tex={CHAINLINK rendermode=4 renderamt=255 targetname=skip_w
+brushent func_wall  -864  132   0  -860 300 1536 tex={CHAINLINK rendermode=4 renderamt=255 targetname=skip_e
+brushent func_wall -1028  300   0  -860 304 1536 tex={CHAINLINK rendermode=4 renderamt=255 targetname=skip_n
+door -984 176 0 -904 256 128 tex=METAL_WALL04 targetname=skip lip=-1392 speed=200 wait=6
+door -992 168 128 -896 264 144 tex=METAL_BORD07 targetname=skip lip=-1504 speed=200 wait=6
+door -948 212 144 -940 220 320 tex=METAL_BORD07 targetname=skip lip=-1344 speed=200 wait=6
+solid -960 300 480 -928 640 512 tex=METAL_BORD07
+brushent trigger_once -560 -700 512 -448 -660 600 tex=AAATRIGGER target=skip targetname=skip_trig1
+brushent trigger_once 448 840 1024 544 880 1100 tex=AAATRIGGER target=skip targetname=skip_trig2
+
+# ---------------------------------------------------------------------------
+# The yard. The sample hoist is in the processing hall (below). The cage does not move for
+# it: the button sends it up at the end. Rails east to the drift with a loco and two cars;
+# the crusher at the foot of the conveyor, which climbs the north wall 1024 long to the bin
+# on the first terrace; the pump over the sump; the stair up the south wall, bottom east,
+# top west by the no-entry gate.
+# ---------------------------------------------------------------------------
+point multisource -1120 224 220 targetname=kit_ok
+
+# The onsetter's hut south of the tower, built from slabs inside the yard: the man who rings
+# the cage, his desk and bell, the door toward the tower, and the tag board on the hut's
+# north face with one tag still hanging (the Record)
+solid -1120 -160 0 -960 -152 112 tex=METAL_WALL04
+solid -1120 -320 0 -960 -312 112 tex=METAL_WALL04
+solid -1120 -320 0 -1112 -160 112 tex=METAL_WALL04
+solid -968 -320 0 -960 -240 112 tex=METAL_WALL04
+solid -1120 -320 112 -960 -160 120 tex=METAL_WALL04
+solid -1104 -304 0 -1040 -240 36 tex=OUT_WD
+solid -1000 -304 40 -984 -288 72 tex=+0~GENERIC85
+point monster_barney -1072 -200 4 angles="0 0 0" targetname=onsetter
+brushent record_brush -1080 -152 40 -1000 -144 120 tex=C1A0_WDSIGN record_id=9 prompt_title="Tag board" targetname=tag_board
+
+# The meal corner north of the tower, where the shift eats in sight of the cage: a long table,
+# two benches, the urn on its stand, two of the crew at it; the first-aid cabinet and the
+# stretcher on the wall beyond it, by the lamp room
+solid -1104 400 0 -944 432 40 tex=OUT_WD
+solid -1104 368 0 -944 384 20 tex=OUT_WD
+solid -1104 448 0 -944 464 20 tex=OUT_WD
+solid -1136 400 0 -1104 432 40 tex=METAL_WALL04
+solid -1128 404 40 -1112 428 72 tex=METAL_BORD07
+point monster_scientist -1024 344 4 angles="0 90 0"
+point monster_scientist -1000 488 4 angles="0 270 0"
+solid -1152 480 60 -1140 544 120 tex=METAL_WALL05B
+solid -1152 560 40 -1144 720 56 tex=OUT_WD
+
+# The niche: the figure, two candles, a low rail across the mouth
+solid -768 -704 32 -736 -680 104 tex=OUT_WD
+solid -792 -700 32 -784 -692 44 tex=OUT_WD
+solid -720 -700 32 -712 -692 44 tex=OUT_WD
+solid -800 -648 32 -704 -640 64 tex=METAL_BORD07
+
+# The magazine: the gate never opens; the crates are seen through it; the sign beside it
+brushent func_wall -1056 -908 0 -992 -900 112 tex={GATE rendermode=4 renderamt=255 targetname=mag_gate
+solid -1120 -1120 0 -1056 -1056 64 tex=BCRATE02
+solid -1056 -1120 0 -992 -1056 64 tex=BCRATE02
+solid -1120 -1056 64 -1056 -992 128 tex=BCRATE03
+solid -992 -1040 0 -928 -976 48 tex=BCRATE04
+solid -1096 -644 40 -1064 -640 104 tex=C1A0_WDSIGN
+
+# The refuge chamber: the heavy door (unnamed on purpose: a named door stops opening on
+# touch), benches, the water tank, the phone, the stretcher and the first-aid cabinet
+door 1152 288 0 1184 352 96 tex=ELEV1_DR speed=60
+solid 1200 240 0 1424 264 20 tex=OUT_WD
+solid 1200 440 0 1424 464 20 tex=OUT_WD
+solid 1376 288 0 1424 400 96 tex=METAL_WALL04
+solid 1432 320 40 1440 352 72 tex=METAL_BORD07
+solid 1200 472 40 1360 480 56 tex=OUT_WD
+solid 1200 464 60 1264 480 104 tex=METAL_WALL05B
+# The main line: from the hut's end of the yard east through the portal into the haulage
+# drift; the working loco and two cars on it. The spur to the hall and the branch to the
+# garage leave it.
+solid -704 -368 0 1984 -352 8 tex=-0OUT_RK4
+solid -704 -288 0 1984 -272 8 tex=-0OUT_RK4
+solid -640 -360 8 -528 -280 88 tex=METAL_WALL04
+solid -512 -344 8 -416 -296 64 tex=-0OUT_RK4
+solid -400 -344 8 -304 -296 64 tex=-0OUT_RK4
+solid 1400 -360 8 1512 -280 88 tex=METAL_WALL04
+point ambient_generic 1456 -320 100 message=ambience/dronemachine1.wav health=5 spawnflags=2
+door 1152 -480 0 1184 -224 208 tex=ELEV2_DR targetname=portal_door speed=20
+# The crusher, and the stockpile bay beside it: three low walls and the pile, fed from the
+# spur by the tipper (craft)
+solid 0 384 0 256 640 224 tex=METAL_WALL04
+solid 272 448 0 288 640 96 tex=METAL_WALL04
+solid 448 448 0 464 640 96 tex=METAL_WALL04
+solid 288 448 0 448 464 96 tex=METAL_WALL04
+stairs 288 464 0 448 624 96 dir=+y tread=32 rise=16 tex=-0OUT_GRVL1
+stairs -1024 576 0 0 640 512 dir=-x tread=32 rise=16 tex=METAL_BORD07
+solid -1088 640 512 -960 832 768 tex=METAL_WALL04
+brushent func_water -1088 -576 -128 -832 -448 -24 tex=!WATER1 skin=-3 WaveHeight=1 targetname=sump_water
+solid -832 -576 0 -768 -480 96 tex=METAL_WALL04
+point ambient_generic -800 -512 80 message=ambience/pumper.wav health=6 spawnflags=4
+stairs -512 -640 0 512 -512 512 dir=-x tread=32 rise=16
+point ambient_generic 0 0 400 message=ambience/industrial2.wav health=4 spawnflags=8
+point monster_scientist -256 -256 4 angles="0 45 0"
+point monster_scientist 640 320 4 angles="0 200 0"
+point monster_barney -768 -160 4 angles="0 90 0"
+
+# The garage: the fence across the opening with the rail gate in it (shut), the branch off
+# the main line running in under the machine, the machine as a track slab, a body and a
+# boom, the battery loco on charge on the rails south of it, the charging rack beside it
+brushent func_wall 640 -660 0 704 -652 192 tex={CHAINLINK rendermode=4 renderamt=255 targetname=garage_fence_w
+brushent func_wall 704 -660 0 832 -652 192 tex={GATE rendermode=4 renderamt=255 targetname=garage_gate
+brushent func_wall 832 -660 0 1024 -652 192 tex={CHAINLINK rendermode=4 renderamt=255 targetname=garage_fence_e
+solid 720 -1080 0 736 -272 8 tex=-0OUT_RK4
+solid 800 -1080 0 816 -272 8 tex=-0OUT_RK4
+solid 616 -1000 0 1048 -760 32 tex=METAL_WALL04
+solid 656 -976 32 1008 -784 176 tex=METAL_WALL04
+solid 800 -784 112 864 -688 208 tex=METAL_WALL04
+solid 712 -1080 8 824 -1016 88 tex=METAL_WALL04
+solid 840 -1080 0 872 -1016 96 tex=METAL_WALL04
+point ambient_generic 832 -880 200 message=ambience/dronemachine1.wav health=3 spawnflags=2
+
+# The lamp room and the crib: a counter each
+solid -1408 400 0 -1216 416 40 tex=OUT_WD
+solid -1408 -416 0 -1216 -400 40 tex=OUT_WD
+point monster_scientist -1300 -300 4 angles="0 90 0"
+
+# The processing hall: the spur off the main line with a loaded car on it, the hopper at its
+# end, the belt east to the sample hoist; two sorting benches, the crew, the window.
+# The sample hoist: a pipe with a window at its foot. The crystal goes into a tube, the tube
+# into the window, the shutter closes and the sample is pushed up the pipe, through the
+# duct, to the lab. The machine's body is the Station (stationtype 3, takes the Heart); the
+# shutter is a door that starts open and closes for eight seconds on use; the push is a
+# steam burst; two seconds later the lab takes over (lab_mm).
+brushent func_wall 640 648 48 960 664 160 tex=GLASS_MED rendermode=2 renderamt=120 targetname=proc_window
+solid 488 -272 0 504 1000 8 tex=-0OUT_RK4
+solid 568 -272 0 584 1000 8 tex=-0OUT_RK4
+# The graded-crystal store in the hall's south-east corner, chainlink, seen through the window
+brushent func_wall 796 672 0 800 760 160 tex={CHAINLINK rendermode=4 renderamt=255 targetname=store_fence_w
+brushent func_wall 796 756 0 1024 760 160 tex={CHAINLINK rendermode=4 renderamt=255 targetname=store_fence_n
+solid 832 680 0 896 744 64 tex=BCRATE05
+solid 912 680 0 976 744 64 tex=BCRATE05
+solid 832 680 64 896 744 128 tex=BCRATE03
+solid 496 720 8 576 816 64 tex=-0OUT_RK4
+solid 460 1000 0 612 1072 96 tex=METAL_WALL04
+solid 612 1016 32 848 1056 48 tex=METAL_BORD07
+brushent func_station 848 976 0 944 1072 112 tex=METAL_WALL04 stationtype=3 target=hoist_mm prompt_title="Sample hoist" targetname=sample_hoist
+door 880 968 40 912 976 88 tex=METAL_WALL05B targetname=hoist_shutter lip=0 speed=40 wait=8 spawnflags=1
+solid 864 992 112 928 1056 512 tex=METAL_BORD07
+point multi_manager 896 940 200 targetname=hoist_mm hoist_shutter=0 hoist_push=1.5 lab_mm=3.5
+point ambient_generic 896 960 100 targetname=hoist_push message=ambience/steamburst1.wav health=8 spawnflags=52
+solid 640 760 0 960 800 40 tex=OUT_WD
+solid 640 880 0 960 920 40 tex=OUT_WD
+point monster_scientist 800 840 4 angles="0 90 0"
+point monster_scientist 800 940 4 angles="0 270 0"
+point ambient_generic 896 1024 300 message=ambience/littlemachine.wav health=4 spawnflags=4
+
+# The lab over the hall, sealed: a steel door that never opens, two windows onto the north
+# ledge to watch through. The pipe comes up through the floor into the lab's own machine,
+# whose shutter faces the windows; the pipe leaves its top, runs north along the ceiling,
+# and goes up through the rock into the maintenance room's drive head on the tier above and
+# on through its ceiling: all the way to the upper facility. The scripted sequence, from
+# lab_mm: the sample arrives with a burst, the technician walks to the machine and presses,
+# the shutter closes, the push, the text, and the hand-in unlocks.
+brushent func_wall 640 840 512 704 856 608 tex=ELEV1_DR targetname=lab_door
+brushent func_wall 448 840 552 640 856 640 tex=GLASS_MED rendermode=2 renderamt=120 targetname=lab_window_w
+brushent func_wall 704 840 552 960 856 640 tex=GLASS_MED rendermode=2 renderamt=120 targetname=lab_window_e
+solid 848 976 512 944 1072 616 tex=METAL_WALL04
+door 880 968 552 912 976 600 tex=METAL_WALL05B targetname=lab_shutter lip=0 speed=40 wait=8 spawnflags=1
+solid 880 1008 616 912 1040 704 tex=METAL_BORD07
+solid 880 1008 672 912 1216 704 tex=METAL_BORD07
+solid 880 1184 704 912 1216 1024 tex=METAL_BORD07
+solid 448 1120 512 704 1160 552 tex=OUT_WD
+solid 448 1216 512 960 1256 552 tex=OUT_WD
+brushent func_wall 704 1088 552 720 1216 640 tex=GLASS_MED rendermode=2 renderamt=120 targetname=lab_glass
+point monster_scientist 600 1080 516 angles="0 0 0"
+point monster_scientist 800 1160 516 angles="0 270 0" targetname=lab_tech
+point scripted_sequence 896 936 516 targetname=lab_tech_go m_iszEntity=lab_tech m_iszPlay=push_button m_iszIdle=console m_flRadius=512 m_flRepeat=0 m_fMoveTo=1 spawnflags=32
+point multi_manager 896 940 680 targetname=lab_mm lab_arrive=0 lab_tech_go=0.5 lab_shutter=5 lab_push=6.5 hoist_text=7.5 kit_ok=7.5
+point ambient_generic 896 1000 660 targetname=lab_arrive message=ambience/steamburst1.wav health=6 spawnflags=52
+point ambient_generic 896 1000 650 targetname=lab_push message=ambience/steamburst1.wav health=8 spawnflags=52
+point game_text 896 940 690 targetname=hoist_text message="The sample goes up. Shift's over: hand in your kit at the dry." spawnflags=1 x=-1 y=0.7 holdtime=6 color="255 170 60" effect=0 fadein=0.3 fadeout=1
+point ambient_generic 704 1072 680 message=ambience/labdrone2.wav health=3 spawnflags=2
+
+# ---------------------------------------------------------------------------
+# The airlock: security at the inner door, which is on the suit's master and buzzes without
+# it; the cycle inside (steam, text, then the outer door); the drift beyond, and the level
+# change into shaft1 at its east end. shaft1's west end mirrors TRANSIT about lm_in.
+# ---------------------------------------------------------------------------
+point multisource 1120 0 200 targetname=suit_on
+door 1152 -96 0 1184 96 160 tex=METAL_WALL05B master=suit_on locked_sound=2
+point monster_barney 1104 -176 4 angles="0 90 0" targetname=air_guard
+brushent trigger_once 1056 -128 0 1088 128 176 tex=AAATRIGGER target=guard_line targetname=guard_trig
+point scripted_sentence 1104 -176 100 targetname=guard_line entity=air_guard sentence=BA_WAIT duration=3 attenuation=1
+brushent trigger_once 1216 -160 0 1248 160 192 tex=AAATRIGGER target=decon_mm targetname=decon_trig
+point multi_manager 1376 40 180 targetname=decon_mm decon_text=0 steam=0.5 steam_off=5.5 air_out=6
+point game_text 1376 -40 180 targetname=decon_text message="Decontamination. Stand clear of the doors." spawnflags=1 x=-1 y=0.6 holdtime=5 color="255 170 60" effect=0 fadein=0.3 fadeout=1
+point ambient_generic 1376 0 150 targetname=steam message=ambience/steamjet1.wav health=8 spawnflags=20
+point trigger_relay 1376 80 180 targetname=steam_off target=steam
+door 1568 -96 0 1600 96 160 tex=METAL_WALL05B targetname=air_out speed=60
+brushent trigger_autosave 1600 -128 0 1632 128 176 tex=AAATRIGGER targetname=save_transit
+point info_landmark 1792 0 16 targetname=lm_in
+brushent trigger_changelevel 1920 -128 0 1984 128 176 tex=AAATRIGGER map=shaft1 landmark=lm_in targetname=cl_in
+
+# ---------------------------------------------------------------------------
+# The first terrace. Rails along the rim with a gap at the stair top and at the bridge; the
+# bridge across the void; the no-entry gate and the way behind it, with the second level
+# change (shaft1's old workings end mirrors OLDWAY about lm_old); the dry; the workshop; the
+# electrical room; the fan station.
+# ---------------------------------------------------------------------------
+brushent func_wall -1152  640 512  1152  644 552 tex={CHAINLINK rendermode=4 renderamt=255 targetname=t1_rail_n
+brushent func_wall -1152 -644 512  -544 -640 552 tex={CHAINLINK rendermode=4 renderamt=255 targetname=t1_rail_s_w
+brushent func_wall  -448 -644 512  1152 -640 552 tex={CHAINLINK rendermode=4 renderamt=255 targetname=t1_rail_s_e
+brushent func_wall -1152 -640 512 -1148  280 552 tex={CHAINLINK rendermode=4 renderamt=255 targetname=t1_rail_w_s
+brushent func_wall -1152  360 512 -1148  640 552 tex={CHAINLINK rendermode=4 renderamt=255 targetname=t1_rail_w_n
+brushent func_wall  1148 -640 512  1152  280 552 tex={CHAINLINK rendermode=4 renderamt=255 targetname=t1_rail_e_s
+brushent func_wall  1148  360 512  1152  512 552 tex={CHAINLINK rendermode=4 renderamt=255 targetname=t1_rail_e_n
+
+# The goods lifts: one from the yard's east end to the first terrace, one from the east ledge
+# to the second; each a platform that toggles on a call button at either landing, and lands
+# in a gap in the rim rail. The stairs stay. The call buttons sit at the platform's edge: on
+# the wall beside it where there is a wall, and on a post on the ledge where there is not,
+# so the rider can press from the platform too. The engine drops a press while a door is
+# moving; the lift answers again the moment it stops. Spawnflag 32 (Toggle) is what makes a
+# wait -1 door come back on the next trigger; without it the lift went up and stayed.
+door 1024 512 0 1152 640 16 tex=METAL_BORD07 targetname=lift1 lip=-480 speed=100 wait=-1 spawnflags=32
+brushent func_button 1144 560 40 1152 592 72 tex=+0BUTTON1 target=lift1 spawnflags=1 wait=1 sounds=1 prompt_title="Goods lift" targetname=lift1_call_lo
+brushent func_button 1160 560 512 1176 592 560 tex=+0BUTTON1 target=lift1 spawnflags=1 wait=1 sounds=1 prompt_title="Goods lift" targetname=lift1_call_hi
+door 1216 704 512 1344 832 528 tex=METAL_BORD07 targetname=lift2 lip=-480 speed=100 wait=-1 spawnflags=32
+brushent func_button 1336 760 552 1344 792 584 tex=+0BUTTON1 target=lift2 spawnflags=1 wait=1 sounds=1 prompt_title="Goods lift" targetname=lift2_call_lo
+brushent func_button 1352 760 1024 1368 792 1072 tex=+0BUTTON1 target=lift2 spawnflags=1 wait=1 sounds=1 prompt_title="Goods lift" targetname=lift2_call_hi
+solid -1152 288 496 1152 352 512 tex=METAL_BORD07
+brushent func_wall -1152 288 512 1152 292 552 tex={CHAINLINK rendermode=4 renderamt=255 targetname=t1_bridge_rail_s
+brushent func_wall -1152 348 512 1152 352 552 tex={CHAINLINK rendermode=4 renderamt=255 targetname=t1_bridge_rail_n
+stairs -512 704 512 512 832 1024 dir=+x tread=32 rise=16 tex=METAL_BORD07
+point monster_barney -1200 -700 516 angles="0 0 0"
+
+# The old workings' gate: seen locked from the terrace, opened by the button behind it
+door -1088 -864 512 -832 -832 632 tex={GATE targetname=old_gate rendermode=4 renderamt=255 speed=60
+brushent func_button -840 -912 536 -832 -880 568 tex=+0BUTTON1 target=old_gate spawnflags=1 wait=-1 sounds=1 prompt_title="Gallery gate" targetname=gate_button
+brushent trigger_autosave -1088 -960 512 -832 -928 632 tex=AAATRIGGER targetname=save_oldway
+point info_landmark -960 -1200 528 targetname=lm_old
+brushent trigger_changelevel -1088 -1344 512 -832 -1312 632 tex=AAATRIGGER map=shaft1 landmark=lm_old targetname=cl_old
+
+# The dry: the locker row on the south wall with the player's own locker open in the middle,
+# the suit and the pick inside; a bench; the guard who sends the player on break at the end;
+# the hand-in button on the locker face (master kit_ok) that strips the kit and frees the cage.
+solid 512 -1376 512 704 -1344 704 tex=METAL_WALL05B
+solid 800 -1376 512 1024 -1344 704 tex=METAL_WALL05B
+pickup item_suit 752 -1360 516 target=suit_on
+pickup weapon_pickaxe 764 -1372 516
+solid 576 -1120 512 960 -1088 532 tex=OUT_WD
+point monster_barney 900 -1000 516 angles="0 180 0" targetname=dry_guard
+brushent func_button 720 -1348 544 752 -1344 576 tex=+0BUTTON1 target=handin_mm spawnflags=1 wait=-1 sounds=1 master=kit_ok prompt_title="Hand in kit" targetname=handin_button
+point multi_manager 736 -1300 650 targetname=handin_mm strip_kit=0 handin_text=0 ride_ok=0.5 dry_guard_line=1
+point player_weaponstrip 736 -1300 640 targetname=strip_kit spawnflags=1
+point game_text 736 -1300 630 targetname=handin_text message="Kit handed in. The cage is yours." spawnflags=1 x=-1 y=0.7 holdtime=5 color="255 170 60" effect=0 fadein=0.3 fadeout=1
+point scripted_sentence 900 -1000 600 targetname=dry_guard_line entity=dry_guard sentence=BA_POK duration=3 attenuation=1
+brushent trigger_once 704 -896 512 768 -864 608 tex=AAATRIGGER target=dry_guard_greet master=kit_ok targetname=dry_greet_trig
+point scripted_sentence 900 -1000 610 targetname=dry_guard_greet entity=dry_guard sentence=BA_WAIT duration=3 attenuation=1
+point record 600 -1100 536 record_id=10 angles="0 90 0" prompt_title="Note on the bench" targetname=bench_note
+
+# The toilets off the dry: three stalls, a sink
+solid 1072 -1216 512 1080 -1120 600 tex=METAL_WALL05B
+solid 1128 -1216 512 1136 -1120 600 tex=METAL_WALL05B
+solid 1184 -1216 512 1192 -1120 600 tex=METAL_WALL05B
+solid 1080 -1216 512 1128 -1200 552 tex=METAL_WALL04
+solid 1136 -1216 512 1184 -1200 552 tex=METAL_WALL04
+solid 1192 -1216 512 1240 -1200 552 tex=METAL_WALL04
+solid 1200 -1040 512 1248 -1008 552 tex=METAL_WALL04
+
+# The workshop: a bench, a car up on blocks
+solid 1440 -288 512 1856 -240 552 tex=OUT_WD
+solid 1600 128 528 1696 176 584 tex=-0OUT_RK4
+solid 1616 112 512 1680 192 528 tex=OUT_WD
+point monster_scientist 1700 -180 516 angles="0 90 0"
+point ambient_generic 1632 0 650 message=ambience/industrial3.wav health=3 spawnflags=2
+
+# The plant room: the electrical panels on the back wall, the compressor beside them, and
+# the air main leaving along the terrace floor, down the yard's east wall and along it to
+# the drift door; the hum, and the compressor over it
+solid 1600 400 512 1632 624 640 tex=METAL_WALL04
+solid 1400 400 512 1520 480 600 tex=METAL_WALL04
+solid 1152 464 512 1400 480 528 tex=METAL_BORD07
+solid 1136 464 216 1152 480 528 tex=METAL_BORD07
+solid 1136 96 200 1152 480 216 tex=METAL_BORD07
+point ambient_generic 1504 512 600 message=ambience/labdrone1.wav health=5 spawnflags=2
+point ambient_generic 1460 440 590 message=ambience/dronemachine3.wav health=7 spawnflags=4
+
+# The fan station: the fan is a box in the back wall until Andrei builds one; heard from the
+# whole first terrace
+solid -1888 -128 544 -1856 128 736 tex=GRATE_RUST
+point ambient_generic -1632 0 700 message=ambience/rotormachine.wav health=6 spawnflags=8
+
+# The smokers, on the terrace beside the fan door where the draught takes the smoke: a
+# bench, the sand bucket, the no-smoking sign above, two of the crew
+solid -1336 96 512 -1304 224 532 tex=OUT_WD
+solid -1336 240 512 -1312 264 540 tex=METAL_BORD07
+solid -1344 96 600 -1340 224 640 tex=C1A0_WDSIGN
+point monster_scientist -1280 144 516 angles="0 0 0"
+point monster_barney -1288 272 516 angles="0 315 0"
+
+# ---------------------------------------------------------------------------
+# The second terrace. Rails with a gap at the stair top and at the bridge; the bridge; the
+# office with its window and the security desk's notebook; the canteen.
+# ---------------------------------------------------------------------------
+brushent func_wall -1344  832 1024   448  836 1064 tex={CHAINLINK rendermode=4 renderamt=255 targetname=t2_rail_n_w
+brushent func_wall   544  832 1024  1344  836 1064 tex={CHAINLINK rendermode=4 renderamt=255 targetname=t2_rail_n_e
+brushent func_wall -1344 -836 1024  1344 -832 1064 tex={CHAINLINK rendermode=4 renderamt=255 targetname=t2_rail_s
+brushent func_wall -1344 -832 1024 -1340 -360 1064 tex={CHAINLINK rendermode=4 renderamt=255 targetname=t2_rail_w_s
+brushent func_wall -1344 -280 1024 -1340  832 1064 tex={CHAINLINK rendermode=4 renderamt=255 targetname=t2_rail_w_n
+brushent func_wall  1340 -832 1024  1344 -360 1064 tex={CHAINLINK rendermode=4 renderamt=255 targetname=t2_rail_e_s
+brushent func_wall  1340 -280 1024  1344  704 1064 tex={CHAINLINK rendermode=4 renderamt=255 targetname=t2_rail_e_n
+
+# The second tier's rim: the water tanks either side of the old mouth on the west, with the
+# main between them; the dispatcher's cabin over the drop on the south rim, built from slabs
+# with its window north; the rope inspection ladder and catwalk to the tower's top on the
+# west, caged and gated at the foot (unreachable); pallets and drums along the east rim
+solid -1520 200 1024 -1392 328 1280 tex=METAL_WALL04
+solid -1520 -328 1024 -1392 -200 1280 tex=METAL_WALL04
+solid -1536 -200 1024 -1520 200 1040 tex=METAL_BORD07
+solid -256 -1016 1024 0 -1008 1136 tex=METAL_WALL04
+solid -256 -1016 1024 -248 -848 1136 tex=METAL_WALL04
+solid -8 -1016 1024 0 -928 1136 tex=METAL_WALL04
+solid -256 -848 1024 0 -840 1064 tex=METAL_WALL04
+brushent func_wall -256 -848 1064 0 -840 1136 tex=GLASS_MED rendermode=2 renderamt=120 targetname=cabin_window
+solid -256 -1016 1136 0 -848 1144 tex=METAL_WALL04
+solid -232 -900 1024 -40 -868 1056 tex=OUT_WD
+point monster_barney -136 -940 1028 angles="0 90 0" targetname=dispatcher
+brushent func_wall -1532 -32 1024 -1528 32 1520 tex={LADDER1 rendermode=4 renderamt=255 targetname=inspect_ladder
+solid -1536 -48 1520 -1028 48 1536 tex=METAL_BORD07
+brushent func_wall -1528 -48 1024 -1480 48 1100 tex={GATE rendermode=4 renderamt=255 targetname=inspect_gate
+solid 1408 200 1024 1472 264 1088 tex=BCRATE02
+solid 1408 280 1024 1472 344 1088 tex=BCRATE02
+solid 1408 280 1088 1472 344 1152 tex=BCRATE03
+solid 1408 400 1024 1456 448 1096 tex=METAL_WALL04
+solid 1464 400 1024 1512 448 1096 tex=METAL_WALL04
+solid -1344 -352 1008 1344 -288 1024 tex=METAL_BORD07
+brushent func_wall -1344 -352 1024 1344 -348 1064 tex={CHAINLINK rendermode=4 renderamt=255 targetname=t2_bridge_rail_s
+brushent func_wall -1344 -292 1024 1344 -288 1064 tex={CHAINLINK rendermode=4 renderamt=255 targetname=t2_bridge_rail_n
+
+# The old salt working's mouth in the west wall: bricked up but for a gap of 24 at the north
+# edge, the date and the sign beside it (craft), and behind the bricks a lamp still burning
+solid -1600 -128 1024 -1536 104 1152 tex=GENERIC_114
+solid -1536 -200 1064 -1532 -136 1128 tex=C1A0_WDSIGN
+light -1744 0 1120 255 200 140 60
+
+# The survey store: the steel door never opens; the window shows the plan table, the
+# stencilled crates and the two who are not miners
+brushent func_wall -672 1032 1024 -608 1048 1120 tex=ELEV1_DR targetname=survey_door
+brushent func_wall -960 1032 1064 -704 1048 1136 tex=GLASS_MED rendermode=2 renderamt=120 targetname=survey_window
+solid -928 1120 1024 -736 1216 1056 tex=OUT_WD
+solid -1008 1248 1024 -944 1312 1088 tex=C1A1_CRATE2
+solid -944 1248 1024 -880 1312 1088 tex=C1A1_CRATE2
+solid -1008 1248 1088 -944 1312 1152 tex=C1A1_CRATE2
+point monster_scientist -800 1100 1028 angles="0 90 0"
+point monster_scientist -864 1240 1028 angles="0 270 0"
+
+# The office: the window over the drop, the desk, security at it, the notebook
+brushent func_wall -480 1032 1064 -160 1048 1136 tex=GLASS_MED rendermode=2 renderamt=120 targetname=office_window
+solid -480 1200 1024 -320 1264 1056 tex=OUT_WD
+point monster_barney -400 1280 1028 angles="0 270 0" targetname=office_guard
+point record -400 1232 1060 record_id=11 angles="0 270 0" prompt_title="Notebook" targetname=foreman_book
+
+# The maintenance room: the sample pipe comes up through the floor into the drive head and
+# leaves its top through the ceiling, on to the upper facility; a pipe run along the back
+# wall, a bench, one fitter
+solid 864 1152 1024 960 1248 1120 tex=METAL_WALL04
+solid 880 1184 1120 912 1216 1200 tex=METAL_BORD07
+solid 560 1288 1056 1008 1312 1088 tex=METAL_BORD07
+solid 560 1096 1024 736 1136 1064 tex=OUT_WD
+point monster_scientist 800 1200 1028 angles="0 180 0"
+point ambient_generic 912 1200 1100 message=ambience/dronemachine2.wav health=3 spawnflags=2
+
+# The canteen: two tables, two of the crew
+solid 64 1120 1024 224 1184 1056 tex=OUT_WD
+solid 288 1120 1024 448 1184 1056 tex=OUT_WD
+point monster_scientist 144 1240 1028 angles="0 270 0"
+point monster_scientist 368 1240 1028 angles="0 270 0"
+
+# ---------------------------------------------------------------------------
+# Lights. Work light in pools: the yard from high lamps, the terraces from lamps on the rock,
+# the rooms one each; the tube dim; the airlock white.
+# ---------------------------------------------------------------------------
+light -768 -320 440 255 220 170 300
+light -256 -320 440 255 220 170 300
+light  256 -320 440 255 220 170 300
+light  768 -320 440 255 220 170 300
+light -768  320 440 255 220 170 300
+light -256  320 440 255 220 170 300
+light  256  320 440 255 220 170 300
+light  768  320 440 255 220 170 300
+light -1100 0 200 255 230 200 150
+light -1000 -720 960 255 220 170 220
+light  -400 -720 960 255 220 170 220
+light   400 -720 960 255 220 170 220
+light  1000 -720 960 255 220 170 220
+light -1000  720 960 255 220 170 220
+light   400  720 960 255 220 170 220
+light  1000  720 960 255 220 170 220
+light  1240    0 960 255 220 170 220
+light -1240    0 960 255 220 170 220
+light -1000 -920 1480 255 220 170 220
+light  1000 -920 1480 255 220 170 220
+light -1000  920 1480 255 220 170 220
+light  1000  920 1480 255 220 170 220
+light  1440    0 1480 255 220 170 220
+light -1440    0 1480 255 220 170 220
+light -1312 320 100 255 230 200 120
+light -1312 -320 100 255 230 200 120
+light  704 880 200 255 240 220 200
+light  704 1072 680 255 240 220 200
+light -960 -512 -40 255 220 170 80
+light -1040 -240 100 255 230 200 100
+light -1024 416 200 255 230 200 160
+light -788 -696 50 255 140 40 40
+light -716 -696 50 255 140 40 40
+light -1024 -1024 110 255 200 160 80
+light -1024 -770 100 255 220 170 80
+light 1312 352 100 255 255 255 140
+light -1260 200 700 255 220 170 100
+light -800 1184 1140 255 230 200 140
+light  832 -880 220 255 220 170 160
+light  1376 0 180 255 255 255 200
+light  1792 0 150 255 220 170 160
+light  -960 -1100 600 255 220 170 100
+light   768 -1120 680 255 230 200 200
+light  1632 0 680 255 230 200 180
+light  1504 512 620 255 230 200 140
+light -1632 0 740 255 220 170 140
+light  -320 1184 1140 255 230 200 160
+light   256 1184 1140 255 230 200 180
+light   784 1184 1140 255 230 200 160
+light  1152 -1108 600 255 230 200 120
+light  1584 -352 180 255 220 170 140
+light  -128 -928 1120 255 230 200 140
+light   368 544 200 255 220 170 120
+light  -944 0 1700 255 220 170 100
+light  -944 0 2100 255 220 170 100
+light  -944 0 2500 255 220 170 100
+
+# ---------------------------------------------------------------------------
+# Nodes, the floor and the terraces
+# ---------------------------------------------------------------------------
+node -944 0 16
+node -768 -256 16
+node -768 256 16
+node -384 -256 16
+node -384 256 16
+node 0 -256 16
+node 0 256 16
+node 384 -256 16
+node 384 256 16
+node 768 -256 16
+node 768 256 16
+node 1088 0 16
+node 1376 0 16
+node 1792 0 16
+node -1312 320 16
+node -1312 -320 16
+node 704 880 16
+node 448 -576 16
+node -1040 -200 16
+node -1024 320 16
+node -1024 -770 16
+node 1312 352 16
+node 1088 576 16
+node 1280 768 528
+node 1440 768 1040
+node -128 -928 1040
+node -1260 200 528
+node -1000 -736 528
+node -600 -736 528
+node -200 -736 528
+node 200 -736 528
+node 736 -736 528
+node 1240 -400 528
+node 1240 400 528
+node -1240 -400 528
+node -1240 400 528
+node 0 320 528
+node -600 736 528
+node 768 -1120 528
+node 1632 0 528
+node -1632 0 528
+node -960 -1100 528
+node -1000 -928 1040
+node 1000 -928 1040
+node -1000 928 1040
+node 1000 928 1040
+node -320 1184 1040
+node 256 1184 1040
+node 784 1184 1040
+node 0 -320 1040

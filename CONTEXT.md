@@ -402,3 +402,14 @@ player's body who walks, always, and swings a pick; everyone's enemy and his own
 Built 2026-09-19; [docs/MADDENED.md](docs/MADDENED.md) is the record. **The cult** is the organised form,
 with a leader, and will share his class.
 _Avoid_: zombie, infected, thrall, cultist for a maddened miner (the cult chose; the maddened broke)
+
+### The mine
+
+**Pit Bottom**:
+The company's underground station at the foot of the shaft, built into a worked-out chamber on three tiers:
+the yard on the floor, two terraces above it, the cage descending through the void in a mesh tower. It is
+`mines1`, the campaign's first map (designed 2026-09-22), and the cold open passes through it twice: in
+at the start through the decontamination airlock into `shaft1`, and out at the end through the gate the old
+workings climb up to. It is **not the hub** of the game's structure (ROADMAP, "The structure"), which is
+somewhere else and later.
+_Avoid_: hub, station (the Stations are the mining machines), chamber (the crystal's) for this place

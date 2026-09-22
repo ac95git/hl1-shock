@@ -78,6 +78,22 @@ notice_access_west
 	Maintenance override for this corridor is *4471*. Do not write it down.
 }
 
+notice_pit_bottom_board
+{
+	id        9
+	category  Notice
+	title     Tag Board -- Pit Bottom
+	source    Tag board, the onsetter's hut by the shaft
+	body
+	Every man takes his tag going down and hangs it back going up. The
+	onsetter counts the hooks before the cage rides. Suits are worn past the
+	drift door; kit is in the dry, first terrace, east side. Decontamination
+	is on the door and runs on its own.
+
+	One tag is still on its hook, three days old, with a strip of tape over
+	the name.
+}
+
 notice_pump_room
 {
 	id        3
@@ -111,6 +127,20 @@ log_night_shift
 	and it has not been touched since I got here.
 }
 
+log_dry_bench_note
+{
+	id        10
+	category  Log
+	title     Left on the Bench
+	source    Folded note, the dry
+	body
+	If you find this before I am back, I went up the north drift to look at
+	the old face again. Do not tell the foreman. Something in the wall there
+	hums when the lamps are off and I want to know if it is the fan.
+
+	Back by the end of shift.
+}
+
 log_after_the_alarm
 {
 	id        5
@@ -123,6 +153,21 @@ log_after_the_alarm
 	whose.
 
 	I asked what we tell the families and he said that was being handled.
+}
+
+log_foreman_office
+{
+	id        11
+	category  Log
+	title     Foreman's Book, Day 3
+	source    Notebook, the office over the pit bottom
+	body
+	Third day the man is missing and the company still says no search party
+	past the junction. They sent two people down instead who are not miners
+	and asked for the survey of the deepest drift, not the old one.
+
+	Told the crew the blast at the face goes ahead tomorrow as planned. It
+	does. That order came with the survey request.
 }
 
 // ---------------------------------------------------------------------
