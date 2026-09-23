@@ -527,6 +527,24 @@ alert, which is the moment it is spotted and stops hiding; heavier claw impacts 
 A player hears the growl in a dark room and knows what it means before they see anything, and nothing the
 Panthereye makes is mistaken for another monster.
 
+## The Panthereye's Wall Pounce — no pose for the wall
+
+### Scope
+The Wall Pounce ([ROADMAP.md](ROADMAP.md#the-menace-rework--grilled-2026-09-23-not-built)), grilled
+2026-09-23. Its first build plays plain `crouch_to_jump` all the way: at the wall, through the cling and
+off it again.
+
+### What's wrong with it
+- The model has no pose for a body against a wall; the cling is the same crouch as a ground leap.
+- The ideal is a `crouch_to_jump` at the wall, a lean against it on controller 1 (`ZR 0 50` on
+  `Bip01 Spine`, still to be read in HLMV), and a second `crouch_to_jump` off it. The turn toward the
+  player on the wall probably needs a second controller on another bone for horizontal rotation — a QC
+  edit to Valve's `Diablo` source and a recompile, which is Andrei's.
+
+### Done when
+The cling reads as a body braced sideways on a wall and turning to the player, not a crouch hanging in the
+air.
+
 ## The Crystal Shard — a glass gib in a glow shell, a glass clink, no Grid Icon
 
 ### Scope

@@ -844,7 +844,7 @@ Xen hell** (2026-09-17), and the roster gained the human side the same day:
 
 | Entry | Kind | Starts from | Shape |
 | --- | --- | --- | --- |
-| [Panthereye](#panthereye) | Enemy | Half-Life's cut model and sounds; AI written new | **v1 built** 2026-09-18 and played; the menace direction is next |
+| [Panthereye](#panthereye) | Enemy | Half-Life's cut model and sounds; AI written new | **v1 built** 2026-09-18 and played; the menace rework grilled 2026-09-23, not built |
 | [Melee alien grunt](#melee-alien-grunt) | Enemy | `CAGrunt`, bare arm | **v1 built** 2026-09-18, verified |
 | [Shelled headcrab](#shelled-headcrab) | Enemy | `CHeadCrab`, recoloured | **Shaped** |
 | [Friendly alien slave](#friendly-alien-slave) | Non-combatant | The slave model on `CTalkMonster` | **Shaped** |
@@ -894,44 +894,78 @@ map; the alpha has no numbers.
   from further out, a shorter `panther_leap_windup`, and may skip the stalk entirely and fight head-on
   from the start ("may" is how it was put; the likely shape rather than a decision).
 - **The glowing-eye light** at the head, so it can be seen in the dark (below).
-- **Freeze when watched** — proposed 2026-09-18 and wanted by Andrei, deferred until the spotted test is
-  proven in play: while it is on the player's screen but not yet spotted it stops dead, a Weeping Angel,
-  and moves again when they look away. More menacing than the crawl; a second behaviour to tune on top of
-  the test, which is why it waits.
+- ~~Freeze when watched~~ — **dropped 2026-09-23** in the menace grill: Circling is the answer to being
+  Glimpsed, and a Panthereye frozen in place cannot also be circling.
 
-**Menace — Andrei's direction after playing v1, 2026-09-18. Idea, not grilled.** v1 plays "super solid";
-the animations read goofy, and the Panthereye has to become menacing:
+#### The menace rework — grilled 2026-09-23, not built
 
-- **A slower crawl.** Playing `crawl_on_belly` slower, with the movement slowed to match, instantly reads
-  as a wild animal. Cheap: `MoveExecute` already multiplies the sequence's ground speed by
-  `pev->framerate`, so one rate on the crawl slows the feet and the body together and nothing slides. The
-  risk is a Panthereye too slow to ever arrive; the running phase off screen is what pays for it.
-- **It looks for the back.** The stalk's goal is the player's rear, not the player.
-- **Circling when glimpsed.** Seen in the corner of the eye (on screen, not yet spotted), it closes by
-  circling rather than coming straight, the way canines circle prey, probing for an opening. This overlaps
-  cover to cover and freeze-when-watched above — three answers to "what does it do when it might be seen",
-  to be reconciled into one before any is built.
-- **The head fixed on the player.** While stalking with a line of sight, the head (and upper body) stays
-  locked on the player as the body circles. **The model already has the means**: two bone controllers on
-  `Bip01 Spine` (bone 16), yaw ±90° and 0–50° on the second axis, which HL: Extended presumably used to aim
-  the upper body. They turn everything above the spine, and the front legs hang off the neck (bones 21 and
-  28 parent to 19), so aiming with them may twist the forelegs off the ground — to be seen in HLMV before
-  it is designed around. A controller on the neck or head alone is a QC edit and a recompile, since
-  Valve's source is in the SDK (below).
+Andrei's direction after playing v1 (2026-09-18): the animations read goofy, and the Panthereye has to
+become menacing. Grilled 2026-09-23 in twelve questions. Valve's source (`Monster Models/Diablo/diablo.qc`,
+[HL_SDK.md](HL_SDK.md)) has two controllers, `$controller 0 "Bip01 Spine" YR 90 -90` and
+`$controller 1 "Bip01 Spine" ZR 0 50`. Both turn everything above the spine, and the front legs hang off
+the neck (bones 21 and 28 parent to 19).
 
-**The two controllers as the menace's means — Andrei, 2026-09-18. Idea.** Valve's source for the model is
-in the SDK (`Monster Models/Diablo/diablo.qc`, [HL_SDK.md](HL_SDK.md)) and confirms both:
-`$controller 0 "Bip01 Spine" YR 90 -90` and `$controller 1 "Bip01 Spine" ZR 0 50`. Andrei's reading is
-that the first turns the upper body and the second is a rotation. His plan for each:
+**Words.** The Panthereye's one-way switch is now **Revealed**, not "spotted", which is the readout state
+pointing the other way (`m_bSpotted` becomes `m_bRevealed`). On screen but not yet Revealed is **Glimpsed**.
+The movement is **Circling**, and the pounce by way of a wall is the **Wall Pounce** (CONTEXT.md).
 
-- **Controller 0 carries the circle-strafe stalk.** The body circles and the upper body stays turned on
-  the player. This is the "head fixed on the player" bullet above, with its foreleg risk still to be seen
-  in HLMV.
-- **Controller 1 for something like a wall jump**: the body rotates toward a wall, pushes off it and comes
-  at the player from an angle they were not watching. "Insane" if it works. It is a leap with a bounce: the
-  headcrab-style leap it already has, a trace for a wall in the leap's path, and a second velocity on the
-  touch. What the ZR 0–50 axis actually does to the pose has to be seen in HLMV before it is designed
-  around.
+**Circling, in both modes.** One movement with two sets of numbers, and it replaces the straight crawl as
+the answer to "what does it do when it might be seen". **Freeze-when-watched is dropped**: a Panthereye
+frozen in place cannot also be circling. Cover to cover stays its own later slice.
+
+- **Stalking.** Off screen it runs, as in v1: that is what keeps it from being too slow ever to arrive.
+  Glimpsed, it **spirals toward the player's back**: each waypoint a little further round toward their rear
+  and a little closer in. Turning to follow it moves the back, so it keeps sliding round the edge of the
+  screen; looking straight at it Reveals it within the dwell, so the dance is the player's to end. In the
+  rear arc and off screen it drops the spiral and closes straight in to the claws. The inward pull matters
+  for the controller too: a true tangent puts the player at exactly 90°, controller 0's limit.
+- **The stalking gait is the crawl, slowed.** `crawl_on_belly` at `panther_crawl_rate` (0.6 to start, about
+  26 u/s). `MoveExecute` multiplies ground speed by `pev->framerate`, so the feet and body slow together.
+- **Combat.** Revealed, it runs to pounce range and circles tight and upright at run speed for a random
+  time between `panther_circle_min` and `panther_circle_max`, then pounces. The ring's direction is random
+  per engagement and reverses when blocked.
+- **Blocked.** A spiral waypoint that fails `CheckLocalMove` falls back to v1's straight crawl for that
+  step. Circling needs no nodes; `topmap` has none.
+- *Rejected:* circling only in the stalk (the combat rush would stay as it is) or only in combat (the
+  stalk would stay goofy, the original complaint). A pounce triggered by the player's aim drifting off it is
+  **parked, not rejected**: it only works once the Panthereye is fast enough that aiming can't hold it off
+  at a distance.
+
+**Controller 0 turns the upper body toward the player while it circles**: clamped at ±90°, at a capped turn
+rate, and released during the claws, the leap and flinches so they play untwisted. **HLMV first**: if a
+60–90° twist on `crawl_on_belly` or `run` wrecks the forelegs, it is dropped and it circles facing its
+travel direction, with nothing to re-decide. The head only follows the shoulders; fixing the head itself
+needs a controller on the head bone (v2).
+
+**The Wall Pounce.** When the circling timer runs out, with chance `panther_wall_chance` (0.5) it pounces
+by way of a wall instead of straight, so the leap arrives from a direction the player wasn't covering.
+Combat only, so it never pounces unRevealed still holds.
+
+- **A usable wall.** Traces sideways (both perpendiculars to the line to the player, and ±30° off each) out
+  to `panther_wall_reach` (200 u). The hit counts if the surface is near vertical, a second trace at head
+  height also hits (tall enough, not a crate), the contact point has a line to the player's eyes, and the
+  rebound comes in at least 45° off the direct approach. None qualifies: the plain pounce.
+- **Leap, cling, rebound.** It leaps at the wall, clings for `panther_wall_cling` (0.25 s: velocity zeroed,
+  gravity held, yaw snapped to face the player), then leaps at the player's eyes; damage is `LeapTouch` as
+  today. The cling is the beat that lets the player see where it will come from, and the slot the ideal
+  version's second crouch drops into. **The cling is not interruptible** in this build.
+- **The first build's pose is plain `crouch_to_jump`**, to prove the trajectory is fun before a modelling
+  session is spent on it. *Rejected:* a Wall Pounce every time a wall qualifies (learned in two fights), and
+  once per encounter (a Panthereye that runs out of tricks works against the menace).
+
+**Build order.** (1) Andrei's HLMV check: controller 0 at 60–90° on `crawl_on_belly` and `run`, and
+controller 1 across 0–50 to see what the axis does. (2) The code, one slice each: the rename, the stalking
+spiral and the slowed crawl, combat Circling, the upper-body turn, the Wall Pounce.
+
+**v2, recorded so it isn't re-grilled:**
+
+- **The ideal Wall Pounce**: `crouch_to_jump` at the wall, a controller-1 lean against it, a second
+  `crouch_to_jump` off it into the pounce. Probably a second controller on another bone for the horizontal
+  turn, a QC edit and recompile (Andrei's). The wall-kick pose is in [ART_DEBT.md](ART_DEBT.md).
+- **Knocking it off the wall** by hurting it during the cling. Needs the Panthereye tilted back to upright
+  as it falls.
+- **Head fixation**: a new controller on the head bone.
+- **The aim-triggered pounce**, once it is fast enough.
 
 **Kin to the Gargantua — Andrei, 2026-09-18. Idea, not grilled.** The Panthereye reads as the Gargantua's
 little cousin: the same skin texture, the same red eye. Proposed to make the kinship mechanical:

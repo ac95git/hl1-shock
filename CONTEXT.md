@@ -347,10 +347,30 @@ to follow. The Panthereye's since 2026-09-18; the assassin moves to it with its 
 _Avoid_: hunter profile, apex, elite — and Trained, which is the soldiers' Profile
 
 **Stalk**:
-What a Panthereye does with an enemy that has not seen it: close in, running where the player cannot see
-it and crawling where they might, growling low. It ends for good when the player sees it, hurts it, or it
-strikes. The monster side of stealth, where the player is the one being hunted.
+What a Panthereye does with an enemy it has not been Revealed to: close in, running where the player
+cannot see it and Circling where they might, growling low. It ends for good when it is Revealed. The
+monster side of stealth, where the player is the one being hunted.
 _Avoid_: hunt (the post-aggro chase), sneak, prowl, ambush (a Stealth node)
+
+**Revealed**:
+The Panthereye's one-way switch from the Stalk to combat: the player has looked at it (within the cone,
+held for the dwell), hurt it, or it has struck. It points from the player to the monster — the reverse of
+Spotted — and never goes back. Settled 2026-09-23.
+_Avoid_: spotted (the readout state, pointing the other way), detected, seen, sighted
+
+**Glimpsed**:
+A Panthereye on the player's screen but not yet Revealed. What starts it Circling.
+_Avoid_: peripheral, noticed (a readout state)
+
+**Circling**:
+How a Panthereye moves around the player: while it Stalks and is Glimpsed, a slow crawling spiral toward
+their back; once Revealed, a tight run around them before it pounces.
+_Avoid_: orbit, strafe, flank
+
+**Wall Pounce**:
+The Panthereye's pounce by way of a wall: it leaps at the wall, clings a moment, and rebounds at the player
+from an angle they were not covering. An attack, not a way of moving.
+_Avoid_: wall jump, bounce
 
 **Backstab**:
 A melee hit landed in a monster's rear arc. Purely a matter of where the attacker stands — whether the
