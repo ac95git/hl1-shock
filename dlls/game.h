@@ -98,6 +98,7 @@ extern cvar_t panther_stalk_crawl_dist;
 extern cvar_t panther_growl_pitch;
 extern cvar_t panther_growl_volume;
 extern cvar_t panther_growl_interval;
+extern cvar_t panther_growl_attn;
 extern cvar_t panther_leap_min;
 extern cvar_t panther_leap_max;
 extern cvar_t panther_leap_speed;

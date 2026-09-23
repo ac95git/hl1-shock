@@ -642,6 +642,7 @@ cvar_t panther_stalk_crawl_dist = {"panther_stalk_crawl_dist", "512"};
 cvar_t panther_growl_pitch = {"panther_growl_pitch", "75"};
 cvar_t panther_growl_volume = {"panther_growl_volume", "0.5"};
 cvar_t panther_growl_interval = {"panther_growl_interval", "3"};
+cvar_t panther_growl_attn = {"panther_growl_attn", "2"}; // ATTN_IDLE: silent past about 500 u; ATTN_NORM is 0.8
 cvar_t panther_leap_min = {"panther_leap_min", "150"};
 cvar_t panther_leap_max = {"panther_leap_max", "450"};
 cvar_t panther_leap_speed = {"panther_leap_speed", "900"};
@@ -1114,6 +1115,7 @@ void GameDLLInit()
 	CVAR_REGISTER(&panther_growl_pitch);
 	CVAR_REGISTER(&panther_growl_volume);
 	CVAR_REGISTER(&panther_growl_interval);
+	CVAR_REGISTER(&panther_growl_attn);
 	CVAR_REGISTER(&panther_leap_min);
 	CVAR_REGISTER(&panther_leap_max);
 	CVAR_REGISTER(&panther_leap_speed);

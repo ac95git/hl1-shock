@@ -634,7 +634,7 @@ void CPanthereye::PrescheduleThink()
 		if (flNow >= m_flNextGrowl)
 		{
 			EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, PANTHER_GROWL_SOUND,
-				V_max(0.0f, V_min(1.0f, panther_growl_volume.value)), ATTN_IDLE, 0,
+				V_max(0.0f, V_min(1.0f, panther_growl_volume.value)), V_max(0.0f, V_min(4.0f, panther_growl_attn.value)), 0,
 				(int)V_max(1.0f, V_min(255.0f, panther_growl_pitch.value)));
 
 			m_flNextGrowl = flNow + V_max(0.5f, panther_growl_interval.value) + RANDOM_FLOAT(0.0f, 2.0f);
@@ -1582,7 +1582,9 @@ void CPanthereye::DebugReport(CBasePlayer* pPlayer, float flAngle, bool bLine, b
 
 	const float flTimer = m_flCircleUntil != 0 ? V_max(0.0f, m_flCircleUntil - gpGlobals->time) : -1.0f;
 
-	char szReport[320];
+	// A user message carries at most 192 bytes, and one over it drops the
+	// client: the centre print is sized to fit and cut short if it does not.
+	char szReport[180];
 	snprintf(szReport, sizeof(szReport),
 		"panthereye %d  %s  %s  %s\nangle %.0f / %.0f  line %s  screen %s\ndwell %.2f / %.2f  dist %.0f  susp %.2f\n"
 		"dir %+d  timer %.1f  turn %.0f  wall %s\n",
@@ -1592,4 +1594,18 @@ void CPanthereye::DebugReport(CBasePlayer* pPlayer, float flAngle, bool bLine, b
 		m_iCircleDir, flTimer, m_flTurn, pWallNames[(int)m_Wall]);
 
 	ClientPrint(pPlayer->pev, HUD_PRINTCENTER, szReport);
+
+	// The animation line, on its own HUD text channel below the centre print.
+	char szAnim[128];
+	snprintf(szAnim, sizeof(szAnim), "seq %d%s  act %d -> %d  yaw %.0f off, speed %.0f  %s",
+		pev->sequence, m_fSequenceFinished ? " (done)" : "", (int)m_Activity, (int)m_IdealActivity,
+		FlYawDiff(), pev->yaw_speed, FBitSet(pev->flags, FL_ONGROUND) ? "ground" : "air");
+
+	hudtextparms_t params = {};
+	params.x = -1;
+	params.y = 0.72f;
+	params.r1 = params.g1 = params.b1 = params.a1 = 255;
+	params.holdTime = 0.35f;
+	params.channel = 3;
+	UTIL_HudMessage(pPlayer, params, szAnim);
 }
