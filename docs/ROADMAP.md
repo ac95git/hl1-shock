@@ -1714,6 +1714,16 @@ answers MADDENED.md's "spawnflag or a class of its own".
   fact, as the glowing shard is); whether it comes off the head, which the geometry of Ivan's hair decides;
   and whether it is modelled by Andrei or taken from an existing model (the SDK and Decay folders first,
   [HL_SDK.md](HL_SDK.md)).
+- **A crystal trinket the player wears, to pass among cultists — Andrei, 2026-09-23. Idea.** The worn
+  crystal is the cult's mark, so wearing one is a disguise. It runs into a rejection above: a true neutral
+  faction was turned down because relationships are a static class table and neutral-until-provoked
+  exists only as Barney's hack. The way round it is perception, not relationships: while the trinket is
+  worn, cultists' Suspicion of the player fills slower or only at close range, through the same
+  Concealment and Profile terms as everything else ([PERCEPTION.md](PERCEPTION.md)); once one notices,
+  he is as hostile as ever. To settle: what breaks the disguise (drawn weapon, running, a body found, a
+  kill witnessed, standing too close too long), whether the maddened are fooled too or only the organised
+  cult, where it is worn (a Module Slot on the Status doll, or an inventory item), where it is found (off
+  a cultist, which the Crystal Shard drop already half-builds), and whether it shows on the player at all.
 - **How the axes combine.** Head shape × helmet × skin colour × crystal is many bodies from few parts;
   GoldSrc packs every bodygroup into `pev->body`, so which combinations a mapper sets and which are rolled
   at spawn is part of the same question.
