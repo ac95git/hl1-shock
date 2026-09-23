@@ -1140,10 +1140,11 @@ static constexpr float k_BossShotTime = 24.0f / 15.0f;
 static constexpr int k_BossOverchargeBolts = 8; // exactly ISLAVE_MAX_BEAMS: the shot clears the channel's beams first
 
 // Stand-ins, all stock, each in its own timbre (docs/ART_DEBT.md, "The alien
-// slave boss -- sounds"): the Nihilanth's own charge for the Overcharge, since
-// the power is his; a short rise for the volley; a crack for a Binding.
-static const char* const k_BossSoundOvercharge = "x/x_teleattack1.wav";
-static const char* const k_BossSoundVolley = "debris/beamstart7.wav";
+// slave boss -- sounds"), Andrei's picks after the first play: the tripmine's
+// arming whine for the Overcharge, a Nihilanth ball attack for the volley, a
+// crack for a Binding.
+static const char* const k_BossSoundOvercharge = "weapons/mine_charge.wav";
+static const char* const k_BossSoundVolley = "x/x_ballatack1.wav";
 static const char* const k_BossSoundBinding = "buttons/spark6.wav";
 
 static const Vector k_BossGreen(96, 255, 96);

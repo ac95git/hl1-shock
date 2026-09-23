@@ -1181,14 +1181,14 @@ The three cues the boss's fight is read by, each asked for in its own timbre (An
 Overcharge's charge, the volley's charge, and a Binding breaking. `k_BossSound*` in `dlls/islave.cpp`.
 
 ### Current stand-ins
-- **Overcharge charge**: `x/x_teleattack1.wav`, the Nihilanth's teleport-ball charge, since the power is his.
-- **Volley charge**: `debris/beamstart7.wav`, the Nihilanth's short rise.
+- **Overcharge charge**: `weapons/mine_charge.wav`, the tripmine's arming whine (Andrei's pick, 2026-09-23; first `x/x_teleattack1.wav`).
+- **Volley charge**: `x/ballatack1.wav`, a Nihilanth ball attack (Andrei's pick, 2026-09-23; first `debris/beamstart7.wav`).
 - **A Binding breaking**: `buttons/spark6.wav` pitched down to 70.
 - The Ward breaking reuses `debris/zap1.wav` at 60.
 
 ### What's wrong with them
-All four are someone else's: two are the Nihilanth's own voice, which a player who reaches him will
-recognise and misread backwards, and the Binding is a spark from a button, not metal giving way.
+All four are someone else's: the volley's is the Nihilanth's own voice, which a player who reaches him will
+recognise and misread backwards, the Overcharge's is the tripmine's, and the Binding is a spark from a button, not metal giving way.
 
 ### What to look for
 From FL Studio into `E:\CustomAssets\sounds\src\`: a long rising charge that tells the player *when* over
