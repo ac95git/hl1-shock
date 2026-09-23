@@ -1583,6 +1583,9 @@ colour's tint (`hud_pulse_tint`) for that one event.
 
 #### The Barrier — settled 2026-09-23
 
+**Built the same day, not verified in game**: `CBarrier` in `dlls/bmodels.cpp`, `func_barrier` in the FGD.
+No map places one yet.
+
 The fight is taught before it. **Barriers** are brush entities of the Shield's own tech, mine safety equipment
 on a power source, so they stand for as long as they are powered. The teaching scene is a slave zapping the
 player through one, and Staggering himself instead.

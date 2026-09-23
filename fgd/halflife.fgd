@@ -1539,11 +1539,19 @@
 	_minlight(string) : "Minimum light level"
 ]
 
-@SolidClass base(func_wall) = func_wall_toggle : "Toggleable geometry" 
+@SolidClass base(func_wall) = func_wall_toggle : "Toggleable geometry"
 [
 	spawnflags(flags) =
 	[
 		1 : "Starts Invisible" : 0
+	]
+]
+
+@SolidClass base(func_wall) = func_barrier : "Barrier: powered safety field. Blocks everything; sends an alien slave's beam back at him. Fire it to cut or restore the power. Drawn additive unless Render Mode is set"
+[
+	spawnflags(flags) =
+	[
+		1 : "Starts Off" : 0
 	]
 ]
 

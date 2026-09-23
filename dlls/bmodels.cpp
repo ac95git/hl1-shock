@@ -139,6 +139,106 @@ void CFuncWallToggle::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYP
 }
 
 
+// =================== FUNC_BARRIER ==========================================
+//
+// A Barrier (CONTEXT.md): the mine's safety field, the Shield's own tech on a
+// power source.  func_wall_toggle's on and off, so a button, a breaker or any
+// trigger cuts or restores the power, and "Starts Off" lets a map power one up.
+// While on it blocks everything, both ways, and takes no damage -- and an alien
+// slave's beam that reaches it goes back to the slave who fired it, with a
+// Stagger.  Back to the shooter rather than anywhere else because a Barrier has
+// no crosshair (docs/adr/0016).  It is how the fight with the slave boss is
+// taught before it (docs/ROADMAP.md, "The Barrier").
+//
+// Drawn additive unless the mapper says otherwise; the texture is Andrei's to
+// paint and a stock one stands in (docs/ART_DEBT.md, "The Barrier -- texture").
+
+bool SlaveBeamFrom(entvars_t* pevInflictor, int bitsDamageType); // islave.cpp
+void SlaveStagger(CBaseEntity* pEntity);                          // islave.cpp
+
+class CBarrier : public CFuncWallToggle
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+	void TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir, TraceResult* ptr, int bitsDamageType) override;
+	bool TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, float flDamage, int bitsDamageType) override { return false; }
+
+private:
+	int m_iBeamSprite = 0; // precache index, reset on every load by Precache
+};
+
+LINK_ENTITY_TO_CLASS(func_barrier, CBarrier);
+
+void CBarrier::Precache()
+{
+	m_iBeamSprite = PRECACHE_MODEL("sprites/lgtning.spr");
+	PRECACHE_SOUND("weapons/electro6.wav");
+}
+
+void CBarrier::Spawn()
+{
+	Precache();
+
+	if (pev->rendermode == kRenderNormal)
+	{
+		pev->rendermode = kRenderTransAdd;
+		if (pev->renderamt == 0)
+			pev->renderamt = 180;
+	}
+
+	CFuncWallToggle::Spawn();
+
+	// Takes damage in the sense that traces hand it their blows -- the slave's
+	// ZapBeam only calls TraceAttack on something with takedamage set -- and in
+	// no other: TakeDamage refuses everything.
+	pev->takedamage = DAMAGE_YES;
+}
+
+void CBarrier::TraceAttack(entvars_t* pevAttacker, float flDamage, Vector vecDir, TraceResult* ptr, int bitsDamageType)
+{
+	// Everything else just stops here.  Not added to the multidamage either,
+	// so nothing reaches TakeDamage to be refused.
+	if (!IsOn() || !SlaveBeamFrom(pevAttacker, bitsDamageType))
+		return;
+
+	CBaseEntity* pSlave = CBaseEntity::Instance(pevAttacker);
+	if (!pSlave)
+		return;
+
+	const Vector vecFrom = ptr->vecEndPos;
+	const Vector vecTo = pSlave->Center();
+
+	// The slave's own bolt colour, going the other way.
+	MESSAGE_BEGIN(MSG_PVS, SVC_TEMPENTITY, vecFrom);
+	WRITE_BYTE(TE_BEAMPOINTS);
+	WRITE_COORD(vecFrom.x);
+	WRITE_COORD(vecFrom.y);
+	WRITE_COORD(vecFrom.z);
+	WRITE_COORD(vecTo.x);
+	WRITE_COORD(vecTo.y);
+	WRITE_COORD(vecTo.z);
+	WRITE_SHORT(m_iBeamSprite);
+	WRITE_BYTE(0);   // startframe
+	WRITE_BYTE(10);  // framerate
+	WRITE_BYTE(2);   // life, in tenths
+	WRITE_BYTE(40);  // width
+	WRITE_BYTE(20);  // noise
+	WRITE_BYTE(180); // r
+	WRITE_BYTE(255); // g
+	WRITE_BYTE(96);  // b
+	WRITE_BYTE(255); // brightness
+	WRITE_BYTE(0);   // speed
+	MESSAGE_END();
+
+	UTIL_EmitAmbientSound(ENT(pev), vecFrom, "weapons/electro6.wav", 0.8, ATTN_NORM, 0, RANDOM_LONG(90, 110));
+
+	// A Stagger only.  Whether a returned beam should also hurt is open
+	// (docs/ROADMAP.md); the teaching scene needs only the flinch.
+	SlaveStagger(pSlave);
+}
+
+
 #define SF_CONVEYOR_VISUAL 0x0001
 #define SF_CONVEYOR_NOTSOLID 0x0002
 

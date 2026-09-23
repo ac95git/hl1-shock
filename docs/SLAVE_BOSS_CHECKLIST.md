@@ -37,3 +37,19 @@ A slave it hits is Staggered. `PulseDischarge` (16) retired; `pulse_discharge_me
 | 2.4 | Pulse a zombie's swipe, a headcrab's leap, a grunt's burst | Negated, and **no** Discharge beam, no green flash | |
 | 2.5 | A save where you held Pulse Discharge | The node is gone from the tree and the point is back | |
 | 2.6 | Pulse a slave's claw | Negated, no Discharge (a claw is not a beam) | |
+
+## Slice 3 — the Barrier
+
+`func_barrier` (`dlls/bmodels.cpp`), in the FGD and synced to `top_mod.fgd`. **No map places one**, so the
+test needs one built: a brush tied to `func_barrier` in `topmap` or a practice map, a slave on the far
+side, and a button targeting the Barrier's name. Any stock texture will do for now.
+
+| # | Test | Expect | Verdict |
+| --- | --- | --- | --- |
+| 3.1 | Look at it | Drawn additive (glowing see-through) without touching Render Mode | |
+| 3.2 | Walk into it; shoot through it; throw a grenade at it | Blocks you and the bullets; the grenade bounces; nothing breaks it | |
+| 3.3 | Stand behind it while the slave zaps you | His bolt stops at the Barrier, a green beam goes back into him, and he flinches. You take nothing | |
+| 3.4 | Press the button, then again | Power off: gone and passable. Power on: back and solid | |
+| 3.5 | "Starts Off" flag | Absent until the button is pressed | |
+| 3.6 | A grunt shooting at you through it | The bullets stop; nothing comes back | |
+| 3.7 | Save and load with it on, and with it off | Loads in the same state | |
