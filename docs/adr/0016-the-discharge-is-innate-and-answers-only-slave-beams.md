@@ -5,7 +5,7 @@ Date: 2026-09-23
 ## Status
 
 Accepted in the grill of the alien slave boss (ROADMAP.md, "The alien slave boss"). **Built the same
-day, not verified in game** (`TryNegate` in `dlls/player_pulse.cpp`; `SlaveBeamFrom`, `SlaveStagger` and
+day, and verified in game that evening through the boss** (`TryNegate` in `dlls/player_pulse.cpp`; `SlaveBeamFrom`, `SlaveStagger` and
 `CISlave::Stagger` in `dlls/islave.cpp`). Amends
 [ADR-0006](0006-the-discharge-vents-at-the-crosshair.md): the Discharge still vents at the crosshair and is
 still `DMG_ENERGYBEAM`; what changes is who has it and what sets it off.

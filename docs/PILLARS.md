@@ -206,7 +206,7 @@ node is a blank pad. Vanilla maps place no pickup, so the Pulse exists there onl
   Recharge and chimes.
 - `CBasePlayer::Spawn()` / `Save` / `Restore` — reset on spawn, `FIELD_TIME` timers across saves.
 
-**Since 2026-09-23 (built, not verified in game): the Discharge is innate, and answers slave beams only**
+**Since 2026-09-23 (built and verified in game): the Discharge is innate, and answers slave beams only**
 ([ADR-0016](adr/0016-the-discharge-is-innate-and-answers-only-slave-beams.md)). A Shield that negates an
 alien slave's zap (`DMG_SHOCK` with a slave as inflictor, `SlaveBeamFrom` in `dlls/islave.cpp`) vents it
 at the crosshair, for every player with the Pulse, and flashes the screen green (`UTIL_ScreenFade`). Every
@@ -232,7 +232,7 @@ deflect. The player therefore can never be Ready while a Shield is still standin
 coexist and the "window always runs its full duration" invariant holds. Granting it at deflect time was
 considered and rejected for exactly that reason.
 
-**The window is one second** (2026-09-23; built, not verified in game). `pulse_window` is 1.0 s for everyone and no Skill extends it: Pulse Window (12) is inert until a Skill-gated parry window is designed, and `pulse_window_bonus` is gone. The window ends in the same second a hold raises the Defense Matrix. **The tail is removed** with it (`pulse_tail_scale` too): it filled 0.25-1.0 s at half damage after a window that deflected nothing, and the window now fills that second. Its record is in [ROADMAP](ROADMAP.md#the-pulses-tail--settled-2026-09-17-built-2026-09-18-overnight-visual-open), the decision in [The Pulse's timing](ROADMAP.md#the-pulses-timing--settled-2026-09-23-one-second).
+**The window is one second** (2026-09-23; built and verified in game). `pulse_window` is 1.0 s for everyone and no Skill extends it: Pulse Window (12) is inert until a Skill-gated parry window is designed, and `pulse_window_bonus` is gone. The window ends in the same second a hold raises the Defense Matrix. **The tail is removed** with it (`pulse_tail_scale` too): it filled 0.25-1.0 s at half damage after a window that deflected nothing, and the window now fills that second. Its record is in [ROADMAP](ROADMAP.md#the-pulses-tail--settled-2026-09-17-built-2026-09-18-overnight-visual-open), the decision in [The Pulse's timing](ROADMAP.md#the-pulses-timing--settled-2026-09-23-one-second).
 
 **Tuning cvars** registered in `dlls/game.cpp` — the two for the rings' look deleted 2026-09-20, and
 `pulse_window_bonus` and `pulse_tail_scale` with the 1 s window on 2026-09-23 — plus `hud_pulse_tint`, which is client-side and `FCVAR_ARCHIVE` because it is a comfort setting

@@ -1,7 +1,7 @@
 # The slave boss build — test rows
 
 Built 2026-09-23 in one session, straight after the boss's grill, one commit per slice, **none verified in
-game**. Andrei asked for it that way: *"do it all in separate commits, I'll test everything and report
+game** at the time; verified that evening, see the end. Andrei asked for it that way: *"do it all in separate commits, I'll test everything and report
 back."* Each slice has its rows here; write the verdict beside each. The design is
 [ROADMAP.md, "The alien slave boss"](ROADMAP.md#the-alien-slave-boss) and
 [ADR-0016](adr/0016-the-discharge-is-innate-and-answers-only-slave-beams.md).
@@ -77,3 +77,16 @@ live in one class and did not split cleanly. On `topmap`: `sv_cheats 1`, `give i
 | 4.13 | Low health | He never runs for cover | |
 | 4.14 | The broken Bindings | Keep sparking every couple of seconds, at the wrists and the neck. Are the positions right? | |
 | 4.15 | Save and load mid-fight | Ward, Bindings and health come back as they were; an attack in hand restarts | |
+
+## Verdicts — 2026-09-23, the same evening
+
+Andrei: *"the slave boss does exactly what is expected. the barrier works. the pulse is 1 second."*
+
+- **Slice 1, the Pulse at one second**: verified.
+- **Slice 2, the innate Discharge**: verified through the boss, whose whole fight runs on it. The rows on
+  ordinary slaves and on non-beam deflects (2.3–2.6) were not reported one by one.
+- **Slice 3, the Barrier**: verified.
+- **Slice 4, the boss**, with the slowed wind-up and the five seconds free: verified.
+
+Not reported, so still open: the Shield's sweep against the new window (1.7), and whether the broken
+Bindings spark in the right places (4.14).

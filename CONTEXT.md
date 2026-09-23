@@ -249,7 +249,7 @@ A brush entity of the Shield's own tech, the mine's safety equipment on a power 
 standing for as long as it is powered, turned off or on by anything that fires it. It blocks everything
 both ways and sends an alien slave's beam back to the slave who fired it, with a Stagger. Not the Shield:
 a Barrier is fixed, powered and part of the level, the Shield is the player's own and lasts a Pulse Window.
-Built 2026-09-23, not verified in game.
+Built and verified in game 2026-09-23.
 _Avoid_: shield, screen, forcefield, ward (the boss's)
 
 **Rebound**:
@@ -432,7 +432,7 @@ _Avoid_: ghost slave (the classname says slave once already), pet, minion, summo
 
 ### The alien slave boss
 
-Settled 2026-09-23 and built the same day (`monster_alien_slave_boss`, not verified in game);
+Settled 2026-09-23 and built the same day (`monster_alien_slave_boss`, verified in game);
 [ROADMAP.md](docs/ROADMAP.md#the-alien-slave-boss) is the design.
 
 **Ward**:

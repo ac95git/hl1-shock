@@ -1506,7 +1506,7 @@ he is gone, and the alien Module drops from his body. **Freeing him is the fight
 is a route a player has to pursue.** The vocabulary (Ward, Overcharge, Bindings, Stagger, Barrier) is in
 [CONTEXT.md](../CONTEXT.md).
 
-#### Built 2026-09-23, not verified in game
+#### Built and verified in game 2026-09-23
 
 `CISlaveBoss`, `monster_alien_slave_boss`, at the end of `dlls/islave.cpp`; in the FGD. `slaveboss_spawn`
 (cheats) puts one 256 units ahead on any map. The test rows are
@@ -1609,7 +1609,7 @@ the slave kneeling, was proposed and dropped: one lethal route, and it is a figh
 
 #### What the Pulse gives up for him — settled 2026-09-23, built the same day
 
-**The Discharge becomes innate to the Pulse, and fires only off slave beams.** Built, not verified in game;
+**The Discharge becomes innate to the Pulse, and fires only off slave beams.** Built and verified in game (through the boss);
 see [SLAVE_BOSS_CHECKLIST.md](SLAVE_BOSS_CHECKLIST.md). Recorded as
 [ADR-0016](adr/0016-the-discharge-is-innate-and-answers-only-slave-beams.md), which amends ADR-0006. Every
 player with the Pulse vents a deflected slave zap to the crosshair; every other negated hit — melee, the
@@ -1620,7 +1620,7 @@ colour's tint (`hud_pulse_tint`) for that one event.
 
 #### The Barrier — settled 2026-09-23
 
-**Built the same day, not verified in game**: `CBarrier` in `dlls/bmodels.cpp`, `func_barrier` in the FGD.
+**Built and verified in game the same day**: `CBarrier` in `dlls/bmodels.cpp`, `func_barrier` in the FGD.
 No map places one yet.
 
 The fight is taught before it. **Barriers** are brush entities of the Shield's own tech, mine safety equipment
@@ -2409,7 +2409,7 @@ average reduction at today's `pulse_recharge_miss` of 3 s. A cushion, not a buil
 ### The Pulse's timing — settled 2026-09-23: one second
 
 **Settled by Andrei on 2026-09-23**, coming out of the slave boss's grill: *"make the pulse last 1 second,
-period."* Built the same day, not verified in game.
+period."* Built and verified in game the same day.
 
 - **`pulse_window` is 1.0 s**, for everyone, and nothing extends it. It is the same second a hold takes to
   raise the Defense Matrix, so window and Matrix are one motion.
