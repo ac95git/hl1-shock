@@ -6,7 +6,8 @@
 // Half-Life's original protagonist as the 25th anniversary shipped him, on
 // the player's rig in a suit of his own washed to work blue, built by
 // maddened_build.py (E:\CustomAssets\scripts) with the pick as a bodygroup
-// on the hand.  One body, no variants.  He walks unaware and runs when he
+// on the hand.  One body; his hair and beard come in five colours as skin
+// families, picked at random when he spawns.  He walks unaware and runs when he
 // chases.  He is everyone's enemy (CLASS_MADDENED: the player's, the
 // soldiers', Xen's) and his own kind's ally, which the cult will share.  The
 // default Perception Profile for now, no Disturbances, backstabbable: three
@@ -38,6 +39,10 @@
 // aiming-up files (blend XR -45 45).  The base AI never touches the blend
 // byte, and 0 would be the floor, so it is held at centre: he swings level.
 #define MADDENED_BLEND_LEVEL 127
+
+// Skin families, in the QC's order: brown (Ivan's own), black, grey, ginger,
+// blond.  HAIR_COLOURS in maddened_build.py.
+#define MADDENED_HAIR_COLOURS 5
 
 // The mutter: every 4-8 s while nothing is happening.
 #define MADDENED_MUTTER_MIN 4.0f
@@ -146,7 +151,7 @@ void CMaddened::Spawn()
 	m_afCapability = bits_CAP_DOORS_GROUP;
 
 	pev->body = MADDENED_BODY_PICK;
-	pev->skin = 0;
+	pev->skin = RANDOM_LONG(0, MADDENED_HAIR_COLOURS - 1);
 	pev->blending[0] = MADDENED_BLEND_LEVEL;
 
 	m_flNextMutter = gpGlobals->time + RANDOM_FLOAT(1.0f, MADDENED_MUTTER_MAX);
