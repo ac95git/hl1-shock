@@ -648,6 +648,26 @@ cvar_t panther_leap_speed = {"panther_leap_speed", "900"};
 cvar_t panther_leap_cooldown = {"panther_leap_cooldown", "3"};
 cvar_t panther_leap_windup = {"panther_leap_windup", "0.55"};
 cvar_t panther_debug = {"panther_debug", "0"};
+// The menace rework, grilled 2026-09-23 (the "spotted" above is now called
+// Revealed; the cvar names stay).  The crawl plays at panther_crawl_rate, the
+// feet slowed with it.  Circling holds the heading panther_circle_angle off
+// the line to the player -- a spiral, tied to the upper body's clamp so the
+// shoulders stay on them -- toward their back while Glimpsed, and in combat
+// for between circle_min and circle_max seconds before the pounce.  The
+// upper body (controller 0) turns up to panther_turn_clamp degrees at
+// panther_turn_rate a second; panther_turn_sign -1 if it turns away.  The
+// Wall Pounce is taken with panther_wall_chance when a wall is within
+// panther_wall_reach, clinging panther_wall_cling seconds before the rebound.
+cvar_t panther_crawl_rate = {"panther_crawl_rate", "0.6"};
+cvar_t panther_circle_angle = {"panther_circle_angle", "60"};
+cvar_t panther_circle_min = {"panther_circle_min", "1.5"};
+cvar_t panther_circle_max = {"panther_circle_max", "3"};
+cvar_t panther_turn_clamp = {"panther_turn_clamp", "60"};
+cvar_t panther_turn_rate = {"panther_turn_rate", "180"};
+cvar_t panther_turn_sign = {"panther_turn_sign", "1"};
+cvar_t panther_wall_chance = {"panther_wall_chance", "0.5"};
+cvar_t panther_wall_reach = {"panther_wall_reach", "200"};
+cvar_t panther_wall_cling = {"panther_wall_cling", "0.25"};
 // The wave the right click throws (CKatanaWave, dlls/katana.cpp): an unseen
 // projectile whose look is the crescent the client draws (EV_KatanaArc).
 // Energy damage to everything on its path, each once: katana_wave_damage
@@ -1076,6 +1096,16 @@ void GameDLLInit()
 	CVAR_REGISTER(&panther_leap_cooldown);
 	CVAR_REGISTER(&panther_leap_windup);
 	CVAR_REGISTER(&panther_debug);
+	CVAR_REGISTER(&panther_crawl_rate);
+	CVAR_REGISTER(&panther_circle_angle);
+	CVAR_REGISTER(&panther_circle_min);
+	CVAR_REGISTER(&panther_circle_max);
+	CVAR_REGISTER(&panther_turn_clamp);
+	CVAR_REGISTER(&panther_turn_rate);
+	CVAR_REGISTER(&panther_turn_sign);
+	CVAR_REGISTER(&panther_wall_chance);
+	CVAR_REGISTER(&panther_wall_reach);
+	CVAR_REGISTER(&panther_wall_cling);
 	CVAR_REGISTER(&katana_wave_damage);
 	CVAR_REGISTER(&katana_wave_range);
 	CVAR_REGISTER(&katana_wave_full_range);
