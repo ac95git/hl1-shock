@@ -15,6 +15,7 @@
 #include "UserMessages.h"
 #include "game.h"
 #include "suit_defs.h"
+#include "shake.h"
 #include <algorithm>
 
 //=========================================================
@@ -50,10 +51,15 @@ static constexpr int k_PulseNegatedDamage =
 //=========================================================
 static constexpr int k_PulseDischargeDamage = DMG_ENERGYBEAM;
 
-// What counts as melee for pulse_discharge_melee.  Claws, bites and blunt
-// blows -- deliberately not DMG_CRUSH, which is falling debris rather than
-// something swung at the player.
-static constexpr int k_PulseMeleeDamage = DMG_SLASH | DMG_CLUB;
+// The Discharge answers slave beams and nothing else (docs/adr/0016): the
+// suit's mining shield happens to take vortigaunt energy, so that is what it
+// vents.  Both live in islave.cpp, where CISlave is visible.
+bool SlaveBeamFrom(entvars_t* pevInflictor, int bitsDamageType);
+void SlaveStagger(CBaseEntity* pEntity);
+
+// The screen's flash when a beam is vented: the slave's own green, the colour
+// the boss's Ward and the freeing also use, so a player connects the three.
+static const Vector k_DischargeFlashColour(96, 255, 96);
 
 // Placeholder assets -- stock Half-Life, pending the mod's own, except the
 // Recharge cue.
@@ -286,6 +292,11 @@ static void FireDischarge(CBasePlayer* pPlayer, float flAbsorbed)
 		ApplyMultiDamage(pPlayer->pev, pPlayer->pev);
 
 		gMultiDamage = savedMultiDamage;
+
+		// A slave hit by a Discharge is Staggered: the attack in hand broken
+		// off, a flinch forced.  Any slave, not only the one that fired --
+		// putting one's beam into another is the point of aiming it.
+		SlaveStagger(pHit);
 	}
 }
 
@@ -959,23 +970,19 @@ bool CPlayerPulse::TryNegate(CBasePlayer* pPlayer, float flDamage, int bitsDamag
 		k_PulseSoundsDeflect[RANDOM_LONG(0, ARRAYSIZE(k_PulseSoundsDeflect) - 1)],
 		1.0, ATTN_NORM, 0, 96 + RANDOM_LONG(0, 8));
 
-	// A Discharge on a MELEE deflect was never designed -- it falls out of
-	// "one Discharge per negated hit", which does not care what dealt the
-	// damage. It plays well, so it stays on by default, but it is the part of
-	// this behaviour most likely to be judged wrong later: pulse_discharge_melee
-	// 0 turns it off without touching anything else.
-	const bool bMelee = (bitsDamageType & k_PulseMeleeDamage) != 0;
-	const bool bWantDischarge = !bMelee || pulse_discharge_melee.value != 0;
-
-	// One Discharge per negated hit, fired in the same frame the hit lands.
-	// The reentrancy guard stops a Discharge that causes damage back to the
-	// player -- venting into an explosive barrel at point blank -- from
-	// recursing.
-	if (bWantDischarge && !m_bDischarging && pPlayer->m_skills.HasSkill(ESkillId::PulseDischarge))
+	// The Discharge is the Pulse's own since 2026-09-23 (docs/adr/0016): no
+	// Skill, and only a slave's beam sets it off.  Every other negated hit --
+	// melee included, which used to vent too -- is negated and nothing more.
+	// One Discharge per negated beam, so a zap's two bolts vent twice.  The
+	// reentrancy guard stops a Discharge whose own damage comes back at the
+	// player from recursing.
+	if (!m_bDischarging && SlaveBeamFrom(pevInflictor, bitsDamageType))
 	{
 		m_bDischarging = true;
 		FireDischarge(pPlayer, flDamage);
 		m_bDischarging = false;
+
+		UTIL_ScreenFade(pPlayer, k_DischargeFlashColour, 0.4f, 0.0f, 70, FFADE_IN);
 	}
 
 	return true;

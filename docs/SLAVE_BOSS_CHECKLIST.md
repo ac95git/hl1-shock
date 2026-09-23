@@ -23,3 +23,17 @@ Commits are in build order, so a slice that fails can be reverted without the on
 | 1.6 | The Skill Tree, Pulse Window | Reads "No effect yet"; buying it changes nothing | |
 | 1.7 | The Shield's look | `pulse_shield_sweep` is still 0.5 in your `config.cfg`, which is half the window, so there is still no hold. Try `pulse_shield_sweep 0.25` for a half-second stand, and keep what looks right | |
 | 1.8 | An old save taken mid-tail | Loads; the Pulse is simply Ready or recharging | |
+
+## Slice 2 — the innate Discharge
+
+The Discharge fires for every player with the Pulse, only off a slave's beam, with a green screen flash.
+A slave it hits is Staggered. `PulseDischarge` (16) retired; `pulse_discharge_melee` removed.
+
+| # | Test | Expect | Verdict |
+| --- | --- | --- | --- |
+| 2.1 | Without ever buying a Pulse Skill, Pulse a slave's zap while aiming at him | Two Discharge beams (one per bolt) hit him; the screen flashes green | |
+| 2.2 | The same slave, right after | He flinches, his zap is broken off, and he waits at least a second before the next one | |
+| 2.3 | Two slaves; deflect one's zap while aiming at the other | The other one takes it and flinches | |
+| 2.4 | Pulse a zombie's swipe, a headcrab's leap, a grunt's burst | Negated, and **no** Discharge beam, no green flash | |
+| 2.5 | A save where you held Pulse Discharge | The node is gone from the tree and the point is back | |
+| 2.6 | Pulse a slave's claw | Negated, no Discharge (a claw is not a beam) | |

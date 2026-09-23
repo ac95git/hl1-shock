@@ -159,7 +159,6 @@ extern cvar_t pulse_discharge_scale;
 extern cvar_t pulse_discharge_min;
 extern cvar_t pulse_discharge_max;
 extern cvar_t pulse_deflect_punch;
-extern cvar_t pulse_discharge_melee;
 extern cvar_t pulse_followup_time;
 extern cvar_t pulse_followup_damage;
 extern cvar_t pulse_followup_knockback;

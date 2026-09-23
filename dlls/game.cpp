@@ -776,11 +776,6 @@ cvar_t pulse_discharge_max = {"pulse_discharge_max", "60"};
 // 0 removes it entirely. Deliberately not 0: a blow that glances off the Shield
 // should still register as something happening, just not as something landing.
 cvar_t pulse_deflect_punch = {"pulse_deflect_punch", "0.25"};
-// Whether deflecting a melee blow fires a Discharge. On by default; this exists
-// because that behaviour was never designed -- it falls out of "one Discharge
-// per negated hit" -- and is the most likely part of the Pulse to be judged
-// wrong under more testing.
-cvar_t pulse_discharge_melee = {"pulse_discharge_melee", "1"};
 // The Follow-Up. Primed by a deflect, spent on the next crowbar hit -- a whiff
 // costs nothing, so the window is what stops it being banked indefinitely.
 // Knockback is headcrab-only; see PulseCrowbarFollowUpKnockback for why.
@@ -1127,7 +1122,6 @@ void GameDLLInit()
 	CVAR_REGISTER(&pulse_discharge_min);
 	CVAR_REGISTER(&pulse_discharge_max);
 	CVAR_REGISTER(&pulse_deflect_punch);
-	CVAR_REGISTER(&pulse_discharge_melee);
 	CVAR_REGISTER(&infusion_rate);
 	CVAR_REGISTER(&infusion_duration);
 	CVAR_REGISTER(&infusion_duration_bonus);

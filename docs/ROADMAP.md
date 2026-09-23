@@ -1570,9 +1570,10 @@ the English, his advice, which the surviving staff carry alone. A global state r
 beside the freed one) for later maps to acknowledge; nothing reads it yet. A kill window after the freeing,
 the slave kneeling, was proposed and dropped: one lethal route, and it is a fight, not an execution.
 
-#### What the Pulse gives up for him — settled 2026-09-23
+#### What the Pulse gives up for him — settled 2026-09-23, built the same day
 
-**The Discharge becomes innate to the Pulse, and fires only off slave beams.** Recorded as
+**The Discharge becomes innate to the Pulse, and fires only off slave beams.** Built, not verified in game;
+see [SLAVE_BOSS_CHECKLIST.md](SLAVE_BOSS_CHECKLIST.md). Recorded as
 [ADR-0016](adr/0016-the-discharge-is-innate-and-answers-only-slave-beams.md), which amends ADR-0006. Every
 player with the Pulse vents a deflected slave zap to the crosshair; every other negated hit — melee, the
 Shield's other damage types — is only negated. The `PulseDischarge` Skill (id 16) is **retired**: its id is
@@ -1606,8 +1607,9 @@ Read from `dlls/islave.cpp` and the model's events on 2026-09-23:
   (`:486-487`), each a hitscan trace dealing `sk_islave_dmg_zap` as `DMG_SHOCK` (`:891`).
 - **The beams come from attachments 1 and 2, the hands** (`:802`), which is where the bracelets are: effects
   at a broken bracelet cost nothing. What the collar has is to be checked in HLMV.
-- **The revive** (`m_hDead`, `:459-480`): a slave zaps a dead slave and a new one spawns in its place. Unused
-  while he fights alone.
+- **The revive** (`m_hDead`, `:459-480`): a slave zaps a dead slave and a new one spawns in its place.
+  **Switched off in the stock code**: `CheckRangeAttack2` returns `false` on its first line, so no slave
+  ever revives. Using it later means turning it back on.
 - **Chained `scripted_sequence`s** play one after another through their `target`s, and the client blends each
   change of sequence over 0.2 s (`cl_dll/StudioModelRenderer.cpp:864-907`).
 
@@ -2920,7 +2922,7 @@ one node each.
 | Ricochet | As above | New. One node, no ranks |
 | Pulse Window (12) | Longer Shield | Exists. The timing branch, brought inside the Route |
 | Pulse Recharge (15) | Shorter Recharge | Exists |
-| Pulse Discharge (16) | Negated hits vent at the crosshair | Exists. **To be retired** (2026-09-23): the Discharge becomes innate, [ADR-0016](adr/0016-the-discharge-is-innate-and-answers-only-slave-beams.md); the node needs a new occupant |
+| Pulse Discharge (16) | Negated hits vent at the crosshair | **Retired** 2026-09-23: the Discharge is innate, [ADR-0016](adr/0016-the-discharge-is-innate-and-answers-only-slave-beams.md); the node needs a new occupant |
 | Pulse Rebound (17) | A deflect skips the Recharge | Exists |
 | Defense Matrix | The gate: hold for 1 s | New. Needs the Pulse Module |
 | Matrix on Kill | A kill while the Matrix is up restores some armour | New. The Route's one way to sustain, and the opposite of idling |

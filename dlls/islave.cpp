@@ -96,6 +96,18 @@ public:
 	// The teleport-out, and gone.  Also how a ghost's lifetime ends.
 	void Vanish();
 
+	// A Stagger (CONTEXT.md): what a Discharge, or a Barrier's returned beam,
+	// does to a slave -- the attack in hand broken off and a flinch forced,
+	// whatever the flinch memory says.  Queued, not applied: it is usually
+	// asked for from inside this slave's own ZAP_SHOOT, through the player's
+	// TakeDamage, and changing schedule halfway through its own anim event
+	// would pull the bolt it is firing out from under it.  MonsterThink applies
+	// it on the next think.  Virtual for the boss, whose Stagger is longer and
+	// whose Ward can refuse it.
+	virtual void Stagger() { m_bStaggerPending = true; }
+	void MonsterThink() override;
+	bool m_bStaggerPending = false; // transient; a save between the two frames loses nothing worth keeping
+
 	int m_iBravery;
 
 	CBeam* m_pBeam[ISLAVE_MAX_BEAMS];
@@ -324,6 +336,29 @@ void CISlave::Vanish()
 	UTIL_EmitAmbientSound(ENT(pev), pev->origin, "debris/zap1.wav", 1.0, ATTN_NORM, 0, 100);
 
 	UTIL_Remove(this);
+}
+
+//=========================================================
+// MonsterThink - applies a queued Stagger, then thinks as normal.
+//=========================================================
+void CISlave::MonsterThink()
+{
+	if (m_bStaggerPending)
+	{
+		m_bStaggerPending = false;
+
+		if (IsAlive() && m_MonsterState != MONSTERSTATE_SCRIPT)
+		{
+			ClearBeams();
+			// Broken off, not merely delayed: the zap it was winding up does not
+			// come straight back the moment the flinch ends.
+			if (m_flNextAttack < gpGlobals->time + 1.0f)
+				m_flNextAttack = gpGlobals->time + 1.0f;
+			ChangeSchedule(GetScheduleOfType(SCHED_SMALL_FLINCH));
+		}
+	}
+
+	CSquadMonster::MonsterThink();
 }
 
 //=========================================================
@@ -1035,4 +1070,40 @@ int SummonCountGhosts(CBasePlayer* pOwner)
 			iCount++;
 	}
 	return iCount;
+}
+
+//=========================================================
+// The two things the Pulse asks about slaves (docs/adr/0016).  Declared
+// extern in player_pulse.cpp, the summon weapon's pattern: CISlave is visible
+// in this file alone.
+//
+// By classname, because nothing else marks a slave: every class this file
+// links, and whatever derives from CISlave further down it.
+//=========================================================
+static CISlave* AsSlave(CBaseEntity* pEntity)
+{
+	if (!pEntity || !pEntity->MyMonsterPointer())
+		return nullptr;
+
+	if (FClassnameIs(pEntity->pev, "monster_alien_slave") || FClassnameIs(pEntity->pev, "monster_vortigaunt") || FClassnameIs(pEntity->pev, "monster_ghost_slave"))
+		return static_cast<CISlave*>(pEntity);
+
+	return nullptr;
+}
+
+// Was this blow a slave's beam?  The zap is DMG_SHOCK with the slave as its
+// inflictor (ZapBeam's TraceAttack, then ApplyMultiDamage( pev, pev )).
+bool SlaveBeamFrom(entvars_t* pevInflictor, int bitsDamageType)
+{
+	if ((bitsDamageType & DMG_SHOCK) == 0 || !pevInflictor)
+		return false;
+
+	return AsSlave(CBaseEntity::Instance(pevInflictor)) != nullptr;
+}
+
+// Stagger it, if it is a slave.  Anything else is untouched.
+void SlaveStagger(CBaseEntity* pEntity)
+{
+	if (CISlave* pSlave = AsSlave(pEntity))
+		pSlave->Stagger();
 }

@@ -206,6 +206,16 @@ node is a blank pad. Vanilla maps place no pickup, so the Pulse exists there onl
   Recharge and chimes.
 - `CBasePlayer::Spawn()` / `Save` / `Restore` — reset on spawn, `FIELD_TIME` timers across saves.
 
+**Since 2026-09-23 (built, not verified in game): the Discharge is innate, and answers slave beams only**
+([ADR-0016](adr/0016-the-discharge-is-innate-and-answers-only-slave-beams.md)). A Shield that negates an
+alien slave's zap (`DMG_SHOCK` with a slave as inflictor, `SlaveBeamFrom` in `dlls/islave.cpp`) vents it
+at the crosshair, for every player with the Pulse, and flashes the screen green (`UTIL_ScreenFade`). Every
+other negated hit is only negated; `pulse_discharge_melee` is gone. A slave a Discharge hits is
+**Staggered** — its attack broken off and a small flinch forced, queued to its next think
+(`CISlave::Stagger`). `PulseDischarge` (16) is `SKILL_RESERVED`, so a player who held it gets the point
+back on load. Pulse Window (12) is inert since the window became one second. So of the four below, two
+still do something. The paragraphs further down describe the Discharge as it was.
+
 **Four Skills** that actually do something: `PulseWindow` (id 12, renamed from `CrowbarParry`) →
 `PulseRecharge` (15) → then a branch into `PulseDischarge` (16) and `PulseRebound` (17). Placed in
 column 11, with Rebound in column 12 so the branch has room to grow.

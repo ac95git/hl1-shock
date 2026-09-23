@@ -232,16 +232,15 @@ _Avoid_: cooldown, refresh, reload
 
 **Discharge**:
 The energy a Shield vents toward the player's crosshair when it negates a hit. It goes where the player is
-aiming, not back where the damage came from. **Settled 2026-09-23, not built**
+aiming, not back where the damage came from. **Since 2026-09-23**
 ([ADR-0016](docs/adr/0016-the-discharge-is-innate-and-answers-only-slave-beams.md)): innate to the Pulse,
-no longer a Skill, and set off only by an alien slave's beam; every other negated hit is only negated. Until
-that is built, the code still has it as the `PulseDischarge` Skill, on every negated hit.
+no longer a Skill, and set off only by an alien slave's beam; every other negated hit is only negated.
 _Avoid_: reflect, riposte, counter, retaliation
 
 **Stagger**:
 What a Discharge does to an alien slave it hits, and what a Barrier's returned beam does to the slave who
 fired it: he is thrown into a flinch and his attack is broken off. Forced, not a side effect of damage —
-slaves are immune to their own `DMG_SHOCK`. Settled 2026-09-23, not built.
+slaves are immune to their own `DMG_SHOCK`. Built 2026-09-23 for the Discharge; the Barrier's is next.
 _Avoid_: stun, knockback (Half-Life has none for monsters), interrupt
 
 **Barrier**:

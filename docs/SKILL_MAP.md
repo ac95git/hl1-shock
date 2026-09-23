@@ -53,7 +53,7 @@ is Bullet Damage.
 | Melee | 17 | 12 | Reach, Speed, Backstab, Cleave, Glass Cannon |
 | Weapon Specialist | 19 | 12 | Quick Draw, Headhunter, Demolitions, Fast Reload, Mastery, Swap Surge |
 | Medical | 14 | 10 | Med Expert, Overheal, Leech, Last Stand |
-| Juggernaut | 18 | 10 | Ricochet, Pulse Window, Pulse Recharge, Defense Matrix, the Major, Matrix on Kill, Pulse Discharge, Pulse Rebound |
+| Juggernaut | 17 | 9 | Ricochet, Pulse Window (inert), Pulse Recharge, Defense Matrix, the Major, Matrix on Kill, Pulse Rebound. Pulse Discharge retired 2026-09-23 ([ADR-0016](adr/0016-the-discharge-is-innate-and-answers-only-slave-beams.md)); its cell (7, 14) is empty and waits for a new occupant |
 | Energy | 15 | 9 | Energy Damage, Insulation, Egon Focus, Energy Efficiency, Overdraw |
 | Shinobi | 19 | 13 | Dash Reach, Dash Recovery, Second Wind, Reprisal, Phase, Air Dash |
 | Stealth | 17 | 10 | Soft Step, Ambush, Phantom, Slip Away, Nightfall, Shroud (Cut the Head until 2026-09-17), Silent Kill |
