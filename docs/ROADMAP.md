@@ -1702,6 +1702,22 @@ answers MADDENED.md's "spawnflag or a class of its own".
 - *Rejected:* **hoods** — cheap, the most generic cult image there is, and they would hide the faces being
   varied. Dropped outright, not kept for rank.
 
+**For a later grill — Andrei, 2026-09-23.** Two more variant axes, on cultists as well as the maddened:
+
+- **Beard shapes.** Ivan's beard is geometry, a wedge down the neck, so a short beard, stubble or a shaved
+  jaw is a head modelled by Andrei, shipped as a head bodygroup with its own hair mask so the colour skins
+  apply to it too. To settle: which shapes, how many, and whether shape says anything (the cult's own
+  grooming, a shaved head as initiation) or is only variety.
+- **Helmets.** A miner's helmet as a bodygroup, some wearing it and some not. It meets the worn crystal
+  above — a shard taped over the helmet's lamp is one of its two proposed places. To settle: whether the
+  helmet marks miner against cultist, or rank, or nothing; whether its lamp is lit (a real light is a stealth
+  fact, as the glowing shard is); whether it comes off the head, which the geometry of Ivan's hair decides;
+  and whether it is modelled by Andrei or taken from an existing model (the SDK and Decay folders first,
+  [HL_SDK.md](HL_SDK.md)).
+- **How the axes combine.** Head shape × helmet × skin colour × crystal is many bodies from few parts;
+  GoldSrc packs every bodygroup into `pev->body`, so which combinations a mapper sets and which are rolled
+  at spawn is part of the same question.
+
 ### Soldiers
 
 **Shape: Idea, from Andrei 2026-09-18. Not grilled.** Soldiers are the bulk of the human enemies and
