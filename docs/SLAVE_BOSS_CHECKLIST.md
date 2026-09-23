@@ -66,12 +66,12 @@ live in one class and did not split cleanly. On `topmap`: `sv_cheats 1`, `give i
 | 4.2 | Shoot him, and hit him with the crowbar | Ricochet sparks, no blood, no flinch; eventually the glow goes out with a crackle (the Ward, 150) | |
 | 4.3 | Ward up: deflect his zap into him | Nothing: no damage, no flinch | |
 | 4.4 | Ward down: deflect his plain zap into him | He bleeds and flinches | |
-| 4.5 | The Overcharge | Holds his arms up for about 2.5 s, beams gathering round him, the Nihilanth's charge sound; then eight bolts. Taken undeflected, about 80 damage | |
+| 4.5 | The Overcharge | The stock wind-up, slowed to fill about 2.5 s, beams gathering round him, the Nihilanth's charge sound; then eight bolts, and the recovery at normal speed. Taken undeflected, about 80 damage | |
 | 4.6 | Ward down, deflect the Overcharge into him | His left bracelet bursts in sparks, the screen shakes, he plays `collar2`, and the Ward comes back. No health lost | |
 | 4.7 | Ward down, dodge the Overcharge behind cover | The Ward comes back anyway; nothing breaks | |
 | 4.8 | After the first Binding | His zaps become a volley: a different charge sound, then four zaps a second apart | |
 | 4.9 | After the second | The Overcharge winds up faster (1.75 s) | |
-| 4.10 | The third | A green flash, he plays `collar1`, then teleports out. Nothing hurts him during it | |
+| 4.10 | The third | A green flash, he plays `collar1`, stands until 5 s have passed since the break (`slaveboss_freed_linger`), then teleports out. Nothing hurts him during it | |
 | 4.11 | The lethal route: never deflect onto him, shoot through every window | He dies with his Bindings on and drops the alien Module | |
 | 4.12 | Rotation | Never more than two plain zaps or volleys between Overcharges | |
 | 4.13 | Low health | He never runs for cover | |

@@ -1111,6 +1111,7 @@ enum
 	TASK_BOSS_OVERCHARGE = LAST_COMMON_TASK + 1,
 	TASK_BOSS_VOLLEY,
 	TASK_BOSS_COLLAR,	// plays a collar sequence by name: flData 1 is collar1 (the freeing), 0 collar2 (a Binding)
+	TASK_BOSS_LINGER,	// freed, he stands until slaveboss_freed_linger has passed since the collar broke
 	TASK_BOSS_BEAM_OUT, // target_freed, then the teleport-out
 };
 
@@ -1130,11 +1131,12 @@ enum EBossFiring
 };
 
 // zapattack1 is 35 frames at 15 fps: the last ZAP_POWERUP is on frame 15 and
-// ZAP_SHOOT on frame 24.  The channel holds the pose on frame 17 -- arms up,
-// charged -- which is 17 * 256 / 34 in pev->frame's units, and the shot comes
-// 7 frames after the hold lets go.
+// ZAP_SHOOT on frame 24, 1.6 s in.  The Overcharge plays those 24 frames slowed
+// to fill its channel.  The volley holds the pose on frame 17 instead -- arms
+// up, charged -- which is 17 * 256 / 34 in pev->frame's units, since it fires
+// on its own clock and has no single shot to land.
 static constexpr float k_BossHoldFrame = 128.0f;
-static constexpr float k_BossShotLead = 7.0f / 15.0f;
+static constexpr float k_BossShotTime = 24.0f / 15.0f;
 static constexpr int k_BossOverchargeBolts = 8; // exactly ISLAVE_MAX_BEAMS: the shot clears the channel's beams first
 
 // Stand-ins, all stock, each in its own timbre (docs/ART_DEBT.md, "The alien
@@ -1185,6 +1187,7 @@ private:
 	bool m_bWardUp = false;
 	int m_iBindings = 0; // broken, 0..3
 	bool m_bFreeing = false;
+	float m_flFreedAt = 0; // when the collar broke
 	int m_iSinceOvercharge = 0;
 	string_t m_iszTargetFreed = 0;
 	string_t m_iszTargetKilled = 0;
@@ -1195,7 +1198,8 @@ private:
 	bool m_bOverchargeCaught = false;
 	bool m_bLongStaggerPending = false;
 	bool m_bFreeingPending = false;
-	float m_flHoldUntil = 0;
+	float m_flChargeRate = 1.0f;    // the Overcharge's wind-up framerate
+	bool m_bOverchargeFired = false; // its shot has gone; the rest plays at stock speed
 	float m_flNextChargeBeam = 0;
 	int m_iVolleyShots = 0;
 	float m_flNextVolleyShot = 0;
@@ -1211,6 +1215,7 @@ TYPEDESCRIPTION CISlaveBoss::m_SaveData[] =
 		DEFINE_FIELD(CISlaveBoss, m_bWardUp, FIELD_BOOLEAN),
 		DEFINE_FIELD(CISlaveBoss, m_iBindings, FIELD_INTEGER),
 		DEFINE_FIELD(CISlaveBoss, m_bFreeing, FIELD_BOOLEAN),
+		DEFINE_FIELD(CISlaveBoss, m_flFreedAt, FIELD_TIME),
 		DEFINE_FIELD(CISlaveBoss, m_iSinceOvercharge, FIELD_INTEGER),
 		DEFINE_FIELD(CISlaveBoss, m_iszTargetFreed, FIELD_STRING),
 		DEFINE_FIELD(CISlaveBoss, m_iszTargetKilled, FIELD_STRING),
@@ -1273,6 +1278,7 @@ Task_t tlBossFreed[] =
 	{
 		{TASK_STOP_MOVING, 0},
 		{TASK_BOSS_COLLAR, (float)1},
+		{TASK_BOSS_LINGER, (float)0},
 		{TASK_BOSS_BEAM_OUT, (float)0},
 };
 
@@ -1417,6 +1423,7 @@ void CISlaveBoss::BreakBinding()
 		// Ward is gone for good.
 		m_bFreeing = true;
 		m_bFreeingPending = true;
+		m_flFreedAt = gpGlobals->time;
 		SetWard(false);
 		pev->takedamage = DAMAGE_NO;
 		UTIL_ScreenFadeAll(k_BossGreen, 1.0f, 0.0f, 90, FFADE_IN);
@@ -1584,6 +1591,7 @@ void CISlaveBoss::ChargeBeam()
 
 void CISlaveBoss::FireOvercharge()
 {
+	m_bOverchargeFired = true;
 	ClearBeams();
 	UTIL_MakeAimVectors(pev->angles);
 
@@ -1675,9 +1683,14 @@ void CISlaveBoss::StartTask(Task_t* pTask)
 		m_IdealActivity = ACT_RANGE_ATTACK1;
 		pev->framerate = 1.0f;
 
-		const float flCharge = std::max(k_BossShotLead + 0.1f,
+		// The stock wind-up, slowed so its shot lands when the channel ends
+		// (Andrei, 2026-09-23: slowed rather than frozen on a held pose).
+		// Applied in RunTask every frame, since SetActivity resets the
+		// framerate to 1 after this returns.
+		const float flCharge = std::max(0.2f,
 			m_iBindings >= 2 ? slaveboss_charge_fast.value : slaveboss_charge.value);
-		m_flHoldUntil = gpGlobals->time + flCharge - k_BossShotLead;
+		m_flChargeRate = k_BossShotTime / flCharge;
+		m_bOverchargeFired = false;
 		m_flNextChargeBeam = gpGlobals->time;
 
 		EMIT_SOUND_DYN(ENT(pev), CHAN_BODY, k_BossSoundOvercharge, 1.0, ATTN_NORM, 0, 100);
@@ -1716,6 +1729,14 @@ void CISlaveBoss::StartTask(Task_t* pTask)
 		break;
 	}
 
+	case TASK_BOSS_LINGER:
+		// Standing, free, before he goes (Andrei, 2026-09-23): five seconds
+		// from the collar breaking, the collar animation inside them.
+		m_IdealActivity = ACT_IDLE;
+		if (gpGlobals->time >= m_flFreedAt + std::max(0.0f, slaveboss_freed_linger.value))
+			TaskComplete();
+		break;
+
 	case TASK_BOSS_BEAM_OUT:
 		if (!FStringNull(m_iszTargetFreed))
 			FireTargets(STRING(m_iszTargetFreed), this, this, USE_TOGGLE, 0);
@@ -1737,9 +1758,9 @@ void CISlaveBoss::RunTask(Task_t* pTask)
 		MakeIdealYaw(m_vecEnemyLKP);
 		ChangeYaw(pev->yaw_speed);
 
-		if (gpGlobals->time < m_flHoldUntil)
+		if (!m_bOverchargeFired)
 		{
-			HoldPose();
+			pev->framerate = m_flChargeRate;
 			if (gpGlobals->time >= m_flNextChargeBeam)
 			{
 				ChargeBeam();
@@ -1748,6 +1769,7 @@ void CISlaveBoss::RunTask(Task_t* pTask)
 		}
 		else
 		{
+			// The recovery after the shot at the stock speed.
 			pev->framerate = 1.0f;
 		}
 
@@ -1800,6 +1822,11 @@ void CISlaveBoss::RunTask(Task_t* pTask)
 			m_Activity = ACT_RESET;
 			TaskComplete();
 		}
+		break;
+
+	case TASK_BOSS_LINGER:
+		if (gpGlobals->time >= m_flFreedAt + std::max(0.0f, slaveboss_freed_linger.value))
+			TaskComplete();
 		break;
 
 	default:

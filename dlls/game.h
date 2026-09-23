@@ -181,6 +181,7 @@ extern cvar_t slaveboss_bolt_damage;
 extern cvar_t slaveboss_overcharge_chance;
 extern cvar_t slaveboss_volley_count;
 extern cvar_t slaveboss_volley_gap;
+extern cvar_t slaveboss_freed_linger;
 
 // The Infusion.  Named for the mechanic rather than the Health Syringe, so a
 // later source of one does not inherit syringe-flavoured cvar names.

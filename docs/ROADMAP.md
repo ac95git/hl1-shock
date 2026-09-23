@@ -1527,9 +1527,12 @@ Calls made while building, each with what it replaced:
   bolts included. The session had said "two per zap, eight per Overcharge"; the code decides it.
 - **A broken Binding staggers him on `collar2`** (1.7 s, him fighting the collar), and **the freeing plays
   `collar1`** (3.3 s). Both are `ACT_SPECIAL_ATTACK1`, so they are played by name.
-- **The ending is in the code, not a `scripted_sequence` chain**: `collar1`, then `target_freed` fires, then
-  the teleport-out. The map hangs the `env_global` (and anything else) on `target_freed`, and on
+- **The ending is in the code, not a `scripted_sequence` chain**: `collar1`, then he stands until five
+  seconds have passed since the collar broke (`slaveboss_freed_linger`, Andrei's call after the first look),
+  then `target_freed` fires, then the teleport-out. The map hangs the `env_global` (and anything else) on `target_freed`, and on
   `target_killed` for the lethal path. A chain would have needed a map to test at all.
+- **The Overcharge's wind-up is the stock one slowed** to fill the channel (Andrei, after the first look),
+  not the held pose first built; the volley still holds the pose, having no single shot to land.
 - **Damage never makes him flinch** — his schedules have no damage interrupts and his damage conditions are
   cleared — since a boss that flinched from every bullet could be held in place. Only a Stagger stops him.
 - **The Ward absorbs a Discharge whole**, not even losing pool to it.

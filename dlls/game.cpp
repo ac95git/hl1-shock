@@ -820,6 +820,8 @@ cvar_t slaveboss_bolt_damage = {"slaveboss_bolt_damage", "10"};
 cvar_t slaveboss_overcharge_chance = {"slaveboss_overcharge_chance", "0.35"};
 cvar_t slaveboss_volley_count = {"slaveboss_volley_count", "4"};
 cvar_t slaveboss_volley_gap = {"slaveboss_volley_gap", "1.0"};
+// Freed, he stands this long from the collar breaking before he teleports out.
+cvar_t slaveboss_freed_linger = {"slaveboss_freed_linger", "5"};
 
 // The Infusion -- see docs/PILLARS.md pillar 3.  40 HP over 10 seconds is more
 // than two medkits, and the duration is what pays for it: none of it lands if
@@ -1160,6 +1162,7 @@ void GameDLLInit()
 	CVAR_REGISTER(&slaveboss_overcharge_chance);
 	CVAR_REGISTER(&slaveboss_volley_count);
 	CVAR_REGISTER(&slaveboss_volley_gap);
+	CVAR_REGISTER(&slaveboss_freed_linger);
 
 	CVAR_REGISTER(&backstab_damage_scale);
 	CVAR_REGISTER(&backstab_arc_dot);
