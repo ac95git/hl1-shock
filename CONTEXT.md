@@ -240,7 +240,8 @@ _Avoid_: reflect, riposte, counter, retaliation
 **Stagger**:
 What a Discharge does to an alien slave it hits, and what a Barrier's returned beam does to the slave who
 fired it: he is thrown into a flinch and his attack is broken off. Forced, not a side effect of damage —
-slaves are immune to their own `DMG_SHOCK`. Built 2026-09-23 for the Discharge; the Barrier's is next.
+slaves are immune to their own `DMG_SHOCK`. Built 2026-09-23. The boss's Ward refuses it, and a broken
+Binding staggers him long, on `collar2`.
 _Avoid_: stun, knockback (Half-Life has none for monsters), interrupt
 
 **Barrier**:
@@ -248,7 +249,7 @@ A brush entity of the Shield's own tech, the mine's safety equipment on a power 
 standing for as long as it is powered, turned off or on by anything that fires it. It blocks everything
 both ways and sends an alien slave's beam back to the slave who fired it, with a Stagger. Not the Shield:
 a Barrier is fixed, powered and part of the level, the Shield is the player's own and lasts a Pulse Window.
-Settled 2026-09-23, not built.
+Built 2026-09-23, not verified in game.
 _Avoid_: shield, screen, forcefield, ward (the boss's)
 
 **Rebound**:
@@ -431,7 +432,8 @@ _Avoid_: ghost slave (the classname says slave once already), pet, minion, summo
 
 ### The alien slave boss
 
-Settled 2026-09-23, not built; [ROADMAP.md](docs/ROADMAP.md#the-alien-slave-boss) is the design.
+Settled 2026-09-23 and built the same day (`monster_alien_slave_boss`, not verified in game);
+[ROADMAP.md](docs/ROADMAP.md#the-alien-slave-boss) is the design.
 
 **Ward**:
 The alien slave boss's protection, the Nihilanth's: a green glow round his body that takes all damage, melee

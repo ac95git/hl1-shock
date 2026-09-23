@@ -1506,6 +1506,40 @@ he is gone, and the alien Module drops from his body. **Freeing him is the fight
 is a route a player has to pursue.** The vocabulary (Ward, Overcharge, Bindings, Stagger, Barrier) is in
 [CONTEXT.md](../CONTEXT.md).
 
+#### Built 2026-09-23, not verified in game
+
+`CISlaveBoss`, `monster_alien_slave_boss`, at the end of `dlls/islave.cpp`; in the FGD. `slaveboss_spawn`
+(cheats) puts one 256 units ahead on any map. The test rows are
+[SLAVE_BOSS_CHECKLIST.md](SLAVE_BOSS_CHECKLIST.md). Numbers are `slaveboss_*` cvars: health 500, Ward 150,
+Overcharge channel 2.5 s (1.75 s after the second Binding), eight bolts of 10, the volley four zaps 1 s
+apart, an Overcharge at a 35% chance and never more than two ranged attacks apart.
+
+Settled after the grill, before the build (Andrei, 2026-09-23): the volley is **four zaps with one second
+between them**; the Overcharge **charges for about 2.5 s and fires eight beams**; the Overcharge, the volley
+and a Binding breaking each get **a charge sound of their own**. With the one-second Pulse and its 1.5 s
+Recharge after a deflect, a player without Skills deflects two of the volley's four; Pulse Recharge and the
+Rebound raise that. Accepted.
+
+Calls made while building, each with what it replaced:
+
+- **One Discharge per zap, not per bolt.** A zap's bolts go through `AddMultiDamage`, which sums hits on one
+  target into one `TakeDamage`, so the Shield sees one hit and vents one Discharge — the Overcharge's eight
+  bolts included. The session had said "two per zap, eight per Overcharge"; the code decides it.
+- **A broken Binding staggers him on `collar2`** (1.7 s, him fighting the collar), and **the freeing plays
+  `collar1`** (3.3 s). Both are `ACT_SPECIAL_ATTACK1`, so they are played by name.
+- **The ending is in the code, not a `scripted_sequence` chain**: `collar1`, then `target_freed` fires, then
+  the teleport-out. The map hangs the `env_global` (and anything else) on `target_freed`, and on
+  `target_killed` for the lethal path. A chain would have needed a map to test at all.
+- **Damage never makes him flinch** — his schedules have no damage interrupts and his damage conditions are
+  cleared — since a boss that flinched from every bullet could be held in place. Only a Stagger stops him.
+- **The Ward absorbs a Discharge whole**, not even losing pool to it.
+- **An Overcharge resolves when it fires**, so a Ward broken *during* the channel still counts if the shot is
+  deflected.
+- **The alien Module drops from him** on the lethal path as a real `item_alienmodule`.
+- **The broken Bindings go on sparking** every couple of seconds, so the player can count them. The bracelet
+  positions are the model's hand attachments by assumption (attachment 1 left, 0 right), and the collar a
+  point at the neck: to be looked at.
+
 #### Settled before the grill
 
 - **Two entities. 2026-09-13.** The boss and the lab slave are separate. Freed, the boss leaves and sets a

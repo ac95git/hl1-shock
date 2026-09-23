@@ -172,6 +172,16 @@ extern cvar_t skill_matrix_speed_scale;
 extern cvar_t skill_matrix_kill_armor;
 extern cvar_t skill_matrix_grant;
 
+// The alien slave boss.
+extern cvar_t slaveboss_health;
+extern cvar_t slaveboss_ward;
+extern cvar_t slaveboss_charge;
+extern cvar_t slaveboss_charge_fast;
+extern cvar_t slaveboss_bolt_damage;
+extern cvar_t slaveboss_overcharge_chance;
+extern cvar_t slaveboss_volley_count;
+extern cvar_t slaveboss_volley_gap;
+
 // The Infusion.  Named for the mechanic rather than the Health Syringe, so a
 // later source of one does not inherit syringe-flavoured cvar names.
 extern cvar_t infusion_rate;

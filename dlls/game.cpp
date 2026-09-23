@@ -806,6 +806,21 @@ cvar_t skill_matrix_kill_armor = {"skill_matrix_kill_armor", "15"};
 // rate is derived, not a knob.  100 was set "to be toned down".
 cvar_t skill_matrix_grant = {"skill_matrix_grant", "100"};
 
+// The alien slave boss (docs/ROADMAP.md, "The alien slave boss").  Every number
+// is a first guess.  His health is sized against the arena's ammunition -- a
+// player who deflects every Overcharge must always free him first -- and his
+// Ward against a magazine or two.  The Overcharge's eight bolts together land
+// at about 80 of a player's 100.  The rotation guarantees an Overcharge at
+// least every third ranged attack, which also bounds the Ward-down window.
+cvar_t slaveboss_health = {"slaveboss_health", "500"};
+cvar_t slaveboss_ward = {"slaveboss_ward", "150"};
+cvar_t slaveboss_charge = {"slaveboss_charge", "2.5"};
+cvar_t slaveboss_charge_fast = {"slaveboss_charge_fast", "1.75"};
+cvar_t slaveboss_bolt_damage = {"slaveboss_bolt_damage", "10"};
+cvar_t slaveboss_overcharge_chance = {"slaveboss_overcharge_chance", "0.35"};
+cvar_t slaveboss_volley_count = {"slaveboss_volley_count", "4"};
+cvar_t slaveboss_volley_gap = {"slaveboss_volley_gap", "1.0"};
+
 // The Infusion -- see docs/PILLARS.md pillar 3.  40 HP over 10 seconds is more
 // than two medkits, and the duration is what pays for it: none of it lands if
 // the player does not survive the ten seconds, and it cannot answer burst
@@ -1137,6 +1152,14 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_matrix_speed_scale);
 	CVAR_REGISTER(&skill_matrix_kill_armor);
 	CVAR_REGISTER(&skill_matrix_grant);
+	CVAR_REGISTER(&slaveboss_health);
+	CVAR_REGISTER(&slaveboss_ward);
+	CVAR_REGISTER(&slaveboss_charge);
+	CVAR_REGISTER(&slaveboss_charge_fast);
+	CVAR_REGISTER(&slaveboss_bolt_damage);
+	CVAR_REGISTER(&slaveboss_overcharge_chance);
+	CVAR_REGISTER(&slaveboss_volley_count);
+	CVAR_REGISTER(&slaveboss_volley_gap);
 
 	CVAR_REGISTER(&backstab_damage_scale);
 	CVAR_REGISTER(&backstab_arc_dot);

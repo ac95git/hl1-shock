@@ -31,7 +31,7 @@ A slave it hits is Staggered. `PulseDischarge` (16) retired; `pulse_discharge_me
 
 | # | Test | Expect | Verdict |
 | --- | --- | --- | --- |
-| 2.1 | Without ever buying a Pulse Skill, Pulse a slave's zap while aiming at him | Two Discharge beams (one per bolt) hit him; the screen flashes green | |
+| 2.1 | Without ever buying a Pulse Skill, Pulse a slave's zap while aiming at him | One Discharge beam hits him (a zap's two bolts arrive as one hit); the screen flashes green | |
 | 2.2 | The same slave, right after | He flinches, his zap is broken off, and he waits at least a second before the next one | |
 | 2.3 | Two slaves; deflect one's zap while aiming at the other | The other one takes it and flinches | |
 | 2.4 | Pulse a zombie's swipe, a headcrab's leap, a grunt's burst | Negated, and **no** Discharge beam, no green flash | |
@@ -53,3 +53,27 @@ side, and a button targeting the Barrier's name. Any stock texture will do for n
 | 3.5 | "Starts Off" flag | Absent until the button is pressed | |
 | 3.6 | A grunt shooting at you through it | The bullets stop; nothing comes back | |
 | 3.7 | Save and load with it on, and with it off | Loads in the same state | |
+
+## Slice 4 — the boss
+
+`monster_alien_slave_boss`, with the escalation (the volley, the faster Overcharge) in the same commit: they
+live in one class and did not split cleanly. On `topmap`: `sv_cheats 1`, `give item_pulsemodule`, then
+`slaveboss_spawn`. Tuning is `slaveboss_*`. `impulse 101` for ammunition.
+
+| # | Test | Expect | Verdict |
+| --- | --- | --- | --- |
+| 4.1 | `slaveboss_spawn` | A slave with a green glow shell on the floor ahead, and he comes for you | |
+| 4.2 | Shoot him, and hit him with the crowbar | Ricochet sparks, no blood, no flinch; eventually the glow goes out with a crackle (the Ward, 150) | |
+| 4.3 | Ward up: deflect his zap into him | Nothing: no damage, no flinch | |
+| 4.4 | Ward down: deflect his plain zap into him | He bleeds and flinches | |
+| 4.5 | The Overcharge | Holds his arms up for about 2.5 s, beams gathering round him, the Nihilanth's charge sound; then eight bolts. Taken undeflected, about 80 damage | |
+| 4.6 | Ward down, deflect the Overcharge into him | His left bracelet bursts in sparks, the screen shakes, he plays `collar2`, and the Ward comes back. No health lost | |
+| 4.7 | Ward down, dodge the Overcharge behind cover | The Ward comes back anyway; nothing breaks | |
+| 4.8 | After the first Binding | His zaps become a volley: a different charge sound, then four zaps a second apart | |
+| 4.9 | After the second | The Overcharge winds up faster (1.75 s) | |
+| 4.10 | The third | A green flash, he plays `collar1`, then teleports out. Nothing hurts him during it | |
+| 4.11 | The lethal route: never deflect onto him, shoot through every window | He dies with his Bindings on and drops the alien Module | |
+| 4.12 | Rotation | Never more than two plain zaps or volleys between Overcharges | |
+| 4.13 | Low health | He never runs for cover | |
+| 4.14 | The broken Bindings | Keep sparking every couple of seconds, at the wrists and the neck. Are the positions right? | |
+| 4.15 | Save and load mid-fight | Ward, Bindings and health come back as they were; an attack in hand restarts | |

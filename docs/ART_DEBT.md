@@ -1173,3 +1173,28 @@ and tiling on a wall of any size.
 
 ### Done when
 A player seeing a Barrier for the first time recognises it as their Shield's material.
+
+## The alien slave boss — sounds
+
+### Scope
+The three cues the boss's fight is read by, each asked for in its own timbre (Andrei, 2026-09-23): the
+Overcharge's charge, the volley's charge, and a Binding breaking. `k_BossSound*` in `dlls/islave.cpp`.
+
+### Current stand-ins
+- **Overcharge charge**: `x/x_teleattack1.wav`, the Nihilanth's teleport-ball charge, since the power is his.
+- **Volley charge**: `debris/beamstart7.wav`, the Nihilanth's short rise.
+- **A Binding breaking**: `buttons/spark6.wav` pitched down to 70.
+- The Ward breaking reuses `debris/zap1.wav` at 60.
+
+### What's wrong with them
+All four are someone else's: two are the Nihilanth's own voice, which a player who reaches him will
+recognise and misread backwards, and the Binding is a spark from a button, not metal giving way.
+
+### What to look for
+From FL Studio into `E:\CustomAssets\sounds\src\`: a long rising charge that tells the player *when* over
+2.5 s (and still reads at 1.75 s); a short, clearly different rise for the volley; a crack with a ring of
+metal for a Binding; and a Ward that sounds like a field failing. None may share a timbre with the Pulse's
+deflect (`weapons/cbar_hit1/2.wav`), per *The Pulse — sounds* above.
+
+### Done when
+A player with their eyes shut can tell which attack is coming, and hear a Binding go.

@@ -2021,7 +2021,12 @@
 		64 : "IgnorePlayer" : 0
 	]
 ]
-@PointClass base(Monster, Sequence) size(-360 -360 -172, 360 360 8) studio("models/apache.mdl") = monster_apache : "Apache" 
+@PointClass base(Monster) size(-16 -16 0, 16 16 72) studio("models/islave.mdl") = monster_alien_slave_boss : "Alien slave boss: the Ward, the Overcharge, three Bindings. Freed, fires target_freed; killed, fires target_killed and drops the alien Module"
+[
+	target_freed(target_destination) : "Target when freed"
+	target_killed(target_destination) : "Target when killed"
+]
+@PointClass base(Monster, Sequence) size(-360 -360 -172, 360 360 8) studio("models/apache.mdl") = monster_apache : "Apache"
 [
 	spawnflags(Flags) = 
 	[
