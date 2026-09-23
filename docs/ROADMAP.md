@@ -965,6 +965,26 @@ Combat only, so it never pounces unRevealed still holds.
 still to be read, for v2's lean. (2) The code, one slice each: the rename, the stalking
 spiral and the slowed crawl, combat Circling, the upper-body turn, the Wall Pounce.
 
+**Built 2026-09-23 and shelved, not verified in game** — all of (2) in one commit, `d17f217`, on the
+branch **`panthereye-menace`**, because Andrei was away from the PC. `hl-shock` and the installed
+`hl.dll` are still v1. To test: `git checkout panthereye-menace`, build `hldll.vcxproj`, then play with
+`panther_debug 1` (its readout gains a line: direction, timer, turn, wall state). Merge into `hl-shock`
+once it passes; the rows:
+
+1. **The turn's direction.** Controller 0's range is reversed in the QC, so which way it turns had to be
+   left to the eye: if the shoulders turn *away* from the player, `panther_turn_sign -1`, then fix the sign
+   in code.
+2. Glimpsed at the screen's edge, it crawls round toward the back; following it keeps it sliding round.
+3. Revealed, it spirals in at a run and pounces after 1.5–3 s, or at about 200 u.
+4. Near a wall, about every other pounce is leap, cling, rebound (`panther_wall_chance 1` forces it).
+5. v1 intact: the growl, the claws, Revealed by being hurt.
+
+Built beyond the grill, as calls made while writing it: the pounce's facing test is gone (the attack
+schedule turns it first), and it turns at 180°/s once Revealed so the turn out of a 60° spiral is not a
+pause. Expected to need tuning: the rebound off the wall reuses the pounce's aim and may come out flat
+and fast; the slowed crawl may be too slow on a long glimpse. A v1 save loads with the Panthereye
+unRevealed (the save field was renamed).
+
 **v2, recorded so it isn't re-grilled:**
 
 - **The ideal Wall Pounce**: `crouch_to_jump` at the wall, a controller-1 lean against it, a second
