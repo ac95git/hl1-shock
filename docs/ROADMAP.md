@@ -2316,6 +2316,10 @@ cannot spend on a verb they do not have.
 
 ### The Pulse's tail — settled 2026-09-17, built 2026-09-18 overnight, visual open
 
+**Removed 2026-09-23**, when the window became one second: the tail filled 0.25–1.0 s, and the window now
+fills all of it. See [The Pulse's timing](#the-pulses-timing--settled-2026-09-23-one-second). Kept below
+as the record of what it was.
+
 **Built and verified in game 2026-09-18: the mechanic is right, the visual is not** — and since
 2026-09-20 the tail is **a candidate for removal**, not merely an unfinished visual. Recorded in
 [PILLARS pillar 2](PILLARS.md#2-enhanced-combat).
@@ -2327,7 +2331,7 @@ mechanic to be clear and rewarding to the player" — was deferred the same day 
 time"). When the first-person Shield could have carried it for free on 2026-09-20, a distinct vanish
 telling "I parried" from "I braced", he declined: *"the tail is something that might not make it to the
 finals so for this v1 lets not take it into consideration for extra treatment."* So nothing is built on
-top of it, and [the Pulse's timing grill](#the-pulses-timing--urgent-grill-booked-for-the-morning-of-2026-09-21)
+top of it, and [the Pulse's timing grill](#the-pulses-timing--settled-2026-09-23-one-second)
 decides whether it merges into a longer window or goes.
 
 If it stays, the proposals recorded 2026-09-18 and not chosen: (1) the bar gives the tail its own dimmer
@@ -2360,13 +2364,34 @@ rules that keep the skill ceiling where it is:
 Mashing the key buys about a second of cover per four-second cycle, most of it at half — roughly 12%
 average reduction at today's `pulse_recharge_miss` of 3 s. A cushion, not a build.
 
-### The Pulse's timing — URGENT GRILL, booked for the morning of 2026-09-21
+### The Pulse's timing — settled 2026-09-23: one second
+
+**Settled by Andrei on 2026-09-23**, coming out of the slave boss's grill: *"make the pulse last 1 second,
+period."* Built the same day, not verified in game.
+
+- **`pulse_window` is 1.0 s**, for everyone, and nothing extends it. It is the same second a hold takes to
+  raise the Defense Matrix, so window and Matrix are one motion.
+- **The tail is gone**, with `pulse_tail_scale`: the window now fills the second it used to.
+- **Pulse Window (12) is inert**, and `pulse_window_bonus` is gone. The node stays on the board doing
+  nothing.
+- **Left for later:** a shorter parry window, gated behind a Skill and carrying extra bonuses — the shape
+  the old 0.25 s window was reaching for — and the retired Discharge's node
+  ([ADR-0016](adr/0016-the-discharge-is-innate-and-answers-only-slave-beams.md)). Pulse Window's slot is the
+  natural home for the first.
+- **What it does to cover:** mashing buys one second of full negation per four-second cycle at today's
+  `pulse_recharge_miss` (3 s), 25% uptime, against about 12% at half damage before. Worth knowing when
+  tuning.
+- **Sustained fire** ([below](#the-pulse-against-sustained-fire)) is answered in the same stroke: a grunt's
+  whole burst fits inside one window.
+- **The Shield's sweep** (`pulse_shield_sweep`, 0.5 s, archived in Andrei's `config.cfg`) is still exactly
+  half the window, so the Shield still has no hold. Anything under 0.5 buys one; 0.25 stands it for half a
+  second. A call by eye.
+
+The brief as it was written, questions and all, is kept below as the record.
 
 **Raised by Andrei on 2026-09-20, the evening the first-person Shield first ran.** His words: *"the pulse
 presentation is now gated by the actual mechanic: 0.25 is impossible to fit expansion and contraction of
 the shield."*
-
-Nothing here is decided. This is a brief, not an answer — do not pre-empt it.
 
 **The observation, and why it is not a presentation problem.** The Shield's sweep is clamped to at most
 half the window, so at `pulse_window` 0.25 s the entrance and the exit are 0.125 s each and there is no
@@ -2412,7 +2437,7 @@ amazing". What is in question is the mechanic underneath it.
 ### The Shield in first person — settled 2026-09-20, built and seen
 
 **Shape: settled by grill 2026-09-20, built the same day. Andrei's verdict on first sighting: "it looks
-amazing."** But see [The Pulse's timing](#the-pulses-timing--urgent-grill-booked-for-the-morning-of-2026-09-21)
+amazing."** But see [The Pulse's timing](#the-pulses-timing--settled-2026-09-23-one-second)
 above — drawing it honestly exposed that the 0.25 s window is too short to fit an entrance and an exit,
 which is a question about the *mechanic*, not about anything in this entry.
 
@@ -2482,7 +2507,7 @@ model answer, a hard swap of `pev->viewmodel` with no holster time, is parked in
    with no hold at all, and every duration scales with the window again, which is the option this one
    was chosen over. The structure reasserts itself the moment the window grows or the sweep drops back
    under half of it; until then nobody should read this rule and expect a hold. That is the observation
-   [the timing grill](#the-pulses-timing--urgent-grill-booked-for-the-morning-of-2026-09-21) exists for.
+   [the timing grill](#the-pulses-timing--settled-2026-09-23-one-second) exists for.
 8. **No texture in v1.** Pure vertex colour; the travelling edge and the obliquity falloff do all the
    work. Hex facets are an [ART_DEBT.md](ART_DEBT.md) entry, deliberately not a prerequisite — if the two
    procedural cues do not sell a surface on their own, that is worth learning for the cost of an evening
@@ -3963,7 +3988,7 @@ grilled would settle it by accident.
 
 Ranked by how much else is waiting on the answer.
 
-1. **The Pulse's timing** — the [grill booked for 2026-09-21](#the-pulses-timing--urgent-grill-booked-for-the-morning-of-2026-09-21),
+1. **The Pulse's timing** — the [grill booked for 2026-09-21](#the-pulses-timing--settled-2026-09-23-one-second),
    with [the Pulse against sustained fire](#the-pulse-against-sustained-fire) folded in. Whether 0.25 s
    is a state at all; what happens to the tail.
 2. **How many Pieces, and what are the wings?** Three Pieces were proposed and not confirmed; no wing in

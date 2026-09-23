@@ -152,10 +152,8 @@ extern cvar_t skill_stat_dash_recovery;
 
 // The Pulse.  Every one of these is a starting guess to be judged in play.
 extern cvar_t pulse_window;
-extern cvar_t pulse_window_bonus;
 extern cvar_t pulse_recharge_hit;
 extern cvar_t pulse_recharge_miss;
-extern cvar_t pulse_tail_scale;
 extern cvar_t pulse_recharge_scale;
 extern cvar_t pulse_discharge_scale;
 extern cvar_t pulse_discharge_min;

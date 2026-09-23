@@ -43,13 +43,6 @@ struct CPlayerPulse
 	bool  m_bRecharging     = false; // a Recharge is running
 	float m_flReadyTime     = 0;     // when it completes
 
-	// The tail: a window that deflected nothing stands on, braced, until
-	// m_flTailEndTime, and a hit in it lands at pulse_tail_scale.  Not a
-	// Shield and not a deflect -- nothing the window alone earns (the short
-	// Recharge, the Rebound, the Discharge, the Follow-Up) is earned here.
-	bool  m_bTailUp         = false;
-	float m_flTailEndTime   = 0;
-
 	// Rebounds banked. Spent when a window that deflected something closes,
 	// which skips its Recharge entirely; all of them are restored by sitting
 	// through a normal Recharge. A count rather than a bool so a later Skill
@@ -135,8 +128,8 @@ struct CPlayerPulse
 	// A Shield is standing and has not yet fallen.
 	bool ShieldActive() const { return m_bShieldUp; }
 
-	// Nothing is standing, braced or recharging.
-	bool Ready() const { return !m_bShieldUp && !m_bTailUp && !m_bRecharging; }
+	// Nothing is standing or recharging.
+	bool Ready() const { return !m_bShieldUp && !m_bRecharging; }
 
 	// Would a Shield turn this damage away right now?  Pure query, no side
 	// effects -- CBasePlayer::TraceAttack asks before spawning blood, because
@@ -162,11 +155,6 @@ struct CPlayerPulse
 	// with no inflictor is reported as coming from the player's own origin,
 	// which the client's direction maths reads as "all around me".
 	bool TryNegate(CBasePlayer* pPlayer, float flDamage, int bitsDamageType, entvars_t* pevInflictor);
-
-	// The tail's share of a hit the Shield did not negate: pulse_tail_scale
-	// while braced and the damage is on the Shield's list, 1 otherwise.  Makes
-	// the brace's own sound when it applies.  Ask after TryNegate.
-	float TailScale(CBasePlayer* pPlayer, int bitsDamageType);
 
 	// Scales back the view kick an attacker applied for a blow the Shield
 	// turned away. Call once per frame from UpdateClientData, which runs after

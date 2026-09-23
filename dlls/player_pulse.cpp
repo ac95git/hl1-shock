@@ -103,8 +103,6 @@ static TYPEDESCRIPTION g_PulseSaveData[] =
 	DEFINE_FIELD(CPlayerPulse, m_bAbsorbed,       FIELD_BOOLEAN),
 	DEFINE_FIELD(CPlayerPulse, m_bRecharging,     FIELD_BOOLEAN),
 	DEFINE_FIELD(CPlayerPulse, m_flReadyTime,     FIELD_TIME),
-	DEFINE_FIELD(CPlayerPulse, m_bTailUp,         FIELD_BOOLEAN),
-	DEFINE_FIELD(CPlayerPulse, m_flTailEndTime,   FIELD_TIME),
 	DEFINE_FIELD(CPlayerPulse, m_iRebounds,       FIELD_INTEGER),
 	DEFINE_FIELD(CPlayerPulse, m_flFollowUpUntil, FIELD_TIME),
 	DEFINE_FIELD(CPlayerPulse, m_flMatrixReadyTime, FIELD_TIME),
@@ -147,14 +145,12 @@ void PulsePrecache()
 // Tuning readers.  Every one of these is a starting guess to be
 // judged in play, which is why they are cvars and not constants.
 //=========================================================
+// One number, and no Skill touches it (2026-09-23): Pulse Window (12) no longer
+// widens it, and stays on the board doing nothing until the Skill-gated parry
+// window is designed.  Kept as a function so that Skill has one place to land.
 static float PulseWindowFor(const CBasePlayer* pPlayer)
 {
-	float window = pulse_window.value;
-
-	if (pPlayer->m_skills.HasSkill(ESkillId::PulseWindow))
-		window += pulse_window_bonus.value;
-
-	return std::max(0.05f, window);
+	return std::max(0.05f, pulse_window.value);
 }
 
 static float PulseRechargeFor(const CBasePlayer* pPlayer, bool bAbsorbed)
@@ -303,8 +299,6 @@ void CPlayerPulse::Clear(CBasePlayer* pPlayer)
 	m_bAbsorbed = false;
 	m_bRecharging = false;
 	m_flReadyTime = 0;
-	m_bTailUp = false;
-	m_flTailEndTime = 0;
 	m_bDischarging = false;
 	m_iSentState = -1;
 	m_iRebounds = PulseMaxRebounds(pPlayer);
@@ -487,16 +481,6 @@ void CPlayerPulse::SyncClient(CBasePlayer* pPlayer)
 		state = PULSE_SHIELD;
 		flRemaining = m_flShieldEndTime - gpGlobals->time;
 	}
-	else if (m_bTailUp)
-	{
-		// The bar shows the tail and the Recharge after it as one countdown to
-		// Ready -- which is what the player needs from the bar -- and the ring
-		// and the brace's sound say the tail is there.  The client needs no
-		// new state, and the count does not resend when the tail hands over to
-		// the Recharge, because the state it sent does not change.
-		state = PULSE_RECHARGING;
-		flRemaining = (m_flTailEndTime - gpGlobals->time) + PulseRechargeFor(pPlayer, false);
-	}
 	else if (m_bRecharging)
 	{
 		state = PULSE_RECHARGING;
@@ -541,15 +525,6 @@ bool CPlayerPulse::TryPulse(CBasePlayer* pPlayer)
 	m_bShieldUp = true;
 	m_flShieldEndTime = gpGlobals->time + PulseWindowFor(pPlayer);
 	m_bAbsorbed = false;
-
-	// Where the tail would end: the moment a hold of this press would raise
-	// the Defense Matrix, so window, tail and Matrix are one motion with no
-	// unprotected gap (docs/ROADMAP.md, "The Pulse's tail", rule 5).  Read
-	// from the Matrix's own number rather than a cvar of the tail's, which
-	// could only ever disagree with it.  Pulse Window widens the window
-	// inside that second and does not extend it (rule 3): a window as long
-	// as the second has no tail at all.
-	m_flTailEndTime = gpGlobals->time + std::max(PulseWindowFor(pPlayer), skill_matrix_hold.value);
 
 	// The Shield is the suit's own field, so it is the suit's own colour.
 	const SuitVariantDef& suit = GetSuitVariant(pPlayer->pev->skin);
@@ -598,25 +573,6 @@ void CPlayerPulse::Think(CBasePlayer* pPlayer)
 				EMIT_SOUND_DYN(ENT(pPlayer->pev), CHAN_ITEM, k_PulseSoundReady,
 					0.7, ATTN_NORM, 0, 130);
 			}
-			else if (!m_bAbsorbed && gpGlobals->time < m_flTailEndTime)
-			{
-				// The tail: nothing was deflected, so the Pulse stands on,
-				// braced, and its Recharge -- the long one, a miss's -- waits
-				// for it.  A window that DID deflect never gets here: it ends
-				// exactly as it always has, so the parry, the short Recharge
-				// and the Rebound are untouched by any of this.
-				//
-				// The tail has NO visual of its own as of 2026-09-20.  It used
-				// to get a dimmer, smaller ring so "I braced" could be told from
-				// "I parried" without a number; that ring went with all the
-				// others when the first-person Shield landed.  Deliberate, and
-				// Andrei's call: the tail may not survive to the final game, so
-				// it was left out of the Shield's v1 rather than given a
-				// treatment that might be thrown away.  Its duller braced sound
-				// (TailScale) is the only cue it has left.  See docs/ROADMAP.md,
-				// "The Pulse's tail".
-				m_bTailUp = true;
-			}
 			else
 			{
 				m_bRecharging = true;
@@ -624,15 +580,6 @@ void CPlayerPulse::Think(CBasePlayer* pPlayer)
 			}
 
 			m_bAbsorbed = false;
-		}
-	}
-	else if (m_bTailUp)
-	{
-		if (gpGlobals->time >= m_flTailEndTime)
-		{
-			m_bTailUp = false;
-			m_bRecharging = true;
-			m_flReadyTime = gpGlobals->time + PulseRechargeFor(pPlayer, false);
 		}
 	}
 	else if (m_bRecharging && gpGlobals->time >= m_flReadyTime)
@@ -945,32 +892,6 @@ void CPlayerPulse::OnKill(CBasePlayer* pPlayer, CBaseMonster* pVictim)
 bool CPlayerPulse::WouldNegate(int bitsDamageType) const
 {
 	return m_bShieldUp && (bitsDamageType & k_PulseNegatedDamage) != 0;
-}
-
-//=========================================================
-// CPlayerPulse::TailScale
-//
-// A hit in the tail is a miss with a discount: the share, and the long
-// Recharge that is already coming.  The Shield's list decides what it
-// applies to (ADR-0005, rule 2), so a fall or drowning is not halved.
-//=========================================================
-float CPlayerPulse::TailScale(CBasePlayer* pPlayer, int bitsDamageType)
-{
-	if (!pPlayer || !m_bTailUp || gpGlobals->time >= m_flTailEndTime)
-		return 1.0f;
-	if ((bitsDamageType & k_PulseNegatedDamage) == 0)
-		return 1.0f;
-
-	// The deflect's own impact, pitched well down and quieter: the same
-	// family, so it reads as the Pulse, but duller, so it never reads as a
-	// parry.  Never in the same instant as a deflect -- one hit is one or the
-	// other -- which is the collision ART_DEBT.md records the first Pulse
-	// sounds failing on.
-	EMIT_SOUND_DYN(ENT(pPlayer->pev), CHAN_AUTO,
-		k_PulseSoundsDeflect[RANDOM_LONG(0, ARRAYSIZE(k_PulseSoundsDeflect) - 1)],
-		0.7, ATTN_NORM, 0, 62 + RANDOM_LONG(0, 6));
-
-	return std::max(0.0f, std::min(pulse_tail_scale.value, 1.0f));
 }
 
 //=========================================================

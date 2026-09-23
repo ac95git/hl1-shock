@@ -222,22 +222,10 @@ deflect. The player therefore can never be Ready while a Shield is still standin
 coexist and the "window always runs its full duration" invariant holds. Granting it at deflect time was
 considered and rejected for exactly that reason.
 
-**The tail** (2026-09-18, overnight; the mechanic **verified in game** the same day, **the visual not
-accepted**: Andrei, "the visual indicator needs to be addressed in order for the mechanic to be clear and
-rewarding to the player" — see [ROADMAP](ROADMAP.md#the-pulses-tail--settled-2026-09-17-built-2026-09-18-overnight-visual-open)). A window that deflected **nothing** does not
-fall; the Pulse stands on, braced, until `skill_matrix_hold` (1 s) after the press — the moment a hold
-would raise the Defense Matrix, so window, tail and Matrix are one motion with no unprotected gap. A hit
-in the tail on the Shield's damage list lands at `pulse_tail_scale` (0.5); falls and drowning are not
-halved. Only the window is a deflect: a hit in the tail earns no Discharge, no Follow-Up, no Rebound and
-no short Recharge, and the long Recharge waits for the tail to end. A window that **did** deflect ends
-exactly as before, so the parry, the Rebound and the short Recharge are untouched. Pulse Window widens
-the window inside the second and never extends it. The tail begins with a dimmer, smaller ring, and a
-braced hit sounds like the deflect pitched far down; the bar counts the tail and the Recharge after it as
-one wait. Its length is the Matrix's own cvar rather than one of its own, which could only ever disagree
-with it. Mashing the key buys about a second of cover per four-second cycle, most of it at half.
+**The window is one second** (2026-09-23; built, not verified in game). `pulse_window` is 1.0 s for everyone and no Skill extends it: Pulse Window (12) is inert until a Skill-gated parry window is designed, and `pulse_window_bonus` is gone. The window ends in the same second a hold raises the Defense Matrix. **The tail is removed** with it (`pulse_tail_scale` too): it filled 0.25-1.0 s at half damage after a window that deflected nothing, and the window now fills that second. Its record is in [ROADMAP](ROADMAP.md#the-pulses-tail--settled-2026-09-17-built-2026-09-18-overnight-visual-open), the decision in [The Pulse's timing](ROADMAP.md#the-pulses-timing--settled-2026-09-23-one-second).
 
-**Sixteen tuning cvars** (`pulse_tail_scale` the sixteenth), registered in `dlls/game.cpp` — fourteen for behaviour, two for the ring's
-look — plus `hud_pulse_tint`, which is client-side and `FCVAR_ARCHIVE` because it is a comfort setting
+**Tuning cvars** registered in `dlls/game.cpp` — the two for the rings' look deleted 2026-09-20, and
+`pulse_window_bonus` and `pulse_tail_scale` with the 1 s window on 2026-09-23 — plus `hud_pulse_tint`, which is client-side and `FCVAR_ARCHIVE` because it is a comfort setting
 rather than a tuning knob.
 
 **Feedback** — nested rings plus a `TE_DLIGHT` flash, and sounds on Pulse, on each deflect, on a denied

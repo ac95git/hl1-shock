@@ -746,16 +746,18 @@ cvar_t skill_reload_time_scale = {"skill_reload_time_scale", "0.8"};
 // The Pulse.  Tuning knobs -- see docs/PILLARS.md pillar 2.  The Recharge is
 // deliberately asymmetric: a Shield that negated something recovers faster than
 // one that negated nothing, so good reads chain and whiffs strand you.
-cvar_t pulse_window = {"pulse_window", "0.25"};
-cvar_t pulse_window_bonus = {"pulse_window_bonus", "0.15"};
+//
+// The window is one second, period (Andrei, 2026-09-23): 0.25 s was too short to
+// be a state, and the Shield could not draw an entrance and an exit inside it.
+// It is the same second a hold takes to raise the Defense Matrix, so the two
+// are one motion.  The tail that used to fill 0.25-1.0 s at half damage is
+// gone with it, and so is Pulse Window's bonus: a shorter, Skill-gated parry
+// window with bonuses of its own is for later (docs/ROADMAP.md, "The Pulse's
+// timing").
+cvar_t pulse_window = {"pulse_window", "1.0"};
 cvar_t pulse_recharge_hit = {"pulse_recharge_hit", "1.5"};
 cvar_t pulse_recharge_miss = {"pulse_recharge_miss", "3.0"};
 cvar_t pulse_recharge_scale = {"pulse_recharge_scale", "0.66"};
-// The tail (docs/ROADMAP.md, "The Pulse's tail"): a Pulse whose window deflected
-// nothing stands on, braced, until the moment a hold would raise the Defense
-// Matrix -- skill_matrix_hold after the press, so window, tail and Matrix are
-// one motion -- and a hit in it takes this share.  Only the window deflects.
-cvar_t pulse_tail_scale = {"pulse_tail_scale", "0.5"};
 // The cap is load-bearing, not cosmetic: without it, timing a Pulse against the
 // hardest-hitting attacks in the game yields the strongest counter.
 cvar_t pulse_discharge_scale = {"pulse_discharge_scale", "0.75"};
@@ -816,7 +818,7 @@ cvar_t skill_matrix_grant = {"skill_matrix_grant", "100"};
 cvar_t infusion_rate = {"infusion_rate", "4"};
 cvar_t infusion_duration = {"infusion_duration", "10"};
 // Med Expert. Additive rather than a percentage so it stays legible when
-// infusion_duration is tuned -- the same choice pulse_window_bonus makes.
+// infusion_duration is tuned.
 cvar_t infusion_duration_bonus = {"infusion_duration_bonus", "5"};
 
 // The Backstab -- see docs/adr/0010-the-backstab-is-positional.md.
@@ -1118,10 +1120,8 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_stat_dash_recovery);
 
 	CVAR_REGISTER(&pulse_window);
-	CVAR_REGISTER(&pulse_window_bonus);
 	CVAR_REGISTER(&pulse_recharge_hit);
 	CVAR_REGISTER(&pulse_recharge_miss);
-	CVAR_REGISTER(&pulse_tail_scale);
 	CVAR_REGISTER(&pulse_recharge_scale);
 	CVAR_REGISTER(&pulse_discharge_scale);
 	CVAR_REGISTER(&pulse_discharge_min);

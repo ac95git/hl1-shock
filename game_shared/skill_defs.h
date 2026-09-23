@@ -549,8 +549,10 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	{ ESkillId::MeleeSpeed,      "Melee Speed",      "-30% melee swing time",                               "d_357",          2,  6,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
 	// 12: the Pulse, in the Juggernaut's far corner.  Gated on the Pulse
-	// Module, which is open until that Module exists.
-	{ ESkillId::PulseWindow,     "Pulse Window",     "+0.15 s Shield window",                             "autoaim_c",      6,  12, 1,  ENodeTier::Minor,  EStat::None,  EGate::PulseModule },
+	// Module.  Inert since 2026-09-23, when the window became one second for
+	// everyone; it waits here for the Skill-gated parry window (docs/ROADMAP.md,
+	// "The Pulse's timing").
+	{ ESkillId::PulseWindow,     "Pulse Window",     "No effect yet: the window is fixed at 1 s",                           "autoaim_c",      6,  12, 1,  ENodeTier::Minor,  EStat::None,  EGate::PulseModule },
 
 	// 13: the hub's south rim Minor
 	{ ESkillId::BatteryCapacity, "Battery Capacity", "+50 max AP",                               "item_battery",   7,  9,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },

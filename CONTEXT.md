@@ -216,13 +216,13 @@ _Avoid_: bubble, barrier, aura, forcefield
 
 **Pulse Window**:
 The interval a Shield stands for. Damage that arrives inside it is negated; damage a moment either side of
-it is not.
+it is not. One second, for everyone, since 2026-09-23.
 _Avoid_: active frames, i-frames, parry window
 
-**Tail**:
-What follows a Pulse Window that negated nothing: the Pulse stands on, braced, up to the moment a hold
-would raise the Defense Matrix, and a hit in it lands at half. **Not a Shield and not a deflect** — it
-earns nothing the window earns. *Brace* is the verb for what it does to a hit.
+**Tail** (removed 2026-09-23):
+What used to follow a Pulse Window that negated nothing: the Pulse stood on, braced, up to the moment a
+hold would raise the Defense Matrix, and a hit in it landed at half. Gone when the window became the whole
+second; the word is free again only once something else earns it.
 _Avoid_: shield, deflect, parry, guard, block
 
 **Recharge**:
