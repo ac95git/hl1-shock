@@ -848,7 +848,7 @@ Xen hell** (2026-09-17), and the roster gained the human side the same day:
 | [Melee alien grunt](#melee-alien-grunt) | Enemy | `CAGrunt`, bare arm | **v1 built** 2026-09-18, verified |
 | [Shelled headcrab](#shelled-headcrab) | Enemy | `CHeadCrab`, recoloured | **Shaped** |
 | [Friendly alien slave](#friendly-alien-slave) | Non-combatant | The slave model on `CTalkMonster` | **Shaped** |
-| [Alien slave boss](#the-alien-slave-boss) | Boss, freed to become the friendly slave | `CISlave` | Idea |
+| [Alien slave boss](#the-alien-slave-boss) | Boss, freed to become the friendly slave, or killed | `CISlave` | **Shaped** 2026-09-23: the Ward, the Overcharge, three Bindings |
 | [Assassin boss](#the-assassin-boss) | Boss | `CHAssassin` | Idea |
 | [Alien grunt boss](#the-alien-grunt-boss) | Boss | `CAGrunt` | Idea |
 | [Nihilanth](#the-nihilanth) | Boss | `CNihilanth`, new model | **Shaped** 2026-09-17: a pattern fight |
@@ -1320,7 +1320,10 @@ Discharge would all go through.
 **The Discharge may skip the lesson.** A melee deflect fires a Discharge at the crosshair
 ([ADR-0006](adr/0006-the-discharge-vents-at-the-crosshair.md)), and a player aiming at a leaping crab is
 aiming at it. If the Discharge kills a flipped crab outright, the player never swings. That is either a fine
-reward for the Skill or a hole in the design; `pulse_discharge_melee 0` exists to compare.
+reward for the Skill or a hole in the design; `pulse_discharge_melee 0` exists to compare. **Answered
+2026-09-23, not built:** the Discharge becomes innate and fires only off slave beams
+([ADR-0016](adr/0016-the-discharge-is-innate-and-answers-only-slave-beams.md)), so a deflected leap vents
+nothing and the swing is the only answer.
 
 **Traps:**
 
@@ -1495,47 +1498,159 @@ Almost everything about him is map setup on stock entities. The code is:
 
 ### The alien slave boss
 
-**Shape: Idea, with its purpose settled 2026-09-13.** A special alien slave under the Nihilanth's control,
-with custom attacks and AI. Defeating it frees it from that control, and from then on it is the
-[friendly alien slave](#friendly-alien-slave): one character, in his lab, who helps the player progress
-through unlockables and information, never by fighting. Its reward was first written as "a Module and some
-items"; that now falls under how the lab slave hands things over.
+**Shape: Shaped 2026-09-23, in a grill.** Nothing built. A special alien slave under the Nihilanth's control,
+who ends wing one. The fight tests the Pulse: guns carry most of it, and one signature attack, the
+**Overcharge**, only a deflect answers. Freed, he is the [friendly alien slave](#friendly-alien-slave): one
+character, in his lab, who helps the player through unlockables and information, never by fighting. Killed,
+he is gone, and the alien Module drops from his body. **Freeing him is the fight's natural end; killing him
+is a route a player has to pursue.** The vocabulary (Ward, Overcharge, Bindings, Stagger, Barrier) is in
+[CONTEXT.md](../CONTEXT.md).
 
-- **Defeated is not killed.** It needs a health floor where the fight ends: the boss stops and is spared.
-  Shooting the freed slave later ends the game, so the fight has to make "spared" unmistakable.
-- **Two entities. Settled 2026-09-13.** The boss and the lab slave are separate. The boss leaves when defeated
-  and sets a global state (`env_global`), and the lab slave is present only once that state is on.
-- **The collar and the bracelets are the Nihilanth's control. Settled.** They already show it on the stock
-  model, and `collar1` and `collar2` tug at the collar.
-- **The end of the fight is scripted**, so that the slave being freed is noticeable. Settled. It is a
-  sequence the player watches rather than a monster that simply stops. What it shows is open.
+#### Settled before the grill
 
-**What that asks of the art.** In the stock model the collar and bracelets are part of the one body mesh: the
-model has a single body submodel, and the metal is most likely its chrome texture (`Chrome_1.bmp`, the one
-chrome-flagged texture in `islaveT.mdl`). So a freed slave without them is a mesh edit and a recompile,
-starting with a decompile. The cheap alternatives, if that waits: a second skin where the metal is dark or
-broken, which is a texture edit and still a recompile, or a freed slave who keeps the hardware and shows his
-freedom only in how he behaves. The boss and the lab slave being two entities makes this easy: they can be two
-models.
-
-**What the scripted ending can use.** `scripted_sequence` for the set piece (the stock `collar1` and
-`collar2` are already a slave fighting his collar), `env_beam` or sprite effects for the control breaking,
-`env_shake` and `env_fade`, and a `scripted_sentence` for a first free word. When it finishes, the boss
-removes itself and the global state turns on. All of it is map entities; the only code in the ending is the
-boss knowing its health floor has been reached and firing a target instead of dying.
+- **Two entities. 2026-09-13.** The boss and the lab slave are separate. Freed, the boss leaves and sets a
+  global state (`env_global`), and the lab slave is present only once that state is on.
+- **The collar and the bracelets are the Nihilanth's control. 2026-09-13.** They already show it on the stock
+  model, and `collar1` and `collar2` tug at the collar. They are the three **Bindings** below.
 - **The Module he gives is the alien Module** (2026-09-13, confirmed 2026-09-17): a platform for
   Core-powered alien weapons, whose first weapon summons ghost slaves, designed under the
-  [Alien Route](#alien). The fiction of the slave teaching an alien ability fits exactly. Until his fight
-  exists, `item_alienmodule` stands in for the hand-over.
-- **How do the items arrive?** Handed straight into the Inventory, where a full Grid refuses them, or left in
-  a Box, which is not built yet.
-- Custom attacks: none written down yet.
+  [Alien Route](#alien). Until his fight exists, `item_alienmodule` stands in for the hand-over.
 - **Placed 2026-09-17: he ends wing one**, in the mine levels, having come through the tear at its deep
   end. Early, because everything downstream needs him: the hub's vortigaunt, the hand-over machine, the
-  second half's advisor. His fight is where the Pulse is *tested* (his zaps are energy, his claws are on the
-  Shield's list), not where it is won — the Pulse is found in the first minutes. Freed, **he gives the
-  alien Module**, confirmed the same day; after the teleport he and the surviving staff advise on the
-  pieces.
+  second half's advisor. The Pulse is found in the first minutes, so by his fight it may be assumed; after the
+  teleport he and the surviving staff advise on the pieces.
+
+#### The fight — settled 2026-09-23
+
+**He fights alone, and he is mortal.** Allies are a later refinement, below.
+
+**The Ward.** A green glow round his body (`kRenderFxGlowShell`) that is his protection. **All damage goes to
+the Ward first, melee included**, and while it stands his health is untouched. **A Discharge does nothing to
+him while the Ward is up** — no damage, no Stagger, no bounce; it is simply absorbed.
+
+**The Overcharge is his attack**, part of each phase's rotation like any other, not a cue the Ward's break
+sets off. It is the stock zap made bigger: a longer channel, more beams, and bolts at a multiple of the zap's
+damage. **Only a deflected Overcharge advances the fight**, so it is in the rotation of every phase.
+
+**The Ward down stays down until his next Overcharge resolves** — deflected, dodged or taken — and then
+comes back up. So a break is always worth exactly one chance, and the lethal route below is still bounded by
+one window of shooting per Overcharge. A fixed timer was rejected: a break with no Overcharge inside it
+wastes ammunition in a fight tuned to be short of it.
+
+**A Discharge off an Overcharge, with the Ward down, breaks one Binding** — left bracelet, right bracelet,
+then the collar — **and deals no damage to his health.** It Staggers him long. A Discharge off his ordinary
+zaps, with the Ward down, Staggers him and hurts like any Discharge. An Overcharge that is not deflected
+breaks nothing. Because the Discharge goes to the crosshair, a panicked deflect while looking away wastes the
+Overcharge; the Ward comes back and the loop runs again, so that is a cost, never a lock.
+
+**The Bindings drive the escalation**, which the player can see, rather than a hidden health threshold:
+
+| Bindings broken | His attacks |
+| --- | --- |
+| 0 | The stock zap and claws, and the Overcharge |
+| 1 (left bracelet) | **The volley** replaces the stock zap: three or four quick zaps with a rhythm, each its own deflect; the short Recharge after a deflect is what makes the next one possible |
+| 2 (right bracelet) | **The Overcharge winds up faster**, a tighter read on the one that frees him |
+
+His claws stay his answer at close range throughout. He **never flees**: the stock slave's flee at low health
+(`dlls/islave.cpp:723`, `health < 20`) is removed on him.
+
+**Freed.** The third Binding breaks: the biggest effect of the fight at the collar, `env_shake`, the green
+flash the Discharge uses, and the Ward goes out for good. Then **the collar animation** (`collar1` or
+`collar2`, Andrei checking them in HLMV first), then he beams out — the Xen teleport sprite and sound, and he
+is removed — and his target fires, which the map hangs the `env_global` and anything else on. The ending is
+the collar animation for now; more animations chained after it, or one long sequence compiled from existing
+ones, wait until it is seen.
+
+**Killed.** Only by out-shooting him through the Ward's windows. His health is sized so that a player who
+deflects every Overcharge always frees him first, and the arena's ammunition so that a player who refuses the
+Pulse — breaking line of sight from each Overcharge, which is hitscan, and shooting through window after
+window — has **barely enough** for the kill. He dies with his Bindings on. **The alien Module drops from his
+body**, so the Alien Route stays open on both paths; what is lost is the character — the lab, the hand-overs,
+the English, his advice, which the surviving staff carry alone. A global state records it (`slave_killed`,
+beside the freed one) for later maps to acknowledge; nothing reads it yet. A kill window after the freeing,
+the slave kneeling, was proposed and dropped: one lethal route, and it is a fight, not an execution.
+
+#### What the Pulse gives up for him — settled 2026-09-23
+
+**The Discharge becomes innate to the Pulse, and fires only off slave beams.** Recorded as
+[ADR-0016](adr/0016-the-discharge-is-innate-and-answers-only-slave-beams.md), which amends ADR-0006. Every
+player with the Pulse vents a deflected slave zap to the crosshair; every other negated hit — melee, the
+Shield's other damage types — is only negated. The `PulseDischarge` Skill (id 16) is **retired**: its id is
+never reused, and its node on the board needs a new occupant. In the fiction, the suit's mining shield
+happens to answer vortigaunt energy. **A deflected beam flashes the screen green**, in place of the suit
+colour's tint (`hud_pulse_tint`) for that one event.
+
+#### The Barrier — settled 2026-09-23
+
+The fight is taught before it. **Barriers** are brush entities of the Shield's own tech, mine safety equipment
+on a power source, so they stand for as long as they are powered. The teaching scene is a slave zapping the
+player through one, and Staggering himself instead.
+
+- **Toggleable**: on until something turns it off (a button, a breaker, any trigger), with a start-off flag so
+  a map can power one *up*. `func_wall_toggle` (`dlls/bmodels.cpp`) already switches a brush's solidity and
+  visibility on each use; `func_barrier` is that plus the zap. Puzzles fall out: cut the power to pass,
+  restore it to shelter, lure a slave into zapping through it.
+- **Blocks everything**, both ways. A grunt's bullets just stop. **Slave beams go back to the slave who fired
+  them**, with a Stagger — the one place a beam returns to its source, because a Barrier has no crosshair.
+- **Its look is Andrei's texture**, painted into `topmod.wad` and drawn additive; a placeholder ships first, see
+  [ART_DEBT.md](ART_DEBT.md).
+
+#### What the base game already gives
+
+Read from `dlls/islave.cpp` and the model's events on 2026-09-23:
+
+- **The stock zap's wind-up** is `zapattack1`: the `ZAP_POWERUP` event four times (frames 0, 4, 10, 15 at
+  15 fps), each adding an arm beam per hand — up to 8, the cap `ISLAVE_MAX_BEAMS` (`:39`) — raising
+  `zap4.wav`'s pitch and brightening the beams (`BeamGlow`, `:815`). `ZAP_SHOOT` at frame 24 (about 1.6 s;
+  1.07 s on Hard, where the framerate is ×1.5) clears them and fires **two bolts, one per hand**
+  (`:486-487`), each a hitscan trace dealing `sk_islave_dmg_zap` as `DMG_SHOCK` (`:891`).
+- **The beams come from attachments 1 and 2, the hands** (`:802`), which is where the bracelets are: effects
+  at a broken bracelet cost nothing. What the collar has is to be checked in HLMV.
+- **The revive** (`m_hDead`, `:459-480`): a slave zaps a dead slave and a new one spawns in its place. Unused
+  while he fights alone.
+- **Chained `scripted_sequence`s** play one after another through their `target`s, and the client blends each
+  change of sequence over 0.2 s (`cl_dll/StudioModelRenderer.cpp:864-907`).
+
+#### Traps
+
+- **Arm beams need walls.** `ArmBeam` draws only if geometry is within 512 units of the hand (`:783-793`); in
+  an open arena the stock wind-up shows nothing. The Overcharge's beams have to be his own — to the floor, or
+  round his body.
+- **He is immune to `DMG_SHOCK`** (`:585`); the Discharge is `DMG_ENERGYBEAM` for that reason. A Stagger is
+  therefore not a side effect of damage and has to be forced.
+- **The gap in a chain**: between two `scripted_sequence`s the monster is handed back to its AI. Whether that
+  shows as a frame of idle or a turn is to be measured, not asserted.
+- **Melee needs no ammunition**, so the ammunition bound on the lethal route is soft for a melee player.
+  Accepted.
+
+#### What is code and what is map
+
+The code: the boss (a `CISlave` subclass) with the Ward's pool and glow, the Overcharge and the volley, the
+Binding counter and its effects, the escalation, no flee, and firing a target on the third break; the forced
+Stagger on any slave; the innate Discharge on beams only, the green flash, and the Skill's retirement;
+`func_barrier`. The map: the arena and its ammunition, the ending's chain, the two global states, and every
+Barrier.
+
+#### Open
+
+- **How do the lab slave's items arrive?** Handed straight into the Inventory, where a full Grid refuses them,
+  or left in a Box, which is not built yet.
+- **Does a Barrier's returned beam also hurt the slave**, or only Stagger him? The teaching scene needs only
+  the Stagger.
+- **The retired Discharge node's replacement** on the board ([SKILL_MAP.md](SKILL_MAP.md),
+  [SKILL_TREE.md](SKILL_TREE.md)), and the two cross-Route links that scale the Discharge (Energy Damage,
+  Weapon Mastery), which still apply to the innate one.
+- **The arena**, in wing one's map, and its ammunition.
+- **Every number**: the Ward's pool, the Overcharge's channel and damage, the Stagger's length, his health
+  against the strongest wing-one weapon over three windows — if a well-armed player kills him by accident
+  while deflecting, the pool is too small.
+
+#### Later
+
+- **Allies**, or **ghost summons** — the alien Module's first weapon, used on the player before it is handed
+  to them, which introduces the Module.
+- **Binding bodygroups** in place of the effects, and the lab slave's model without the hardware, from one
+  decompile; see [ART_DEBT.md](ART_DEBT.md).
 
 ### The assassin boss
 
@@ -2780,7 +2895,7 @@ one node each.
 | Ricochet | As above | New. One node, no ranks |
 | Pulse Window (12) | Longer Shield | Exists. The timing branch, brought inside the Route |
 | Pulse Recharge (15) | Shorter Recharge | Exists |
-| Pulse Discharge (16) | Negated hits vent at the crosshair | Exists |
+| Pulse Discharge (16) | Negated hits vent at the crosshair | Exists. **To be retired** (2026-09-23): the Discharge becomes innate, [ADR-0016](adr/0016-the-discharge-is-innate-and-answers-only-slave-beams.md); the node needs a new occupant |
 | Pulse Rebound (17) | A deflect skips the Recharge | Exists |
 | Defense Matrix | The gate: hold for 1 s | New. Needs the Pulse Module |
 | Matrix on Kill | A kill while the Matrix is up restores some armour | New. The Route's one way to sustain, and the opposite of idling |

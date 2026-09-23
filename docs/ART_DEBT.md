@@ -1125,3 +1125,51 @@ a matching texture set would pay for itself.
 ### Done when
 A Record on a desk reads as something to read before the Prompt says so, and registering one makes a
 sound in the suit's voice.
+
+## The alien slave boss — Bindings
+
+### Scope
+The boss's collar and two bracelets, the three Bindings he loses one at a time, and the freed lab slave who
+wears none of them. Designed 2026-09-23, [ROADMAP.md](ROADMAP.md#the-alien-slave-boss); not built, so this
+entry describes a stand-in that does not exist yet.
+
+### Current stand-in
+**Effects on the stock model.** A broken Binding is a spark burst and a short beam flicker, then a small
+persistent sprite at the spot. The bracelets sit at the model's hand attachments (1 and 2, `dlls/islave.cpp:802`),
+so those cost nothing; the collar's spot is to be found in HLMV. The metal itself stays on the mesh.
+
+### What's wrong with it
+- **The metal never leaves.** In `islave.mdl` the collar and bracelets are part of the one body mesh (one
+  body submodel, most likely the `Chrome_1.bmp` texture), so a freed slave still visibly wears all three.
+- **The lab slave inherits it.** Freed, he should have no hardware at all, and he is the same mesh.
+
+### What to look for
+The collar and each bracelet split into **bodygroups of their own**, each with an intact and a broken (or
+empty) state, so a break switches the group; and a second model for the lab slave with the hardware gone.
+The SDK folder on `D:` has **no islave source** (checked 2026-09-23), so it starts with a Crowbar decompile —
+Andrei's, per the model workflow. If the ending's chained `scripted_sequence`s show a gap, the same decompile
+can carry one long ending sequence joined from existing animations.
+
+### Done when
+Each Binding visibly comes off as it breaks, and the lab slave wears none of them.
+
+## The Barrier — texture
+
+### Scope
+`func_barrier`, the mine's powered safety field of the Shield's tech. Designed 2026-09-23,
+[ROADMAP.md](ROADMAP.md#the-barrier--settled-2026-09-23); not built.
+
+### Current stand-in
+Whatever stock WAD texture the first build uses, drawn additive.
+
+### What's wrong with it
+A stock texture reads as the thing it was painted for — glass, water, a teleporter — not as the same
+field the player's Shield is made of, which is the whole point of the teaching scene.
+
+### What to look for
+A texture of Andrei's in `E:\CustomAssets\textures\wad\`, packed into `topmod.wad` by `wadpack.py`, that
+reads as kin to the first-person Shield: an energy surface with some structure, luminous when drawn additive,
+and tiling on a wall of any size.
+
+### Done when
+A player seeing a Barrier for the first time recognises it as their Shield's material.

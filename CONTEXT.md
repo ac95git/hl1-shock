@@ -211,7 +211,7 @@ The field a Pulse raises around the player. It exists only for the Pulse Window 
 closes. In first person it is **drawn as a surface the player is inside**, formed and withdrawn from the
 crosshair (settled 2026-09-20, [ROADMAP.md](docs/ROADMAP.md#the-shield-in-first-person--settled-2026-09-20-built-and-seen)) —
 which makes the Avoid list below a live temptation rather than a theoretical one. It is the Shield seen
-from within; it is not a bubble and not a barrier.
+from within; it is not a bubble and not a barrier — a **Barrier** is the world entity of the same tech, below.
 _Avoid_: bubble, barrier, aura, forcefield
 
 **Pulse Window**:
@@ -232,8 +232,25 @@ _Avoid_: cooldown, refresh, reload
 
 **Discharge**:
 The energy a Shield vents toward the player's crosshair when it negates a hit. It goes where the player is
-aiming, not back where the damage came from.
+aiming, not back where the damage came from. **Settled 2026-09-23, not built**
+([ADR-0016](docs/adr/0016-the-discharge-is-innate-and-answers-only-slave-beams.md)): innate to the Pulse,
+no longer a Skill, and set off only by an alien slave's beam; every other negated hit is only negated. Until
+that is built, the code still has it as the `PulseDischarge` Skill, on every negated hit.
 _Avoid_: reflect, riposte, counter, retaliation
+
+**Stagger**:
+What a Discharge does to an alien slave it hits, and what a Barrier's returned beam does to the slave who
+fired it: he is thrown into a flinch and his attack is broken off. Forced, not a side effect of damage —
+slaves are immune to their own `DMG_SHOCK`. Settled 2026-09-23, not built.
+_Avoid_: stun, knockback (Half-Life has none for monsters), interrupt
+
+**Barrier**:
+A brush entity of the Shield's own tech, the mine's safety equipment on a power source (`func_barrier`):
+standing for as long as it is powered, turned off or on by anything that fires it. It blocks everything
+both ways and sends an alien slave's beam back to the slave who fired it, with a Stagger. Not the Shield:
+a Barrier is fixed, powered and part of the level, the Shield is the player's own and lasts a Pulse Window.
+Settled 2026-09-23, not built.
+_Avoid_: shield, screen, forcefield, ward (the boss's)
 
 **Rebound**:
 A Recharge skipped because the Shield deflected something. Held as a count, spent when such a window
@@ -412,6 +429,27 @@ A monster_ghost_slave summoned by the alien Module's weapon: an alien slave figh
 translucent, with no corpse, gone when its lifetime runs out, on death, or — once built — with the
 ultimate's volley. Built 2026-09-16; it does not yet follow the player.
 _Avoid_: ghost slave (the classname says slave once already), pet, minion, summon (the weapon and the verb)
+
+### The alien slave boss
+
+Settled 2026-09-23, not built; [ROADMAP.md](docs/ROADMAP.md#the-alien-slave-boss) is the design.
+
+**Ward**:
+The alien slave boss's protection, the Nihilanth's: a green glow round his body that takes all damage, melee
+included, before his health does, and absorbs every Discharge while it stands. Down, it stays down until
+his next Overcharge resolves, then comes back.
+_Avoid_: barrier (the world entity), shield (the player's), aura, armour
+
+**Overcharge**:
+The alien slave boss's signature attack: the slave's zap with a longer channel, more beams and far more
+damage, part of his rotation in every phase. A Discharge off one, with his Ward down, breaks a Binding; it
+is the only thing that moves his fight on.
+_Avoid_: charged zap, super zap, big zap
+
+**Bindings**:
+The collar and the two bracelets, which are the Nihilanth's control of a slave. The boss's are broken one
+at a time — left bracelet, right bracelet, collar — and the third frees him.
+_Avoid_: shackles, restraints, chains, collar (for all three)
 
 ### The humans
 
