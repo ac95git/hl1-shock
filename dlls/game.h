@@ -114,6 +114,8 @@ extern cvar_t panther_turn_sign;
 extern cvar_t panther_wall_chance;
 extern cvar_t panther_wall_reach;
 extern cvar_t panther_wall_cling;
+extern cvar_t panther_wall_only;
+extern cvar_t panther_circling;
 extern cvar_t skill_weapon_damage_scale;
 extern cvar_t skill_reload_time_scale;
 extern cvar_t skill_marksman_scale;

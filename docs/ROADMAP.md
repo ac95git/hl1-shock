@@ -965,11 +965,54 @@ Combat only, so it never pounces unRevealed still holds.
 still to be read, for v2's lean. (2) The code, one slice each: the rename, the stalking
 spiral and the slowed crawl, combat Circling, the upper-body turn, the Wall Pounce.
 
-**Built 2026-09-23 and shelved, not verified in game** — all of (2) in one commit, `d17f217`, on the
-branch **`panthereye-menace`**, because Andrei was away from the PC. `hl-shock` and the installed
-`hl.dll` are still v1. To test: `git checkout panthereye-menace`, build `hldll.vcxproj`, then play with
-`panther_debug 1` (its readout gains a line: direction, timer, turn, wall state). Merge into `hl-shock`
-once it passes; the rows:
+**Built 2026-09-23 and shelved** — all of (2) in one commit, `d17f217`, on the branch
+**`panthereye-menace`**, because Andrei was away from the PC. `panther_debug 1` adds a line to the readout:
+direction, timer, turn, wall state.
+
+**Tested the same evening. The Wall Pounce passed. Circling did not, and needs heavy rework.**
+
+- **Circling and the upper-body turn are gated off** behind `panther_circling` (default 0). Andrei: the
+  sneak-around "not so much", the circling "does not look good, the bone is not right", and too ambitious
+  for now. Off, the stalk and the chase run straight and the pounce is taken anywhere in the band, as v1
+  did; the Glimpsed state is never entered and controller 0 stays at rest. The code is kept, not deleted,
+  for the rework. That rework starts from what failed: the path (the spiral read wrong in play), and the
+  bone (controller 0 on `Bip01 Spine` turns the wrong part of the body; a better one would need a QC
+  change, which is Andrei's). Rows 1–3 below are void until then.
+- **The Wall Pounce was reworked in the test session and passed**, "solid":
+  - **Held to the wall.** It counts as on the wall by the engine's contact plane, so a wall met at an
+    angle no longer lets it slide along. The cling pins its origin and zeroes its velocity every think.
+  - **Standing on the wall.** It is tilted by entity angles, not a bone controller: both controllers sit
+    on the spine, so they can't carry the hind legs. The tilt starts at takeoff and completes at the
+    wall: feet on the wall, belly out, head along the wall toward the player. It tilts back to upright
+    over the flight off it. The model turns about its origin, so the origin slides out to the wall's face
+    with the tilt while the hull is offset to stay where it was (`SetBodyOffset`).
+  - **The crouch on the wall.** On sticking, `crouch_to_jump` restarts from frame 0, scaled so its takeoff
+    event lands `panther_wall_cling` seconds later, and that event is the push-off. The rest of the
+    sequence plays at the ground leap's rate.
+  - `panther_wall_only 1` is a test switch: no claws, no straight pounce, and with no wall in reach it
+    keeps closing.
+
+**When it tries a Wall Pounce** (evaluated 2026-09-23, unchanged). It is a variant of the pounce, not a
+movement choice. The pounce has to be ready: Revealed, on the ground, `panther_leap_cooldown` spent, and
+150–450 u from the player (with Circling on, also the circling timer or the band's floor). Then
+`panther_wall_chance` is rolled, then `FindWall`. What follows from that:
+
+- **It never goes looking for a wall.** It uses one only if it already stands within about 230 u of it
+  (`panther_wall_reach` plus the hull). In an open room it never happens; in a corridor it happens about
+  every other pounce.
+- **Only walls to its side count.** The search covers 60–120° off the line to the player, either side, so a
+  wall behind it or beyond the player is never used, and the rebound must come in at least 45° off the
+  straight approach.
+- **Not checked:** room for the hull. Both flights are tested with line traces only, so a door frame, a
+  low ceiling or a prop in the way can clip the leap. The rebound's range against the wall-to-player
+  distance isn't checked either.
+- Open for Andrei: whether it should move to a wall on purpose (a movement choice, and the natural home
+  for the menace Circling was meant to give), whether walls behind it should count, and whether the
+  flights want hull traces.
+
+`panther_wall_only` and `panther_circling` are both on the branch.
+
+The rows as first written:
 
 1. **The turn's direction.** Controller 0's range is reversed in the QC, so which way it turns had to be
    left to the eye: if the shoulders turn *away* from the player, `panther_turn_sign -1`, then fix the sign
@@ -988,8 +1031,9 @@ unRevealed (the save field was renamed).
 **v2, recorded so it isn't re-grilled:**
 
 - **The ideal Wall Pounce**: `crouch_to_jump` at the wall, a controller-1 lean against it, a second
-  `crouch_to_jump` off it into the pounce. Probably a second controller on another bone for the horizontal
-  turn, a QC edit and recompile (Andrei's). The wall-kick pose is in [ART_DEBT.md](ART_DEBT.md).
+  `crouch_to_jump` off it into the pounce. The second crouch and the lean (as a whole-body tilt) were built
+  in the test session, 2026-09-23. What is left is a real wall pose, a modelling job; see
+  [ART_DEBT.md](ART_DEBT.md).
 - **Knocking it off the wall** by hurting it during the cling. Needs the Panthereye tilted back to upright
   as it falls.
 - **Head fixation**: a new controller on the head bone.

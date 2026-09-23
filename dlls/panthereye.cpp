@@ -23,6 +23,16 @@
 *	toward the player only so far: the heading is held panther_circle_angle off
 *	the line to the player, so the shoulders can stay on them the whole way.
 *
+*	NEEDS HEAVY REWORK: Circling and the upper-body turn did not play well in
+*	Andrei's test (2026-09-23) -- the path reads wrong and the spine bone is
+*	not the right one to turn -- so all of it is behind panther_circling, off
+*	by default.  Off, the stalk and the chase run straight and the pounce is
+*	taken anywhere in the band, as v1.  See docs/ROADMAP.md.
+*
+*	The Wall Pounce passed the same test: it leaps at a wall, tilts in the
+*	air to stand on it, replays crouch_to_jump there and pushes off at the
+*	player on the crouch's own take-off event.
+*
 *	Alone: a CBaseMonster, not a CSquadMonster.  Always the blue body; the red
 *	one is the alpha, which is a later slice.  So are the cover-to-cover
 *	search, feeding, the glowing-eye light, the wall pose, the knock-off and
@@ -168,8 +178,13 @@ private:
 	void UpdateTurn(float flDelta);
 	bool CircleStep();
 	bool FindWall();
-	Vector LeapVelocity(const Vector& vecTarget);
+	Vector LeapVelocity(const Vector& vecTarget, float* pflFlight = NULL);
 	void EndWallPounce();
+	void WallRebound();
+	void SetBodyOffset(const Vector& vecOffset);
+	void SetOrientation(const Vector& vecForward, const Vector& vecUp);
+	void UpdateWallTilt();
+	Vector WallFacing(const Vector& vecFrom, const Vector& vecNormal);
 	bool PlayerSees(CBasePlayer* pPlayer, float flHalfAngle, float* pflAngle, bool* pbLine);
 	void DebugReport(CBasePlayer* pPlayer, float flAngle, bool bLine, bool bOnScreen, float flDist);
 
@@ -191,7 +206,19 @@ private:
 	EPantherWall m_Wall;
 	Vector m_vecWallTarget; // where the hull's centre aims to meet the wall
 	Vector m_vecWallDir;	// horizontal, toward the wall
-	float m_flWallTime;
+	Vector m_vecWallNormal; // horizontal, out of the wall
+	Vector m_vecClingOrigin; // where it met the wall; held there for the cling
+	float m_flWallTime;		 // ToWall and Rebound: the takeoff
+	float m_flWallFlight;	 // ToWall and Rebound: how long the flight should take
+
+	// The tilt onto the wall and back.  The model turns about its origin, the
+	// feet, so the origin moves out to the wall's face with it and the hull is
+	// offset to stay where it was: m_vecBodyOffset is the origin's shift from
+	// the hull's bottom centre.
+	Vector m_vecBodyOffset;
+	Vector m_vecTiltFromOffset;
+	Vector m_vecTiltFromForward;
+	Vector m_vecTiltFromUp;
 };
 
 LINK_ENTITY_TO_CLASS(monster_panthereye, CPanthereye);
@@ -220,6 +247,13 @@ bool CPanthereye::Restore(CRestore& restore)
 	// Saved mid-cling: the wall state is not saved, so come back on the ground.
 	if (pev->movetype == MOVETYPE_FLY)
 		pev->movetype = MOVETYPE_STEP;
+
+	// Saved mid-tilt: the hull's offset is in the saved mins, so undo it from
+	// there, and stand upright.
+	m_vecBodyOffset = Vector(-PANTHER_HULL_HALF, -PANTHER_HULL_HALF, 0) - pev->mins;
+	SetBodyOffset(g_vecZero);
+	pev->angles.x = 0;
+	pev->angles.z = 0;
 
 	return true;
 }
@@ -394,6 +428,8 @@ void CPanthereye::Spawn()
 	m_flTurn = 0;
 	m_Wall = EPantherWall::None;
 	m_flWallTime = 0;
+	m_flWallFlight = 0;
+	m_vecBodyOffset = g_vecZero;
 
 	MonsterInit();
 }
@@ -578,7 +614,7 @@ void CPanthereye::PrescheduleThink()
 	// --- Glimpsed --------------------------------------------------------------
 	// A change either way ends the schedule it is in: the straight stalk gives
 	// way to Circling, and Circling to the run once it is off screen again.
-	const bool bGlimpsed = IsStalking() && pPlayer == pEnemy && bOnScreen;
+	const bool bGlimpsed = panther_circling.value != 0 && IsStalking() && pPlayer == pEnemy && bOnScreen;
 	if (bGlimpsed != m_bGlimpsed)
 	{
 		m_bGlimpsed = bGlimpsed;
@@ -628,7 +664,7 @@ void CPanthereye::UpdateTurn(float flDelta)
 	float flTarget = 0;
 	CBaseEntity* pEnemy = m_hEnemy;
 
-	if (pEnemy != NULL && IsAlive() && m_Activity == ACT_RUN && m_Wall == EPantherWall::None)
+	if (panther_circling.value != 0 && pEnemy != NULL && IsAlive() && m_Activity == ACT_RUN && m_Wall == EPantherWall::None)
 	{
 		const float flClamp = V_max(0.0f, panther_turn_clamp.value);
 		flTarget = UTIL_AngleDiff(UTIL_VecToYaw(pEnemy->pev->origin - pev->origin), pev->angles.y);
@@ -884,6 +920,7 @@ bool CPanthereye::FindWall()
 
 		m_vecWallTarget = vecTarget;
 		m_vecWallDir = vecDir;
+		m_vecWallNormal = Vector(tr.vecPlaneNormal.x, tr.vecPlaneNormal.y, 0).Normalize();
 		return true;
 	}
 
@@ -911,14 +948,25 @@ bool CPanthereye::CheckMeleeAttack1(float flDot, float flDist)
 	// Circling first: it pounces when the timer runs out, or when the spiral
 	// has brought it down to the band's floor.  No facing test -- the attack
 	// schedule turns it to face before the crouch.
+	// Without Circling, anywhere in the band, as v1.
 	const bool bTimer = m_flCircleUntil != 0 && gpGlobals->time >= m_flCircleUntil;
 	const bool bFloor = flDist <= panther_leap_min.value + PANTHER_BAND_FLOOR_MARGIN;
 
-	return bTimer || bFloor;
+	if (panther_circling.value != 0 && !bTimer && !bFloor)
+		return false;
+
+	// Testing the Wall Pounce: no wall, no pounce -- it keeps Circling.
+	if (panther_wall_only.value != 0 && !FindWall())
+		return false;
+
+	return true;
 }
 
 bool CPanthereye::CheckMeleeAttack2(float flDot, float flDist)
 {
+	if (panther_wall_only.value != 0)
+		return false;
+
 	// The claws, in either mode.  Reach plus the two hulls' half-widths.
 	return flDist <= PANTHER_CLAW_REACH + 32 && flDot >= 0.7f;
 }
@@ -1000,30 +1048,30 @@ void CPanthereye::RunTask(Task_t* pTask)
 				break;
 
 			case EPantherWall::ToWall:
+				UpdateWallTilt();
+
 				// Landed short of the wall, or never got there.
 				if ((FBitSet(pev->flags, FL_ONGROUND) && flNow > m_flWallTime + 0.1f) || flNow > m_flWallTime + PANTHER_WALL_TIMEOUT)
 					EndWallPounce();
 				break;
 
 			case EPantherWall::Cling:
-				if (flNow >= m_flWallTime)
-				{
-					// Off the wall, at the enemy's eyes.
-					CBaseEntity* pEnemy = m_hEnemy;
+				// Fixed to the wall: nothing moves it while it clings, a shot's
+				// knockback included.
+				pev->velocity = g_vecZero;
+				pev->basevelocity = g_vecZero;
+				if (pev->origin != m_vecClingOrigin)
+					UTIL_SetOrigin(pev, m_vecClingOrigin);
 
-					pev->movetype = MOVETYPE_STEP;
-					pev->framerate = PANTHER_NATURAL_WINDUP / V_max(0.1f, panther_leap_windup.value);
-					pev->velocity = pEnemy != NULL ? LeapVelocity(pEnemy->pev->origin + pEnemy->pev->view_ofs) : m_vecWallDir * -350.0f;
-
-					EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAttackSounds), 1.0, ATTN_NORM, 0, 95 + RANDOM_LONG(0, 10));
-
-					m_Wall = EPantherWall::Rebound;
-					m_flWallTime = flNow;
-					SetTouch(&CPanthereye::LeapTouch);
-				}
+				// The crouch's take-off event lets it go (HandleAnimEvent); this
+				// is only in case the event never comes.
+				if (flNow >= m_flWallTime + 0.5f)
+					WallRebound();
 				break;
 
 			case EPantherWall::Rebound:
+				UpdateWallTilt();
+
 				if ((FBitSet(pev->flags, FL_ONGROUND) && flNow > m_flWallTime + 0.1f) || flNow > m_flWallTime + PANTHER_WALL_TIMEOUT)
 					EndWallPounce();
 				break;
@@ -1055,7 +1103,144 @@ void CPanthereye::EndWallPounce()
 	if (pev->movetype == MOVETYPE_FLY)
 		pev->movetype = MOVETYPE_STEP;
 
+	// Whatever is left of the tilt, snapped: upright, on its own hull.
+	SetBodyOffset(g_vecZero);
+	pev->angles.x = 0;
+	pev->angles.z = 0;
+	pev->ideal_yaw = pev->angles.y;
+
 	m_Wall = EPantherWall::None;
+}
+
+//=========================================================
+// Off the wall, at the enemy's eyes, and back to upright over the flight from
+// the pose on the wall.  The rest of crouch_to_jump plays at the ground
+// leap's rate, as the airborne half of a pounce.
+//=========================================================
+void CPanthereye::WallRebound()
+{
+	CBaseEntity* pEnemy = m_hEnemy;
+
+	pev->movetype = MOVETYPE_STEP;
+	pev->framerate = PANTHER_NATURAL_WINDUP / V_max(0.1f, panther_leap_windup.value);
+	m_flWallFlight = 0.5f;
+	pev->velocity = pEnemy != NULL ? LeapVelocity(pEnemy->pev->origin + pEnemy->pev->view_ofs, &m_flWallFlight) : m_vecWallNormal * 350.0f;
+
+	UTIL_MakeAimVectors(pev->angles);
+	m_vecTiltFromForward = gpGlobals->v_forward;
+	m_vecTiltFromUp = gpGlobals->v_up;
+	m_vecTiltFromOffset = m_vecBodyOffset;
+
+	EMIT_SOUND_DYN(ENT(pev), CHAN_VOICE, RANDOM_SOUND_ARRAY(pAttackSounds), 1.0, ATTN_NORM, 0, 95 + RANDOM_LONG(0, 10));
+
+	m_Wall = EPantherWall::Rebound;
+	m_flWallTime = gpGlobals->time;
+	SetTouch(&CPanthereye::LeapTouch);
+}
+
+//=========================================================
+// The tilt onto the wall.  m_vecBodyOffset moves the origin -- the feet, the
+// point the model turns about -- while the hull stays put.
+//=========================================================
+void CPanthereye::SetBodyOffset(const Vector& vecOffset)
+{
+	const Vector vecDelta = vecOffset - m_vecBodyOffset;
+	m_vecBodyOffset = vecOffset;
+
+	UTIL_SetSize(pev, Vector(-PANTHER_HULL_HALF, -PANTHER_HULL_HALF, 0) - vecOffset, Vector(PANTHER_HULL_HALF, PANTHER_HULL_HALF, PANTHER_HULL_TOP) - vecOffset);
+	UTIL_SetOrigin(pev, pev->origin + vecDelta);
+}
+
+// The model's forward and up as entity angles.  The renderer negates pitch
+// (StudioSetUpTransform), so pitch here is nose-up, and roll is solved against
+// the unrolled frame.
+void CPanthereye::SetOrientation(const Vector& vecForward, const Vector& vecUp)
+{
+	const float flYaw = atan2(vecForward.y, vecForward.x);
+	const float flPitch = atan2(vecForward.z, sqrt(vecForward.x * vecForward.x + vecForward.y * vecForward.y));
+
+	const float sy = sin(flYaw), cy = cos(flYaw);
+	const float sp = sin(flPitch), cp = cos(flPitch);
+	const Vector vecUp0 = Vector(-sp * cy, -sp * sy, cp);
+	const Vector vecRight0 = Vector(sy, -cy, 0);
+	const float flRoll = atan2(DotProduct(vecUp, vecRight0), DotProduct(vecUp, vecUp0));
+
+	pev->angles.x = flPitch * (180.0f / M_PI);
+	pev->angles.y = UTIL_AngleMod(flYaw * (180.0f / M_PI));
+	pev->angles.z = flRoll * (180.0f / M_PI);
+	pev->ideal_yaw = pev->angles.y;
+}
+
+// Standing on the wall at vecFrom: the head toward the player, in the wall's
+// plane; straight up the wall if the player is dead ahead of it.
+Vector CPanthereye::WallFacing(const Vector& vecFrom, const Vector& vecNormal)
+{
+	CBaseEntity* pEnemy = m_hEnemy;
+	if (pEnemy != NULL)
+	{
+		Vector vecTo = pEnemy->Center() - vecFrom;
+		vecTo = vecTo - vecNormal * DotProduct(vecTo, vecNormal);
+		if (vecTo.Length() > 8.0f)
+			return vecTo.Normalize();
+	}
+
+	return Vector(0, 0, 1);
+}
+
+static Vector SlerpDir(const Vector& a, const Vector& b, float t)
+{
+	const float flDot = V_max(-1.0f, V_min(1.0f, DotProduct(a, b)));
+	const float flAngle = acos(flDot);
+
+	if (flAngle < 0.01f)
+		return b;
+
+	Vector vecOrtho = b - a * flDot;
+	if (vecOrtho.Length() < 0.001f)
+	{
+		// Opposite: any way round will do.
+		vecOrtho = CrossProduct(a, fabs(a.z) < 0.9f ? Vector(0, 0, 1) : Vector(1, 0, 0));
+	}
+	vecOrtho = vecOrtho.Normalize();
+
+	return a * cos(flAngle * t) + vecOrtho * sin(flAngle * t);
+}
+
+// Each think of a flight: turned and shifted by how far through the flight
+// it is.  Onto the wall, the pose is aimed at the wall FindWall saw; the
+// touch sets the true one.  Off it, back to upright facing the player.
+void CPanthereye::UpdateWallTilt()
+{
+	const float t = m_flWallFlight > 0.01f ? V_min(1.0f, (gpGlobals->time - m_flWallTime) / m_flWallFlight) : 1.0f;
+
+	Vector vecToForward, vecToUp, vecToOffset;
+
+	if (m_Wall == EPantherWall::ToWall)
+	{
+		const Vector n = m_vecWallNormal;
+		vecToUp = n;
+		vecToOffset = n * -(PANTHER_HULL_HALF * (fabs(n.x) + fabs(n.y)) - 1.0f) + Vector(0, 0, PANTHER_HULL_TOP * 0.5f);
+		vecToForward = WallFacing(pev->origin - m_vecBodyOffset + vecToOffset, n);
+	}
+	else
+	{
+		vecToUp = Vector(0, 0, 1);
+		vecToOffset = g_vecZero;
+
+		CBaseEntity* pEnemy = m_hEnemy;
+		Vector vecTo = pEnemy != NULL ? pEnemy->pev->origin - pev->origin : m_vecTiltFromForward;
+		vecTo.z = 0;
+		vecToForward = vecTo.Length() > 1.0f ? vecTo.Normalize() : Vector(cos(pev->angles.y * (M_PI / 180.0f)), sin(pev->angles.y * (M_PI / 180.0f)), 0);
+	}
+
+	const Vector vecForward = SlerpDir(m_vecTiltFromForward, vecToForward, t);
+	Vector vecUp = SlerpDir(m_vecTiltFromUp, vecToUp, t);
+	vecUp = vecUp - vecForward * DotProduct(vecUp, vecForward);
+	if (vecUp.Length() < 0.001f)
+		vecUp = vecToUp;
+
+	SetOrientation(vecForward, vecUp.Normalize());
+	SetBodyOffset(m_vecTiltFromOffset + (vecToOffset - m_vecTiltFromOffset) * t);
 }
 
 void CPanthereye::Claw()
@@ -1087,26 +1272,38 @@ void CPanthereye::Claw()
 // Panthereye's size: up fast enough to reach the target's height, across in
 // the time that takes, capped at panther_leap_speed.
 //=========================================================
-Vector CPanthereye::LeapVelocity(const Vector& vecTarget)
+Vector CPanthereye::LeapVelocity(const Vector& vecTarget, float* pflFlight)
 {
 	float flGravity = g_psv_gravity->value;
 	if (flGravity <= 1)
 		flGravity = 1;
 
-	float flHeight = vecTarget.z - pev->origin.z;
+	// From the hull's bottom centre, which is the origin unless it is tilted
+	// on a wall.
+	const Vector vecFrom = pev->origin - m_vecBodyOffset;
+
+	float flHeight = vecTarget.z - vecFrom.z;
 	if (flHeight < 16)
 		flHeight = 16;
 
 	const float flSpeed = sqrt(2 * flGravity * flHeight);
 	const float flTime = flSpeed / flGravity;
 
-	Vector vecJump = (vecTarget - pev->origin) * (1.0f / flTime);
+	Vector vecJump = (vecTarget - vecFrom) * (1.0f / flTime);
 	vecJump.z = flSpeed;
 
 	const float flCap = V_max(100.0f, panther_leap_speed.value);
 	const float flLength = vecJump.Length();
 	if (flLength > flCap)
 		vecJump = vecJump * (flCap / flLength);
+
+	// How long it takes to get there across: the cap slows it.
+	if (pflFlight != NULL)
+	{
+		const float flAcross = (vecTarget - vecFrom).Length2D();
+		const float flSpeedAcross = vecJump.Length2D();
+		*pflFlight = flSpeedAcross > 1.0f ? flAcross / flSpeedAcross : flTime;
+	}
 
 	return vecJump;
 }
@@ -1123,6 +1320,13 @@ void CPanthereye::HandleAnimEvent(MonsterEvent_t* pEvent)
 
 	case PANTHER_AE_LEAP:
 	{
+		// The crouch replayed on the wall: this is the push off it.
+		if (m_Wall == EPantherWall::Cling)
+		{
+			WallRebound();
+			break;
+		}
+
 		ClearBits(pev->flags, FL_ONGROUND);
 		UTIL_SetOrigin(pev, pev->origin + Vector(0, 0, 1));
 		UTIL_MakeVectors(pev->angles);
@@ -1132,9 +1336,16 @@ void CPanthereye::HandleAnimEvent(MonsterEvent_t* pEvent)
 
 		if (m_Wall == EPantherWall::Chosen)
 		{
-			vecJump = LeapVelocity(m_vecWallTarget);
+			m_flWallFlight = 0.5f;
+			vecJump = LeapVelocity(m_vecWallTarget, &m_flWallFlight);
 			m_Wall = EPantherWall::ToWall;
 			m_flWallTime = gpGlobals->time;
+
+			// The tilt starts as the feet leave the ground.
+			const float flYaw = pev->angles.y * (M_PI / 180.0f);
+			m_vecTiltFromForward = Vector(cos(flYaw), sin(flYaw), 0);
+			m_vecTiltFromUp = Vector(0, 0, 1);
+			m_vecTiltFromOffset = m_vecBodyOffset;
 		}
 		else if (pEnemy != NULL)
 		{
@@ -1164,34 +1375,62 @@ void CPanthereye::HandleAnimEvent(MonsterEvent_t* pEvent)
 //=========================================================
 // LeapTouch -- once per leap, while in the air.  A miss lands it, and the
 // rest of crouch_to_jump is the recovery the player punishes.  On the way to
-// a wall, touching the wall is the cling: held there, turned to the enemy,
-// for panther_wall_cling, then RunTask lets it go.
+// a wall, touching the wall is the cling: held there standing on it, the
+// crouch replayed, and its take-off event lets it go.
 //=========================================================
 void CPanthereye::LeapTouch(CBaseEntity* pOther)
 {
 	if (m_Wall == EPantherWall::ToWall && pOther->pev->solid == SOLID_BSP)
 	{
-		// The floor is BSP too: only a surface ahead of it, near vertical, is
-		// the wall.
+		// The floor is BSP too: only a near-vertical surface is the wall.  The
+		// engine's own contact plane first -- a wall met at an angle is still
+		// the wall, where a trace along the leap can miss it and let the hull
+		// slide along it -- and the trace ahead as a fallback.
 		const Vector vecCentre = Center();
-		TraceResult tr;
-		UTIL_TraceLine(vecCentre, vecCentre + m_vecWallDir * (PANTHER_HULL_HALF + 16.0f), ignore_monsters, edict(), &tr);
+		Vector vecNormal = gpGlobals->trace_plane_normal;
+		bool bWall = gpGlobals->trace_fraction < 1.0f && fabs(vecNormal.z) <= 0.3f &&
+					 DotProduct(vecNormal, m_vecWallDir) < 0;
 
-		if (tr.flFraction < 1.0f && fabs(tr.vecPlaneNormal.z) <= 0.3f)
+		if (!bWall)
+		{
+			TraceResult tr;
+			UTIL_TraceLine(vecCentre, vecCentre + m_vecWallDir * (PANTHER_HULL_HALF + 16.0f), ignore_monsters, edict(), &tr);
+			bWall = tr.flFraction < 1.0f && fabs(tr.vecPlaneNormal.z) <= 0.3f;
+			vecNormal = tr.vecPlaneNormal;
+		}
+
+		if (bWall)
 		{
 			m_Wall = EPantherWall::Cling;
 			m_flWallTime = gpGlobals->time + V_max(0.0f, panther_wall_cling.value);
 
 			pev->movetype = MOVETYPE_FLY;
 			pev->velocity = g_vecZero;
-			pev->framerate = 0;
+			pev->basevelocity = g_vecZero;
 
-			CBaseEntity* pEnemy = m_hEnemy;
-			if (pEnemy != NULL)
-			{
-				pev->angles.y = UTIL_VecToYaw(pEnemy->pev->origin - pev->origin);
-				pev->ideal_yaw = pev->angles.y;
-			}
+			// crouch_to_jump again from the top, the wall as the ground: its
+			// take-off event, panther_wall_cling seconds from now, is the
+			// push off (HandleAnimEvent).
+			pev->frame = 0;
+			ResetSequenceInfo();
+			pev->framerate = PANTHER_NATURAL_WINDUP / V_max(0.05f, panther_wall_cling.value);
+
+			// Standing on it: the feet on the wall's face at the hull's
+			// middle height, the belly out, the head toward the player.
+			const Vector n = Vector(vecNormal.x, vecNormal.y, 0).Normalize();
+			m_vecWallNormal = n;
+
+			const Vector vecBase = pev->origin - m_vecBodyOffset;
+			Vector vecOffset = n * -(PANTHER_HULL_HALF * (fabs(n.x) + fabs(n.y)) - 1.0f) + Vector(0, 0, PANTHER_HULL_TOP * 0.5f);
+
+			TraceResult trFace;
+			UTIL_TraceLine(vecCentre, vecCentre - n * (PANTHER_HULL_HALF * 2 + 16.0f), ignore_monsters, edict(), &trFace);
+			if (trFace.flFraction < 1.0f && (trFace.vecEndPos - vecCentre).Length() <= PANTHER_HULL_HALF * 1.5f + 8.0f)
+				vecOffset = trFace.vecEndPos + n - vecBase;
+
+			SetBodyOffset(vecOffset);
+			SetOrientation(WallFacing(pev->origin, n), n);
+			m_vecClingOrigin = pev->origin;
 			return;
 		}
 	}
@@ -1246,14 +1485,14 @@ Schedule_t* CPanthereye::GetScheduleOfType(int Type)
 			return m_bGlimpsed ? slPantherCircle : slPantherStalk;
 
 		// Revealed and in the pounce band, a chase is combat Circling.
-		if (Type == SCHED_CHASE_ENEMY && m_hEnemy != NULL && HasConditions(bits_COND_SEE_ENEMY) &&
+		if (panther_circling.value != 0 && Type == SCHED_CHASE_ENEMY && m_hEnemy != NULL && HasConditions(bits_COND_SEE_ENEMY) &&
 			(m_hEnemy->pev->origin - pev->origin).Length() <= panther_leap_max.value)
 			return slPantherCircle;
 		break;
 
 	case SCHED_MELEE_ATTACK1:
 		// Sometimes by way of a wall.
-		if (m_bRevealed && RANDOM_FLOAT(0.0f, 1.0f) < panther_wall_chance.value && FindWall())
+		if (m_bRevealed && (panther_wall_only.value != 0 || RANDOM_FLOAT(0.0f, 1.0f) < panther_wall_chance.value) && FindWall())
 		{
 			m_Wall = EPantherWall::Chosen;
 			return slPantherWallPounce;

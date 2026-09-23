@@ -657,7 +657,15 @@ cvar_t panther_debug = {"panther_debug", "0"};
 // upper body (controller 0) turns up to panther_turn_clamp degrees at
 // panther_turn_rate a second; panther_turn_sign -1 if it turns away.  The
 // Wall Pounce is taken with panther_wall_chance when a wall is within
-// panther_wall_reach, clinging panther_wall_cling seconds before the rebound.
+// panther_wall_reach; on the wall it replays crouch_to_jump, scaled so the
+// push off comes panther_wall_cling seconds after it sticks.
+// panther_circling 0 (the default) turns off the whole sneak-around layer --
+// Circling in both modes and the upper-body turn -- because it did not play
+// well in Andrei's test (2026-09-23) and needs heavy rework; see
+// docs/ROADMAP.md.  Off, it stalks and chases straight and pounces anywhere in
+// the leap band, as v1 did.
+// panther_wall_only 1 is for testing it: no claws, no straight pounce, and
+// with no wall in reach it goes on Circling.
 cvar_t panther_crawl_rate = {"panther_crawl_rate", "0.6"};
 cvar_t panther_circle_angle = {"panther_circle_angle", "60"};
 cvar_t panther_circle_min = {"panther_circle_min", "1.5"};
@@ -668,6 +676,8 @@ cvar_t panther_turn_sign = {"panther_turn_sign", "1"};
 cvar_t panther_wall_chance = {"panther_wall_chance", "0.5"};
 cvar_t panther_wall_reach = {"panther_wall_reach", "200"};
 cvar_t panther_wall_cling = {"panther_wall_cling", "0.25"};
+cvar_t panther_wall_only = {"panther_wall_only", "0"};
+cvar_t panther_circling = {"panther_circling", "0"};
 // The wave the right click throws (CKatanaWave, dlls/katana.cpp): an unseen
 // projectile whose look is the crescent the client draws (EV_KatanaArc).
 // Energy damage to everything on its path, each once: katana_wave_damage
@@ -1120,6 +1130,8 @@ void GameDLLInit()
 	CVAR_REGISTER(&panther_wall_chance);
 	CVAR_REGISTER(&panther_wall_reach);
 	CVAR_REGISTER(&panther_wall_cling);
+	CVAR_REGISTER(&panther_wall_only);
+	CVAR_REGISTER(&panther_circling);
 	CVAR_REGISTER(&katana_wave_damage);
 	CVAR_REGISTER(&katana_wave_range);
 	CVAR_REGISTER(&katana_wave_full_range);
