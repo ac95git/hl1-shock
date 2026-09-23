@@ -1682,6 +1682,26 @@ who spent years around crystal, heard the voice, and did something with it.
   table, neutral-until-provoked exists only as Barney's per-monster hack, and a faction-wide version is a
   second social layer on top of an untested 5f. One ritual room gives the feeling at a fraction of the cost.
 
+**How a cultist looks — Andrei, 2026-09-23. Direction, not grilled in full.** The maddened is a miner who
+broke; a cultist is a miner who joined something, so what marks him is belonging, not madness. One class:
+a cultist is the maddened plus a keyvalue that sets his skin and bodygroup, plus the ritual state — which
+answers MADDENED.md's "spawnflag or a class of its own".
+
+- **The sign.** One glyph, drawn once by Andrei, used everywhere: a **decal on the tunnel walls**, met
+  before the first cultist so the player learns the sign before the people; **on the suit's chest plate**,
+  in place of Ivan's RESEARCH plate, as a skin family (texture only, the same pipeline as the
+  [face variants](MADDENED.md)); and in the margins of cult Records. Unchecked: whether a custom decal
+  means the mod ships a whole replacement `decals.wad`.
+- **Crystal, worn**, as submodels (a bodygroup): a shard on a cord or taped over the lamp, in the
+  deposits' purple or the Core's green, additive so it reads as glowing. The voice comes through crystal
+  and they carry it. It also shows them in the dark before they see the player — the stealth pillar, and
+  the Panthereye's opposite — and may drop a Crystal Shard. A modelling rung for Andrei after the beard.
+- **The ritual pose.** The members kneel on the player rig's **crouch idle** to begin with, facing the
+  crystal, backs turned; expected to need tuning. The chant is the mutter in unison. **The leader gets
+  something else**, not chosen yet.
+- *Rejected:* **hoods** — cheap, the most generic cult image there is, and they would hide the faces being
+  varied. Dropped outright, not kept for rank.
+
 ### Soldiers
 
 **Shape: Idea, from Andrei 2026-09-18. Not grilled.** Soldiers are the bulk of the human enemies and
