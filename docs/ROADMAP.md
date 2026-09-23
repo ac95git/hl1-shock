@@ -917,13 +917,23 @@ frozen in place cannot also be circling. Cover to cover stays its own later slic
   Glimpsed, it **spirals toward the player's back**: each waypoint a little further round toward their rear
   and a little closer in. Turning to follow it moves the back, so it keeps sliding round the edge of the
   screen; looking straight at it Reveals it within the dwell, so the dance is the player's to end. In the
-  rear arc and off screen it drops the spiral and closes straight in to the claws. The inward pull matters
-  for the controller too: a true tangent puts the player at exactly 90°, controller 0's limit.
+  rear arc and off screen it drops the spiral and closes straight in to the claws.
+- **The spiral is the controller's clamp** (settled after the grill, same day). Andrei clamps controller 0
+  at 60°, so to keep the upper body on the player the heading may never be more than 60° off the line to
+  them: every Circling path closes, and a constant-radius ring is impossible. Circling is therefore a
+  logarithmic spiral at a constant `panther_circle_angle` (60°, tied to the clamp) off that line — each
+  unit travelled closes 0.5 and goes round 0.87, and the radius shrinks ×0.16 per half-turn. From 600 u a
+  spiral to the player's back arrives about 100 u behind them, near claw range, so the stalk's spiral ends
+  at the back and the claws by its own geometry. Widening the controller in the QC flattens it toward a
+  circle with no code change.
 - **The stalking gait is the crawl, slowed.** `crawl_on_belly` at `panther_crawl_rate` (0.6 to start, about
   26 u/s). `MoveExecute` multiplies ground speed by `pev->framerate`, so the feet and body slow together.
-- **Combat.** Revealed, it runs to pounce range and circles tight and upright at run speed for a random
-  time between `panther_circle_min` and `panther_circle_max`, then pounces. The ring's direction is random
-  per engagement and reverses when blocked.
+- **Combat.** Revealed, it runs to the top of the pounce band and spirals in upright at run speed, the same
+  60° spiral. It pounces when a random time between `panther_circle_min` and `panther_circle_max` runs out
+  **or** when it reaches the band's floor, whichever is first: 450 → 150 u is 600 u of path, about 3 s at
+  run speed and about 110° round the player, so the geometry caps the timer. The direction is random per
+  engagement and reverses when blocked. *Rejected:* a true ring with the upper body lagging 30° short
+  (loses the facing that sold the controller), and weaving out and back in (it turns its back).
 - **Blocked.** A spiral waypoint that fails `CheckLocalMove` falls back to v1's straight crawl for that
   step. Circling needs no nodes; `topmap` has none.
 - *Rejected:* circling only in the stalk (the combat rush would stay as it is) or only in combat (the
@@ -931,10 +941,8 @@ frozen in place cannot also be circling. Cover to cover stays its own later slic
   **parked, not rejected**: it only works once the Panthereye is fast enough that aiming can't hold it off
   at a distance.
 
-**Controller 0 turns the upper body toward the player while it circles**: clamped at ±90°, at a capped turn
-rate, and released during the claws, the leap and flinches so they play untwisted. **HLMV first**: if a
-60–90° twist on `crawl_on_belly` or `run` wrecks the forelegs, it is dropped and it circles facing its
-travel direction, with nothing to re-decide. The head only follows the shoulders; fixing the head itself
+**Controller 0 turns the upper body toward the player while it circles**: clamped at ±60°, at a capped turn
+rate, and released during the claws, the leap and flinches so they play untwisted. The head only follows the shoulders; fixing the head itself
 needs a controller on the head bone (v2).
 
 **The Wall Pounce.** When the circling timer runs out, with chance `panther_wall_chance` (0.5) it pounces
@@ -953,8 +961,8 @@ Combat only, so it never pounces unRevealed still holds.
   session is spent on it. *Rejected:* a Wall Pounce every time a wall qualifies (learned in two fights), and
   once per encounter (a Panthereye that runs out of tricks works against the menace).
 
-**Build order.** (1) Andrei's HLMV check: controller 0 at 60–90° on `crawl_on_belly` and `run`, and
-controller 1 across 0–50 to see what the axis does. (2) The code, one slice each: the rename, the stalking
+**Build order.** (1) Andrei's HLMV check: controller 0 settled at a 60° clamp; controller 1 across 0–50
+still to be read, for v2's lean. (2) The code, one slice each: the rename, the stalking
 spiral and the slowed crawl, combat Circling, the upper-body turn, the Wall Pounce.
 
 **v2, recorded so it isn't re-grilled:**
