@@ -24,8 +24,8 @@
 // sweep looked better and was rejected for lying: it empties the centre of the
 // view while the Shield is still mechanically up.
 //
-// The sweep is a FIXED duration at both ends; a longer window (Pulse Window,
-// 0.25s -> 0.40s) buys hold time only.  Sweep speed is a property of the suit,
+// The sweep is a FIXED duration at both ends; a longer window buys hold time
+// only.  Sweep speed is a property of the suit,
 // not of the player's build, and an entrance that looks identical every time is
 // what makes it readable as "the press registered".
 //
@@ -35,7 +35,7 @@
 // exact centre of a sphere every surface element is face-on, and the path length
 // through a thin shell is the same in every direction.  There is no fresnel to
 // reproduce.  The centre is kept clear because the player needs to see what they
-// are shooting during the one quarter-second that matters, and that is the whole
+// are shooting during the second that matters, and that is the whole
 // justification.  pulse_shield_spread and _falloff shape it by eye.
 //
 // Raw GL rather than the triangle API, which is the reverse of what the design
@@ -165,16 +165,12 @@ void RegisterCvars()
 	g_pCvarEnable = CVAR_CREATE("pulse_shield", "1", FCVAR_ARCHIVE);
 	// How long the edge takes to cross the view, each way.
 	//
-	// 0.5 on Andrei's call after the first sighting, up from 0.08.  Note what
-	// that does at the default window: the sweep is clamped below to half the
-	// window's length, and half of 0.25s is 0.125s, so a default Pulse now
-	// spends its ENTIRE life travelling -- out for half, back for half, with no
-	// hold at all.  The "fixed sweep, variable hold" decision
-	// (docs/ROADMAP.md) is thereby inert at this value: everything scales with
-	// the window again, which was the option it was chosen over.  Left as asked
-	// because it is judged by eye and it plainly looks better; the decision is
-	// still the right shape if the window ever grows, and dropping this back
-	// under half the window restores it.
+	// 0.5 on Andrei's call after the first sighting, up from 0.08, when the
+	// window was 0.25s and the sweep was clamped to half of it.  The window is
+	// 1s since 2026-09-23, and 0.5 is still exactly half of that: out for half,
+	// back for half, no hold.  Anything under 0.5 now buys a hold -- 0.25 stands
+	// the Shield for half a second -- which is the "fixed sweep, variable hold"
+	// shape (docs/ROADMAP.md) this was designed as.  Judged by eye, so left.
 	g_pCvarSweep = CVAR_CREATE("pulse_shield_sweep", "0.5", FCVAR_ARCHIVE);
 	// Brightness of the Shield's body where it is fully dense.
 	g_pCvarAlpha = CVAR_CREATE("pulse_shield_alpha", "0.55", FCVAR_ARCHIVE);
@@ -236,7 +232,7 @@ void PulseShield_SetState(int iState, float flDuration)
 
 	g_bUp = true;
 	g_flStart = gHUD.m_flTime;
-	g_flDuration = flDuration > 0.0f ? flDuration : 0.25f;
+	g_flDuration = flDuration > 0.0f ? flDuration : 1.0f;
 
 	// Latch the look direction for pulse_shield_live 0.  Captured whether or not
 	// that cvar is on, so flipping it mid-game cannot find a stale vector.

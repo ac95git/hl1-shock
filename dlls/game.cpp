@@ -766,16 +766,18 @@ cvar_t skill_reload_time_scale = {"skill_reload_time_scale", "0.8"};
 // The Pulse.  Tuning knobs -- see docs/PILLARS.md pillar 2.  The Recharge is
 // deliberately asymmetric: a Shield that negated something recovers faster than
 // one that negated nothing, so good reads chain and whiffs strand you.
-cvar_t pulse_window = {"pulse_window", "0.25"};
-cvar_t pulse_window_bonus = {"pulse_window_bonus", "0.15"};
+//
+// The window is one second, period (Andrei, 2026-09-23): 0.25 s was too short to
+// be a state, and the Shield could not draw an entrance and an exit inside it.
+// It is the same second a hold takes to raise the Defense Matrix, so the two
+// are one motion.  The tail that used to fill 0.25-1.0 s at half damage is
+// gone with it, and so is Pulse Window's bonus: a shorter, Skill-gated parry
+// window with bonuses of its own is for later (docs/ROADMAP.md, "The Pulse's
+// timing").
+cvar_t pulse_window = {"pulse_window", "1.0"};
 cvar_t pulse_recharge_hit = {"pulse_recharge_hit", "1.5"};
 cvar_t pulse_recharge_miss = {"pulse_recharge_miss", "3.0"};
 cvar_t pulse_recharge_scale = {"pulse_recharge_scale", "0.66"};
-// The tail (docs/ROADMAP.md, "The Pulse's tail"): a Pulse whose window deflected
-// nothing stands on, braced, until the moment a hold would raise the Defense
-// Matrix -- skill_matrix_hold after the press, so window, tail and Matrix are
-// one motion -- and a hit in it takes this share.  Only the window deflects.
-cvar_t pulse_tail_scale = {"pulse_tail_scale", "0.5"};
 // The cap is load-bearing, not cosmetic: without it, timing a Pulse against the
 // hardest-hitting attacks in the game yields the strongest counter.
 cvar_t pulse_discharge_scale = {"pulse_discharge_scale", "0.75"};
@@ -794,11 +796,6 @@ cvar_t pulse_discharge_max = {"pulse_discharge_max", "60"};
 // 0 removes it entirely. Deliberately not 0: a blow that glances off the Shield
 // should still register as something happening, just not as something landing.
 cvar_t pulse_deflect_punch = {"pulse_deflect_punch", "0.25"};
-// Whether deflecting a melee blow fires a Discharge. On by default; this exists
-// because that behaviour was never designed -- it falls out of "one Discharge
-// per negated hit" -- and is the most likely part of the Pulse to be judged
-// wrong under more testing.
-cvar_t pulse_discharge_melee = {"pulse_discharge_melee", "1"};
 // The Follow-Up. Primed by a deflect, spent on the next crowbar hit -- a whiff
 // costs nothing, so the window is what stops it being banked indefinitely.
 // Knockback is headcrab-only; see PulseCrowbarFollowUpKnockback for why.
@@ -829,6 +826,23 @@ cvar_t skill_matrix_kill_armor = {"skill_matrix_kill_armor", "15"};
 // rate is derived, not a knob.  100 was set "to be toned down".
 cvar_t skill_matrix_grant = {"skill_matrix_grant", "100"};
 
+// The alien slave boss (docs/ROADMAP.md, "The alien slave boss").  Every number
+// is a first guess.  His health is sized against the arena's ammunition -- a
+// player who deflects every Overcharge must always free him first -- and his
+// Ward against a magazine or two.  The Overcharge's eight bolts together land
+// at about 80 of a player's 100.  The rotation guarantees an Overcharge at
+// least every third ranged attack, which also bounds the Ward-down window.
+cvar_t slaveboss_health = {"slaveboss_health", "500"};
+cvar_t slaveboss_ward = {"slaveboss_ward", "150"};
+cvar_t slaveboss_charge = {"slaveboss_charge", "2.5"};
+cvar_t slaveboss_charge_fast = {"slaveboss_charge_fast", "1.75"};
+cvar_t slaveboss_bolt_damage = {"slaveboss_bolt_damage", "10"};
+cvar_t slaveboss_overcharge_chance = {"slaveboss_overcharge_chance", "0.35"};
+cvar_t slaveboss_volley_count = {"slaveboss_volley_count", "4"};
+cvar_t slaveboss_volley_gap = {"slaveboss_volley_gap", "1.0"};
+// Freed, he stands this long from the collar breaking before he teleports out.
+cvar_t slaveboss_freed_linger = {"slaveboss_freed_linger", "5"};
+
 // The Infusion -- see docs/PILLARS.md pillar 3.  40 HP over 10 seconds is more
 // than two medkits, and the duration is what pays for it: none of it lands if
 // the player does not survive the ten seconds, and it cannot answer burst
@@ -836,7 +850,7 @@ cvar_t skill_matrix_grant = {"skill_matrix_grant", "100"};
 cvar_t infusion_rate = {"infusion_rate", "4"};
 cvar_t infusion_duration = {"infusion_duration", "10"};
 // Med Expert. Additive rather than a percentage so it stays legible when
-// infusion_duration is tuned -- the same choice pulse_window_bonus makes.
+// infusion_duration is tuned.
 cvar_t infusion_duration_bonus = {"infusion_duration_bonus", "5"};
 
 // The Backstab -- see docs/adr/0010-the-backstab-is-positional.md.
@@ -1148,16 +1162,13 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_stat_dash_recovery);
 
 	CVAR_REGISTER(&pulse_window);
-	CVAR_REGISTER(&pulse_window_bonus);
 	CVAR_REGISTER(&pulse_recharge_hit);
 	CVAR_REGISTER(&pulse_recharge_miss);
-	CVAR_REGISTER(&pulse_tail_scale);
 	CVAR_REGISTER(&pulse_recharge_scale);
 	CVAR_REGISTER(&pulse_discharge_scale);
 	CVAR_REGISTER(&pulse_discharge_min);
 	CVAR_REGISTER(&pulse_discharge_max);
 	CVAR_REGISTER(&pulse_deflect_punch);
-	CVAR_REGISTER(&pulse_discharge_melee);
 	CVAR_REGISTER(&infusion_rate);
 	CVAR_REGISTER(&infusion_duration);
 	CVAR_REGISTER(&infusion_duration_bonus);
@@ -1173,6 +1184,15 @@ void GameDLLInit()
 	CVAR_REGISTER(&skill_matrix_speed_scale);
 	CVAR_REGISTER(&skill_matrix_kill_armor);
 	CVAR_REGISTER(&skill_matrix_grant);
+	CVAR_REGISTER(&slaveboss_health);
+	CVAR_REGISTER(&slaveboss_ward);
+	CVAR_REGISTER(&slaveboss_charge);
+	CVAR_REGISTER(&slaveboss_charge_fast);
+	CVAR_REGISTER(&slaveboss_bolt_damage);
+	CVAR_REGISTER(&slaveboss_overcharge_chance);
+	CVAR_REGISTER(&slaveboss_volley_count);
+	CVAR_REGISTER(&slaveboss_volley_gap);
+	CVAR_REGISTER(&slaveboss_freed_linger);
 
 	CVAR_REGISTER(&backstab_damage_scale);
 	CVAR_REGISTER(&backstab_arc_dot);

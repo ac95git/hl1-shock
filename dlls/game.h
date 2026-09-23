@@ -162,16 +162,13 @@ extern cvar_t skill_stat_dash_recovery;
 
 // The Pulse.  Every one of these is a starting guess to be judged in play.
 extern cvar_t pulse_window;
-extern cvar_t pulse_window_bonus;
 extern cvar_t pulse_recharge_hit;
 extern cvar_t pulse_recharge_miss;
-extern cvar_t pulse_tail_scale;
 extern cvar_t pulse_recharge_scale;
 extern cvar_t pulse_discharge_scale;
 extern cvar_t pulse_discharge_min;
 extern cvar_t pulse_discharge_max;
 extern cvar_t pulse_deflect_punch;
-extern cvar_t pulse_discharge_melee;
 extern cvar_t pulse_followup_time;
 extern cvar_t pulse_followup_damage;
 extern cvar_t pulse_followup_knockback;
@@ -184,6 +181,17 @@ extern cvar_t skill_matrix_armor_cost_scale;
 extern cvar_t skill_matrix_speed_scale;
 extern cvar_t skill_matrix_kill_armor;
 extern cvar_t skill_matrix_grant;
+
+// The alien slave boss.
+extern cvar_t slaveboss_health;
+extern cvar_t slaveboss_ward;
+extern cvar_t slaveboss_charge;
+extern cvar_t slaveboss_charge_fast;
+extern cvar_t slaveboss_bolt_damage;
+extern cvar_t slaveboss_overcharge_chance;
+extern cvar_t slaveboss_volley_count;
+extern cvar_t slaveboss_volley_gap;
+extern cvar_t slaveboss_freed_linger;
 
 // The Infusion.  Named for the mechanic rather than the Health Syringe, so a
 // later source of one does not inherit syringe-flavoured cvar names.

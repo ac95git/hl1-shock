@@ -131,7 +131,8 @@ no keyvalues of its own, and `info_node`s, since he walks the node graph like an
 Not decided, or decided for now and worth revisiting once he has been fought a few times:
 
 - **The run, now that he has it.** He runs in the chase since the first fight. What the cult then has that
-  he does not, and whether the cult is a spawnflag on him or a class of its own. Whether the first fight in
+  he does not. (Whether the cult is a spawnflag or a class of its own: one class, a keyvalue setting skin
+  and bodygroup — ROADMAP, "How a cultist looks", 2026-09-23.) Whether the first fight in
   the game, a man sprinting at the player in the dark with a pick, wants a beat of warning before it —
   the mutter already is one.
 - **The flinch.** He takes hits without reacting. A short flinch on this rig would also give the player
@@ -140,7 +141,10 @@ Not decided, or decided for now and worth revisiting once he has been fought a f
   the leader may want faster ones.
 - **The voice.** His mutter is the road's whisper is a vortigaunt's. What he says, in what language, and
   whether the maddened ever speak a word the player understands.
-- **The bodies.** Every maddened is Ivan now, one face and one blue suit. Whether the crew that wears the
+- **The bodies.** Every maddened is Ivan now, one face and one blue suit. **Face variants started
+  2026-09-23**: hair, beard and skin colours as skin families, made by `maddened_build.py` from hair masks
+  Andrei corrects in Paint.NET (drafts from `utils/mdltool/hair_mask_draft.py`); beard shapes are
+  modelling, since Ivan's beard is geometry (a wedge down the neck), and become a head bodygroup. Whether the crew that wears the
   mod's suit (Andrei: not all of the crew wears suits, but the ones on special operations always do)
   ever turns maddened in it, and what that body is; whether any maddened drops or hands over anything.
 - **Security.** The roadmap has a maddened security member as a lone grunt; whether that stays a grunt or

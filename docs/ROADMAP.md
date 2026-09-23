@@ -848,7 +848,7 @@ Xen hell** (2026-09-17), and the roster gained the human side the same day:
 | [Melee alien grunt](#melee-alien-grunt) | Enemy | `CAGrunt`, bare arm | **v1 built** 2026-09-18, verified |
 | [Shelled headcrab](#shelled-headcrab) | Enemy | `CHeadCrab`, recoloured | **Shaped** |
 | [Friendly alien slave](#friendly-alien-slave) | Non-combatant | The slave model on `CTalkMonster` | **Shaped** |
-| [Alien slave boss](#the-alien-slave-boss) | Boss, freed to become the friendly slave | `CISlave` | Idea |
+| [Alien slave boss](#the-alien-slave-boss) | Boss, freed to become the friendly slave, or killed | `CISlave` | **Shaped** 2026-09-23: the Ward, the Overcharge, three Bindings |
 | [Assassin boss](#the-assassin-boss) | Boss | `CHAssassin` | Idea |
 | [Alien grunt boss](#the-alien-grunt-boss) | Boss | `CAGrunt` | Idea |
 | [Nihilanth](#the-nihilanth) | Boss | `CNihilanth`, new model | **Shaped** 2026-09-17: a pattern fight |
@@ -964,6 +964,26 @@ Combat only, so it never pounces unRevealed still holds.
 **Build order.** (1) Andrei's HLMV check: controller 0 settled at a 60° clamp; controller 1 across 0–50
 still to be read, for v2's lean. (2) The code, one slice each: the rename, the stalking
 spiral and the slowed crawl, combat Circling, the upper-body turn, the Wall Pounce.
+
+**Built 2026-09-23 and shelved, not verified in game** — all of (2) in one commit, `d17f217`, on the
+branch **`panthereye-menace`**, because Andrei was away from the PC. `hl-shock` and the installed
+`hl.dll` are still v1. To test: `git checkout panthereye-menace`, build `hldll.vcxproj`, then play with
+`panther_debug 1` (its readout gains a line: direction, timer, turn, wall state). Merge into `hl-shock`
+once it passes; the rows:
+
+1. **The turn's direction.** Controller 0's range is reversed in the QC, so which way it turns had to be
+   left to the eye: if the shoulders turn *away* from the player, `panther_turn_sign -1`, then fix the sign
+   in code.
+2. Glimpsed at the screen's edge, it crawls round toward the back; following it keeps it sliding round.
+3. Revealed, it spirals in at a run and pounces after 1.5–3 s, or at about 200 u.
+4. Near a wall, about every other pounce is leap, cling, rebound (`panther_wall_chance 1` forces it).
+5. v1 intact: the growl, the claws, Revealed by being hurt.
+
+Built beyond the grill, as calls made while writing it: the pounce's facing test is gone (the attack
+schedule turns it first), and it turns at 180°/s once Revealed so the turn out of a 60° spiral is not a
+pause. Expected to need tuning: the rebound off the wall reuses the pounce's aim and may come out flat
+and fast; the slowed crawl may be too slow on a long glimpse. A v1 save loads with the Panthereye
+unRevealed (the save field was renamed).
 
 **v2, recorded so it isn't re-grilled:**
 
@@ -1300,7 +1320,10 @@ Discharge would all go through.
 **The Discharge may skip the lesson.** A melee deflect fires a Discharge at the crosshair
 ([ADR-0006](adr/0006-the-discharge-vents-at-the-crosshair.md)), and a player aiming at a leaping crab is
 aiming at it. If the Discharge kills a flipped crab outright, the player never swings. That is either a fine
-reward for the Skill or a hole in the design; `pulse_discharge_melee 0` exists to compare.
+reward for the Skill or a hole in the design; `pulse_discharge_melee 0` exists to compare. **Answered
+2026-09-23, not built:** the Discharge becomes innate and fires only off slave beams
+([ADR-0016](adr/0016-the-discharge-is-innate-and-answers-only-slave-beams.md)), so a deflected leap vents
+nothing and the swing is the only answer.
 
 **Traps:**
 
@@ -1475,47 +1498,201 @@ Almost everything about him is map setup on stock entities. The code is:
 
 ### The alien slave boss
 
-**Shape: Idea, with its purpose settled 2026-09-13.** A special alien slave under the Nihilanth's control,
-with custom attacks and AI. Defeating it frees it from that control, and from then on it is the
-[friendly alien slave](#friendly-alien-slave): one character, in his lab, who helps the player progress
-through unlockables and information, never by fighting. Its reward was first written as "a Module and some
-items"; that now falls under how the lab slave hands things over.
+**Shape: Shaped 2026-09-23, in a grill.** Nothing built. A special alien slave under the Nihilanth's control,
+who ends wing one. The fight tests the Pulse: guns carry most of it, and one signature attack, the
+**Overcharge**, only a deflect answers. Freed, he is the [friendly alien slave](#friendly-alien-slave): one
+character, in his lab, who helps the player through unlockables and information, never by fighting. Killed,
+he is gone, and the alien Module drops from his body. **Freeing him is the fight's natural end; killing him
+is a route a player has to pursue.** The vocabulary (Ward, Overcharge, Bindings, Stagger, Barrier) is in
+[CONTEXT.md](../CONTEXT.md).
 
-- **Defeated is not killed.** It needs a health floor where the fight ends: the boss stops and is spared.
-  Shooting the freed slave later ends the game, so the fight has to make "spared" unmistakable.
-- **Two entities. Settled 2026-09-13.** The boss and the lab slave are separate. The boss leaves when defeated
-  and sets a global state (`env_global`), and the lab slave is present only once that state is on.
-- **The collar and the bracelets are the Nihilanth's control. Settled.** They already show it on the stock
-  model, and `collar1` and `collar2` tug at the collar.
-- **The end of the fight is scripted**, so that the slave being freed is noticeable. Settled. It is a
-  sequence the player watches rather than a monster that simply stops. What it shows is open.
+#### Built and verified in game 2026-09-23
 
-**What that asks of the art.** In the stock model the collar and bracelets are part of the one body mesh: the
-model has a single body submodel, and the metal is most likely its chrome texture (`Chrome_1.bmp`, the one
-chrome-flagged texture in `islaveT.mdl`). So a freed slave without them is a mesh edit and a recompile,
-starting with a decompile. The cheap alternatives, if that waits: a second skin where the metal is dark or
-broken, which is a texture edit and still a recompile, or a freed slave who keeps the hardware and shows his
-freedom only in how he behaves. The boss and the lab slave being two entities makes this easy: they can be two
-models.
+`CISlaveBoss`, `monster_alien_slave_boss`, at the end of `dlls/islave.cpp`; in the FGD. `slaveboss_spawn`
+(cheats) puts one 256 units ahead on any map. The test rows are
+[SLAVE_BOSS_CHECKLIST.md](SLAVE_BOSS_CHECKLIST.md). Numbers are `slaveboss_*` cvars: health 500, Ward 150,
+Overcharge channel 2.5 s (1.75 s after the second Binding), eight bolts of 10, the volley four zaps 1 s
+apart, an Overcharge at a 35% chance and never more than two ranged attacks apart.
 
-**What the scripted ending can use.** `scripted_sequence` for the set piece (the stock `collar1` and
-`collar2` are already a slave fighting his collar), `env_beam` or sprite effects for the control breaking,
-`env_shake` and `env_fade`, and a `scripted_sentence` for a first free word. When it finishes, the boss
-removes itself and the global state turns on. All of it is map entities; the only code in the ending is the
-boss knowing its health floor has been reached and firing a target instead of dying.
+Settled after the grill, before the build (Andrei, 2026-09-23): the volley is **four zaps with one second
+between them**; the Overcharge **charges for about 2.5 s and fires eight beams**; the Overcharge, the volley
+and a Binding breaking each get **a charge sound of their own**. With the one-second Pulse and its 1.5 s
+Recharge after a deflect, a player without Skills deflects two of the volley's four; Pulse Recharge and the
+Rebound raise that. Accepted.
+
+Calls made while building, each with what it replaced:
+
+- **One Discharge per zap, not per bolt.** A zap's bolts go through `AddMultiDamage`, which sums hits on one
+  target into one `TakeDamage`, so the Shield sees one hit and vents one Discharge — the Overcharge's eight
+  bolts included. The session had said "two per zap, eight per Overcharge"; the code decides it.
+- **A broken Binding staggers him on `collar2`** (1.7 s, him fighting the collar), and **the freeing plays
+  `collar1`** (3.3 s). Both are `ACT_SPECIAL_ATTACK1`, so they are played by name.
+- **The ending is in the code, not a `scripted_sequence` chain**: `collar1`, then he stands until five
+  seconds have passed since the collar broke (`slaveboss_freed_linger`, Andrei's call after the first look),
+  then `target_freed` fires, then the teleport-out. The map hangs the `env_global` (and anything else) on `target_freed`, and on
+  `target_killed` for the lethal path. A chain would have needed a map to test at all.
+- **The Overcharge's wind-up is the stock one slowed** to fill the channel (Andrei, after the first look),
+  not the held pose first built; the volley still holds the pose, having no single shot to land.
+- **Damage never makes him flinch** — his schedules have no damage interrupts and his damage conditions are
+  cleared — since a boss that flinched from every bullet could be held in place. Only a Stagger stops him.
+- **The Ward absorbs a Discharge whole**, not even losing pool to it.
+- **An Overcharge resolves when it fires**, so a Ward broken *during* the channel still counts if the shot is
+  deflected.
+- **The alien Module drops from him** on the lethal path as a real `item_alienmodule`.
+- **The broken Bindings go on sparking** every couple of seconds, so the player can count them. The bracelet
+  positions are the model's hand attachments by assumption (attachment 1 left, 0 right), and the collar a
+  point at the neck: to be looked at.
+
+#### Settled before the grill
+
+- **Two entities. 2026-09-13.** The boss and the lab slave are separate. Freed, the boss leaves and sets a
+  global state (`env_global`), and the lab slave is present only once that state is on.
+- **The collar and the bracelets are the Nihilanth's control. 2026-09-13.** They already show it on the stock
+  model, and `collar1` and `collar2` tug at the collar. They are the three **Bindings** below.
 - **The Module he gives is the alien Module** (2026-09-13, confirmed 2026-09-17): a platform for
   Core-powered alien weapons, whose first weapon summons ghost slaves, designed under the
-  [Alien Route](#alien). The fiction of the slave teaching an alien ability fits exactly. Until his fight
-  exists, `item_alienmodule` stands in for the hand-over.
-- **How do the items arrive?** Handed straight into the Inventory, where a full Grid refuses them, or left in
-  a Box, which is not built yet.
-- Custom attacks: none written down yet.
+  [Alien Route](#alien). Until his fight exists, `item_alienmodule` stands in for the hand-over.
 - **Placed 2026-09-17: he ends wing one**, in the mine levels, having come through the tear at its deep
   end. Early, because everything downstream needs him: the hub's vortigaunt, the hand-over machine, the
-  second half's advisor. His fight is where the Pulse is *tested* (his zaps are energy, his claws are on the
-  Shield's list), not where it is won — the Pulse is found in the first minutes. Freed, **he gives the
-  alien Module**, confirmed the same day; after the teleport he and the surviving staff advise on the
-  pieces.
+  second half's advisor. The Pulse is found in the first minutes, so by his fight it may be assumed; after the
+  teleport he and the surviving staff advise on the pieces.
+
+#### The fight — settled 2026-09-23
+
+**He fights alone, and he is mortal.** Allies are a later refinement, below.
+
+**The Ward.** A green glow round his body (`kRenderFxGlowShell`) that is his protection. **All damage goes to
+the Ward first, melee included**, and while it stands his health is untouched. **A Discharge does nothing to
+him while the Ward is up** — no damage, no Stagger, no bounce; it is simply absorbed.
+
+**The Overcharge is his attack**, part of each phase's rotation like any other, not a cue the Ward's break
+sets off. It is the stock zap made bigger: a longer channel, more beams, and bolts at a multiple of the zap's
+damage. **Only a deflected Overcharge advances the fight**, so it is in the rotation of every phase.
+
+**The Ward down stays down until his next Overcharge resolves** — deflected, dodged or taken — and then
+comes back up. So a break is always worth exactly one chance, and the lethal route below is still bounded by
+one window of shooting per Overcharge. A fixed timer was rejected: a break with no Overcharge inside it
+wastes ammunition in a fight tuned to be short of it.
+
+**A Discharge off an Overcharge, with the Ward down, breaks one Binding** — left bracelet, right bracelet,
+then the collar — **and deals no damage to his health.** It Staggers him long. A Discharge off his ordinary
+zaps, with the Ward down, Staggers him and hurts like any Discharge. An Overcharge that is not deflected
+breaks nothing. Because the Discharge goes to the crosshair, a panicked deflect while looking away wastes the
+Overcharge; the Ward comes back and the loop runs again, so that is a cost, never a lock.
+
+**The Bindings drive the escalation**, which the player can see, rather than a hidden health threshold:
+
+| Bindings broken | His attacks |
+| --- | --- |
+| 0 | The stock zap and claws, and the Overcharge |
+| 1 (left bracelet) | **The volley** replaces the stock zap: three or four quick zaps with a rhythm, each its own deflect; the short Recharge after a deflect is what makes the next one possible |
+| 2 (right bracelet) | **The Overcharge winds up faster**, a tighter read on the one that frees him |
+
+His claws stay his answer at close range throughout. He **never flees**: the stock slave's flee at low health
+(`dlls/islave.cpp:723`, `health < 20`) is removed on him.
+
+**Freed.** The third Binding breaks: the biggest effect of the fight at the collar, `env_shake`, the green
+flash the Discharge uses, and the Ward goes out for good. Then **the collar animation** (`collar1` or
+`collar2`, Andrei checking them in HLMV first), then he beams out — the Xen teleport sprite and sound, and he
+is removed — and his target fires, which the map hangs the `env_global` and anything else on. The ending is
+the collar animation for now; more animations chained after it, or one long sequence compiled from existing
+ones, wait until it is seen.
+
+**Killed.** Only by out-shooting him through the Ward's windows. His health is sized so that a player who
+deflects every Overcharge always frees him first, and the arena's ammunition so that a player who refuses the
+Pulse — breaking line of sight from each Overcharge, which is hitscan, and shooting through window after
+window — has **barely enough** for the kill. He dies with his Bindings on. **The alien Module drops from his
+body**, so the Alien Route stays open on both paths; what is lost is the character — the lab, the hand-overs,
+the English, his advice, which the surviving staff carry alone. A global state records it (`slave_killed`,
+beside the freed one) for later maps to acknowledge; nothing reads it yet. A kill window after the freeing,
+the slave kneeling, was proposed and dropped: one lethal route, and it is a fight, not an execution.
+
+#### What the Pulse gives up for him — settled 2026-09-23, built the same day
+
+**The Discharge becomes innate to the Pulse, and fires only off slave beams.** Built and verified in game (through the boss);
+see [SLAVE_BOSS_CHECKLIST.md](SLAVE_BOSS_CHECKLIST.md). Recorded as
+[ADR-0016](adr/0016-the-discharge-is-innate-and-answers-only-slave-beams.md), which amends ADR-0006. Every
+player with the Pulse vents a deflected slave zap to the crosshair; every other negated hit — melee, the
+Shield's other damage types — is only negated. The `PulseDischarge` Skill (id 16) is **retired**: its id is
+never reused, and its node on the board needs a new occupant. In the fiction, the suit's mining shield
+happens to answer vortigaunt energy. **A deflected beam flashes the screen green**, in place of the suit
+colour's tint (`hud_pulse_tint`) for that one event.
+
+#### The Barrier — settled 2026-09-23
+
+**Built and verified in game the same day**: `CBarrier` in `dlls/bmodels.cpp`, `func_barrier` in the FGD.
+No map places one yet.
+
+The fight is taught before it. **Barriers** are brush entities of the Shield's own tech, mine safety equipment
+on a power source, so they stand for as long as they are powered. The teaching scene is a slave zapping the
+player through one, and Staggering himself instead.
+
+- **Toggleable**: on until something turns it off (a button, a breaker, any trigger), with a start-off flag so
+  a map can power one *up*. `func_wall_toggle` (`dlls/bmodels.cpp`) already switches a brush's solidity and
+  visibility on each use; `func_barrier` is that plus the zap. Puzzles fall out: cut the power to pass,
+  restore it to shelter, lure a slave into zapping through it.
+- **Blocks everything**, both ways. A grunt's bullets just stop. **Slave beams go back to the slave who fired
+  them**, with a Stagger — the one place a beam returns to its source, because a Barrier has no crosshair.
+- **Its look is Andrei's texture**, painted into `topmod.wad` and drawn additive; a placeholder ships first, see
+  [ART_DEBT.md](ART_DEBT.md).
+
+#### What the base game already gives
+
+Read from `dlls/islave.cpp` and the model's events on 2026-09-23:
+
+- **The stock zap's wind-up** is `zapattack1`: the `ZAP_POWERUP` event four times (frames 0, 4, 10, 15 at
+  15 fps), each adding an arm beam per hand — up to 8, the cap `ISLAVE_MAX_BEAMS` (`:39`) — raising
+  `zap4.wav`'s pitch and brightening the beams (`BeamGlow`, `:815`). `ZAP_SHOOT` at frame 24 (about 1.6 s;
+  1.07 s on Hard, where the framerate is ×1.5) clears them and fires **two bolts, one per hand**
+  (`:486-487`), each a hitscan trace dealing `sk_islave_dmg_zap` as `DMG_SHOCK` (`:891`).
+- **The beams come from attachments 1 and 2, the hands** (`:802`), which is where the bracelets are: effects
+  at a broken bracelet cost nothing. What the collar has is to be checked in HLMV.
+- **The revive** (`m_hDead`, `:459-480`): a slave zaps a dead slave and a new one spawns in its place.
+  **Switched off in the stock code**: `CheckRangeAttack2` returns `false` on its first line, so no slave
+  ever revives. Using it later means turning it back on.
+- **Chained `scripted_sequence`s** play one after another through their `target`s, and the client blends each
+  change of sequence over 0.2 s (`cl_dll/StudioModelRenderer.cpp:864-907`).
+
+#### Traps
+
+- **Arm beams need walls.** `ArmBeam` draws only if geometry is within 512 units of the hand (`:783-793`); in
+  an open arena the stock wind-up shows nothing. The Overcharge's beams have to be his own — to the floor, or
+  round his body.
+- **He is immune to `DMG_SHOCK`** (`:585`); the Discharge is `DMG_ENERGYBEAM` for that reason. A Stagger is
+  therefore not a side effect of damage and has to be forced.
+- **The gap in a chain**: between two `scripted_sequence`s the monster is handed back to its AI. Whether that
+  shows as a frame of idle or a turn is to be measured, not asserted.
+- **Melee needs no ammunition**, so the ammunition bound on the lethal route is soft for a melee player.
+  Accepted.
+
+#### What is code and what is map
+
+The code: the boss (a `CISlave` subclass) with the Ward's pool and glow, the Overcharge and the volley, the
+Binding counter and its effects, the escalation, no flee, and firing a target on the third break; the forced
+Stagger on any slave; the innate Discharge on beams only, the green flash, and the Skill's retirement;
+`func_barrier`. The map: the arena and its ammunition, the ending's chain, the two global states, and every
+Barrier.
+
+#### Open
+
+- **How do the lab slave's items arrive?** Handed straight into the Inventory, where a full Grid refuses them,
+  or left in a Box, which is not built yet.
+- **Does a Barrier's returned beam also hurt the slave**, or only Stagger him? The teaching scene needs only
+  the Stagger.
+- **The retired Discharge node's replacement** on the board ([SKILL_MAP.md](SKILL_MAP.md),
+  [SKILL_TREE.md](SKILL_TREE.md)), and the two cross-Route links that scale the Discharge (Energy Damage,
+  Weapon Mastery), which still apply to the innate one.
+- **The arena**, in wing one's map, and its ammunition.
+- **Every number**: the Ward's pool, the Overcharge's channel and damage, the Stagger's length, his health
+  against the strongest wing-one weapon over three windows — if a well-armed player kills him by accident
+  while deflecting, the pool is too small.
+
+#### Later
+
+- **Allies**, or **ghost summons** — the alien Module's first weapon, used on the player before it is handed
+  to them, which introduces the Module.
+- **Binding bodygroups** in place of the effects, and the lab slave's model without the hardware, from one
+  decompile; see [ART_DEBT.md](ART_DEBT.md).
 
 ### The assassin boss
 
@@ -1661,6 +1838,52 @@ who spent years around crystal, heard the voice, and did something with it.
 - A true neutral faction (walk among them until provoked) was rejected: relationships are a static class
   table, neutral-until-provoked exists only as Barney's per-monster hack, and a faction-wide version is a
   second social layer on top of an untested 5f. One ritual room gives the feeling at a fraction of the cost.
+
+**How a cultist looks — Andrei, 2026-09-23. Direction, not grilled in full.** The maddened is a miner who
+broke; a cultist is a miner who joined something, so what marks him is belonging, not madness. One class:
+a cultist is the maddened plus a keyvalue that sets his skin and bodygroup, plus the ritual state — which
+answers MADDENED.md's "spawnflag or a class of its own".
+
+- **The sign.** One glyph, drawn once by Andrei, used everywhere: a **decal on the tunnel walls**, met
+  before the first cultist so the player learns the sign before the people; **on the suit's chest plate**,
+  in place of Ivan's RESEARCH plate, as a skin family (texture only, the same pipeline as the
+  [face variants](MADDENED.md)); and in the margins of cult Records. Unchecked: whether a custom decal
+  means the mod ships a whole replacement `decals.wad`.
+- **Crystal, worn**, as submodels (a bodygroup): a shard on a cord or taped over the lamp, in the
+  deposits' purple or the Core's green, additive so it reads as glowing. The voice comes through crystal
+  and they carry it. It also shows them in the dark before they see the player — the stealth pillar, and
+  the Panthereye's opposite — and may drop a Crystal Shard. A modelling rung for Andrei after the beard.
+- **The ritual pose.** The members kneel on the player rig's **crouch idle** to begin with, facing the
+  crystal, backs turned; expected to need tuning. The chant is the mutter in unison. **The leader gets
+  something else**, not chosen yet.
+- *Rejected:* **hoods** — cheap, the most generic cult image there is, and they would hide the faces being
+  varied. Dropped outright, not kept for rank.
+
+**For a later grill — Andrei, 2026-09-23.** Two more variant axes, on cultists as well as the maddened:
+
+- **Beard shapes.** Ivan's beard is geometry, a wedge down the neck, so a short beard, stubble or a shaved
+  jaw is a head modelled by Andrei, shipped as a head bodygroup with its own hair mask so the colour skins
+  apply to it too. To settle: which shapes, how many, and whether shape says anything (the cult's own
+  grooming, a shaved head as initiation) or is only variety.
+- **Helmets.** A miner's helmet as a bodygroup, some wearing it and some not. It meets the worn crystal
+  above — a shard taped over the helmet's lamp is one of its two proposed places. To settle: whether the
+  helmet marks miner against cultist, or rank, or nothing; whether its lamp is lit (a real light is a stealth
+  fact, as the glowing shard is); whether it comes off the head, which the geometry of Ivan's hair decides;
+  and whether it is modelled by Andrei or taken from an existing model (the SDK and Decay folders first,
+  [HL_SDK.md](HL_SDK.md)).
+- **A crystal trinket the player wears, to pass among cultists — Andrei, 2026-09-23. Idea.** The worn
+  crystal is the cult's mark, so wearing one is a disguise. It runs into a rejection above: a true neutral
+  faction was turned down because relationships are a static class table and neutral-until-provoked
+  exists only as Barney's hack. The way round it is perception, not relationships: while the trinket is
+  worn, cultists' Suspicion of the player fills slower or only at close range, through the same
+  Concealment and Profile terms as everything else ([PERCEPTION.md](PERCEPTION.md)); once one notices,
+  he is as hostile as ever. To settle: what breaks the disguise (drawn weapon, running, a body found, a
+  kill witnessed, standing too close too long), whether the maddened are fooled too or only the organised
+  cult, where it is worn (a Module Slot on the Status doll, or an inventory item), where it is found (off
+  a cultist, which the Crystal Shard drop already half-builds), and whether it shows on the player at all.
+- **How the axes combine.** Head shape × helmet × skin colour × crystal is many bodies from few parts;
+  GoldSrc packs every bodygroup into `pev->body`, so which combinations a mapper sets and which are rolled
+  at spawn is part of the same question.
 
 ### Soldiers
 
@@ -2135,6 +2358,10 @@ cannot spend on a verb they do not have.
 
 ### The Pulse's tail — settled 2026-09-17, built 2026-09-18 overnight, visual open
 
+**Removed 2026-09-23**, when the window became one second: the tail filled 0.25–1.0 s, and the window now
+fills all of it. See [The Pulse's timing](#the-pulses-timing--settled-2026-09-23-one-second). Kept below
+as the record of what it was.
+
 **Built and verified in game 2026-09-18: the mechanic is right, the visual is not** — and since
 2026-09-20 the tail is **a candidate for removal**, not merely an unfinished visual. Recorded in
 [PILLARS pillar 2](PILLARS.md#2-enhanced-combat).
@@ -2146,7 +2373,7 @@ mechanic to be clear and rewarding to the player" — was deferred the same day 
 time"). When the first-person Shield could have carried it for free on 2026-09-20, a distinct vanish
 telling "I parried" from "I braced", he declined: *"the tail is something that might not make it to the
 finals so for this v1 lets not take it into consideration for extra treatment."* So nothing is built on
-top of it, and [the Pulse's timing grill](#the-pulses-timing--urgent-grill-booked-for-the-morning-of-2026-09-21)
+top of it, and [the Pulse's timing grill](#the-pulses-timing--settled-2026-09-23-one-second)
 decides whether it merges into a longer window or goes.
 
 If it stays, the proposals recorded 2026-09-18 and not chosen: (1) the bar gives the tail its own dimmer
@@ -2179,13 +2406,34 @@ rules that keep the skill ceiling where it is:
 Mashing the key buys about a second of cover per four-second cycle, most of it at half — roughly 12%
 average reduction at today's `pulse_recharge_miss` of 3 s. A cushion, not a build.
 
-### The Pulse's timing — URGENT GRILL, booked for the morning of 2026-09-21
+### The Pulse's timing — settled 2026-09-23: one second
+
+**Settled by Andrei on 2026-09-23**, coming out of the slave boss's grill: *"make the pulse last 1 second,
+period."* Built and verified in game the same day.
+
+- **`pulse_window` is 1.0 s**, for everyone, and nothing extends it. It is the same second a hold takes to
+  raise the Defense Matrix, so window and Matrix are one motion.
+- **The tail is gone**, with `pulse_tail_scale`: the window now fills the second it used to.
+- **Pulse Window (12) is inert**, and `pulse_window_bonus` is gone. The node stays on the board doing
+  nothing.
+- **Left for later:** a shorter parry window, gated behind a Skill and carrying extra bonuses — the shape
+  the old 0.25 s window was reaching for — and the retired Discharge's node
+  ([ADR-0016](adr/0016-the-discharge-is-innate-and-answers-only-slave-beams.md)). Pulse Window's slot is the
+  natural home for the first.
+- **What it does to cover:** mashing buys one second of full negation per four-second cycle at today's
+  `pulse_recharge_miss` (3 s), 25% uptime, against about 12% at half damage before. Worth knowing when
+  tuning.
+- **Sustained fire** ([below](#the-pulse-against-sustained-fire)) is answered in the same stroke: a grunt's
+  whole burst fits inside one window.
+- **The Shield's sweep** (`pulse_shield_sweep`, 0.5 s, archived in Andrei's `config.cfg`) is still exactly
+  half the window, so the Shield still has no hold. Anything under 0.5 buys one; 0.25 stands it for half a
+  second. A call by eye.
+
+The brief as it was written, questions and all, is kept below as the record.
 
 **Raised by Andrei on 2026-09-20, the evening the first-person Shield first ran.** His words: *"the pulse
 presentation is now gated by the actual mechanic: 0.25 is impossible to fit expansion and contraction of
 the shield."*
-
-Nothing here is decided. This is a brief, not an answer — do not pre-empt it.
 
 **The observation, and why it is not a presentation problem.** The Shield's sweep is clamped to at most
 half the window, so at `pulse_window` 0.25 s the entrance and the exit are 0.125 s each and there is no
@@ -2231,7 +2479,7 @@ amazing". What is in question is the mechanic underneath it.
 ### The Shield in first person — settled 2026-09-20, built and seen
 
 **Shape: settled by grill 2026-09-20, built the same day. Andrei's verdict on first sighting: "it looks
-amazing."** But see [The Pulse's timing](#the-pulses-timing--urgent-grill-booked-for-the-morning-of-2026-09-21)
+amazing."** But see [The Pulse's timing](#the-pulses-timing--settled-2026-09-23-one-second)
 above — drawing it honestly exposed that the 0.25 s window is too short to fit an entrance and an exit,
 which is a question about the *mechanic*, not about anything in this entry.
 
@@ -2301,7 +2549,7 @@ model answer, a hard swap of `pev->viewmodel` with no holster time, is parked in
    with no hold at all, and every duration scales with the window again, which is the option this one
    was chosen over. The structure reasserts itself the moment the window grows or the sweep drops back
    under half of it; until then nobody should read this rule and expect a hold. That is the observation
-   [the timing grill](#the-pulses-timing--urgent-grill-booked-for-the-morning-of-2026-09-21) exists for.
+   [the timing grill](#the-pulses-timing--settled-2026-09-23-one-second) exists for.
 8. **No texture in v1.** Pure vertex colour; the travelling edge and the obliquity falloff do all the
    work. Hex facets are an [ART_DEBT.md](ART_DEBT.md) entry, deliberately not a prerequisite — if the two
    procedural cues do not sell a surface on their own, that is worth learning for the cost of an evening
@@ -2714,7 +2962,7 @@ one node each.
 | Ricochet | As above | New. One node, no ranks |
 | Pulse Window (12) | Longer Shield | Exists. The timing branch, brought inside the Route |
 | Pulse Recharge (15) | Shorter Recharge | Exists |
-| Pulse Discharge (16) | Negated hits vent at the crosshair | Exists |
+| Pulse Discharge (16) | Negated hits vent at the crosshair | **Retired** 2026-09-23: the Discharge is innate, [ADR-0016](adr/0016-the-discharge-is-innate-and-answers-only-slave-beams.md); the node needs a new occupant |
 | Pulse Rebound (17) | A deflect skips the Recharge | Exists |
 | Defense Matrix | The gate: hold for 1 s | New. Needs the Pulse Module |
 | Matrix on Kill | A kill while the Matrix is up restores some armour | New. The Route's one way to sustain, and the opposite of idling |
@@ -3782,7 +4030,7 @@ grilled would settle it by accident.
 
 Ranked by how much else is waiting on the answer.
 
-1. **The Pulse's timing** — the [grill booked for 2026-09-21](#the-pulses-timing--urgent-grill-booked-for-the-morning-of-2026-09-21),
+1. **The Pulse's timing** — the [grill booked for 2026-09-21](#the-pulses-timing--settled-2026-09-23-one-second),
    with [the Pulse against sustained fire](#the-pulse-against-sustained-fire) folded in. Whether 0.25 s
    is a state at all; what happens to the tail.
 2. **How many Pieces, and what are the wings?** Three Pieces were proposed and not confirmed; no wing in

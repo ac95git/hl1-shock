@@ -679,6 +679,28 @@ void ClientCommand(edict_t* pEntity)
 			ClientPrint(pev, HUD_PRINTCONSOLE, "record_spawn needs sv_cheats 1.\n");
 		}
 	}
+	else if (FStrEq(pcmd, "slaveboss_spawn"))
+	{
+		// Cheat-gated testing aid: the alien slave boss on the floor 256 units
+		// ahead, facing the player, so his fight can be played on topmap before
+		// wing one exists (docs/SLAVE_BOSS_CHECKLIST.md).
+		if (0 != g_psv_cheats->value)
+		{
+			UTIL_MakeVectors(Vector(0, player->pev->v_angle.y, 0));
+			const Vector vecStart = player->pev->origin + gpGlobals->v_forward * 256 + Vector(0, 0, 36);
+
+			TraceResult tr;
+			UTIL_TraceLine(vecStart, vecStart - Vector(0, 0, 512), ignore_monsters, player->edict(), &tr);
+
+			CBaseEntity* pBoss = CBaseEntity::Create("monster_alien_slave_boss", tr.vecEndPos + Vector(0, 0, 4),
+				Vector(0, player->pev->v_angle.y + 180, 0), nullptr);
+			ClientPrint(pev, HUD_PRINTCONSOLE, pBoss ? "Spawned the alien slave boss.\n" : "slaveboss_spawn: could not create one.\n");
+		}
+		else
+		{
+			ClientPrint(pev, HUD_PRINTCONSOLE, "slaveboss_spawn needs sv_cheats 1.\n");
+		}
+	}
 	else if (FStrEq(pcmd, "record_grant") || FStrEq(pcmd, "record_revoke"))
 	{
 		// Cheat-gated: what record_grant does, without a trigger to wire.
@@ -1200,6 +1222,12 @@ void ClientPrecache()
 {
 	// The Pulse's ring sprite and sounds.
 	PulsePrecache();
+
+	// The alien slave boss, on every map, so slaveboss_spawn can make one
+	// anywhere: a model or sound first asked for after the map has loaded is
+	// an engine error, not a missing asset.  The slave's model and sounds are
+	// most of it, and the summon weapon precaches those already.
+	UTIL_PrecacheOther("monster_alien_slave_boss");
 
 	// Cleave's ready cue and the Follow-Up's attack sound, both placeholders
 	// (docs/ART_DEBT.md).  Here rather than on the crowbar because the cue

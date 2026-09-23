@@ -112,7 +112,7 @@ enum class ESkillId : int
 	// Skill had an effect yet.  Do not treat this as a precedent.
 	PulseWindow         = 12, // wider Pulse Window
 	PulseRecharge       = 15, // shorter Recharge
-	PulseDischarge      = 16, // negated hits vent at the crosshair
+	PulseDischarge      = 16, // RETIRED 2026-09-23: the Discharge is innate (docs/adr/0016).  Reserved forever
 	PulseRebound        = 17, // a deflect skips the Recharge, once per charge
 
 	BatteryCapacity     = 13, // +50 max battery (the hub's south rim)
@@ -549,8 +549,10 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	{ ESkillId::MeleeSpeed,      "Melee Speed",      "-30% melee swing time",                               "d_357",          2,  6,  1,  ENodeTier::Medium, EStat::None,  EGate::None },
 
 	// 12: the Pulse, in the Juggernaut's far corner.  Gated on the Pulse
-	// Module, which is open until that Module exists.
-	{ ESkillId::PulseWindow,     "Pulse Window",     "+0.15 s Shield window",                             "autoaim_c",      6,  12, 1,  ENodeTier::Minor,  EStat::None,  EGate::PulseModule },
+	// Module.  Inert since 2026-09-23, when the window became one second for
+	// everyone; it waits here for the Skill-gated parry window (docs/ROADMAP.md,
+	// "The Pulse's timing").
+	{ ESkillId::PulseWindow,     "Pulse Window",     "No effect yet: the window is fixed at 1 s",                           "autoaim_c",      6,  12, 1,  ENodeTier::Minor,  EStat::None,  EGate::PulseModule },
 
 	// 13: the hub's south rim Minor
 	{ ESkillId::BatteryCapacity, "Battery Capacity", "+50 max AP",                               "item_battery",   7,  9,  1,  ENodeTier::Minor,  EStat::None,  EGate::None },
@@ -565,7 +567,10 @@ inline constexpr SkillDef k_SkillDefs[k_MaxSkills] =
 	// Rebound -- and no longer touches the Matrix trio, which is the armour
 	// road's alone now (docs/SKILL_MAP.md).
 	{ ESkillId::PulseRecharge,   "Pulse Recharge",   "-33% Pulse recharge",                 "flash_empty",    6,  13, 1,  ENodeTier::Medium, EStat::None,  EGate::PulseModule },
-	{ ESkillId::PulseDischarge,  "Pulse Discharge",  "Negated hits vent as energy at the crosshair.",                 "d_egon",         7,  14, 1,  ENodeTier::Major,  EStat::None,  EGate::PulseModule },
+	// 16 retired 2026-09-23: the Discharge is the Pulse's own now, on slave
+	// beams only (docs/adr/0016).  Its cell (7, 14) is a dead end and waits for
+	// a new occupant; a player who held it gets the point back on load.
+	SKILL_RESERVED(PulseDischarge),
 	{ ESkillId::PulseRebound,    "Pulse Rebound",    "A deflect skips the Recharge, once per normal Recharge.", "flash_beam", 6, 14, 1, ENodeTier::Major, EStat::None,  EGate::PulseModule },
 
 	// 18: the Melee x Juggernaut link, in the hub's south-west corner cell.

@@ -15,6 +15,7 @@
 #include "UserMessages.h"
 #include "game.h"
 #include "suit_defs.h"
+#include "shake.h"
 #include <algorithm>
 
 //=========================================================
@@ -50,10 +51,15 @@ static constexpr int k_PulseNegatedDamage =
 //=========================================================
 static constexpr int k_PulseDischargeDamage = DMG_ENERGYBEAM;
 
-// What counts as melee for pulse_discharge_melee.  Claws, bites and blunt
-// blows -- deliberately not DMG_CRUSH, which is falling debris rather than
-// something swung at the player.
-static constexpr int k_PulseMeleeDamage = DMG_SLASH | DMG_CLUB;
+// The Discharge answers slave beams and nothing else (docs/adr/0016): the
+// suit's mining shield happens to take vortigaunt energy, so that is what it
+// vents.  Both live in islave.cpp, where CISlave is visible.
+bool SlaveBeamFrom(entvars_t* pevInflictor, int bitsDamageType);
+void SlaveStagger(CBaseEntity* pEntity);
+
+// The screen's flash when a beam is vented: the slave's own green, the colour
+// the boss's Ward and the freeing also use, so a player connects the three.
+static const Vector k_DischargeFlashColour(96, 255, 96);
 
 // Placeholder assets -- stock Half-Life, pending the mod's own, except the
 // Recharge cue.
@@ -103,8 +109,6 @@ static TYPEDESCRIPTION g_PulseSaveData[] =
 	DEFINE_FIELD(CPlayerPulse, m_bAbsorbed,       FIELD_BOOLEAN),
 	DEFINE_FIELD(CPlayerPulse, m_bRecharging,     FIELD_BOOLEAN),
 	DEFINE_FIELD(CPlayerPulse, m_flReadyTime,     FIELD_TIME),
-	DEFINE_FIELD(CPlayerPulse, m_bTailUp,         FIELD_BOOLEAN),
-	DEFINE_FIELD(CPlayerPulse, m_flTailEndTime,   FIELD_TIME),
 	DEFINE_FIELD(CPlayerPulse, m_iRebounds,       FIELD_INTEGER),
 	DEFINE_FIELD(CPlayerPulse, m_flFollowUpUntil, FIELD_TIME),
 	DEFINE_FIELD(CPlayerPulse, m_flMatrixReadyTime, FIELD_TIME),
@@ -147,14 +151,12 @@ void PulsePrecache()
 // Tuning readers.  Every one of these is a starting guess to be
 // judged in play, which is why they are cvars and not constants.
 //=========================================================
+// One number, and no Skill touches it (2026-09-23): Pulse Window (12) no longer
+// widens it, and stays on the board doing nothing until the Skill-gated parry
+// window is designed.  Kept as a function so that Skill has one place to land.
 static float PulseWindowFor(const CBasePlayer* pPlayer)
 {
-	float window = pulse_window.value;
-
-	if (pPlayer->m_skills.HasSkill(ESkillId::PulseWindow))
-		window += pulse_window_bonus.value;
-
-	return std::max(0.05f, window);
+	return std::max(0.05f, pulse_window.value);
 }
 
 static float PulseRechargeFor(const CBasePlayer* pPlayer, bool bAbsorbed)
@@ -290,6 +292,11 @@ static void FireDischarge(CBasePlayer* pPlayer, float flAbsorbed)
 		ApplyMultiDamage(pPlayer->pev, pPlayer->pev);
 
 		gMultiDamage = savedMultiDamage;
+
+		// A slave hit by a Discharge is Staggered: the attack in hand broken
+		// off, a flinch forced.  Any slave, not only the one that fired --
+		// putting one's beam into another is the point of aiming it.
+		SlaveStagger(pHit);
 	}
 }
 
@@ -303,8 +310,6 @@ void CPlayerPulse::Clear(CBasePlayer* pPlayer)
 	m_bAbsorbed = false;
 	m_bRecharging = false;
 	m_flReadyTime = 0;
-	m_bTailUp = false;
-	m_flTailEndTime = 0;
 	m_bDischarging = false;
 	m_iSentState = -1;
 	m_iRebounds = PulseMaxRebounds(pPlayer);
@@ -487,16 +492,6 @@ void CPlayerPulse::SyncClient(CBasePlayer* pPlayer)
 		state = PULSE_SHIELD;
 		flRemaining = m_flShieldEndTime - gpGlobals->time;
 	}
-	else if (m_bTailUp)
-	{
-		// The bar shows the tail and the Recharge after it as one countdown to
-		// Ready -- which is what the player needs from the bar -- and the ring
-		// and the brace's sound say the tail is there.  The client needs no
-		// new state, and the count does not resend when the tail hands over to
-		// the Recharge, because the state it sent does not change.
-		state = PULSE_RECHARGING;
-		flRemaining = (m_flTailEndTime - gpGlobals->time) + PulseRechargeFor(pPlayer, false);
-	}
 	else if (m_bRecharging)
 	{
 		state = PULSE_RECHARGING;
@@ -541,15 +536,6 @@ bool CPlayerPulse::TryPulse(CBasePlayer* pPlayer)
 	m_bShieldUp = true;
 	m_flShieldEndTime = gpGlobals->time + PulseWindowFor(pPlayer);
 	m_bAbsorbed = false;
-
-	// Where the tail would end: the moment a hold of this press would raise
-	// the Defense Matrix, so window, tail and Matrix are one motion with no
-	// unprotected gap (docs/ROADMAP.md, "The Pulse's tail", rule 5).  Read
-	// from the Matrix's own number rather than a cvar of the tail's, which
-	// could only ever disagree with it.  Pulse Window widens the window
-	// inside that second and does not extend it (rule 3): a window as long
-	// as the second has no tail at all.
-	m_flTailEndTime = gpGlobals->time + std::max(PulseWindowFor(pPlayer), skill_matrix_hold.value);
 
 	// The Shield is the suit's own field, so it is the suit's own colour.
 	const SuitVariantDef& suit = GetSuitVariant(pPlayer->pev->skin);
@@ -598,25 +584,6 @@ void CPlayerPulse::Think(CBasePlayer* pPlayer)
 				EMIT_SOUND_DYN(ENT(pPlayer->pev), CHAN_ITEM, k_PulseSoundReady,
 					0.7, ATTN_NORM, 0, 130);
 			}
-			else if (!m_bAbsorbed && gpGlobals->time < m_flTailEndTime)
-			{
-				// The tail: nothing was deflected, so the Pulse stands on,
-				// braced, and its Recharge -- the long one, a miss's -- waits
-				// for it.  A window that DID deflect never gets here: it ends
-				// exactly as it always has, so the parry, the short Recharge
-				// and the Rebound are untouched by any of this.
-				//
-				// The tail has NO visual of its own as of 2026-09-20.  It used
-				// to get a dimmer, smaller ring so "I braced" could be told from
-				// "I parried" without a number; that ring went with all the
-				// others when the first-person Shield landed.  Deliberate, and
-				// Andrei's call: the tail may not survive to the final game, so
-				// it was left out of the Shield's v1 rather than given a
-				// treatment that might be thrown away.  Its duller braced sound
-				// (TailScale) is the only cue it has left.  See docs/ROADMAP.md,
-				// "The Pulse's tail".
-				m_bTailUp = true;
-			}
 			else
 			{
 				m_bRecharging = true;
@@ -624,15 +591,6 @@ void CPlayerPulse::Think(CBasePlayer* pPlayer)
 			}
 
 			m_bAbsorbed = false;
-		}
-	}
-	else if (m_bTailUp)
-	{
-		if (gpGlobals->time >= m_flTailEndTime)
-		{
-			m_bTailUp = false;
-			m_bRecharging = true;
-			m_flReadyTime = gpGlobals->time + PulseRechargeFor(pPlayer, false);
 		}
 	}
 	else if (m_bRecharging && gpGlobals->time >= m_flReadyTime)
@@ -948,32 +906,6 @@ bool CPlayerPulse::WouldNegate(int bitsDamageType) const
 }
 
 //=========================================================
-// CPlayerPulse::TailScale
-//
-// A hit in the tail is a miss with a discount: the share, and the long
-// Recharge that is already coming.  The Shield's list decides what it
-// applies to (ADR-0005, rule 2), so a fall or drowning is not halved.
-//=========================================================
-float CPlayerPulse::TailScale(CBasePlayer* pPlayer, int bitsDamageType)
-{
-	if (!pPlayer || !m_bTailUp || gpGlobals->time >= m_flTailEndTime)
-		return 1.0f;
-	if ((bitsDamageType & k_PulseNegatedDamage) == 0)
-		return 1.0f;
-
-	// The deflect's own impact, pitched well down and quieter: the same
-	// family, so it reads as the Pulse, but duller, so it never reads as a
-	// parry.  Never in the same instant as a deflect -- one hit is one or the
-	// other -- which is the collision ART_DEBT.md records the first Pulse
-	// sounds failing on.
-	EMIT_SOUND_DYN(ENT(pPlayer->pev), CHAN_AUTO,
-		k_PulseSoundsDeflect[RANDOM_LONG(0, ARRAYSIZE(k_PulseSoundsDeflect) - 1)],
-		0.7, ATTN_NORM, 0, 62 + RANDOM_LONG(0, 6));
-
-	return std::max(0.0f, std::min(pulse_tail_scale.value, 1.0f));
-}
-
-//=========================================================
 // CPlayerPulse::ReportDeflect
 //
 // Tells the client where a turned-away blow came from, so the Shield can flare
@@ -1038,23 +970,19 @@ bool CPlayerPulse::TryNegate(CBasePlayer* pPlayer, float flDamage, int bitsDamag
 		k_PulseSoundsDeflect[RANDOM_LONG(0, ARRAYSIZE(k_PulseSoundsDeflect) - 1)],
 		1.0, ATTN_NORM, 0, 96 + RANDOM_LONG(0, 8));
 
-	// A Discharge on a MELEE deflect was never designed -- it falls out of
-	// "one Discharge per negated hit", which does not care what dealt the
-	// damage. It plays well, so it stays on by default, but it is the part of
-	// this behaviour most likely to be judged wrong later: pulse_discharge_melee
-	// 0 turns it off without touching anything else.
-	const bool bMelee = (bitsDamageType & k_PulseMeleeDamage) != 0;
-	const bool bWantDischarge = !bMelee || pulse_discharge_melee.value != 0;
-
-	// One Discharge per negated hit, fired in the same frame the hit lands.
-	// The reentrancy guard stops a Discharge that causes damage back to the
-	// player -- venting into an explosive barrel at point blank -- from
-	// recursing.
-	if (bWantDischarge && !m_bDischarging && pPlayer->m_skills.HasSkill(ESkillId::PulseDischarge))
+	// The Discharge is the Pulse's own since 2026-09-23 (docs/adr/0016): no
+	// Skill, and only a slave's beam sets it off.  Every other negated hit --
+	// melee included, which used to vent too -- is negated and nothing more.
+	// One Discharge per negated beam, so a zap's two bolts vent twice.  The
+	// reentrancy guard stops a Discharge whose own damage comes back at the
+	// player from recursing.
+	if (!m_bDischarging && SlaveBeamFrom(pevInflictor, bitsDamageType))
 	{
 		m_bDischarging = true;
 		FireDischarge(pPlayer, flDamage);
 		m_bDischarging = false;
+
+		UTIL_ScreenFade(pPlayer, k_DischargeFlashColour, 0.4f, 0.0f, 70, FFADE_IN);
 	}
 
 	return true;

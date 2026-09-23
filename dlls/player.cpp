@@ -538,12 +538,6 @@ bool CBasePlayer::TakeDamage(entvars_t* pevInflictor, entvars_t* pevAttacker, fl
 		}
 	}
 
-	// The Pulse's tail: a Pulse whose window deflected nothing stands on,
-	// braced, up to the moment a hold would raise the Matrix, and a hit in it
-	// lands at a share. Here rather than beside TryNegate so a hit that Last
-	// Stand or a Ricochet turns away entirely never makes the brace's sound.
-	flDamage *= m_pulse.TailScale(this, bitsDamageType);
-
 	// Demolitions, taken: explosions hurt the player less, their own grenades
 	// included. Before the armour split and the suit's report, so both see
 	// the blow that actually arrived, the way Sure Footing scales a fall.

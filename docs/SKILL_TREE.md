@@ -287,7 +287,7 @@ Matrix, and the armour both lean on. [ROADMAP](ROADMAP.md#juggernaut--resilient)
 | Ricochet | 64 | A chance per bullet (`skill_ricochet_chance` 0.2) to bounce it, negated for the player, its full damage dealt to the attacker as bullet damage with a tracer back to them. Bullets only, needs armour | — | **Built 2026-09-14**; a spur off the armour road since 2026-09-16. One node, tuned by its cvar: under the matrix there is no rank for it, and the Juggernaut's road stat is Max Armour. Whether Ricochet wants a stat of its own is a low-priority question to revisit once the Route has been played |
 | Pulse Window | 12 | The Shield stands longer | — | Exists |
 | Pulse Recharge | 15 | The Recharge is shorter | — | Exists |
-| Pulse Discharge | 16 | Negated hits vent at the crosshair, as energy | — | Exists |
+| Pulse Discharge | 16 | Negated hits vent at the crosshair, as energy | — | **Retired** 2026-09-23 ([ADR-0016](adr/0016-the-discharge-is-innate-and-answers-only-slave-beams.md)): the Discharge is innate. `SKILL_RESERVED`; id 16 is never reused and the node needs a new occupant |
 | Pulse Rebound | 17 | A deflect skips the Recharge, once per charge | — | Exists |
 | Defense Matrix | 157 | Hold the Pulse key 1 s: **no damage reaches health**, armour pays for the whole hit at 0.5 AP per point (`skill_matrix_armor_cost_scale`), the player is slowed 20%, stands 6 s or until zero armour, 10 s cooldown. Armour is the pool; nothing refills by waiting | — | **Built 2026-09-16**, reworked the same day: the first shape, a larger share of the stock split, could not be read in play, and holding the key through the six seconds was dropped |
 | Matrix on Kill | 158 | A kill while the Matrix is up restores some armour (15, to the cap) | — | **Built 2026-09-16** |
