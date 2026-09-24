@@ -286,6 +286,12 @@ cvar_t sk_maddened_dmg_swing1 = {"sk_maddened_dmg_swing1", "10"};
 cvar_t sk_maddened_dmg_swing2 = {"sk_maddened_dmg_swing2", "15"};
 cvar_t sk_maddened_dmg_swing3 = {"sk_maddened_dmg_swing3", "20"};
 
+// The Crew (dlls/crew.cpp, grilled 2026-09-24): between the scientist's 20
+// and Barney's 35, on every skill.
+cvar_t sk_crew_health1 = {"sk_crew_health1", "25"};
+cvar_t sk_crew_health2 = {"sk_crew_health2", "25"};
+cvar_t sk_crew_health3 = {"sk_crew_health3", "25"};
+
 
 //Turret
 cvar_t sk_turret_health1 = {"sk_turret_health1", "0"};
@@ -1485,6 +1491,10 @@ void GameDLLInit()
 	CVAR_REGISTER(&sk_maddened_dmg_swing1);
 	CVAR_REGISTER(&sk_maddened_dmg_swing2);
 	CVAR_REGISTER(&sk_maddened_dmg_swing3);
+
+	CVAR_REGISTER(&sk_crew_health1);
+	CVAR_REGISTER(&sk_crew_health2);
+	CVAR_REGISTER(&sk_crew_health3);
 
 
 	//Turret

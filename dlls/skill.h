@@ -96,6 +96,9 @@ struct skilldata_t
 	float maddenedHealth;
 	float maddenedDmgSwing;
 
+	// The Crew (dlls/crew.cpp)
+	float crewHealth;
+
 	float turretHealth;
 	float miniturretHealth;
 	float sentryHealth;

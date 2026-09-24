@@ -2493,6 +2493,37 @@
 // allied with his own kind. Mutters the road's whisper every few seconds - his tell in the dark. One
 // body: Ivan, Half-Life's original protagonist, in a work-blue suit; see docs/MADDENED.md.
 @PointClass base(Monster, Sequence) size(-16 -16 0, 16 16 72) studio("models/maddened.mdl") = monster_maddened : "Maddened miner" []
+// The Crew: the facility's friendly humans (dlls/crew.cpp; ROADMAP, "The Crew"). They stand at their post,
+// look at the player, and answer a use press with one printed line from crew_lines.txt, at random from their
+// kind's pool unless `line` names one. They never follow or fight; hurt, they run. For a Crew member who
+// gates the sequence, set Trigger Condition to Death and point TriggerTarget at the game over.
+@BaseClass base(Monster, Sequence) size(-16 -16 0, 16 16 72) = Crew
+[
+	line(string) : "Line (crew_lines.txt id)" : : "Always say this line on use, instead of one from the kind's pool"
+]
+@BaseClass = CrewHair
+[
+	hair(choices) : "Hair colour" : -1 =
+	[
+		-1 : "Random"
+		0 : "Brown"
+		1 : "Black"
+		2 : "Grey"
+		3 : "Ginger"
+		4 : "Blond"
+	]
+]
+@PointClass base(Crew, CrewHair) studio("models/maddened.mdl") = monster_miner : "Miner (Crew)"
+[
+	pick(choices) : "Pick in hand" : 0 =
+	[
+		0 : "No"
+		1 : "Yes"
+	]
+]
+@PointClass base(Crew) studio("models/barney.mdl") = monster_security : "Security (Crew) - Barney stands in" []
+@PointClass base(Crew, CrewHair) studio("models/maddened.mdl") = monster_construction : "Construction worker (Crew) - the miner stands in" []
+@PointClass base(Crew) studio("models/scientist.mdl") = monster_technician : "Technician (Crew) - a scientist stands in" []
 @PointClass base(Targetname, Angles) size(-16 -16 -16, 16 16 16) = monstermaker : "Monster Maker"
 [
 	target(string) : "Target On Release" 

@@ -55,6 +55,15 @@ const char* CTalkMonster::m_szFriends[TLK_CFRIENDS] =
 		"monster_barney",
 		"monster_scientist",
 		"monster_sitting_scientist",
+
+		// The Crew.  After Valve's three, which the scientist's and Barney's
+		// TalkInit reorder by index and FriendNumber maps below 3, so those
+		// stay as they were.  Being on the list is what makes a killing one
+		// of them provoke the rest, and quiets them when another speaks.
+		"monster_miner",
+		"monster_security",
+		"monster_construction",
+		"monster_technician",
 };
 
 

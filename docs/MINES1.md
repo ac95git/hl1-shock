@@ -132,6 +132,18 @@ The loco is in three places: working on the main line, on charge in the garage, 
 roller door. The skip, the sealed working, the compressor, the toilets, the second first-aid cabinet and
 the charging rack went in on "add all suggested".
 
+## The cast — the Crew, grilled 2026-09-24
+
+The 26 stand-ins become the Crew (ROADMAP, "The Crew — grilled 2026-09-24"), placed by Andrei by hand:
+the seven Barneys `monster_security`; the lab's two `monster_technician`; the workshop's and the
+garage's `monster_construction` once that model exists, miners until then; the other ten
+`monster_miner`. The three who gate the sequence — the drift-door guard (`air_guard`), the dry guard
+(`dry_guard`) and the lab technician (`lab_tech`) — carry a game-over trigger on death, set in the map.
+The technician's push uses Barney's `buttonpush`, not the scientist's `console`. The miners are on the
+maddened's rig and cannot sit: the canteen's two and the meal corner stand or crouch until the Barney-rig
+crew exist. Everyone answers a use press with one printed line from the lines file; nothing is voiced
+until Andrei records.
+
 ## Names, for J.A.C.K.
 
 Every brush entity has a `targetname` that says where and what: `tower_w`, `skip_n`, `t1_rail_e_s`,

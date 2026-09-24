@@ -471,6 +471,38 @@ and only body. Not yet verified in game.
 More than one face, a real pick, a flinch, a swing with a step, and a human mutter. Until then he is a
 bearded man in a blue suit in the dark with a crowbar, which already reads as a man who broke.
 
+## The Crew — three kinds in borrowed bodies, and no voices
+
+### Scope
+`monster_miner`, `monster_security`, `monster_construction`, `monster_technician` in `dlls/crew.cpp`, and
+`crew_lines.txt`. Built 2026-09-24 as step 1 of ROADMAP.md, "The Crew", before any of their art.
+
+### Current stand-ins
+
+| Use | Asset | Borrowed from |
+| --- | --- | --- |
+| The miner | `models/maddened.mdl`, clean, any of the five hair colours | the maddened, by design: this one is not a stand-in |
+| Security | `models/barney.mdl`, pistol holstered | Valve's Barney |
+| Construction | `models/maddened.mdl` | the miner, as the cast table says, until its own model exists |
+| The technician | `models/scientist.mdl`, the first head | Valve's scientist |
+| Pain and death | none of their own: the talk monster's silence | — |
+| Every line | printed text only; no wav exists | — |
+
+### What's wrong with them
+- **Security is Barney and the technician is a scientist**, Black Mesa's own people in Black Mesa's
+  uniforms, in a mine that is not Black Mesa. The Barney-rig crew in Ivan's suit (Andrei's suit swap) are
+  the fix; the default model is one line per kind in `crew.cpp`, and `model` on a placed one tries a new
+  body before that.
+- **The miner and a maddened are the same man** until the marked skin families exist: the tell settled in
+  the grill (the cult glyph, dirt and blood) is not painted yet, so today only staging tells them apart.
+- **Nobody makes a sound**: no pain, no death, no hello. Recordings switch the unprompted pools on with
+  no code change.
+- **Every line is a first draft by the agent**, written to make the slice testable.
+
+### Done when
+Security, construction and the technician wear the Barney-rig bodies, the maddened are marked, the lines
+are Andrei's, and the recordings are in.
+
 ## The melee alien grunt — armour it does not have, and no chainsaw
 
 ### Scope

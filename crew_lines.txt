@@ -1,0 +1,128 @@
+// crew_lines.txt -- what the Crew say (docs/ROADMAP.md, "The Crew").
+//
+// The repo copy is the source of truth.  Copy it to the mod directory by
+// hand after every change, like records.txt.  It is read by the server
+// on every map load, so a changed file shows on the next `map` or `restart`.
+//
+// FORMAT -- keyed blocks, line-based, as records.txt:
+//
+//   <string id>
+//   {
+//       kind  <miner | security | construction | technician>
+//       pool  <use | hello | idle | stare>     (use when absent)
+//       text  <one line of what prints; repeat for more lines>
+//       wav   <path under sound/>              (optional)
+//   }
+//
+// A use press prints a random line from the kind's `use` pool, and plays
+// its wav if it has one.  A Crew member with `line` set in the map says
+// that id and nothing else -- for the three who must say something exact.
+//
+// hello, idle and stare are UNPROMPTED and never print: a line there does
+// nothing until it has a wav.  Until then that kind is silent unprompted.
+// A wav named here but missing from sound/ is dropped with a console line,
+// so writing the line before recording it is fine.
+//
+// Ids are not saved; rename freely, but a `line` in a map names one.
+//
+// Keep a line short: it is read in passing, over the player's shoulder.
+// The text wraps at 60 characters on its own.
+//
+// Every line below is a FIRST DRAFT, written by the agent on 2026-09-24
+// to make the slice testable.  Andrei's to rewrite.
+
+// ---------------------------------------------------------------------
+// The three who gate mines1 (ROADMAP, the cast table).  Set as `line`
+// on air_guard, dry_guard and lab_tech.
+// ---------------------------------------------------------------------
+
+security_drift_door
+{
+	kind  security
+	text  Not past this door without a suit.
+	text  Kit's in the dry. First terrace, east side.
+}
+
+security_dry
+{
+	kind  security
+	text  Your locker's the open one. Suit, lamp, pick.
+	text  Hand the kit in here when you're back up.
+}
+
+technician_lab
+{
+	kind  technician
+	text  Sample line's live. Put it in the hoist downstairs
+	text  and we'll take it from there.
+}
+
+// ---------------------------------------------------------------------
+// Miners
+// ---------------------------------------------------------------------
+
+miner_tags
+{
+	kind  miner
+	text  Take your tag down, hang it back up. Every time.
+}
+
+miner_missing
+{
+	kind  miner
+	text  Three days. Nobody's said his name since the second.
+}
+
+miner_blast
+{
+	kind  miner
+	text  They're blasting the face tomorrow whether he's found or not.
+}
+
+miner_old_drift
+{
+	kind  miner
+	text  Don't go up the old drift. The air's wrong up there.
+}
+
+// ---------------------------------------------------------------------
+// Security
+// ---------------------------------------------------------------------
+
+security_move_along
+{
+	kind  security
+	text  Keep moving. The cage runs on the hour.
+}
+
+security_survey
+{
+	kind  security
+	text  The survey store's company business. Not mine, not yours.
+}
+
+// ---------------------------------------------------------------------
+// Construction
+// ---------------------------------------------------------------------
+
+construction_car
+{
+	kind  construction
+	text  Axle's cracked right through. Third one this month.
+}
+
+construction_lift
+{
+	kind  construction
+	text  Goods lift's fine. Just don't press the button twice.
+}
+
+// ---------------------------------------------------------------------
+// Technicians
+// ---------------------------------------------------------------------
+
+technician_samples
+{
+	kind  technician
+	text  We grade them down here and send them up. That's all we do.
+}

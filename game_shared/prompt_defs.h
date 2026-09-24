@@ -33,7 +33,11 @@ enum class EPromptClass : uint8_t
 	HevCharger,    // func_recharge
 	Scientist,     // monster_scientist, monster_sitting_scientist
 	Guard,         // monster_barney
-	Movable,       // func_pushable
+	Miner,         // monster_miner          -- the Crew, dlls/crew.cpp
+	Security,      // monster_security
+	Construction,  // monster_construction
+	Technician,    // monster_technician
+	Movable,      // func_pushable
 	MountedGun,    // func_tankcontrols
 	Record,        // the `record` entity, in either of its two forms
 
@@ -124,6 +128,10 @@ static const PromptClassDef k_PromptClassDefs[] = {
 	{"HEV charger", "Charge"},   // HevCharger
 	{"Scientist", "Talk"},       // Scientist
 	{"Security guard", "Talk"},  // Guard
+	{"Miner", "Talk"},           // Miner
+	{"Security", "Talk"},        // Security
+	{"Construction worker", "Talk"}, // Construction
+	{"Technician", "Talk"},      // Technician
 	{"Movable object", "Pull"},  // Movable
 	{"Mounted gun", "Operate"},  // MountedGun
 	{"Record", "Read"},          // Record

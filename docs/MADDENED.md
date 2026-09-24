@@ -150,6 +150,10 @@ Not decided, or decided for now and worth revisiting once he has been fought a f
   bodygroup with a mask each. Whether the crew that wears the
   mod's suit (Andrei: not all of the crew wears suits, but the ones on special operations always do)
   ever turns maddened in it, and what that body is; whether any maddened drops or hands over anything.
+  **Settled 2026-09-24, in the Crew's grill:** the friendly `monster_miner` shares this model as it
+  stands, and **the maddened is marked** — the cult glyph on the suit plus dirt and blood, as five marked
+  skin families beside the five clean ones (hair × clean/marked). The friendly miner takes the clean five.
+  Not yet painted or built.
 - **Security.** The roadmap has a maddened security member as a lone grunt; whether that stays a grunt or
   becomes a variant of him with a pistol.
 - **The ritual state.** The cult's passive-until-noticed spawn state, which the feeding Panthereye also

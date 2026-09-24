@@ -203,6 +203,12 @@ reach in play, because vanilla maps cannot hold them. Two decisions closed it:
 
 What the campaign's maps should contain is under [The world](#pillar-1-the-world).
 
+**The order of work, Andrei 2026-09-24: `mines1` first.** *"Until the mines1 map is brought to a decent
+polish level, we don't generate another map."* Every Idea in this document ranks below what
+[MINES1.md](MINES1.md) needs. What it needs from code, beside his own J.A.C.K. work, is
+[the Crew](#the-crew--grilled-2026-09-24): miners, construction workers, security, technicians — grilled
+the same day. The `shaft1` retune and everything after it wait.
+
 ---
 
 ## Pillar 6: Stealth
@@ -848,6 +854,7 @@ Xen hell** (2026-09-17), and the roster gained the human side the same day:
 | [Melee alien grunt](#melee-alien-grunt) | Enemy | `CAGrunt`, bare arm | **v1 built** 2026-09-18, verified |
 | [Shelled headcrab](#shelled-headcrab) | Enemy | `CHeadCrab`, recoloured | **Shaped** |
 | [Friendly alien slave](#friendly-alien-slave) | Non-combatant | The slave model on `CTalkMonster` | **Shaped** |
+| [The Crew](#the-crew--grilled-2026-09-24) | Non-combatants: miners, construction workers, security, technicians | `CTalkMonster`; the maddened's body for the miners, Barney's skeleton in Ivan's suit for the rest | **Shaped** 2026-09-24, **first in line**: what `mines1` needs. Step 1 (classes, lines file) built the same day, unverified |
 | [Alien slave boss](#the-alien-slave-boss) | Boss, freed to become the friendly slave, or killed | `CISlave` | **Shaped** 2026-09-23: the Ward, the Overcharge, three Bindings |
 | [Assassin boss](#the-assassin-boss) | Boss | `CHAssassin` | Idea |
 | [Alien grunt boss](#the-alien-grunt-boss) | Boss | `CAGrunt` | Idea |
@@ -1539,6 +1546,155 @@ Almost everything about him is map setup on stock entities. The code is:
   text on screen (`game_text`, `dlls/maprules.cpp:239`; the mod has no subtitle system).
 - **A player walking in mid-hand-over.** A `scripted_sequence` holds a monster until it ends. A +use press or a
   room conversation arriving while he is at the machine needs an answer: wait, or refuse.
+
+### The Crew — grilled 2026-09-24
+
+**Shape: Shaped 2026-09-24, in a grill of eleven questions, Andrei's verdict "solid". Step 1 of the build
+order built the same day, not verified in game. First in line**, because [`mines1`](MINES1.md) is populated
+by them and nothing else on this page is built until that map is polished. Four kinds: **miners,
+construction workers, security, technicians.** The Pit Bottom already places 26 stand-ins for them —
+security at the drift door and the foreman's desk, the guard in the dry, the technician at the hoist seen
+through two windows, the smokers at the fan door, the meal corner.
+
+#### Built 2026-09-24: step 1, the classes and the lines file
+
+`dlls/crew.cpp`: `CCrew` on `CTalkMonster` and the four classnames, each in the FGD (base class `Crew`,
+keyvalue `line`; the miner also `pick`). `crew_lines.txt` at the repo root, copied to the mod directory by
+hand like `records.txt`, with first-draft lines for every kind and the three gate lines
+(`security_drift_door`, `security_dry`, `technician_lab`). The Prompt says *Miner*, *Security*,
+*Construction worker*, *Technician* over *Talk*. Health is `sk_crew_health`, 25 on every skill. The test
+rows are in [CREW_CHECKLIST.md](CREW_CHECKLIST.md).
+
+Calls made while building, each with what it replaced:
+
+- **Stand-in bodies for the three Barney-rig kinds**: security is Barney as he ships, the technician the
+  scientist (first head) as he ships — so mines1's lab scene, written against the scientist's sequences,
+  keeps working — and construction the miner's body, as the cast table says. Any of them takes `model` in
+  the map, so the Barney-rig models can be tried before the defaults move. Rejected: shipping the three
+  classes with no body until the suit swap (nothing to place).
+- **The text prints as HUD text** on its own channel (4), centred at 0.75 of the screen height, under the
+  Prompt, held 2.5 s plus a twentieth of a second a character (never shorter than the recording, never
+  over 10 s), wrapped at 60 characters by the server. Rejected: a centre print, which crashes the level
+  over ~185 characters.
+- **The file is read by the server**, on every map load, since the server decides the line and plays the
+  wav; `records.txt` is the client's. A wav named but not on disk is dropped with a console line, so a
+  line is written before it is recorded.
+- **Unprompted pools switch on per kind** the moment one of their lines has a recording: `hello`, `idle`
+  and `stare` ride the talk monster's own hello, chatter and stare, which never print. The base's
+  conversations between friends are cut out: a Crew member speaks only to the player.
+- **Bumped, he turns to look at the player and stays on his Post**, where Valve's talk monsters step
+  aside. A use press turns him to the player too, the whole body, because the miner's rig has no head
+  controller. Rejected: the step aside, which would walk 26 people off their Posts.
+- **Hurt, he runs; he does not come back.** The scientist's rules: danger sounds and a seen enemy send him
+  to cover, fifteen seconds unseen and he forgets it, and he stays where he ended up. A player who hurt
+  him gets no line on use. Returning to the Post after a scare was left out because a `scripted_sequence`
+  that moves him would then walk him back to where he spawned.
+- **The Crew joined the talk monsters' friends list** (`TLK_CFRIENDS` 3 → 7), so killing one provokes the
+  rest, as killing a scientist does, and Valve's scientists and Barneys count them as friends.
+- **The miner takes all five hair colours**, since the marked five do not exist yet: at random by default,
+  as the maddened does, or one chosen by `hair` (0 brown, 1 black, 2 grey, 3 ginger, 4 blond; Andrei,
+  2026-09-25), on construction too while it wears the miner's body. The pick bodygroup is off unless
+  `pick 1`. His eyes are 50 above his feet, Barney's and the scientist's.
+- **The head controller Ivan's QC was to gain is not added.** Ivan's controller 0 is his spine, which the
+  talk monster's head turn would bend; the miner simply has no head turn, and turns his body instead.
+  Adding a head controller is a change to `maddened_build.py` and the maddened's model, left for when the
+  model is next rebuilt.
+
+#### Settled
+
+1. **What they do: stand at a post, look at the player, answer a use press with one line.** No following,
+   no fighting, no wandering. Anything more is the mapper's, through `scripted_sequence`. Rejected: set
+   dressing that ignores the use key (the Prompt offers `Talk` on anyone with a use function, and a crew
+   that ignores it teaches that use presses are unreliable), and full Barney/scientist behaviour with
+   following (puts a follow verb on people whose job is to stand somewhere).
+2. **Bodies: the friendly miner uses `models/maddened.mdl` as it stands**, no mouth, since Ivan has no jaw
+   bone. **The other three go on Barney's skeleton wearing Ivan's suit** — Andrei's suit swap in Blender:
+   Barney's reference with his body mesh deleted and his head kept, Ivan's suit mesh reparented to
+   Barney's armature (the 22 bone names match, so the vertex groups transfer by name), the suit fitted to
+   Barney's rest pose, the neck seam welded. Estimated at an evening. What it buys is the jaw
+   (`$controller mouth "Bone05" ZR 0 45`, driven by the engine from the sentence's amplitude) and
+   **Barney's 72 sequences** — sit at desk, lean, push button, wave, flashlight, cower, the scripted
+   deaths — which is what turns 26 standing stand-ins into a mine at work. Rejected: a head swap onto Ivan
+   (one talking head on the player's animation set, which has no working poses). **One model per kind,
+   security first**, then construction and technician. **Kinds vary by texture first**; shapes (helmet,
+   vest, holster, coat) become bodygroups as Andrei's modelling rungs land.
+3. **Classes: four thin subclasses on one talk-monster base.** `monster_miner`, `monster_security`,
+   `monster_construction`, `monster_technician`, each in J.A.C.K.'s list with its own model preview.
+   `CLASS_PLAYER_ALLY`, which the maddened's relationship row already hates — a maddened who reaches the
+   lit chamber attacks them, a scene for free later. The maddened stays `monster_maddened`, an enemy class
+   with a shared body, not a member. Rejected: one class with a `kind` keyvalue (Andrei: separate models,
+   the maddened is already encumbered with variants).
+4. **Movement: posts only in the first build.** The points-of-interest loop the
+   [friendly alien slave](#friendly-alien-slave) describes (`path_corner`s honouring `wait`, an animation
+   named per stop) comes when the Barney-rig crew have animations to stop into; the miner on Ivan's rig has
+   only the player's idles. Built once, shared with the vortigaunt.
+5. **Harm: vanilla scientist rules.** Allies; they take damage and die; they flee when shot at (both rigs
+   run); security does not shoot back. **The three who gate the sequence** — the drift-door guard, the dry
+   guard, the lab technician — carry a game-over `TriggerCondition` on death, set in the map as Half-Life
+   does for critical scientists. The other 23 are killable with no consequence. Rejected: untouchable crew;
+   Barney's fight-back for security (a fight system on a map with no fights in its lit half — a real option
+   later, once security is on Barney's rig where the pistol code lives).
+6. **Lines: a lines file beside `records.txt`, one text and an optional wav per line.** A small pool per
+   kind, picked at random; a `line` keyvalue on a placed entity overrides it, for the three who have to say
+   something specific. **Text prints on use** from the first build. When a wav lands the sentence plays too
+   and the jaw moves; the text stays as the subtitle. Sounds are Andrei's to make, as everywhere.
+   Rejected: vanilla sentence groups as stand-ins (half the crew in Black Mesa's voices, the miners mute);
+   waiting for recordings before shipping.
+7. **Unprompted speech is audio only, never text.** Hello, idle chatter and "stop staring" play when a
+   line has a wav and print nothing. Until Andrei records, the crew is silent unprompted; after, the chamber
+   murmurs. Text on screen is for the use press only, so the player learns the text is for them, and it
+   never competes with the Prompt and the Records.
+8. **The tell between a friendly miner and a maddened one: the maddened is marked.** The cult glyph on the
+   suit plus dirt and blood, as **five marked skin families beside the five clean ones** in the one model
+   (hair colour × clean/marked = 10 families); the friendly miner takes the clean five. Staging keeps him
+   in the dark, muttering. Rejected as the tell: the pick in the hand (the blank weapon bodygroup stays,
+   see below, but it is not the rule).
+9. **mines1's cast**, confirmed; Andrei places them by hand:
+
+   | Today | Where | Becomes |
+   | --- | --- | --- |
+   | 7 Barneys | drift door, dry, office desk, dispatcher's cabin, tier 1 ledge, tier 2, airlock | `monster_security` |
+   | 2 scientists | the sealed lab, one scripted as the technician | `monster_technician` |
+   | 2 scientists | workshop, garage | `monster_construction`; miners until the model exists |
+   | 10 scientists | canteen, crib, sorting benches, smokers, meal corner, tier 2 | `monster_miner` |
+
+10. **Words: the Crew**, for the friendly humans as a group — MINES1.md's room table already says "two of
+    the crew". In [Proposed vocabulary](#proposed-vocabulary) until built. *Technician* over *lab worker*:
+    the spec names one, and Valve's cut `technician.cpp` reached for the same word.
+
+#### Assumptions written as such, not asked
+
+- The miner's pick bodygroup is blank by default, with a keyvalue to show it for a scene at a face.
+- Ivan's QC gains a head controller (`$controller 0 "Bip01 Head"`) so the look-at-player works; the
+  build script adds it.
+- Health in `skill.cfg`, between the scientist's 20 and Barney's 35.
+- The technician's scripted push uses Barney's own `buttonpush` sequence; the scientist's `console`
+  animation is on a different skeleton (clavicle bones) and does not transfer.
+- The miner on Ivan's rig cannot sit: the canteen's two and the meal corner stand or crouch until the
+  Barney-rig crew exist.
+- **The miner never lip-syncs**, accepted by Andrei 2026-09-24 when asked again: his lines print, and a
+  recorded wav plays over a still face. If that grates once recordings exist, the fixes are the head
+  swap onto Ivan or moving the miner onto the Barney rig at the cost of the maddened's shared body. Both
+  deferred, neither decided.
+
+#### What was looked up
+
+Barney's SDK source (`Monster Models/Barney/`) has the reference, 72 sequences and the jaw chain
+(`Bone05`–`07` under `Bip01 Head`). The scientist's monster source is **not** in the SDK, only the
+deathmatch player version, so his heads need a Crowbar decompile first. Valve's own construction worker
+(`valve/models/construction.mdl`, the Blast Pit corpse) is Barney's body with a hard hat, 22 bones, 20
+sequences (idles, walk, run, deaths, barnacle, lying poses, two scripted scenes) — nothing to work or talk
+with, but it confirms Valve made its worker as Barney plus a helmet. Half-Life: Extended and Half-Life:
+Echoes ship `construction.mdl` and `worker.mdl` with 105–229 sequences, four heads, hand items and hats:
+other teams' art, the same licensing question as the decompiled maps, not used.
+
+#### Order of build
+
+1. ~~The miner class and the lines file — no new art. The base class, the four subclasses' skeletons, the
+   FGD, the text on use, the game-over hook is vanilla.~~ Built 2026-09-24, above.
+2. Andrei's suit swap in Blender; the script assembles the model from it.
+3. `monster_security` on it, then construction and technician as textures are painted.
+4. Recordings, which switch on the audio and the jaw with no code change.
 
 ### The alien slave boss
 
@@ -4061,7 +4217,7 @@ required the victim to be unaware, and the settled term is purely a matter of wh
 Stat node (2026-09-14); Core and Ghost (2026-09-16; *ghost slave* lost the second word because the
 classname already says slave once); Defense Matrix and Decaying Armor; the Dash; Station, Fuel processor,
 Deposit, Shard, Tail, Carbon Pickaxe, Record, Guidance and Prompt (2026-09-18); the maddened and the cult
-(2026-09-19).
+(2026-09-19); the Crew (2026-09-24).
 
 Note what is deliberately *absent*: there is no proposed term for the scrap that
 [crafting](#crafting--idea-2026-09-18) would consume or the currency

@@ -462,6 +462,14 @@ Built 2026-09-19; [docs/MADDENED.md](docs/MADDENED.md) is the record. **The cult
 with a leader, and will share his class.
 _Avoid_: zombie, infected, thrall, cultist for a maddened miner (the cult chose; the maddened broke)
 
+**The Crew**:
+The friendly humans of the facility as a group: miners, construction workers, security, technicians, one
+classname per kind (`monster_miner`, `monster_construction`, `monster_security`, `monster_technician`) on
+one talk-monster base in `dlls/crew.cpp`. They stand at their Post, look at the player and answer a use
+press with one printed line from `crew_lines.txt`; they never follow or fight. A **Crew member** is one of
+them. Built 2026-09-24 (ROADMAP, "The Crew"). The maddened are not Crew, though the miner shares his body.
+_Avoid_: staff, personnel, civilians, NPCs in player-facing text; lab worker (the word is *technician*)
+
 ### The mine
 
 **Pit Bottom**:

@@ -290,6 +290,9 @@ void CGameRules::RefreshSkillData()
 	gSkillData.maddenedHealth = GetSkillCvar("sk_maddened_health");
 	gSkillData.maddenedDmgSwing = GetSkillCvar("sk_maddened_dmg_swing");
 
+	// The Crew
+	gSkillData.crewHealth = GetSkillCvar("sk_crew_health");
+
 	//Turret
 	gSkillData.turretHealth = GetSkillCvar("sk_turret_health");
 

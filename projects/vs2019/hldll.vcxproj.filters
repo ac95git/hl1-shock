@@ -117,6 +117,9 @@
     <ClCompile Include="..\..\dlls\panthereye.cpp">
       <Filter>Source Files\dlls</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\dlls\crew.cpp">
+      <Filter>Source Files\dlls</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\dlls\station.cpp">
       <Filter>Source Files\dlls</Filter>
     </ClCompile>

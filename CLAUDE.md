@@ -67,6 +67,7 @@ Referenced by `00-PROJECT-OVERVIEW.md` but **not yet written**: `10-COMMON-TASKS
 | [docs/MORNING_CHECKLIST.md](docs/MORNING_CHECKLIST.md) | **Before building on anything from the overnight session of 2026-09-18** — mining, Stations, the Pulse's tail, the Dash in the air, the melee alien grunt. The test rows Andrei reports against, every decision made unattended, and what was left undone. [docs/OVERNIGHT_BRIEF.md](docs/OVERNIGHT_BRIEF.md) is the grill that set it up |
 | [docs/HOUR_CHECKLIST.md](docs/HOUR_CHECKLIST.md) | **Before building on anything from the one-hour session of 2026-09-20** — 5g, Phase's effect, the deflected-melee root cause, 5e, the VGUI collector. The rows Andrei reports against. [docs/HOUR_BRIEF.md](docs/HOUR_BRIEF.md) is the brief: the decisions made in advance and on the fly, each with its rejected alternative |
 | [docs/SLAVE_BOSS_CHECKLIST.md](docs/SLAVE_BOSS_CHECKLIST.md) | **Before building on anything from the slave boss build of 2026-09-23** — the Pulse at 1 s, the innate Discharge, the Barrier, the boss. One commit per slice, all four verified in game the same evening; two rows left unreported |
+| [docs/CREW_CHECKLIST.md](docs/CREW_CHECKLIST.md) | **Before building on the Crew** — step 1 of 2026-09-24: the four classes, `crew_lines.txt`, the Prompt. Built and not verified in game; the rows Andrei reports against |
 | [docs/adr/](docs/adr/) | Before changing something that looks arbitrary — the decisions recorded there were deliberate and the reasoning is not visible in the code. ADR-0015 is the working split itself: Andrei builds the craft, the agent writes steps and reads back, and a session opens with his sentence, not a menu |
 | [docs/TECH_DEBT.md](docs/TECH_DEBT.md) | Touching the skill tree tooltip or the inventory grid — both have known-issue entries with acceptance criteria |
 | [docs/ART_DEBT.md](docs/ART_DEBT.md) | Replacing a placeholder sprite or sound. Records what each stand-in is, why it's wrong, and what the replacement has to achieve |
@@ -108,5 +109,8 @@ Out of scope: engine-level changes — graphics upgrades, physics, and anything 
 - Suit Variant — definitions `game_shared/suit_defs.h` (both DLLs), server `CItemSuit` in `dlls/items.cpp`,
   client `CHud::UpdateSuitVariant` / `SuitColour*` in `cl_dll/hud.cpp`. The value is the player's
   `pev->skin`; there is no save field and no user message for it
+- The Crew — `dlls/crew.cpp` (the four friendly classnames on one `CTalkMonster` base); their lines in
+  `crew_lines.txt` at the repo root, read by the server and copied to the mod directory by hand like
+  `records.txt`
 
 Skill ids are saved and are bit positions in the sync message: keep them stable once added, and never reuse a removed one. All static Skill data is one shared table — see [instructions/04-CUSTOM-FEATURES.md](instructions/04-CUSTOM-FEATURES.md).
