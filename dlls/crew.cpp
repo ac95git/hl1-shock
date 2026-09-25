@@ -20,8 +20,9 @@
 //
 // Bodies, for now (docs/ART_DEBT.md, "The Crew"): the miner is the maddened's
 // model as it stands, in the five clean hair colours; construction wears the
-// miner's until its own exists; security and the technician stand in as
-// Barney and a scientist until the Barney-rig crew are built.  A mapper can
+// miner's until its own exists; security stands in as Barney until the
+// Barney-rig crew are built; the technician is scientist_suit, the
+// scientist's rig in Ivan's suit (2026-09-25).  A mapper can
 // set `model` on any of them to try a new body before the default moves.
 //
 // Server only.
@@ -892,14 +893,15 @@ protected:
 
 LINK_ENTITY_TO_CLASS(monster_security, CCrewSecurity);
 
-// The technician: the scientist as he ships, first head, until the
-// Barney-rig technician exists.  mines1's lab scene is written against his
-// sequences today.
+// The technician: the scientist's rig, heads and sequences in Ivan's suit,
+// the protective suit worn to handle the crystals (scientist_suit, 2026-09-25).
+// First head.  mines1's lab scene is written against the scientist's
+// sequences, which the model keeps.
 class CCrewTechnician : public CCrew
 {
 protected:
 	const char* Kind() const override { return "technician"; }
-	const char* DefaultModel() const override { return "models/scientist.mdl"; }
+	const char* DefaultModel() const override { return "models/scientist_suit.mdl"; }
 	bool HasHeadController() const override { return true; }
 };
 

@@ -12,7 +12,7 @@ session, 2026-09-24; again after every edit). The FGD is synced. Place one of ea
 
 | # | Test | Expect | Verdict |
 | --- | --- | --- | --- |
-| 1.1 | J.A.C.K.'s entity list | `monster_miner`, `monster_security`, `monster_construction`, `monster_technician`, each with a model preview (Ivan, Barney, Ivan, a scientist) | |
+| 1.1 | J.A.C.K.'s entity list | `monster_miner`, `monster_security`, `monster_construction`, `monster_technician`, each with a model preview (Ivan, Barney, Ivan, the scientist in Ivan's suit) | |
 | 1.2 | Walk up to each | He stands where he was placed; the Prompt reads *Miner* / *Security* / *Construction worker* / *Technician*, *[E] Talk* | |
 | 1.3 | Press use on a miner, several times | One line prints under the Prompt, white, a new one on each press, never the same one twice running; he turns his whole body to face you | |
 | 1.4 | Press use on security and the technician | Their own pools' lines; they turn to you (and their heads follow you when you walk round them) | |
@@ -23,6 +23,7 @@ session, 2026-09-24; again after every edit). The FGD is synced. Place one of ea
 | 1.8a | A miner and a construction worker set to *Ginger* (any one colour) | Both have that colour every time the map loads | |
 | 1.9 | Walk into one | He does not step aside; he turns to look at you | |
 | 1.10 | Stand near them a minute | Silence: no hello, no chatter, nothing printed unprompted (there are no recordings yet) | |
+| 1.11 | A technician, walked round and made to flee | `scientist_suit.mdl` (2026-09-25): the nerd head in Ivan's suit, collar still round the neck, head turning inside it; runs with the scientist's run, no tearing past what HLMV showed | Animation checked in game on the vanilla scientist (`_sv_override_scientist_mdl`), 2026-09-25: "doesn't read too bad". The technician itself untested |
 
 ## Harm
 

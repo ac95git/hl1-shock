@@ -44,6 +44,21 @@ predate that rule and are longer than the ones to come.
 
 ---
 
+## 2026-09-25 — Ivan's suit on the scientist (`scientist_suit`, rung 6: weights by hand)
+
+- **A mesh moves to another rig by joints, not by scale.** Copy Location per bone onto the target's
+  bones, apply the Armature modifier, rename the groups. Bones with no counterpart stay free.
+- **One bone per vertex means every weight is a choice about where the stretch goes.** The shell's
+  torso belongs to the chest bone, the seat and crotch to the pelvis, only the sleeves to the arms. On
+  the scientist the collarbones turn 70° in `walk` and the pelvis twists 11°, so each of Ivan's
+  torso vertices left on them tore visibly in HLMV.
+- **A vertex belongs to whatever its neighbours are.** Two back vertices surrounded by sleeve were
+  moved to the chest and the sleeve went "like paper" when the arm crossed the body.
+- **Thin a limb where it collides, not all round.** Scaling the legs evenly read as chicken legs;
+  moving only the inner-thigh vertices out cleared the clipping and kept the shape.
+- **Scale a torso about one pivot on the spine line** (the 3D cursor at the origin), or the bands
+  drift apart.
+
 ## 2026-09-21 — the pickaxe's third cut: form where the screen can see it (modelling rung 1, closed)
 
 **Built by Andrei** across a long day in `v_pickaxe.blend`, opened on his sentence "pickaxe round 3".
