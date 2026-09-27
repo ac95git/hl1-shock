@@ -2,9 +2,10 @@
 
 The campaign's first map, one file per map from here on. Designed with Andrei on 2026-09-22 in five
 rounds of the plan, generated the same day and walked fullbright: "it's insane, I like it a lot", with
-minor issues, listed below as work. The spec is `maps/mines1.rooms.txt` and is still the source: J.A.C.K.
-has not opened this map, so a fix goes into the spec and the map is regenerated. The plans are
-`maps/mines1.plan_floor.png`, `_tier1`, `_tier2`, `_shaft` and the combined `mines1.plan.png`.
+minor issues, listed below as work. Andrei has edited it by hand in J.A.C.K. since, so the `.map` is
+the source now and `maps/mines1.rooms.txt` is the original intent only; nothing is regenerated. The
+plans of that intent are `maps/mines1.plan_floor.png`, `_tier1`, `_tier2`, `_shaft` and the combined
+`mines1.plan.png`; the traffic plans are below.
 
 **What it is.** The foot of the shaft, built into a worked-out salt chamber 3072 by 2048 and 1536 high,
 on three tiers: the yard on the floor, two terraces above it, each 192 wider than the one below. The
@@ -131,6 +132,35 @@ rails get **their own portal** south of the airlock, since a loco cannot pass a 
 The loco is in three places: working on the main line, on charge in the garage, idling behind the
 roller door. The skip, the sealed working, the compressor, the toilets, the second first-aid cabinet and
 the charging rack went in on "add all suggested".
+
+### Traffic — settled 2026-09-27, not built
+
+Andrei's hour of 2026-09-26 removed both stairs (the lifts are now the only way between tiers), the
+old rails and trackbed, the crusher and stockpile placeholders; extended the yard north to y 896 and
+the garage west to x −832; moved the lamp room north and the niche up to z 256; and hung two cables
+on the cage (`lip −550`, the cables in the door entity so they ride with it). The traffic plan was
+drawn over that export. **`maps/mines1.plan_traffic.png` is the chosen one**;
+`mines1.plan_traffic_salt.png` is the first draft, in which salt was also a product.
+
+- **Only the crystals are worth anything.** Everything else dug is waste.
+- **Rails:** two rails 24 apart (narrow gauge), sleepers 48 every 32; straights and 45° only;
+  turnouts, no turntables, all facing a train from the portal. One main line at y −368 from the portal
+  west to the tip; turnouts to the hall spur (x 848), the garage (x 1088, two roads: the jumbo and the
+  loco's charger) and the cage siding (x −560). The drill is a rail jumbo, static, in the garage.
+- **Ore:** portal → hall spur, road A → tipped into the ore bunker → picking belt with benches →
+  crystals by hand to the mesh store → crated → up in the cage with a guard, from the cage siding.
+- **Waste:** the rest of the belt falls into a waste hopper over the hall's road B, and back out;
+  waste from new tunnels comes in at the portal and runs straight through. Both go to **the tip**:
+  the main line's west end, where cars dump into **the stope**, a worked-out void from the floor to
+  tier 2 behind the west wall (x −1888..−1600, y −496..−240). The tier-2 bricked mouth moves south
+  onto it, so the lamp behind the bricks looks down on the spoil. Named the stope, never "old
+  workings", which is `OLDWAY`.
+- **The skip becomes the cage's counterweight:** same compartment, same trigger as the cage, starting
+  at the bottom and moving opposite. Its two triggers stood at the removed stair tops and go.
+- **Moves:** the crib (the tip drift takes its door); the fan room (out of the stope's column, anywhere).
+  The tier-1 conveyor has no job left. A player-driven train is not for mines1.
+- **Open:** where the crib and the fan room go; whether `crashtrain` (a `func_tracktrain` with no
+  `path_track`, so it never moves) is deleted; parked trains or one scripted straight run.
 
 ## The cast — the Crew, grilled 2026-09-24
 
