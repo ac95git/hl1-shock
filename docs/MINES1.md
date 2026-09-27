@@ -162,6 +162,25 @@ drawn over that export. **`maps/mines1.plan_traffic.png` is the chosen one**;
 - **Open:** where the crib and the fan room go; whether `crashtrain` (a `func_tracktrain` with no
   `path_track`, so it never moves) is deleted; parked trains or one scripted straight run.
 
+### Steel — proposed 2026-09-27, not built
+
+Andrei's lattice pillar (`{truss_*` in `topmod.wad`, 2026-09-27) wanted a place. The rock holds itself
+up: a chamber this size stands on its walls, rock left in place and roof bolts, and a steel column
+1536 tall holding a roof would read as dressing. So the steel carries machines and people only.
+`maps/mines1.plan_steel.png` draws it over the traffic plan:
+
+- **A, the cage headframe:** truss posts at the corners of the cage and skip compartment and two on
+  their shared wall, 0 to 1536; the mesh stays between. The chamber's one full-height column.
+- **B and C, the lift towers:** four posts round each platform, `lift1` 0 to 640 and `lift2` 512 to
+  1152, a head over the top landing; panels only on the faces not against rock or used as entry.
+- **D, the tier-1 bridge:** four legs down to the yard at y ±256, clear of the main line.
+- **E, the tier-2 bridge:** hung from the roof on twelve rods, since the main line runs under it.
+- **F, the ore bunker and waste hopper:** four short legs each, cars beneath; when they are built.
+
+Offered with it and not taken yet: roof bolts and mesh where people work, one or two salt pillars left
+standing in the yard, steel arch sets in the drifts. Build tip: a column's faces as thin separate
+brushes, since a box shows only its near side through the mask.
+
 ## The cast — the Crew, grilled 2026-09-24
 
 The 26 stand-ins become the Crew (ROADMAP, "The Crew — grilled 2026-09-24"), placed by Andrei by hand:
