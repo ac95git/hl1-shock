@@ -52,3 +52,25 @@ origin brush on the hinge edge.
   misaligned. Fit or align them in Surface Properties afterwards.
 - Any face left permanently buried after the cut gets `NULL`.
 - Same method for a window, a vent or a hatch — it is only the number of clips that changes.
+
+# Replacing the brushes of a brush entity, keeping its class and properties
+
+Copy the properties across. The manual (p. 64) gives Object Properties' Class Info tab **Copy** and
+**Paste** buttons for exactly this:
+
+1. Select the old entity, `Alt+Enter`, **Copy**. Close the dialog.
+2. Build the replacement — one brush or several; several brushes tied together become *one* entity.
+3. Select all of it, `Ctrl+T`, pick the **same class**, then `Alt+Enter` → **Paste** → **Apply**.
+4. Check the Flags tab and the `targetname` against the old one, then delete the old entity.
+
+Two traps:
+
+- A rotating entity (`func_door_rotating`, `func_rotating`, ...) takes its pivot from an `ORIGIN` brush.
+  The replacement needs its own, included in the selection at step 3.
+- Don't delete the old entity first. Once it's gone there is nothing left to copy from.
+
+The other way round — keeping the entity and swapping only its brushes — uses **Ignore Groups**
+(`Ctrl+Shift+W`, p. 76), which lets you select and delete single brushes inside an entity. Add the new
+brush before removing the last old one: an entity with no brushes left is deleted with it. Whether
+`Ctrl+T` on a world brush *plus* an existing entity adds the brush to that entity or makes a new one is
+not in the manual — untested here.
