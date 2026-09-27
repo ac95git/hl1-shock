@@ -15,3 +15,6 @@ __pycache__/
 maps/jmf/
 *.jmf
 *.jmx
+
+# The texture catalogue, regenerated from the WADs by utils/maptool/wadcatalogue.py
+utils/maptool/catalogue/
