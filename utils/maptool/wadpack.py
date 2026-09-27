@@ -9,7 +9,7 @@ WAD"); this script only ever reads it. Sides must be multiples of 16, since the 
 sixteenth of the first. Each texture is quantised to its own 256-colour palette; the three
 smaller mips are box-filtered from the full-size image and mapped back onto that palette, so a
 mip never introduces a colour the palette lacks. A name starting with `{` is a masked texture:
-its pixels with alpha 0 go to index 255, which is set to (0, 0, 255), the engine's clear colour,
+its pixels with alpha 0, or of the pure blue (0, 0, 255) a WAD export marks them with, go to index 255, which is set to (0, 0, 255), the engine's clear colour,
 and the mips are reduced premultiplied so the clear colour does not bleed into the edge.
 
 `--install` copies the finished WAD to the mod directory. `--list` reads a WAD back and prints
@@ -106,6 +106,11 @@ def pack(out, src_dir, install=False):
         if len(name) > 15:
             die("%s: a texture name is 15 characters or fewer" % name)
         im = Image.open(os.path.join(src_dir, f)).convert("RGBA")
+        if name.startswith("{"):
+            # A texture exported from a WAD (Wally, --dump) marks its clear pixels with the pure
+            # blue rather than alpha; read that blue as clear too.
+            im.putdata([(r, g, b, 0) if (r, g, b) == CLEAR else (r, g, b, a)
+                        for r, g, b, a in im.get_flattened_data()])
         lumps.append((name, miptex(name, im), im.size))
     body = b""
     directory = b""

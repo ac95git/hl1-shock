@@ -208,6 +208,10 @@ arcs and the Heart, so the vein and the model are painted from one source.
 - **A map names it** in `worldspawn`'s `wad` key beside valve's, on the same drive-relative form
   (`/apps/steam/steamapps/common/Half-Life/topmod/topmod.wad`); `greybox.py`'s `wad` header line is
   where. Until a map does, CSG never looks for it.
+- **In J.A.C.K., add the installed copy, never the repo's.** J.A.C.K. writes the `wad` key from its game
+  profile with the drive letter stripped, and the compile runs on `D:`. The repo copy on `E:` became
+  `/Projects/halflife-updated/wads/topmod.wad`, read as `D:\Projects\...`, and CSG stopped on "Could not
+  open wad file" (2026-09-27). The entry is `D:\apps\steam\steamapps\common\Half-Life\topmod\topmod.wad`.
 - **Judging a texture is Andrei's**, in J.A.C.K.'s browser and in the game. The agent can read the WAD
   back (`--list`, `--dump`) and say whether the quantise banded a gradient; it cannot say whether a
   wall looks right.
