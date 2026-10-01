@@ -162,6 +162,75 @@ drawn over that export. **`maps/mines1.plan_traffic.png` is the chosen one**;
 - **Open:** where the crib and the fan room go; whether `crashtrain` (a `func_tracktrain` with no
   `path_track`, so it never moves) is deleted; parked trains or one scripted straight run.
 
+**Superseded in part on 2026-09-30** by "Ore out" below: the ore bunker, the picking belt, road B, the
+waste hopper, the tip, the stope, the cage siding and the skip as counterweight are gone.
+
+### Ore out — settled 2026-09-30, track built, the rest not
+
+Andrei's export of 2026-09-30 added the west annex (the yard out to x −1632, a switchback stairwell
+floor → tier 1 → tier 2 at x −1632..−1376, y 288..864, the sump under the fan room) and the north side
+(the yard and the hall out to y 1280; on tier 1 a room at x −1120..352, y 864..1280, 192 high, beside
+the lab and open to the north ledge along its length). A processing line on tier 1 was worked out the
+same day and dropped: **mines1 shows extraction only.** The ore leaves the map on a belt and is
+processed in the next map, *Residue Processing*, not built and closed for now. Andrei: "introducing too
+many elements in the first map will keep me stuck into it for a month." **`maps/mines1.plan_process.png`**
+draws it.
+
+- **Track, as Andrei laid it on 2026-09-30 (the hour 21:10–22:10 and after, export of 23:30; rails not
+  yet refined).** A **loop**: the main line at y −400 and a second line at y 400, joined by curved ends
+  west of the cage (straight at about x −1290) and at about x 540, the curves built in 2:1 segments.
+  Wagons run round to the bin without reversing. The main line runs east from the loop's east curve to
+  the portal; it stops at x 1122 today and is to reach the portal door and on into the haulage drift.
+- **The turntable** sits in the main line, centre about (−178, −400), deck about 260 across, and feeds
+  **three garage roads** south: one curving south-west to x about −610, one straight at x −182, one 45°
+  south-east to x about 255, each straight south into the garage. This supersedes "no turntables" in
+  Traffic: small wagon turntables are what narrow-gauge mines used to reach roads at right angles. Each
+  road crosses the garage fence at y −656 and wants a gate: the fence's one gate is at x 704..832.
+- **The loco**, set up 2026-10-01 at Andrei's request, not verified in game: `crashtrain`, `dmg` 5 so it
+  shoves rather than kills, the `globalname c2a1_train` copied from Valve's map removed, speed 80.
+  **It moves only when the player drives it or a script starts it** (Andrei). Parked at spawn
+  (`startspeed 0`); driven from the cab well through a `func_traincontrols` box (x −662..−602,
+  y −456..−344, z 24..104), throttle in Valve's five notches; the relays `crash_go` / `crash_park` stay
+  for scripts. Its path is the loop clockwise, `mt01`..`mt16` (facing west, as built), or anticlockwise,
+  `ma01`..`ma16`, once the turntable has turned it round. Its ORIGIN brush sits at its rear (x −544 on
+  a body −768..−512), so it pivots there on curves and on the table; moving it to the middle is offered.
+  Its two loaded wagons stand on the second line and are left for Andrei: the loco passes through them.
+- **The turntable, working**: a `func_turntable` (new, `dlls/plats.cpp`): `func_trackchange` for any number of
+  tracks. `turntable`, about its ORIGIN brush at (−176, −400), `startyaw 45` so home is the main line.
+  A valve (`func_rot_button`, Andrei's to place) turns it one stop per use, always anticlockwise:
+  home → SW road → S road → SE road → turned round (180°) → home. A loco standing still with its
+  origin within 100 (its `wheels`) of the pivot is **carried**, and put on that stop's track: `mt15`
+  (home), `sw00`, `s00`, `se00` (each road's chain starts at the pivot with nothing before it, so a
+  loco reversing out of a garage stops on the table), `ma01` (turned round). While the deck is off the
+  main line or turning, the gates `mt14` and `ma16` are Disabled, so a loco coming at the table finds
+  the end of the line (at `mt13` from the east, `ma15` from the west). With the loco over its swing,
+  or moving closer than those, it will not turn and sounds Valve's alarm. **Seen in game 2026-10-01:**
+  Andrei's valve (copied from a stock map) turns it, after a fix to the in-the-way test, which had
+  measured the loco by the world box the engine grows round a turned brush entity. Not yet tried:
+  driving, carrying, the roads, the gates, the alarm under a moving loco. The valve that turns on
+  45° a use instead of winding back is an Idea in ROADMAP.md, "The step valve".
+- **Remove:** the old garage road at x 720..816, which meets the main line at 90°, and its gate if no
+  road uses it; the loaded car in the hall (x 508..564).
+- **Gauge:** the new roads match the main line (rails 32 wide, centres 96 apart); the old garage road's
+  16-wide rails go with it.
+- **The bin.** On legs between the second line and the belt's tail, about x 180..276, y 480..560: rim
+  about 56, so a wagon on the second line side-tips north into it. Its throat feeds the belt.
+- **The belt**, as built: a flat `func_conveyor` at x 196..260 from y 560 north under the ledge and the
+  tier-1 room to the north wall. Through the wall at x 180..276, a short tunnel with a strip curtain
+  across it and a sealed end behind; the belt is the only way the ore leaves.
+- **No waste in mines1.** The old stope box west (x −2488..−1664, y −656..112) goes, and with it the tip.
+- **The hall** keeps the sample hoist, the Heart's route to the lab above; the loaded car, the bunker,
+  the sorting benches, the old belt to the hoist and the store leave it. **The lab** receives the sample.
+- **The processing door.** West of the belt, in the north wall at x 96..160, a steel door
+  to processing that never opens: a `func_door` with a `targetname` and nothing targeting it, which
+  plays its `locked_sound` on touch and never moves (`CBaseDoor::DoorTouch`). Behind it a sealed
+  vestibule, 64 deep. The belt and the door read together as "processing is through there".
+- **The tier-1 room beside the lab** is a **store room**: pallets, crates, drums, a gas-bottle rack,
+  from props and prefabs already in hand; one or two of the crew.
+- **The skip goes**, compartment, triggers and shaft tube. The crib and the fan room stay where they are.
+
+Next: vanilla references for the bin and the belt, then the build in J.A.C.K.
+
 ### Steel — proposed 2026-09-27, not built
 
 Andrei's lattice pillar (`{truss_*` in `topmod.wad`, 2026-09-27) wanted a place. The rock holds itself
@@ -180,6 +249,15 @@ up: a chamber this size stands on its walls, rock left in place and roof bolts, 
 Offered with it and not taken yet: roof bolts and mesh where people work, one or two salt pillars left
 standing in the yard, steel arch sets in the drifts. Build tip: a column's faces as thin separate
 brushes, since a box shows only its near side through the mask.
+
+### The cage landing — session card, 2026-09-28
+
+The corner to finish first, as the style reference: x −1184 to −560, y −460 to 560. The card
+(https://claude.ai/artifact/9rU347qsdsgLcdqwr4mSyw) has the corner's plan, a palette measured from Valve's
+three landings of the same lift (`floathumanlift` in `c2a2e` and `t0a0`, the grunt lift in `c2a2b1`), the
+`setpos` lines to go and look at them, and the done-when list. The cage is textured like Valve's
+`floathumanlift` and targets `floathumanlift1`. The onsetter's hut and the tag board are in the spec but not
+in this corner.
 
 ## The cast — the Crew, grilled 2026-09-24
 

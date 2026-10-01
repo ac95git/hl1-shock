@@ -44,6 +44,18 @@ predate that rule and are longer than the ones to come.
 
 ---
 
+## 2026-09-30 — `mines1`'s rails: a crossover, then a loop and a turntable (mapping, an hour and after)
+
+- **Never Carve where two rails cross: let them overlap.** Two world brushes passing through each
+  other compile clean, the compiler drops the hidden faces; Carve left four slivers where two were due.
+- **A 45° rail is rotated with Texture Lock, and its off-grid corners are accepted.** On floor detail
+  inside the map they cannot leak. Shearing in vertex mode keeps every corner on the grid but drags
+  the texture with it, and the realign costs more than the grid saves.
+- **A turnout is two rails doing different things.** One diagonal rail runs into the rail it meets;
+  the other crosses the near rail (the frog) and joins the far one. Andrei's first crossover had both
+  right before he knew the names.
+- **Track cannot meet track at 90°.** A road at right angles needs a turntable or a 45° turnout first.
+
 ## 2026-09-25 — Ivan's suit on the scientist (`scientist_suit`, rung 6: weights by hand)
 
 - **A mesh moves to another rig by joints, not by scale.** Copy Location per bone onto the target's
