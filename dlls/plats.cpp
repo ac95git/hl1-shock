@@ -1289,9 +1289,10 @@ void CFuncTrackTrain::Next()
 		// Are we there yet?
 		if (distance > 0)
 		{
-			// no, how long to get there?
-			time = distance / m_oldSpeed;
-			pev->velocity = pev->velocity * (m_oldSpeed / distance);
+			// no, how long to get there? By the speed's size: reversing, a negative speed sent the
+			// train away from the dead end, forward, for a frame before it stopped.
+			time = distance / fabs(m_oldSpeed);
+			pev->velocity = pev->velocity * (fabs(m_oldSpeed) / distance);
 			SetThink(&CFuncTrackTrain::DeadEnd);
 			NextThink(pev->ltime + time, false);
 		}
