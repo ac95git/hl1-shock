@@ -2308,3 +2308,348 @@ void CGunTarget::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE use
 		Next();
 	}
 }
+
+
+//=========================================================
+// func_turntable: a platform that turns about its ORIGIN brush from stop to stop, one stop per use
+// (a button, a valve), always the same way round; from the last stop it carries on round to the
+// first. It is func_trackchange for any number of tracks:
+//   - `stopangles`: each stop's angle from home, e.g. "0 45 90 135 180"; home is how it spawns,
+//     after `startyaw`.
+//   - `tracks`: the path_track for each stop, in the same order: where the train (`target`) is put
+//     when the table arrives there with it aboard.
+//   - `gatepaths`: the path_tracks where the line through home runs onto the table. They are
+//     Disabled whenever the deck is not on that line or is turning, so a train coming at one finds
+//     the end of the line and stops; it goes on when next started.
+//   - the train is carried when it stands still with its origin within its `wheels` of the pivot.
+//     It will not turn if the train is otherwise over its swing, or moving and closer than the
+//     path_track before a gate; it sounds func_trackchange's alarm instead.
+//=========================================================
+#define TURNTABLE_MAX_STOPS 8
+
+class CFuncTurntable : public CBaseToggle
+{
+public:
+	void Spawn() override;
+	void Precache() override;
+	void Activate() override;
+	bool KeyValue(KeyValueData* pkvd) override;
+	void Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value) override;
+	int ObjectCaps() override { return CBaseToggle::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
+
+	void EXPORT Arrived();
+
+	bool Save(CSave& save) override;
+	bool Restore(CRestore& restore) override;
+	static TYPEDESCRIPTION m_SaveData[];
+
+private:
+	enum TrainState
+	{
+		TRAIN_CLEAR,
+		TRAIN_IN_THE_WAY,
+		TRAIN_ABOARD
+	};
+
+	CFuncTrackTrain* Train();
+	CPathTrack* PathNamed(string_t list, int index);
+	TrainState EvaluateTrain(CFuncTrackTrain* pTrain);
+	void UpdateGates();
+	void CarryTrain(CFuncTrackTrain* pTrain, const Vector& dest);
+
+	float m_flAngles[TURNTABLE_MAX_STOPS]; // from home
+	int m_iCount;
+	int m_iStop;		// the stop it is at, or turning to
+	bool m_bMoving;
+	bool m_bCarrying;
+	float m_flRadius;	// how far the table reaches from its origin as it turns
+	float m_flStartYaw; // added to the built orientation at spawn
+	string_t m_iszAngles;
+	string_t m_iszTracks;
+	string_t m_iszGates;
+};
+LINK_ENTITY_TO_CLASS(func_turntable, CFuncTurntable);
+
+TYPEDESCRIPTION CFuncTurntable::m_SaveData[] =
+	{
+		DEFINE_ARRAY(CFuncTurntable, m_flAngles, FIELD_FLOAT, TURNTABLE_MAX_STOPS),
+		DEFINE_FIELD(CFuncTurntable, m_iCount, FIELD_INTEGER),
+		DEFINE_FIELD(CFuncTurntable, m_iStop, FIELD_INTEGER),
+		DEFINE_FIELD(CFuncTurntable, m_bMoving, FIELD_BOOLEAN),
+		DEFINE_FIELD(CFuncTurntable, m_bCarrying, FIELD_BOOLEAN),
+		DEFINE_FIELD(CFuncTurntable, m_flRadius, FIELD_FLOAT),
+		DEFINE_FIELD(CFuncTurntable, m_flStartYaw, FIELD_FLOAT),
+		DEFINE_FIELD(CFuncTurntable, m_iszAngles, FIELD_STRING),
+		DEFINE_FIELD(CFuncTurntable, m_iszTracks, FIELD_STRING),
+		DEFINE_FIELD(CFuncTurntable, m_iszGates, FIELD_STRING),
+};
+
+IMPLEMENT_SAVERESTORE(CFuncTurntable, CBaseToggle);
+
+// The index-th word of a space-separated list, or false past its end.
+static bool TurntableWord(const char* list, int index, char* out, int size)
+{
+	for (int n = 0; *list; n++)
+	{
+		while (*list == ' ')
+			list++;
+		if (!*list)
+			break;
+		const char* end = list;
+		while (*end && *end != ' ')
+			end++;
+		if (n == index)
+		{
+			const int len = V_min((int)(end - list), size - 1);
+			memcpy(out, list, len);
+			out[len] = 0;
+			return true;
+		}
+		list = end;
+	}
+	return false;
+}
+
+bool CFuncTurntable::KeyValue(KeyValueData* pkvd)
+{
+	if (FStrEq(pkvd->szKeyName, "stopangles"))
+	{
+		m_iszAngles = ALLOC_STRING(pkvd->szValue);
+		return true;
+	}
+	else if (FStrEq(pkvd->szKeyName, "tracks"))
+	{
+		m_iszTracks = ALLOC_STRING(pkvd->szValue);
+		return true;
+	}
+	else if (FStrEq(pkvd->szKeyName, "gatepaths"))
+	{
+		m_iszGates = ALLOC_STRING(pkvd->szValue);
+		return true;
+	}
+	else if (FStrEq(pkvd->szKeyName, "startyaw"))
+	{
+		m_flStartYaw = atof(pkvd->szValue);
+		return true;
+	}
+	return CBaseToggle::KeyValue(pkvd);
+}
+
+void CFuncTurntable::Precache()
+{
+	if (FStringNull(pev->noise1))
+		pev->noise1 = MAKE_STRING("plats/heavymove1.wav");
+	if (FStringNull(pev->noise2))
+		pev->noise2 = MAKE_STRING("plats/heavystop2.wav");
+	PRECACHE_SOUND(STRING(pev->noise1));
+	PRECACHE_SOUND(STRING(pev->noise2));
+	PRECACHE_SOUND("buttons/button11.wav");
+}
+
+void CFuncTurntable::Spawn()
+{
+	Precache();
+
+	pev->movetype = MOVETYPE_PUSH;
+	pev->solid = SOLID_BSP;
+	UTIL_SetOrigin(pev, pev->origin);
+	SET_MODEL(ENT(pev), STRING(pev->model));
+
+	// The model's reach from the pivot, before it is turned: the corner of its box, which is
+	// generous for a round table and exact for a square one.
+	const float x = V_max(fabs(pev->mins.x), fabs(pev->maxs.x));
+	const float y = V_max(fabs(pev->mins.y), fabs(pev->maxs.y));
+	m_flRadius = sqrt(x * x + y * y);
+
+	if (pev->speed == 0)
+		pev->speed = 15;
+
+	m_iCount = 0;
+	char word[32];
+	const char* angles = FStringNull(m_iszAngles) ? "0 45 90 135" : STRING(m_iszAngles);
+	while (m_iCount < TURNTABLE_MAX_STOPS && TurntableWord(angles, m_iCount, word, sizeof(word)))
+	{
+		m_flAngles[m_iCount] = atof(word);
+		m_iCount++;
+	}
+	if (m_iCount < 2)
+		ALERT(at_error, "func_turntable %s: fewer than two stopangles\n", STRING(pev->targetname));
+
+	pev->angles = g_vecZero;
+	pev->angles.y = m_flStartYaw;
+	m_iStop = 0;
+	m_bMoving = m_bCarrying = false;
+}
+
+// Every entity has spawned by now, the gates' path_tracks too.
+void CFuncTurntable::Activate()
+{
+	UpdateGates();
+}
+
+CFuncTrackTrain* CFuncTurntable::Train()
+{
+	CBaseEntity* pTrain = UTIL_FindEntityByTargetname(nullptr, STRING(pev->target));
+	if (!pTrain || !FClassnameIs(pTrain->pev, "func_tracktrain"))
+		return nullptr;
+	return CFuncTrackTrain::Instance(pTrain->edict());
+}
+
+CPathTrack* CFuncTurntable::PathNamed(string_t list, int index)
+{
+	char name[64];
+	if (FStringNull(list) || !TurntableWord(STRING(list), index, name, sizeof(name)))
+		return nullptr;
+	return CPathTrack::Instance(FIND_ENTITY_BY_TARGETNAME(nullptr, name));
+}
+
+void CFuncTurntable::UpdateGates()
+{
+	// The line through home is lined up at home and half a turn from it.
+	const bool open = !m_bMoving && fabs(fmod(m_flAngles[m_iStop], 180.0f)) < 0.5f;
+
+	CPathTrack* pGate;
+	for (int i = 0; (pGate = PathNamed(m_iszGates, i)) != nullptr; i++)
+	{
+		if (open)
+			ClearBits(pGate->pev->spawnflags, SF_PATH_DISABLED);
+		else
+			SetBits(pGate->pev->spawnflags, SF_PATH_DISABLED);
+	}
+}
+
+CFuncTurntable::TrainState CFuncTurntable::EvaluateTrain(CFuncTrackTrain* pTrain)
+{
+	if (!pTrain)
+		return TRAIN_CLEAR;
+
+	const Vector& c = pev->origin;
+	const float dist = (pTrain->pev->origin - c).Length2D();
+
+	if (pTrain->pev->speed == 0 && dist < pTrain->m_length)
+		return TRAIN_ABOARD;
+
+	// Any part of it over the table's swing. The pivot is measured in the train's own frame against
+	// its model's box: its absmin/absmax are no use, the engine grows them to a cube once it has turned.
+	const Vector ofs = c - pTrain->pev->origin;
+	UTIL_MakeVectors(Vector(0, pTrain->pev->angles.y, 0));
+	const float lx = DotProduct(ofs, gpGlobals->v_forward);
+	const float ly = -DotProduct(ofs, gpGlobals->v_right);
+	const float dx = V_max(V_max(pTrain->pev->mins.x - lx, lx - pTrain->pev->maxs.x), 0.0f);
+	const float dy = V_max(V_max(pTrain->pev->mins.y - ly, ly - pTrain->pev->maxs.y), 0.0f);
+	const float gap = sqrt(dx * dx + dy * dy);
+	if (gap < m_flRadius)
+	{
+		ALERT(at_console, "func_turntable %s: %s is over the swing (%.0f from the pivot, swing %.0f)\n",
+			STRING(pev->targetname), STRING(pTrain->pev->targetname), gap, m_flRadius);
+		return TRAIN_IN_THE_WAY;
+	}
+
+	// Moving, and past the path_track before a gate: too late for the gate to stop it.
+	if (pTrain->pev->speed != 0)
+	{
+		CPathTrack* pGate;
+		for (int i = 0; (pGate = PathNamed(m_iszGates, i)) != nullptr; i++)
+		{
+			CPathTrack* pBefore = pGate->GetPrevious();
+			if (pBefore && dist <= (pBefore->pev->origin - c).Length2D() + 1)
+			{
+				ALERT(at_console, "func_turntable %s: %s is moving and past %s\n",
+					STRING(pev->targetname), STRING(pTrain->pev->targetname), STRING(pBefore->pev->targetname));
+				return TRAIN_IN_THE_WAY;
+			}
+		}
+	}
+
+	return TRAIN_CLEAR;
+}
+
+// func_trackchange's UpdateTrain: turn the train with the table about the table's origin, and hold
+// its own thinking until the table arrives.
+void CFuncTurntable::CarryTrain(CFuncTrackTrain* pTrain, const Vector& dest)
+{
+	const float time = pev->nextthink - pev->ltime;
+
+	pTrain->pev->avelocity = pev->avelocity;
+	pTrain->pev->velocity = g_vecZero;
+	pTrain->NextThink(pTrain->pev->ltime + time, false);
+	pTrain->m_ppath = nullptr;
+	if (time <= 0)
+		return;
+
+	const Vector offset = pTrain->pev->origin - pev->origin;
+	const Vector delta = dest - pev->angles;
+	UTIL_MakeInvVectors(delta, gpGlobals);
+	Vector local;
+	local.x = DotProduct(offset, gpGlobals->v_forward);
+	local.y = DotProduct(offset, gpGlobals->v_right);
+	local.z = DotProduct(offset, gpGlobals->v_up);
+
+	pTrain->pev->velocity = (local - offset) * (1.0 / time);
+}
+
+void CFuncTurntable::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE useType, float value)
+{
+	if (m_bMoving || m_iCount < 2)
+		return;
+
+	CFuncTrackTrain* pTrain = Train();
+	const TrainState state = EvaluateTrain(pTrain);
+	if (state == TRAIN_IN_THE_WAY)
+	{
+		EMIT_SOUND(ENT(pev), CHAN_VOICE, "buttons/button11.wav", 1, ATTN_NORM);
+		return;
+	}
+
+	const int next = (m_iStop + 1) % m_iCount;
+	float turn = m_flAngles[next] - m_flAngles[m_iStop];
+	while (turn <= 0)
+		turn += 360;
+
+	m_iStop = next;
+	m_bMoving = true;
+	UpdateGates();
+
+	const Vector dest = pev->angles + Vector(0, turn, 0);
+	EMIT_SOUND(ENT(pev), CHAN_STATIC, STRING(pev->noise1), 1, ATTN_NORM);
+	SetMoveDone(&CFuncTurntable::Arrived);
+	AngularMove(dest, pev->speed);
+
+	m_bCarrying = state == TRAIN_ABOARD;
+	if (m_bCarrying)
+		CarryTrain(pTrain, dest);
+}
+
+void CFuncTurntable::Arrived()
+{
+	m_bMoving = false;
+	STOP_SOUND(ENT(pev), CHAN_STATIC, STRING(pev->noise1));
+	EMIT_SOUND(ENT(pev), CHAN_VOICE, STRING(pev->noise2), 1, ATTN_NORM);
+
+	// Keep the yaw in 0..360 so a table turned round and round never grows its angle.
+	pev->angles.y = UTIL_AngleMod(pev->angles.y);
+
+	if (m_bCarrying)
+	{
+		m_bCarrying = false;
+		CFuncTrackTrain* pTrain = Train();
+		CPathTrack* pTrack = PathNamed(m_iszTracks, m_iStop);
+		if (pTrain)
+		{
+			// A train told to think while stopped returns without touching its velocity: stop it here.
+			pTrain->pev->velocity = g_vecZero;
+			pTrain->pev->avelocity = g_vecZero;
+			pTrain->pev->speed = 0;
+			pTrain->pev->angles.y = UTIL_AngleMod(pTrain->pev->angles.y);
+			if (pTrack)
+				pTrain->SetTrack(pTrack);
+			else
+				ALERT(at_error, "func_turntable %s: no track for stop %d\n", STRING(pev->targetname), m_iStop);
+		}
+	}
+
+	UpdateGates();
+
+	if (!FStringNull(pev->message))
+		FireTargets(STRING(pev->message), this, this, USE_TOGGLE, 0);
+}

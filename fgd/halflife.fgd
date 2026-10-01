@@ -1456,6 +1456,20 @@
 	_minlight(string) : "Minimum light level"
 ]
 
+@SolidClass base(Targetname, RenderFields, ZHLT) = func_turntable : "Turntable: func_trackchange for any number of tracks. Turns about its ORIGIN brush one stop per use, always the same way round. Carries the train when it stands still on it and puts it on that stop's track. Disables the gate path_tracks while the deck is off the line through home, so a train stops at the end of the line; will not turn under a train (alarm)."
+[
+	target(target_destination) : "Train (func_tracktrain)"
+	stopangles(string) : "Stop angles from home (space-separated)" : "0 45 90 135 180"
+	tracks(string) : "path_track at the pivot for each stop (space-separated, same order)"
+	gatepaths(string) : "Gate path_tracks onto the table (space-separated)"
+	speed(integer) : "Turn speed (degrees/sec)" : 15
+	startyaw(integer) : "Turn at spawn (degrees); the result is home" : 0
+	message(target_destination) : "Fire at each stop"
+	noise1(sound) : "Move sound" : "plats/heavymove1.wav"
+	noise2(sound) : "Stop sound" : "plats/heavystop2.wav"
+	_minlight(string) : "Minimum light level"
+]
+
 @SolidClass base(Targetname, Global, RenderFields, ZHLT) = func_tracktrain : "Track Train" 
 [
 	spawnflags(flags) =

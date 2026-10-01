@@ -209,6 +209,18 @@ polish level, we don't generate another map."* Every Idea in this document ranks
 [the Crew](#the-crew--grilled-2026-09-24): miners, construction workers, security, technicians — grilled
 the same day. The `shaft1` retune and everything after it wait.
 
+### The step valve — Idea, 2026-10-01
+
+`mines1`'s turntable is driven by a `func_rot_button`, which turns to its distance and winds back on
+every use. Andrei asked for a valve that turns 45° further on each use, never back. Proposed, not taken
+yet: let `func_turntable` (`dlls/plats.cpp`) be the valve as well, with two small additions, a **Player
+can use** flag and `func_rot_button`'s **X axis** / **Y axis** flags so it can turn on a wall. The valve is
+then a `func_turntable` with `stopangles` `0 45 90 135 180 225 270 315` and **Fire at each stop** = the
+table. Open: the wheel turns even when the table refuses (the loco in its way); whether the valve should
+ask the table first. The no-code fallback, a `func_rotating` switched on for a timed 1.5 s by a
+`multi_manager`, drifts by the tick and was not preferred. Further out, also set aside the same day: a
+wheel the table follows as it is turned (`momentary_rot_button`), settling at the nearest stop.
+
 ---
 
 ## Pillar 6: Stealth
