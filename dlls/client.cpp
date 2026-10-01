@@ -701,6 +701,32 @@ void ClientCommand(edict_t* pEntity)
 			ClientPrint(pev, HUD_PRINTCONSOLE, "slaveboss_spawn needs sv_cheats 1.\n");
 		}
 	}
+	else if (FStrEq(pcmd, "setpos"))
+	{
+		// Cheat-gated: setpos x y z [yaw]. Puts the player at a spot a session card
+		// names -- a corner of mines1 or a landing in one of Valve's maps -- without
+		// walking there. Noclip first if the spot is inside a brush.
+		if (0 != g_psv_cheats->value && CMD_ARGC() >= 4)
+		{
+			UTIL_SetOrigin(pev, Vector(atof(CMD_ARGV(1)), atof(CMD_ARGV(2)), atof(CMD_ARGV(3))));
+			pev->velocity = g_vecZero;
+			if (CMD_ARGC() >= 5)
+			{
+				pev->angles = pev->v_angle = Vector(0, atof(CMD_ARGV(4)), 0);
+				pev->fixangle = 1;
+			}
+		}
+		else
+		{
+			ClientPrint(pev, HUD_PRINTCONSOLE, "setpos x y z [yaw] needs sv_cheats 1.\n");
+		}
+	}
+	else if (FStrEq(pcmd, "getpos"))
+	{
+		// Prints the line setpos takes back, so a spot found in game can go on a card.
+		ClientPrint(pev, HUD_PRINTCONSOLE, UTIL_VarArgs("setpos %.0f %.0f %.0f %.0f\n",
+			pev->origin.x, pev->origin.y, pev->origin.z, pev->v_angle.y));
+	}
 	else if (FStrEq(pcmd, "record_grant") || FStrEq(pcmd, "record_revoke"))
 	{
 		// Cheat-gated: what record_grant does, without a trigger to wire.
