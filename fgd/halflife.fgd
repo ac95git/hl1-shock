@@ -1461,7 +1461,8 @@
 	target(target_destination) : "Train (func_tracktrain)"
 	stopangles(string) : "Stop angles from home (space-separated)" : "0 45 90 135 180"
 	tracks(string) : "path_track at the pivot for each stop (space-separated, same order)"
-	gatepaths(string) : "Gate path_tracks onto the table (space-separated)"
+	backtracks(string) : "path_track at the pivot for each stop, for a train facing the other way (space-separated, same order)"
+	gatepaths(string) : "Gate path_tracks onto the table, one each side of it per line (space-separated)"
 	speed(integer) : "Turn speed (degrees/sec)" : 15
 	startyaw(integer) : "Turn at spawn (degrees); the result is home" : 0
 	message(target_destination) : "Fire at each stop"

@@ -2318,9 +2318,15 @@ void CGunTarget::Use(CBaseEntity* pActivator, CBaseEntity* pCaller, USE_TYPE use
 //     after `startyaw`.
 //   - `tracks`: the path_track for each stop, in the same order: where the train (`target`) is put
 //     when the table arrives there with it aboard.
-//   - `gatepaths`: the path_tracks where the line through home runs onto the table. They are
-//     Disabled whenever the deck is not on that line or is turning, so a train coming at one finds
-//     the end of the line and stops; it goes on when next started.
+//   - `backtracks`: the same for a train facing the other way round. A train always faces along its
+//     path, so a train facing against a stop's track would be spun to face it; it is put on that
+//     stop's back track instead, a chain running the other way (or the other loop).
+//   - `gatepaths`: the path_tracks where a line runs onto the table, on any road. A gate is
+//     Disabled unless the deck is still and lined up with it (the gate lies on the line the stop's
+//     track runs along through the pivot), so a train coming at one finds the end of the line and
+//     stops at the path_track before it; it goes on when next started. A gate stops a train on its
+//     own chain from its own side only, driven or reversing, so each chain wants a gate on every
+//     side of the table it reaches.
 //   - the train is carried when it stands still with its origin within its `wheels` of the pivot.
 //     It will not turn if the train is otherwise over its swing, or moving and closer than the
 //     path_track before a gate; it sounds func_trackchange's alarm instead.
@@ -2338,6 +2344,7 @@ public:
 	int ObjectCaps() override { return CBaseToggle::ObjectCaps() & ~FCAP_ACROSS_TRANSITION; }
 
 	void EXPORT Arrived();
+	void EXPORT GatesThink();
 
 	bool Save(CSave& save) override;
 	bool Restore(CRestore& restore) override;
@@ -2366,6 +2373,7 @@ private:
 	float m_flStartYaw; // added to the built orientation at spawn
 	string_t m_iszAngles;
 	string_t m_iszTracks;
+	string_t m_iszBackTracks;
 	string_t m_iszGates;
 };
 LINK_ENTITY_TO_CLASS(func_turntable, CFuncTurntable);
@@ -2381,6 +2389,7 @@ TYPEDESCRIPTION CFuncTurntable::m_SaveData[] =
 		DEFINE_FIELD(CFuncTurntable, m_flStartYaw, FIELD_FLOAT),
 		DEFINE_FIELD(CFuncTurntable, m_iszAngles, FIELD_STRING),
 		DEFINE_FIELD(CFuncTurntable, m_iszTracks, FIELD_STRING),
+		DEFINE_FIELD(CFuncTurntable, m_iszBackTracks, FIELD_STRING),
 		DEFINE_FIELD(CFuncTurntable, m_iszGates, FIELD_STRING),
 };
 
@@ -2410,6 +2419,27 @@ static bool TurntableWord(const char* list, int index, char* out, int size)
 	return false;
 }
 
+// The way a track runs at this path_track, flat and of unit length: towards the next one, or at a
+// chain's end on from the one before. Zero for a lone path_track.
+static Vector TrackDirection(CPathTrack* pTrack)
+{
+	Vector dir = g_vecZero;
+	if (CPathTrack* pNext = pTrack->GetNext())
+		dir = pNext->pev->origin - pTrack->pev->origin;
+	else if (CPathTrack* pPrev = pTrack->GetPrevious())
+		dir = pTrack->pev->origin - pPrev->pev->origin;
+	dir.z = 0;
+	return dir.Length() > 0 ? dir.Normalize() : g_vecZero;
+}
+
+// Whether the train faces the way a track runs at this path_track. Its model points west, so its
+// nose is its yaw + 180.
+static bool FacesAlong(CFuncTrackTrain* pTrain, CPathTrack* pTrack)
+{
+	UTIL_MakeVectors(Vector(0, pTrain->pev->angles.y + 180, 0));
+	return DotProduct(TrackDirection(pTrack), gpGlobals->v_forward) >= 0;
+}
+
 bool CFuncTurntable::KeyValue(KeyValueData* pkvd)
 {
 	if (FStrEq(pkvd->szKeyName, "stopangles"))
@@ -2420,6 +2450,11 @@ bool CFuncTurntable::KeyValue(KeyValueData* pkvd)
 	else if (FStrEq(pkvd->szKeyName, "tracks"))
 	{
 		m_iszTracks = ALLOC_STRING(pkvd->szValue);
+		return true;
+	}
+	else if (FStrEq(pkvd->szKeyName, "backtracks"))
+	{
+		m_iszBackTracks = ALLOC_STRING(pkvd->szValue);
 		return true;
 	}
 	else if (FStrEq(pkvd->szKeyName, "gatepaths"))
@@ -2481,9 +2516,19 @@ void CFuncTurntable::Spawn()
 	m_bMoving = m_bCarrying = false;
 }
 
-// Every entity has spawned by now, the gates' path_tracks too.
+// The gates follow the stops' tracks, which link up in their own Activate: wait for them all.
+// A table restored mid-turn keeps its move's think; the gates' flags were saved with them.
 void CFuncTurntable::Activate()
 {
+	if (m_bMoving)
+		return;
+	SetThink(&CFuncTurntable::GatesThink);
+	pev->nextthink = pev->ltime + 0.1;
+}
+
+void CFuncTurntable::GatesThink()
+{
+	SetThink(nullptr);
 	UpdateGates();
 }
 
@@ -2505,12 +2550,18 @@ CPathTrack* CFuncTurntable::PathNamed(string_t list, int index)
 
 void CFuncTurntable::UpdateGates()
 {
-	// The line through home is lined up at home and half a turn from it.
-	const bool open = !m_bMoving && fabs(fmod(m_flAngles[m_iStop], 180.0f)) < 0.5f;
+	// The line the deck is on: the one its stop's track runs along through the pivot.
+	CPathTrack* pTrack = PathNamed(m_iszTracks, m_iStop);
+	const Vector line = pTrack ? TrackDirection(pTrack) : g_vecZero;
 
 	CPathTrack* pGate;
 	for (int i = 0; (pGate = PathNamed(m_iszGates, i)) != nullptr; i++)
 	{
+		Vector toGate = pGate->pev->origin - pev->origin;
+		toGate.z = 0;
+		// Within about 2.5 degrees of the line, either side of the pivot.
+		const bool open = !m_bMoving && toGate.Length() > 0 && fabs(DotProduct(toGate.Normalize(), line)) > 0.999f;
+
 		if (open)
 			ClearBits(pGate->pev->spawnflags, SF_PATH_DISABLED);
 		else
@@ -2545,13 +2596,17 @@ CFuncTurntable::TrainState CFuncTurntable::EvaluateTrain(CFuncTrackTrain* pTrain
 		return TRAIN_IN_THE_WAY;
 	}
 
-	// Moving, and past the path_track before a gate: too late for the gate to stop it.
+	// Moving, and past the path_track before a gate: too late for the gate to stop it. "Before" is
+	// the gate's neighbour away from the pivot, whichever way the line runs through it.
 	if (pTrain->pev->speed != 0)
 	{
 		CPathTrack* pGate;
 		for (int i = 0; (pGate = PathNamed(m_iszGates, i)) != nullptr; i++)
 		{
 			CPathTrack* pBefore = pGate->GetPrevious();
+			CPathTrack* pNext = pGate->GetNext();
+			if (!pBefore || (pNext && (pNext->pev->origin - c).Length2D() > (pBefore->pev->origin - c).Length2D()))
+				pBefore = pNext;
 			if (pBefore && dist <= (pBefore->pev->origin - c).Length2D() + 1)
 			{
 				ALERT(at_console, "func_turntable %s: %s is moving and past %s\n",
@@ -2641,6 +2696,15 @@ void CFuncTurntable::Arrived()
 			pTrain->pev->avelocity = g_vecZero;
 			pTrain->pev->speed = 0;
 			pTrain->pev->angles.y = UTIL_AngleMod(pTrain->pev->angles.y);
+			if (pTrack && !FacesAlong(pTrain, pTrack))
+			{
+				CPathTrack* pBack = PathNamed(m_iszBackTracks, m_iStop);
+				if (pBack)
+					pTrack = pBack;
+				else
+					ALERT(at_console, "func_turntable %s: %s faces against %s and stop %d has no back track\n",
+						STRING(pev->targetname), STRING(pTrain->pev->targetname), STRING(pTrack->pev->targetname), m_iStop);
+			}
 			if (pTrack)
 				pTrain->SetTrack(pTrack);
 			else

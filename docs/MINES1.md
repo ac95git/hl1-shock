@@ -192,8 +192,9 @@ draws it.
   (`startspeed 0`); driven from the cab well through a `func_traincontrols` box (x −662..−602,
   y −456..−344, z 24..104), throttle in Valve's five notches; the relays `crash_go` / `crash_park` stay
   for scripts. Its path is the loop clockwise, `mt01`..`mt16` (facing west, as built), or anticlockwise,
-  `ma01`..`ma16`, once the turntable has turned it round. Its ORIGIN brush sits at its rear (x −544 on
-  a body −768..−512), so it pivots there on curves and on the table; moving it to the middle is offered.
+  `ma01`..`ma16`, once the turntable has turned it round. Its ORIGIN brush sits at x −624 on a body
+  −768..−512 (moved by Andrei from −544 at its rear), so its nose is 144 ahead of where it pivots and
+  its tail 112 behind.
   Its two loaded wagons stand on the second line and are left for Andrei: the loco passes through them.
 - **The turntable, working**: a `func_turntable` (new, `dlls/plats.cpp`): `func_trackchange` for any number of
   tracks. `turntable`, about its ORIGIN brush at (−176, −400), `startyaw 45` so home is the main line.
@@ -201,9 +202,20 @@ draws it.
   home → SW road → S road → SE road → turned round (180°) → home. A loco standing still with its
   origin within 100 (its `wheels`) of the pivot is **carried**, and put on that stop's track: `mt15`
   (home), `sw00`, `s00`, `se00` (each road's chain starts at the pivot with nothing before it, so a
-  loco reversing out of a garage stops on the table), `ma01` (turned round). While the deck is off the
-  main line or turning, the gates `mt14` and `ma16` are Disabled, so a loco coming at the table finds
-  the end of the line (at `mt13` from the east, `ma15` from the west). With the loco over its swing,
+  loco reversing out of a garage stops on the table), `ma01` (turned round). A loco always faces along
+  its path, so one carried facing against a stop's track was spun round on it (seen 2026-10-01); it is
+  put on that stop's `backtracks` entry instead: `ma01 swb00 sb00 seb00 mt15`, the `b` chains running
+  from the garage end to the pivot, ending there with nothing after it. **Gates:** every chain has
+  one 160 out on each side of the table it reaches: `mt14 mt16 ma02 ma16` on the main line, `swgate`,
+  `sgate`, `segate` on the roads and `swbgate`, `sbgate`, `sebgate` on their back chains. A gate is
+  Disabled unless the deck is still and lined up with it, so a loco coming at the table finds the end
+  of the line on the stop node before it: `mt13a` (x 184) and `ma02a` (x 152) from the east,
+  `mt16a` (x −568, Andrei's) and `ma15` (x −536) from the west, `swstop`/`sstop`/`sestop` 328 out
+  and `swbstop`/`sbstop`/`sebstop` 360 out on the roads. Each but `mt16a` leaves the leading end 216
+  from the pivot (nose 144 ahead of the origin, tail 112 behind), just outside the table's swing of
+  about 184, the corner of its box; Andrei set `mt13a` there by hand. A gate stops a train from its
+  own side only: with just `mt14 ma16` (until 2026-10-01) a loco reversing onto the table rode
+  straight on to the pivot, misaligned or not. With the loco over its swing,
   or moving closer than those, it will not turn and sounds Valve's alarm. **Seen in game 2026-10-01:**
   Andrei's valve (copied from a stock map) turns it, after a fix to the in-the-way test, which had
   measured the loco by the world box the engine grows round a turned brush entity. Not yet tried:
